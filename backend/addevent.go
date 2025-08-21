@@ -44,6 +44,7 @@ func (s *State) HandleAddStone(evt *EventJSON) (*Frame, error) {
 	marks := s.GenerateMarks()
 
 	explorer := s.Root.FillGrid(s.Current.Index)
+	s.Explorer = explorer
 	return &Frame{DiffFrame, diff, marks, explorer, nil, nil}, nil
 }
 
@@ -58,6 +59,7 @@ func (s *State) HandlePass(evt *EventJSON) (*Frame, error) {
 	s.AddPassNode(Color(evt.Color), fields, -1)
 
 	explorer := s.Root.FillGrid(s.Current.Index)
+	s.Explorer = explorer
 	return &Frame{DiffFrame, nil, nil, explorer, nil, nil}, nil
 }
 
@@ -79,6 +81,7 @@ func (s *State) HandleRemoveStone(evt *EventJSON) (*Frame, error) {
 	diff := s.AddFieldNode(fields, -1)
 
 	explorer := s.Root.FillGrid(s.Current.Index)
+	s.Explorer = explorer
 	return &Frame{DiffFrame, diff, nil, explorer, nil, nil}, nil
 }
 
@@ -178,12 +181,11 @@ func (s *State) HandleRemoveMark(evt *EventJSON) (*Frame, error) {
 func (s *State) HandleLeft() (*Frame, error) {
 	diff := s.Left()
 	marks := s.GenerateMarks()
-	explorer := s.Root.FillGrid(s.Current.Index)
 
-	// left doesn't change the preferred nodes and edges
-	explorer.Nodes = nil
-	explorer.Edges = nil
-	explorer.PreferredNodes = nil
+	// make an empty explorer
+	explorer := &Explorer{}
+	explorer.Current = s.Explorer.Left()
+
 	comments := s.GenerateComments()
 	return &Frame{DiffFrame, diff, marks, explorer, comments, nil}, nil
 }
@@ -191,12 +193,11 @@ func (s *State) HandleLeft() (*Frame, error) {
 func (s *State) HandleRight() (*Frame, error) {
 	diff := s.Right()
 	marks := s.GenerateMarks()
-	explorer := s.Root.FillGrid(s.Current.Index)
 
-	// right doesn't change the preferred nodes and edges
-	explorer.Nodes = nil
-	explorer.Edges = nil
-	explorer.PreferredNodes = nil
+	// make an empty explorer
+	explorer := &Explorer{}
+	explorer.Current = s.Explorer.Right()
+
 	comments := s.GenerateComments()
 	return &Frame{DiffFrame, diff, marks, explorer, comments, nil}, nil
 }
@@ -209,6 +210,7 @@ func (s *State) HandleUp() (*Frame, error) {
 
 	// for the current mark
 	marks := s.GenerateMarks()
+	s.Explorer = explorer
 
 	return &Frame{DiffFrame, nil, marks, explorer, nil, nil}, nil
 }
@@ -218,6 +220,7 @@ func (s *State) HandleDown() (*Frame, error) {
 	explorer := s.Root.FillGrid(s.Current.Index)
 	explorer.Nodes = nil
 	explorer.Edges = nil
+	s.Explorer = explorer
 
 	// for the current mark
 	marks := s.GenerateMarks()
@@ -298,6 +301,7 @@ func (s *State) HandleCut(evt *EventJSON) (*Frame, error) {
 	marks := s.GenerateMarks()
 	explorer := s.Root.FillGrid(s.Current.Index)
 	comments := s.GenerateComments()
+	s.Explorer = explorer
 	return &Frame{DiffFrame, diff, marks, explorer, comments, nil}, nil
 }
 
@@ -328,6 +332,7 @@ func (s *State) HandleClipboard() (*Frame, error) {
 	clipboard.Up = s.Current
 
 	explorer := s.Root.FillGrid(s.Current.Index)
+	s.Explorer = explorer
 	marks := s.GenerateMarks()
 	return &Frame{DiffFrame, nil, marks, explorer, nil, nil}, nil
 }

@@ -10,6 +10,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 package main
 
+import (
+	"fmt"
+)
+
 func Fmap(f func(*TreeNode), root *TreeNode) {
 	stack := []*TreeNode{root}
 	for len(stack) > 0 {
@@ -114,8 +118,13 @@ func (n *TreeNode) FillGrid(currentIndex int) *Explorer {
 	colors := make(map[int]Color)
 	parents := make(map[int]int)
 	prefs := make(map[int]int)
+
 	var currentCoord *Coord
 	var currentColor Color
+
+	nodes := []*GridNode{}
+	nodeMap := make(map[int]*GridNode)
+
 	for len(stack) > 0 {
 		// pop off the stack
 		cur := stack[len(stack)-1]
@@ -175,6 +184,10 @@ func (n *TreeNode) FillGrid(currentIndex int) *Explorer {
 		grid[[2]int{y, x}] = node.Index
 		loc[node.Index] = [2]int{x, y}
 
+		gridNode := &GridNode{&Coord{x, y}, node.Color, node.Index, nil, nil}
+		nodes = append(nodes, gridNode)
+		nodeMap[node.Index] = gridNode
+
 		if node.Index == currentIndex {
 			currentCoord = &Coord{x, y}
 			currentColor = node.Color
@@ -202,20 +215,18 @@ func (n *TreeNode) FillGrid(currentIndex int) *Explorer {
 		}
 	}
 
-	nodes := []*GridNode{}
 	edges := []*GridEdge{}
 	for i, l := range loc {
 		// gather all the nodes with their color attached
 		x := l[0]
 		y := l[1]
-		gridNode := &GridNode{&Coord{x, y}, colors[i], i}
-		nodes = append(nodes, gridNode)
 
 		// gather all the edges
 		p, ok := parents[i]
 		if !ok {
 			continue
 		}
+
 		pCoord := loc[p]
 		start := &Coord{pCoord[0], pCoord[1]}
 		end := &Coord{x, y}
@@ -223,19 +234,31 @@ func (n *TreeNode) FillGrid(currentIndex int) *Explorer {
 		edges = append(edges, edge)
 	}
 
+
+	var currentNode *GridNode
 	preferredNodes := []*GridNode{}
 	index := 0
 	for {
 		if l, ok := loc[index]; ok {
 			x := l[0]
 			y := l[1]
-			gridNode := &GridNode{&Coord{x, y}, colors[index], index}
+			gridNode := &GridNode{&Coord{x, y}, colors[index], index, nil, nil}
+
+			if len(preferredNodes) > 0 {
+				left := preferredNodes[len(preferredNodes)-1]
+				left.Right = gridNode
+				gridNode.Left = left
+			}
+
 			preferredNodes = append(preferredNodes, gridNode)
+
+			if index == currentIndex {
+				currentNode = gridNode
+			}
 
 			if index, ok = prefs[index]; !ok {
 				break
 			}
-
 		} else {
 			break
 		}
@@ -247,6 +270,7 @@ func (n *TreeNode) FillGrid(currentIndex int) *Explorer {
 		preferredNodes,
 		currentCoord,
 		currentColor,
+		currentNode,
 	}
 }
 
@@ -254,6 +278,19 @@ type GridNode struct {
 	Coord *Coord `json:"coord"`
 	Color `json:"color"`
 	Index int `json:"index"`
+	Left *GridNode `json:"-"`
+	Right *GridNode `json:"-"`
+}
+
+func (n *GridNode) String() string {
+	if n.Left == nil && n.Right == nil {
+		return fmt.Sprintf("%v %v %v", n.Coord, n.Color, n.Index)
+	} else if n.Left == nil {
+		return fmt.Sprintf("%v %v %v right=%d", n.Coord, n.Color, n.Index, n.Right.Index)
+	} else if n.Right == nil {
+		return fmt.Sprintf("%v %v %v left=%d", n.Coord, n.Color, n.Index, n.Left.Index)
+	}
+	return fmt.Sprintf("%v %v %v left=%d right=%d", n.Coord, n.Color, n.Index, n.Left.Index, n.Right.Index)
 }
 
 type GridEdge struct {
@@ -267,4 +304,49 @@ type Explorer struct {
 	PreferredNodes []*GridNode `json:"preferred_nodes"`
 	Current        *Coord      `json:"current"`
 	CurrentColor   Color       `json:"current_color"`
+	CurrentNode	   *GridNode   `json:"-"`
+}
+
+func (e *Explorer) Left() *Coord {
+	// just go left on the saved explorer
+
+	if e == nil {
+		return nil
+	}
+
+	if e.CurrentNode == nil {
+		return nil
+	}
+
+	if e.CurrentNode.Left == nil {
+		return nil
+	}
+
+	e.CurrentNode = e.CurrentNode.Left
+	return e.CurrentNode.Coord
+}
+
+func (e *Explorer) Right() *Coord {
+	// just go left on the saved explorer
+
+	if e == nil {
+		return nil
+	}
+
+	if e.CurrentNode == nil {
+		return nil
+	}
+
+	if e.CurrentNode.Right == nil {
+		return nil
+	}
+
+	e.CurrentNode = e.CurrentNode.Right
+	return e.CurrentNode.Coord
+}
+
+func (e *Explorer) Rewind() {
+}
+
+func (e *Explorer) FastForward() {
 }
