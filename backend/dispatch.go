@@ -125,7 +125,8 @@ func (room *Room) HandleRequestSGF(evt *EventJSON) *EventJSON {
 				return bcast
 			}
 			connectToOGS = !ended
-		} else if ogsType == "review" {
+		} else if ogsType == "review" || ogsType == "demo"   {
+			ogsType = "review" 
 			connectToOGS = true
 		}
 

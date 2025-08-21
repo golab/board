@@ -61,6 +61,7 @@ func FetchOGS(ogsUrl string) (string, error) {
 	}else {
 		ogsUrl = strings.Replace(ogsUrl, ".com", ".com/api/v1", 1)
 		ogsUrl = strings.Replace(ogsUrl, "review", "reviews", 1)
+		ogsUrl = strings.Replace(ogsUrl, "demo", "reviews", 1)
 		ogsUrl += "/sgf"
 	}
 	return Fetch(ogsUrl)
