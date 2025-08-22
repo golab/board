@@ -174,7 +174,7 @@ func (room *Room) HandleTrash(evt *EventJSON) *EventJSON {
 	// reuse old inputbuffer
 	room.State.InputBuffer = oldBuffer
 
-	frame := room.State.GenerateFullFrame(true)
+	frame := room.State.GenerateFullFrame(Full)
 	bcast := FrameJSON(frame)
 	bcast.UserID = evt.UserID
 	return bcast
@@ -255,7 +255,7 @@ func (room *Room) BroadcastAfter(setTime bool) Middleware {
 func (room *Room) BroadcastFullFrameAfter(handler EventHandler) EventHandler {
 	return func(evt *EventJSON) *EventJSON {
 		evt = handler(evt)
-		frame := room.State.GenerateFullFrame(true)
+		frame := room.State.GenerateFullFrame(Full)
 		bcast := FrameJSON(frame)
 		room.Broadcast(bcast, false)
 		return evt

@@ -82,6 +82,8 @@ class TreeGraphics {
         this.grid = new Map();
         this.preferred_grid = new Map();
         this.index = 0;
+        this.node_map = new Map();
+        this.nodes = null;
 
         this.r = 12;
         this.step = this.r*3;
@@ -190,173 +192,155 @@ class TreeGraphics {
 
     handle_tree(tree) {
 
-        let max_x = 0;
-        let max_y = 0;
+        if (tree.nodes != null) {
+            let max_x = 0;
+            let max_y = 0;
 
-        let [g, loc] = this.fill_grid(tree);
+            let g = this.fill_grid(tree);
 
-        // edges
-        let edges = [];
-        for (let [index, c1] of loc) {
-            let node = tree.nodes[index];
-            let p = tree.nodes[node.up];
-            if (p == null) {
-                continue
+            // edges
+            let edges = [];
+            for (let [index, c1] of this.node_map) {
+                let node = tree.nodes[index];
+                let p = tree.nodes[node.up];
+                if (p == null) {
+                    continue
+                }
+                let c0 = this.node_map.get(node.up);
+
+                let start = new Object();
+                let end = new Object();
+
+                start.x = c0[0];
+                start.y = c0[1];
+                end.x = c1[0];
+                end.y = c1[1];
+
+                if (end.y - start.y > 1) {
+                    let mid = new Object();
+                    mid.x = start.x;
+                    mid.y = end.y - 1;
+                    let edge1 = new Object();
+                    edge1.start = start;
+                    edge1.end = mid;
+                    edges.push(edge1);
+                    let edge2 = new Object();
+                    edge2.start = mid;
+                    edge2.end = end;
+                    edges.push(edge2);
+                } else {
+                    let edge = new Object();
+                    edge.start = start;
+                    edge.end = end;
+                    edges.push(edge);
+                }
             }
-            let c0 = loc.get(node.up);
-
-            let start = new Object();
-            let end = new Object();
-
-            start.x = c0[0];
-            start.y = c0[1];
-            end.x = c1[0];
-            end.y = c1[1];
-
-            if (end.y - start.y > 1) {
-                let mid = new Object();
-                mid.x = start.x;
-                mid.y = end.y - 1;
-                let edge1 = new Object();
-                edge1.start = start;
-                edge1.end = mid;
-                edges.push(edge1);
-                let edge2 = new Object();
-                edge2.start = mid;
-                edge2.end = end;
-                edges.push(edge2);
-            } else {
-                let edge = new Object();
-                edge.start = start;
-                edge.end = end;
-                edges.push(edge);
-            }
-        }
-        this.edges = edges;
+            this.edges = edges;
 
 
-        // nodes
-        let grid = new Map();
+            // nodes
+            let grid = new Map();
 
-        for (let y = 0; y < g.length; y++) {
-            
-            let row = g[y];
+            for (let y = 0; y < g.length; y++) {
+                
+                let row = g[y];
 
-            for (let x = 0; x < row.length; x++) {
-                let entry = g[y][x];
-                if (entry != 0 && entry != 1 && entry != null) {
-                    if (!grid.has(y)) {
-                        grid.set(y, new Map());
-                    }
-                    let node = new Object();
-                    let coord = new Object();
-                    coord.x = x;
-                    coord.y = y;
-                    node.coord = coord
-                    node.color = entry.color;
-                    node.index = entry.index;
-                    grid.get(y).set(x, node);
+                for (let x = 0; x < row.length; x++) {
+                    let entry = g[y][x];
+                    if (entry != 0 && entry != 1 && entry != null) {
+                        if (!grid.has(y)) {
+                            grid.set(y, new Map());
+                        }
+                        let node = new Object();
+                        let coord = new Object();
+                        coord.x = x;
+                        coord.y = y;
+                        node.coord = coord
+                        node.color = entry.color;
+                        node.index = entry.index;
+                        grid.get(y).set(x, node);
 
-                    if (coord.x > max_x) {
-                        max_x = coord.x;
-                    }
-                    if (coord.y > max_y) {
-                        max_y = coord.y;
+                        if (coord.x > max_x) {
+                            max_x = coord.x;
+                        }
+                        if (coord.y > max_y) {
+                            max_y = coord.y;
+                        }
                     }
                 }
             }
+            this.set_dims_all(max_x+1, max_y+1);
+            this.grid = grid;
         }
 
-        let move_number = 0;
-        let current_color = 0;
         if (tree.current != null) {
-            let cur = loc.get(tree.current);
+            let cur = this.node_map.get(tree.current);
             this.current = cur;
-            move_number = cur[0];
-            current_color = cur.color;
+            this.set_scroll();
         }
 
-        this.set_dims_all(max_x+1, max_y+1);
-        this.grid = grid;
 
-        /*
-        for (let node of explorer.nodes) {
-            let coord = node.coord;
-            if (coord.x > max_x) {
-                max_x = coord.x;
-            }
-            if (coord.y > max_y) {
-                max_y = coord.y;
-            }
-
-            if (!grid.has(coord.y)) {
-                grid.set(coord.y, new Map());
-            }
-            grid.get(coord.y).set(coord.x, node);
-        }
-
-        //this.edges = explorer.edges;
-        //this.set_dims_all(max_x+1, max_y+1);
-        //*/
-        
         // preferred nodes and edges
-        let preferred_edges = [];
-        let preferred = new Map();
-        for (let i of tree.preferred) {
-            // preferred node
-            let node = tree.nodes[i];
-            let c1 = loc.get(i);
-            let [x,y] = c1;
 
-            let coord = new Object();
-            coord.x = x;
-            coord.y = y;
+        if (tree.preferred != null) {
+            // use this.nodes instead of tree.nodes
+            let preferred_edges = [];
+            let preferred_grid = new Map();
+            for (let i of tree.preferred) {
+                // preferred grid
+                let node = this.nodes[i];
+                let c1 = this.node_map.get(i);
+                let [x,y] = c1;
 
-            node.coord = coord;
-            if (!preferred.has(y)) {
-                preferred.set(y, new Map());
+                let coord = new Object();
+                coord.x = x;
+                coord.y = y;
+
+                node.coord = coord;
+                if (!preferred_grid.has(y)) {
+                    preferred_grid.set(y, new Map());
+                }
+                preferred_grid.get(y).set(x, node);
+
+                // preferred edge
+                let p = this.nodes[node.up];
+                if (p == null) {
+                    continue
+                }
+                let c0 = this.node_map.get(node.up);
+
+                let start = new Object();
+                let end = new Object();
+
+                start.x = c0[0];
+                start.y = c0[1];
+                end.x = c1[0];
+                end.y = c1[1];
+
+                if (end.y - start.y > 1) {
+                    let mid = new Object();
+                    mid.x = start.x;
+                    mid.y = end.y - 1;
+                    let edge1 = new Object();
+                    edge1.start = start;
+                    edge1.end = mid;
+                    preferred_edges.push(edge1);
+                    let edge2 = new Object();
+                    edge2.start = mid;
+                    edge2.end = end;
+                    preferred_edges.push(edge2);
+                } else {
+                    let edge = new Object();
+                    edge.start = start;
+                    edge.end = end;
+                    preferred_edges.push(edge);
+                }
+
+
             }
-            preferred.get(y).set(x, node);
-
-            // preferred edge
-            let p = tree.nodes[node.up];
-            if (p == null) {
-                continue
-            }
-            let c0 = loc.get(node.up);
-
-            let start = new Object();
-            let end = new Object();
-
-            start.x = c0[0];
-            start.y = c0[1];
-            end.x = c1[0];
-            end.y = c1[1];
-
-            if (end.y - start.y > 1) {
-                let mid = new Object();
-                mid.x = start.x;
-                mid.y = end.y - 1;
-                let edge1 = new Object();
-                edge1.start = start;
-                edge1.end = mid;
-                preferred_edges.push(edge1);
-                let edge2 = new Object();
-                edge2.start = mid;
-                edge2.end = end;
-                preferred_edges.push(edge2);
-            } else {
-                let edge = new Object();
-                edge.start = start;
-                edge.end = end;
-                preferred_edges.push(edge);
-            }
-
-
+            this.preferred_grid = preferred_grid;
+            this.preferred_edges = preferred_edges;
         }
-        this.preferred_grid = preferred;
-        this.preferred_edges = preferred_edges;
-        return [move_number, current_color];
 
     }
 
@@ -380,7 +364,7 @@ class TreeGraphics {
         let nodes = []
 
         // we'll also keep track of placements in the grid with a map
-        let loc = new Map();
+        let node_map = new Map();
 
         // thus we should always be able to calculate your place
         // in the grid
@@ -415,7 +399,7 @@ class TreeGraphics {
                     // look at the parent
                     let p = cur.up;
                     if (p != null) {
-                        let [x1, y1] = loc.get(p);
+                        let [x1, y1] = node_map.get(p);
                         // actually, don't go any farther than the 
                         // diagonal connecting the parent
                         if (x-y >= x1-y1) {
@@ -439,14 +423,14 @@ class TreeGraphics {
             }
 
             grid[y][x] = cur;
-            loc.set(cur.index, [x,y]);
+            node_map.set(cur.index, [x,y]);
 
             // if the parent is a diagonal away, we have to take up
             // another node
             // (this is for all the "angled" edges)
             let p = cur.up;
             if (p != null) {
-                let [x1, y1] = loc.get(p);
+                let [x1, y1] = node_map.get(p);
                 if (y - y1 > 1) {
                     if (grid[y-1][x-1] == 0) {
                         grid[y-1][x-1] = 1;
@@ -463,7 +447,8 @@ class TreeGraphics {
                 stack.push(child);
             }
         }
-        return [grid, loc];
+        this.node_map = node_map;
+        return grid;
     }
 
     visible(grid, edges) {

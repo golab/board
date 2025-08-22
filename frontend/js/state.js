@@ -691,17 +691,31 @@ class State {
             this.handle_comments(frame.comments);
         }
 
-        if (frame.explorer != null) {
+        //if (frame.explorer != null) {
             //this.tree_graphics._update(frame.explorer);
             //this.set_move_number(frame.explorer.current.x);
             //this.update_color(frame.explorer.current_color);
-        }
+        //}
 
         if (frame.tree != null) {
-            let [move_number, current_color] = this.tree_graphics.handle_tree(frame.tree);
-            this.set_move_number(move_number);
-            this.update_color(current_color);
+            // save it
+            if (frame.tree.nodes != null) {
+                this.tree_graphics.nodes = frame.tree.nodes;
+            }
+ 
+            this.tree_graphics.handle_tree(frame.tree);
 
+            // current should always exist
+            let current_index = frame.tree.current;
+          
+            // setting move number must happen before setting the color
+            let current_node = this.tree_graphics.nodes[current_index];
+            let move_number = current_node.depth;
+            this.set_move_number(move_number);
+
+            // updating the color checks the current move
+            let current_color = current_node.color;
+            this.update_color(current_color);
         }
     
         this.tree_graphics.set_scroll();

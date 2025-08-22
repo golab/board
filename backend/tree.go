@@ -129,10 +129,17 @@ func (n *TreeNode) RemoveField(key, value string) {
 	}
 }
 
+type TreeJSONType int
+const (
+	CurrentOnly TreeJSONType = iota
+	CurrentAndPreferred
+	Full
+)
 
 type NodeJSON struct {
 	Color Color `json:"color"`
 	Down []int `json:"down"`
+	Depth int `json:"depth"`
 }
 
 type TreeJSON struct {
@@ -142,27 +149,35 @@ type TreeJSON struct {
 	Depth int `json:"depth"`
 }
 
-func (s *State) CreateTreeJSON() *TreeJSON {
+func (s *State) CreateTreeJSON(t TreeJSONType) *TreeJSON {
 	// nodes
-	nodes := make(map[int]*NodeJSON)
-	Fmap(func(n *TreeNode){
-		down := []int{}
-		for _, c := range n.Down {
-			down = append(down, c.Index)
-		}
-		nodes[n.Index] = &NodeJSON {
-			Color: n.Color,
-			Down: down,
-		}
+	var nodes map[int]*NodeJSON
 
-	}, s.Root)
+	if (t == Full) {
+		nodes = make(map[int]*NodeJSON)
+		Fmap(func(n *TreeNode){
+			down := []int{}
+			for _, c := range n.Down {
+				down = append(down, c.Index)
+			}
+			nodes[n.Index] = &NodeJSON {
+				Color: n.Color,
+				Down: down,
+				Depth: n.Depth,
+			}
+
+		}, s.Root)
+	}
 
 	// preferred
-	node := s.Root
-	preferred := []int{node.Index}
-	for len(node.Down) != 0 {
-		node = node.Down[node.PreferredChild]
-		preferred = append(preferred, node.Index)
+	var preferred []int = nil
+	if (t >= CurrentAndPreferred) {
+		node := s.Root
+		preferred = []int{node.Index}
+		for len(node.Down) != 0 {
+			node = node.Down[node.PreferredChild]
+			preferred = append(preferred, node.Index)
+		}
 	}
 
 	return &TreeJSON {

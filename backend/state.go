@@ -19,14 +19,6 @@ import (
 
 const Letters = "ABCDEFGHIJKLNMOPQRSTUVWXYZ"
 
-type ExplorerType int
-
-const (
-	CurrentOnly ExplorerType = iota
-	CurrentAndPreferred
-	Full
-)
-
 type Settings struct {
 	Buffer   int64
 	Size     int
@@ -681,19 +673,12 @@ func (s *State) GenerateComments() []string {
 	return cmts
 }
 
-func (s *State) GenerateFullFrame(init bool) *Frame {
+func (s *State) GenerateFullFrame(t TreeJSONType) *Frame {
 	frame := s.Board.CurrentFrame()
 	frame.Marks = s.GenerateMarks()
-	//frame.Explorer = s.Root.FillGrid(s.Current.Index)
-	//if !init {
-	//	frame.Explorer.Nodes = nil
-	//	frame.Explorer.Edges = nil
-	//}
-	//s.Explorer = frame.Explorer
-
 	frame.Metadata = s.GenerateMetadata()
 	frame.Comments = s.GenerateComments()
-	frame.TreeJSON = s.CreateTreeJSON()
+	frame.TreeJSON = s.CreateTreeJSON(t)
 	return frame
 }
 

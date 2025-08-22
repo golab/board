@@ -100,7 +100,7 @@ func (r *Room) UploadSGF(sgf string) *EventJSON {
 	r.State = state
 
 	// replace evt with initdata
-	frame := r.State.GenerateFullFrame(true)
+	frame := r.State.GenerateFullFrame(Full)
 	return FrameJSON(frame)
 }
 

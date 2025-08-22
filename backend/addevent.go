@@ -43,9 +43,7 @@ func (s *State) HandleAddStone(evt *EventJSON) (*Frame, error) {
 
 	marks := s.GenerateMarks()
 
-	explorer := s.Root.FillGrid(s.Current.Index)
-	s.Explorer = explorer
-	return &Frame{DiffFrame, diff, marks, nil, nil, s.CreateTreeJSON()}, nil
+	return &Frame{DiffFrame, diff, marks, nil, nil, s.CreateTreeJSON(Full)}, nil
 }
 
 func (s *State) HandlePass(evt *EventJSON) (*Frame, error) {
@@ -58,9 +56,7 @@ func (s *State) HandlePass(evt *EventJSON) (*Frame, error) {
 	fields[key] = []string{""}
 	s.AddPassNode(Color(evt.Color), fields, -1)
 
-	explorer := s.Root.FillGrid(s.Current.Index)
-	s.Explorer = explorer
-	return &Frame{DiffFrame, nil, nil, nil, nil, s.CreateTreeJSON()}, nil
+	return &Frame{DiffFrame, nil, nil, nil, nil, s.CreateTreeJSON(Full)}, nil
 }
 
 
@@ -80,9 +76,7 @@ func (s *State) HandleRemoveStone(evt *EventJSON) (*Frame, error) {
 	fields["AE"] = []string{c.ToLetters()}
 	diff := s.AddFieldNode(fields, -1)
 
-	explorer := s.Root.FillGrid(s.Current.Index)
-	s.Explorer = explorer
-	return &Frame{DiffFrame, diff, nil, nil, nil, s.CreateTreeJSON()}, nil
+	return &Frame{DiffFrame, diff, nil, nil, nil, s.CreateTreeJSON(Full)}, nil
 }
 
 func (s *State) HandleAddTriangle(evt *EventJSON) (*Frame, error) {
@@ -181,68 +175,49 @@ func (s *State) HandleRemoveMark(evt *EventJSON) (*Frame, error) {
 func (s *State) HandleLeft() (*Frame, error) {
 	diff := s.Left()
 	marks := s.GenerateMarks()
-
-	// make an empty explorer
-	explorer := &Explorer{}
-	explorer.Current = s.Explorer.Left()
-
 	comments := s.GenerateComments()
-	return &Frame{DiffFrame, diff, marks, comments, nil, s.CreateTreeJSON()}, nil
+	return &Frame{DiffFrame, diff, marks, comments, nil, s.CreateTreeJSON(CurrentOnly)}, nil
 }
 
 func (s *State) HandleRight() (*Frame, error) {
 	diff := s.Right()
 	marks := s.GenerateMarks()
-
-	// make an empty explorer
-	explorer := &Explorer{}
-	explorer.Current = s.Explorer.Right()
-
 	comments := s.GenerateComments()
 
-	return &Frame{DiffFrame, diff, marks, comments, nil, s.CreateTreeJSON()}, nil
+	return &Frame{DiffFrame, diff, marks, comments, nil, s.CreateTreeJSON(CurrentOnly)}, nil
 }
 
 func (s *State) HandleUp() (*Frame, error) {
 	s.Up()
-	explorer := s.Root.FillGrid(s.Current.Index)
-	explorer.Nodes = nil
-	explorer.Edges = nil
-
 	// for the current mark
 	marks := s.GenerateMarks()
-	s.Explorer = explorer
 
-	return &Frame{DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON()}, nil
+	return &Frame{DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(CurrentAndPreferred)}, nil
 }
 
 func (s *State) HandleDown() (*Frame, error) {
 	s.Down()
-	explorer := s.Root.FillGrid(s.Current.Index)
-	explorer.Nodes = nil
-	explorer.Edges = nil
-	s.Explorer = explorer
 
 	// for the current mark
 	marks := s.GenerateMarks()
 
-	return &Frame{DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON()}, nil
+	return &Frame{DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(CurrentAndPreferred)}, nil
 }
 
 func (s *State) HandleRewind() (*Frame, error) {
 	s.Rewind()
-	return s.GenerateFullFrame(false), nil
+	return s.GenerateFullFrame(CurrentOnly), nil
 }
 
 func (s *State) HandleFastForward() (*Frame, error) {
 	s.FastForward()
-	return s.GenerateFullFrame(false), nil
+	return s.GenerateFullFrame(CurrentOnly), nil
 }
 
 func (s *State) HandleGotoGrid(evt *EventJSON) (*Frame, error) {
 	index := int(evt.Value.(float64))
 	s.GotoIndex(index)
-	return s.GenerateFullFrame(false), nil
+	return s.GenerateFullFrame(CurrentAndPreferred), nil
 }
 
 func (s *State) HandleGotoCoord(evt *EventJSON) (*Frame, error) {
@@ -256,7 +231,7 @@ func (s *State) HandleGotoCoord(evt *EventJSON) (*Frame, error) {
 	x := coords[0]
 	y := coords[1]
 	s.GotoCoord(x, y)
-	return s.GenerateFullFrame(false), nil
+	return s.GenerateFullFrame(CurrentAndPreferred), nil
 
 }
 
@@ -300,10 +275,8 @@ func (s *State) HandleErasePen() (*Frame, error) {
 func (s *State) HandleCut(evt *EventJSON) (*Frame, error) {
 	diff := s.Cut()
 	marks := s.GenerateMarks()
-	explorer := s.Root.FillGrid(s.Current.Index)
 	comments := s.GenerateComments()
-	s.Explorer = explorer
-	return &Frame{DiffFrame, diff, marks, comments, nil, s.CreateTreeJSON()}, nil
+	return &Frame{DiffFrame, diff, marks, comments, nil, s.CreateTreeJSON(Full)}, nil
 }
 
 func (s *State) HandleCopy() (*Frame, error) {
@@ -332,8 +305,6 @@ func (s *State) HandleClipboard() (*Frame, error) {
 	// set the current node to be the parent of the clipboard branch
 	clipboard.Up = s.Current
 
-	explorer := s.Root.FillGrid(s.Current.Index)
-	s.Explorer = explorer
 	marks := s.GenerateMarks()
-	return &Frame{DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON()}, nil
+	return &Frame{DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(Full)}, nil
 }
