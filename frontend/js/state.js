@@ -700,7 +700,7 @@ class State {
         if (frame.tree != null) {
             // save it
             if (frame.tree.nodes != null) {
-                if (frame.tree.up != 0) {
+                if (frame.tree.root != 0) {
                     // this is the node to attach onto
                     let up = frame.tree.up;
                     let graft = this.tree_graphics.nodes[up];
