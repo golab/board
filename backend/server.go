@@ -314,7 +314,7 @@ func (room *Room) NewConnection(ws *websocket.Conn, first bool) string {
 
 	// send initial state if it's not the first connection
 	if !first {
-		frame := room.State.GenerateFullFrame(true)
+		frame := room.State.GenerateFullFrame(Full)
 		evt := FrameJSON(frame)
 		SendEvent(ws, evt)
 	}

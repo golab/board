@@ -87,6 +87,7 @@ type State struct {
 	Size        int
 	Board       *Board
 	Clipboard	*TreeNode
+	Explorer 	*Explorer
 }
 
 func (s *State) Prefs() string {
@@ -672,21 +673,43 @@ func (s *State) GenerateComments() []string {
 	return cmts
 }
 
-func (s *State) GenerateFullFrame(init bool) *Frame {
+func (s *State) GenerateFullFrame(t TreeJSONType) *Frame {
 	frame := s.Board.CurrentFrame()
 	frame.Marks = s.GenerateMarks()
-	frame.Explorer = s.Root.FillGrid(s.Current.Index)
-	if !init {
-		frame.Explorer.Nodes = nil
-		frame.Explorer.Edges = nil
-	}
-
 	frame.Metadata = s.GenerateMetadata()
 	frame.Comments = s.GenerateComments()
+	frame.TreeJSON = s.CreateTreeJSON(t)
 	return frame
-
 }
 
+
+// full frame or diff frame
+// explorer:
+//	- change current
+//	- change preferred path
+//	- change tree
+
+
+/*
+func (s *State) GenerateFrame(t ExplorerType, f FrameType, d *Diff) *Frame {
+	marks := s.GenerateMarks()
+	comments := s.GenerateMetadata()
+	metadata := s.GenerateMetadata()
+
+	switch t {
+	case CurrentOnly:
+		explorer := &Explorer{}
+		explorer.Current = s.Explorer.Current.Coord
+
+	case CurrentAndPreferred:
+
+
+	case Full:
+	}
+}
+*/
+
+// see addevent.go
 func (s *State) AddEvent(evt *EventJSON) (*Frame, error) {
 	switch evt.Event {
 	case "add_stone":
@@ -886,5 +909,5 @@ func NewState(size int, initRoot bool) *State {
 	board := NewBoard(size)
 	// default input buffer of 250
 	// default room timeout of 86400
-	return &State{root, root, root, nodes, index, 250, 86400, size, board, nil}
+	return &State{root, root, root, nodes, index, 250, 86400, size, board, nil, nil}
 }
