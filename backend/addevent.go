@@ -43,7 +43,7 @@ func (s *State) HandleAddStone(evt *EventJSON) (*Frame, error) {
 
 	marks := s.GenerateMarks()
 
-	return &Frame{DiffFrame, diff, marks, nil, nil, s.CreateTreeJSON(Full)}, nil
+	return &Frame{DiffFrame, diff, marks, nil, nil, s.CreateTreeJSON(PartialNodes)}, nil
 }
 
 func (s *State) HandlePass(evt *EventJSON) (*Frame, error) {
@@ -56,7 +56,7 @@ func (s *State) HandlePass(evt *EventJSON) (*Frame, error) {
 	fields[key] = []string{""}
 	s.AddPassNode(Color(evt.Color), fields, -1)
 
-	return &Frame{DiffFrame, nil, nil, nil, nil, s.CreateTreeJSON(Full)}, nil
+	return &Frame{DiffFrame, nil, nil, nil, nil, s.CreateTreeJSON(PartialNodes)}, nil
 }
 
 
@@ -76,7 +76,7 @@ func (s *State) HandleRemoveStone(evt *EventJSON) (*Frame, error) {
 	fields["AE"] = []string{c.ToLetters()}
 	diff := s.AddFieldNode(fields, -1)
 
-	return &Frame{DiffFrame, diff, nil, nil, nil, s.CreateTreeJSON(Full)}, nil
+	return &Frame{DiffFrame, diff, nil, nil, nil, s.CreateTreeJSON(PartialNodes)}, nil
 }
 
 func (s *State) HandleAddTriangle(evt *EventJSON) (*Frame, error) {

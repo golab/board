@@ -700,7 +700,19 @@ class State {
         if (frame.tree != null) {
             // save it
             if (frame.tree.nodes != null) {
-                this.tree_graphics.nodes = frame.tree.nodes;
+                if (frame.tree.up != 0) {
+                    // this is the node to attach onto
+                    let up = frame.tree.up;
+                    let graft = this.tree_graphics.nodes[up];
+                    // graft it on
+                    graft.down.push(frame.tree.root);
+                    for (let index in frame.tree.nodes) {
+                        let node = frame.tree.nodes[index];
+                        this.tree_graphics.nodes[index] = node;
+                    }
+                } else {
+                    this.tree_graphics.nodes = frame.tree.nodes;
+                }
             }
  
             this.tree_graphics.handle_tree(frame.tree);

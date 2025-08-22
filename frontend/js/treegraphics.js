@@ -193,6 +193,7 @@ class TreeGraphics {
     handle_tree(tree) {
 
         if (tree.nodes != null) {
+            // use this.nodes instead of tree.nodes
             let max_x = 0;
             let max_y = 0;
 
@@ -201,8 +202,8 @@ class TreeGraphics {
             // edges
             let edges = [];
             for (let [index, c1] of this.node_map) {
-                let node = tree.nodes[index];
-                let p = tree.nodes[node.up];
+                let node = this.nodes[index];
+                let p = this.nodes[node.up];
                 if (p == null) {
                     continue
                 }
@@ -273,6 +274,8 @@ class TreeGraphics {
             this.grid = grid;
         }
 
+        // current
+        
         if (tree.current != null) {
             let cur = this.node_map.get(tree.current);
             this.current = cur;
@@ -344,14 +347,15 @@ class TreeGraphics {
 
     }
 
+    // still some work to clean this up
     fill_grid(tree) {
         // set parents and edges
-        for (let index in tree.nodes) {
+        for (let index in this.nodes) {
             let i = parseInt(index);
-            tree.nodes[index].index = i;
-            let node = tree.nodes[index];
+            this.nodes[index].index = i;
+            let node = this.nodes[index];
             for (let d of node.down) {
-                tree.nodes[d].up = i;
+                this.nodes[d].up = i;
             }
         }
 
@@ -369,7 +373,7 @@ class TreeGraphics {
         // thus we should always be able to calculate your place
         // in the grid
 
-        let root = tree.nodes["0"];
+        let root = this.nodes["0"];
         let stack = [root];
         let x = 0;
         let y = 0;
@@ -443,7 +447,7 @@ class TreeGraphics {
             // push on children in reverse order
             for (let i=cur.down.length-1; i >=0; i--) {
                 stack.push("<")
-                let child = tree.nodes[cur.down[i]];
+                let child = this.nodes[cur.down[i]];
                 stack.push(child);
             }
         }
