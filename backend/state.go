@@ -40,6 +40,9 @@ func (c *Coord) ToLetters() string {
 }
 
 func (c *Coord) Equal(other *Coord) bool {
+	if c == nil || other == nil {
+		return false
+	}
 	return c.X == other.X && c.Y == other.Y
 }
 

@@ -27,6 +27,13 @@ func (s *State) HandleAddStone(evt *EventJSON) (*Frame, error) {
 
 	col := Color(evt.Color)
 
+	// if a child already exists with that coord and col, then actually
+	// this is just a gotoindex operation
+	if child, ok := s.Current.HasChild(c, col); ok {
+		s.GotoIndex(child)
+		return s.GenerateFullFrame(CurrentAndPreferred), nil
+	}
+
 	// do nothing on a suicide move
 	if !s.Board.Legal(c, col) {
 		return nil, nil

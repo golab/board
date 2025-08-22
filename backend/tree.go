@@ -62,6 +62,15 @@ func (n *TreeNode) SetParent(up *TreeNode) {
 	n.Depth = up.Depth + 1
 }
 
+func (n *TreeNode) HasChild(coord *Coord, col Color) (int, bool) {
+	for _, node := range n.Down {
+		if node.XY.Equal(coord) {
+			return node.Index, true
+		}
+	}
+	return 0, false
+}
+
 func (n *TreeNode) Copy() *TreeNode {
 	// copy fields
 	fields := make(map[string][]string)
@@ -208,6 +217,7 @@ func (s *State) CreateTreeJSON(t TreeJSONType) *TreeJSON {
 	}
 }
 
+/*
 func (n *TreeNode) FillGrid(currentIndex int) *Explorer {
 	stack := []interface{}{n}
 	x := 0
@@ -373,6 +383,7 @@ func (n *TreeNode) FillGrid(currentIndex int) *Explorer {
 		currentNode,
 	}
 }
+*/
 
 type GridNode struct {
 	Coord *Coord `json:"coord"`
