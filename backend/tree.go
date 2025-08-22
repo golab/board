@@ -133,6 +133,7 @@ type TreeJSONType int
 const (
 	CurrentOnly TreeJSONType = iota
 	CurrentAndPreferred
+	PartialNodes
 	Full
 )
 
@@ -147,14 +148,31 @@ type TreeJSON struct {
 	Current int `json:"current"`
 	Preferred []int `json:"preferred"`
 	Depth int `json:"depth"`
+	Up int `json:"up"`
+	Root int `json:"root"`
 }
 
 func (s *State) CreateTreeJSON(t TreeJSONType) *TreeJSON {
+	// only really used when we have a partial tree
+	up := 0
+	root := 0
+
 	// nodes
 	var nodes map[int]*NodeJSON
 
-	if (t == Full) {
+	if t >= PartialNodes {
 		nodes = make(map[int]*NodeJSON)
+		var start *TreeNode
+		// we can choose to send the full or just a partial tree
+		// based on which node we start on
+
+		if t == PartialNodes {
+			start = s.Current
+			up = start.Up.Index
+			root = start.Index
+		} else if t == Full {
+			start = s.Root
+		}
 		Fmap(func(n *TreeNode){
 			down := []int{}
 			for _, c := range n.Down {
@@ -166,12 +184,12 @@ func (s *State) CreateTreeJSON(t TreeJSONType) *TreeJSON {
 				Depth: n.Depth,
 			}
 
-		}, s.Root)
+		}, start)
 	}
 
 	// preferred
 	var preferred []int = nil
-	if (t >= CurrentAndPreferred) {
+	if t >= CurrentAndPreferred {
 		node := s.Root
 		preferred = []int{node.Index}
 		for len(node.Down) != 0 {
@@ -185,6 +203,8 @@ func (s *State) CreateTreeJSON(t TreeJSONType) *TreeJSON {
 		Current: s.Current.Index,
 		Preferred: preferred,
 		Depth: s.Root.MaxDepth(),
+		Up: up,
+		Root: root,
 	}
 }
 
