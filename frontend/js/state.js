@@ -692,10 +692,18 @@ class State {
         }
 
         if (frame.explorer != null) {
-            this.tree_graphics._update(frame.explorer);
-            this.set_move_number(frame.explorer.current.x);
-            this.update_color(frame.explorer.current_color);
+            //this.tree_graphics._update(frame.explorer);
+            //this.set_move_number(frame.explorer.current.x);
+            //this.update_color(frame.explorer.current_color);
         }
+
+        if (frame.tree != null) {
+            let [move_number, current_color] = this.tree_graphics.handle_tree(frame.tree);
+            this.set_move_number(move_number);
+            this.update_color(current_color);
+
+        }
+    
         this.tree_graphics.set_scroll();
         this.tree_graphics.render();
 

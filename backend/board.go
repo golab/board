@@ -45,9 +45,9 @@ type Frame struct {
 	Type     FrameType `json:"type"`
 	Diff     *Diff     `json:"diff"`
 	Marks    *Marks    `json:"marks"`
-	Explorer *Explorer `json:"explorer"`
 	Comments []string  `json:"comments"`
 	Metadata *Metadata `json:"metadata"`
+	TreeJSON *TreeJSON `json:"tree"`
 }
 
 type Marks struct {

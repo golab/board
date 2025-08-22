@@ -187,6 +187,285 @@ class TreeGraphics {
         return -1;
     }
 
+
+    handle_tree(tree) {
+
+        let max_x = 0;
+        let max_y = 0;
+
+        let [g, loc] = this.fill_grid(tree);
+
+        // edges
+        let edges = [];
+        for (let [index, c1] of loc) {
+            let node = tree.nodes[index];
+            let p = tree.nodes[node.up];
+            if (p == null) {
+                continue
+            }
+            let c0 = loc.get(node.up);
+
+            let start = new Object();
+            let end = new Object();
+
+            start.x = c0[0];
+            start.y = c0[1];
+            end.x = c1[0];
+            end.y = c1[1];
+
+            if (end.y - start.y > 1) {
+                let mid = new Object();
+                mid.x = start.x;
+                mid.y = end.y - 1;
+                let edge1 = new Object();
+                edge1.start = start;
+                edge1.end = mid;
+                edges.push(edge1);
+                let edge2 = new Object();
+                edge2.start = mid;
+                edge2.end = end;
+                edges.push(edge2);
+            } else {
+                let edge = new Object();
+                edge.start = start;
+                edge.end = end;
+                edges.push(edge);
+            }
+        }
+        this.edges = edges;
+
+
+        // nodes
+        let grid = new Map();
+
+        for (let y = 0; y < g.length; y++) {
+            
+            let row = g[y];
+
+            for (let x = 0; x < row.length; x++) {
+                let entry = g[y][x];
+                if (entry != 0 && entry != 1 && entry != null) {
+                    if (!grid.has(y)) {
+                        grid.set(y, new Map());
+                    }
+                    let node = new Object();
+                    let coord = new Object();
+                    coord.x = x;
+                    coord.y = y;
+                    node.coord = coord
+                    node.color = entry.color;
+                    node.index = entry.index;
+                    grid.get(y).set(x, node);
+
+                    if (coord.x > max_x) {
+                        max_x = coord.x;
+                    }
+                    if (coord.y > max_y) {
+                        max_y = coord.y;
+                    }
+                }
+            }
+        }
+
+        let move_number = 0;
+        let current_color = 0;
+        if (tree.current != null) {
+            let cur = loc.get(tree.current);
+            this.current = cur;
+            move_number = cur[0];
+            current_color = cur.color;
+        }
+
+        this.set_dims_all(max_x+1, max_y+1);
+        this.grid = grid;
+
+        /*
+        for (let node of explorer.nodes) {
+            let coord = node.coord;
+            if (coord.x > max_x) {
+                max_x = coord.x;
+            }
+            if (coord.y > max_y) {
+                max_y = coord.y;
+            }
+
+            if (!grid.has(coord.y)) {
+                grid.set(coord.y, new Map());
+            }
+            grid.get(coord.y).set(coord.x, node);
+        }
+
+        //this.edges = explorer.edges;
+        //this.set_dims_all(max_x+1, max_y+1);
+        //*/
+        
+        // preferred nodes and edges
+        let preferred_edges = [];
+        let preferred = new Map();
+        for (let i of tree.preferred) {
+            // preferred node
+            let node = tree.nodes[i];
+            let c1 = loc.get(i);
+            let [x,y] = c1;
+
+            let coord = new Object();
+            coord.x = x;
+            coord.y = y;
+
+            node.coord = coord;
+            if (!preferred.has(y)) {
+                preferred.set(y, new Map());
+            }
+            preferred.get(y).set(x, node);
+
+            // preferred edge
+            let p = tree.nodes[node.up];
+            if (p == null) {
+                continue
+            }
+            let c0 = loc.get(node.up);
+
+            let start = new Object();
+            let end = new Object();
+
+            start.x = c0[0];
+            start.y = c0[1];
+            end.x = c1[0];
+            end.y = c1[1];
+
+            if (end.y - start.y > 1) {
+                let mid = new Object();
+                mid.x = start.x;
+                mid.y = end.y - 1;
+                let edge1 = new Object();
+                edge1.start = start;
+                edge1.end = mid;
+                preferred_edges.push(edge1);
+                let edge2 = new Object();
+                edge2.start = mid;
+                edge2.end = end;
+                preferred_edges.push(edge2);
+            } else {
+                let edge = new Object();
+                edge.start = start;
+                edge.end = end;
+                preferred_edges.push(edge);
+            }
+
+
+        }
+        this.preferred_grid = preferred;
+        this.preferred_edges = preferred_edges;
+        return [move_number, current_color];
+
+    }
+
+    fill_grid(tree) {
+        // set parents and edges
+        for (let index in tree.nodes) {
+            let i = parseInt(index);
+            tree.nodes[index].index = i;
+            let node = tree.nodes[index];
+            for (let d of node.down) {
+                tree.nodes[d].up = i;
+            }
+        }
+
+        // there is a 2d "grid" that every move will exist on
+        let row = new Array(tree.depth+1).fill(0);
+        let grid = [];
+        grid.push(row);
+        
+        //let grid = new Map();
+        let nodes = []
+
+        // we'll also keep track of placements in the grid with a map
+        let loc = new Map();
+
+        // thus we should always be able to calculate your place
+        // in the grid
+
+        let root = tree.nodes["0"];
+        let stack = [root];
+        let x = 0;
+        let y = 0;
+        while (stack.length > 0) {
+            let cur = stack.pop();
+            if (typeof cur == "string") {
+                if (cur == "<") {
+                    x--;
+                }
+                continue;
+            }
+            // y is the row
+            // start with the last row
+            y = grid.length - 1;
+
+            if (grid[y][x] != 0) {
+                // if there's something in the last row (in the x coord)
+                // add a new row
+                grid.push(new Array(tree.depth+1).fill(0));
+                y++;
+            } else {
+                while (true) {
+                    if (y == 0) {
+                        break;
+                    }
+
+                    // look at the parent
+                    let p = cur.up;
+                    if (p != null) {
+                        let [x1, y1] = loc.get(p);
+                        // actually, don't go any farther than the 
+                        // diagonal connecting the parent
+                        if (x-y >= x1-y1) {
+                            break;
+                        }
+                        // don't go any farther than the parent row
+                        if (y == y1) {
+                            break;
+                        }
+
+                    }
+
+                    // i want to find the earliest row
+                    // (before going past the parent)
+                    // that is empty
+                    if (grid[y][x] == 0 && grid[y-1][x] != 0) {
+                        break;
+                    }
+                    y--;
+                }
+            }
+
+            grid[y][x] = cur;
+            loc.set(cur.index, [x,y]);
+
+            // if the parent is a diagonal away, we have to take up
+            // another node
+            // (this is for all the "angled" edges)
+            let p = cur.up;
+            if (p != null) {
+                let [x1, y1] = loc.get(p);
+                if (y - y1 > 1) {
+                    if (grid[y-1][x-1] == 0) {
+                        grid[y-1][x-1] = 1;
+                    }
+                }
+            }
+
+            x ++;
+
+            // push on children in reverse order
+            for (let i=cur.down.length-1; i >=0; i--) {
+                stack.push("<")
+                let child = tree.nodes[cur.down[i]];
+                stack.push(child);
+            }
+        }
+        return [grid, loc];
+    }
+
     visible(grid, edges) {
         let x0 = this.container.scrollLeft;
         let x1 = x0 + this.container.offsetWidth;
@@ -284,6 +563,7 @@ class TreeGraphics {
             }
         }
         */
+
 
         this._draw_stones(render_nodes);
         this._draw_lines(render_edges);

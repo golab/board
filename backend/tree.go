@@ -41,6 +41,7 @@ type TreeNode struct {
 	PreferredChild int
 	Fields         map[string][]string
 	Diff           *Diff
+	Depth		   int
 }
 
 func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields map[string][]string) *TreeNode {
@@ -48,7 +49,17 @@ func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields map[st
 		fields = make(map[string][]string)
 	}
 	down := []*TreeNode{}
-	return &TreeNode{coord, col, down, up, index, 0, fields, nil}
+	node := &TreeNode{coord, col, down, nil, index, 0, fields, nil, 0}
+	if up != nil {
+		node.SetParent(up)
+	}
+	return node
+}
+
+// SetParent exists to add the depth attribute
+func (n *TreeNode) SetParent(up *TreeNode) {
+	n.Up = up
+	n.Depth = up.Depth + 1
 }
 
 func (n *TreeNode) Copy() *TreeNode {
@@ -72,7 +83,7 @@ func (n *TreeNode) Copy() *TreeNode {
 	down := []*TreeNode{}
 	for _, d := range n.Down {
 		e := d.Copy()
-		e.Up = m
+		e.SetParent(m)
 		down = append(down, e)
 	}
 
@@ -80,6 +91,16 @@ func (n *TreeNode) Copy() *TreeNode {
 	m.Diff = n.Diff.Copy()
 
 	return m
+}
+
+func (n *TreeNode) MaxDepth() int {
+	depth := 0
+	Fmap(func(m *TreeNode) {
+		if m.Depth > depth {
+			depth = m.Depth
+		}
+	}, n)
+	return depth
 }
 
 func (n *TreeNode) AddField(key, value string) {
@@ -105,6 +126,50 @@ func (n *TreeNode) RemoveField(key, value string) {
 	n.Fields[key] = append(n.Fields[key][:index], n.Fields[key][index+1:]...)
 	if len(n.Fields[key]) == 0 {
 		delete(n.Fields, key)
+	}
+}
+
+
+type NodeJSON struct {
+	Color Color `json:"color"`
+	Down []int `json:"down"`
+}
+
+type TreeJSON struct {
+	Nodes map[int]*NodeJSON `json:"nodes"`
+	Current int `json:"current"`
+	Preferred []int `json:"preferred"`
+	Depth int `json:"depth"`
+}
+
+func (s *State) CreateTreeJSON() *TreeJSON {
+	// nodes
+	nodes := make(map[int]*NodeJSON)
+	Fmap(func(n *TreeNode){
+		down := []int{}
+		for _, c := range n.Down {
+			down = append(down, c.Index)
+		}
+		nodes[n.Index] = &NodeJSON {
+			Color: n.Color,
+			Down: down,
+		}
+
+	}, s.Root)
+
+	// preferred
+	node := s.Root
+	preferred := []int{node.Index}
+	for len(node.Down) != 0 {
+		node = node.Down[node.PreferredChild]
+		preferred = append(preferred, node.Index)
+	}
+
+	return &TreeJSON {
+		Nodes: nodes,
+		Current: s.Current.Index,
+		Preferred: preferred,
+		Depth: s.Root.MaxDepth(),
 	}
 }
 

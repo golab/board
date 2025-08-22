@@ -684,15 +684,16 @@ func (s *State) GenerateComments() []string {
 func (s *State) GenerateFullFrame(init bool) *Frame {
 	frame := s.Board.CurrentFrame()
 	frame.Marks = s.GenerateMarks()
-	frame.Explorer = s.Root.FillGrid(s.Current.Index)
-	if !init {
-		frame.Explorer.Nodes = nil
-		frame.Explorer.Edges = nil
-	}
-	s.Explorer = frame.Explorer
+	//frame.Explorer = s.Root.FillGrid(s.Current.Index)
+	//if !init {
+	//	frame.Explorer.Nodes = nil
+	//	frame.Explorer.Edges = nil
+	//}
+	//s.Explorer = frame.Explorer
 
 	frame.Metadata = s.GenerateMetadata()
 	frame.Comments = s.GenerateComments()
+	frame.TreeJSON = s.CreateTreeJSON()
 	return frame
 }
 
@@ -722,6 +723,8 @@ func (s *State) GenerateFrame(t ExplorerType, f FrameType, d *Diff) *Frame {
 	}
 }
 */
+
+// see addevent.go
 func (s *State) AddEvent(evt *EventJSON) (*Frame, error) {
 	switch evt.Event {
 	case "add_stone":
