@@ -267,6 +267,15 @@ class BoardGraphics {
 
         this.bgcolor = hex_color;
 
+        let img = document.createElementNS(this.svgns, "image");
+        img.setAttributeNS(null, "href", "/static/board_light.svg");
+        img.setAttributeNS(null, "width", this.width+this.pad*2);
+        img.setAttributeNS(null, "height", this.width+this.pad*2);
+        img.setAttributeNS(null, "x", 0);
+        img.setAttributeNS(null, "y", 0);
+        svg.appendChild(img);
+
+
         // very low on the priority list for fixing some day
         this.clear_marks();
     }
