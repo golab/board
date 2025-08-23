@@ -148,6 +148,9 @@ type StoneSet struct {
 }
 
 func (s *StoneSet) Copy() *StoneSet {
+	if s == nil {
+		return nil
+	}
 	coords := []*Coord{}
 	for _, c := range s.Coords {
 		coords = append(coords, c.Copy())
@@ -176,6 +179,9 @@ func NewDiff(add, remove []*StoneSet) *Diff {
 }
 
 func (d *Diff) Copy() *Diff {
+	if d == nil {
+		return nil
+	}
 	add := []*StoneSet{}
 	remove := []*StoneSet{}
 	for _, a := range d.Add {

@@ -47,6 +47,9 @@ func (c *Coord) Equal(other *Coord) bool {
 }
 
 func (c *Coord) Copy() *Coord {
+	if c == nil {
+		return nil
+	}
 	return &Coord{c.X, c.Y}
 }
 
