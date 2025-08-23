@@ -62,6 +62,16 @@ func (n *TreeNode) SetParent(up *TreeNode) {
 	n.Depth = up.Depth + 1
 }
 
+// RecomputeDepth is used when grafting, to make sure the depth is set
+// correctly for all lower nodes
+func (n *TreeNode) RecomputeDepth() {
+	Fmap(func(m *TreeNode) {
+		if m.Up != nil {
+			m.Depth = m.Up.Depth + 1
+		}
+	}, n)
+}
+
 func (n *TreeNode) HasChild(coord *Coord, col Color) (int, bool) {
 	for _, node := range n.Down {
 		if node.XY.Equal(coord) {

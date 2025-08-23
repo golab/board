@@ -310,7 +310,11 @@ func (s *State) HandleClipboard() (*Frame, error) {
 	s.Current.Down = append(s.Current.Down, clipboard)
 
 	// set the current node to be the parent of the clipboard branch
-	clipboard.Up = s.Current
+	// this also sets the depth appropriately
+	clipboard.SetParent(s.Current)
+
+	// adusts the depth of all the lower nodes
+	clipboard.RecomputeDepth()
 
 	marks := s.GenerateMarks()
 	return &Frame{DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(Full)}, nil
