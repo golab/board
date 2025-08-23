@@ -13,7 +13,8 @@ then
     rm build/backend
     go build -C backend -o ../build/
     ./build/backend
-else
+elif [[ "$1" == "all" ]]
+then
     rm build/*
     go build -C frontend -o ../build/
     go build -C backend -o ../build/

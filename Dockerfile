@@ -17,4 +17,4 @@ EXPOSE 9000
 
 ADD run.sh /root
 WORKDIR /root
-CMD ["bash", "/root/run.sh"]
+CMD ["bash", "/root/run.sh", "all"]

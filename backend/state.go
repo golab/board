@@ -93,7 +93,6 @@ type State struct {
 	Size        int
 	Board       *Board
 	Clipboard   *TreeNode
-	Explorer    *Explorer
 }
 
 func (s *State) Prefs() string {
@@ -687,31 +686,6 @@ func (s *State) GenerateFullFrame(t TreeJSONType) *Frame {
 	return frame
 }
 
-// full frame or diff frame
-// explorer:
-//	- change current
-//	- change preferred path
-//	- change tree
-
-/*
-func (s *State) GenerateFrame(t ExplorerType, f FrameType, d *Diff) *Frame {
-	marks := s.GenerateMarks()
-	comments := s.GenerateMetadata()
-	metadata := s.GenerateMetadata()
-
-	switch t {
-	case CurrentOnly:
-		explorer := &Explorer{}
-		explorer.Current = s.Explorer.Current.Coord
-
-	case CurrentAndPreferred:
-
-
-	case Full:
-	}
-}
-*/
-
 // see addevent.go
 func (s *State) AddEvent(evt *EventJSON) (*Frame, error) {
 	switch evt.Event {
@@ -912,5 +886,5 @@ func NewState(size int, initRoot bool) *State {
 	board := NewBoard(size)
 	// default input buffer of 250
 	// default room timeout of 86400
-	return &State{root, root, root, nodes, index, 250, 86400, size, board, nil, nil}
+	return &State{root, root, root, nodes, index, 250, 86400, size, board, nil}
 }
