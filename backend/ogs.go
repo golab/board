@@ -43,7 +43,6 @@ type Creds struct {
 	JWT  string `json:"user_jwt"`
 }
 
-
 func GetCreds() (*Creds, error) {
 	url := "https://online-go.com/api/v1/ui/config"
 	data, err := Fetch(url)
@@ -97,10 +96,10 @@ func (o *OGSConnector) Connect(gameID int, ogsType string) error {
 	payload := make(map[string]interface{})
 	payload["player_id"] = o.Creds.User.ID
 	payload["chat"] = false
-	if(ogsType == "game"){
+	if ogsType == "game" {
 		payload["game_id"] = gameID
 		return o.Send("game/connect", payload)
-	}else{
+	} else {
 		payload["review_id"] = gameID
 		return o.Send("review/connect", payload)
 	}
@@ -172,7 +171,7 @@ func (o *OGSConnector) Ping() {
 			break
 		}
 		//30 seconds seemed just a little too long was causing connection issues
-		time.Sleep(25 * time.Second) 
+		time.Sleep(25 * time.Second)
 		payload := make(map[string]interface{})
 		payload["client"] = time.Now().UnixMilli()
 		o.Send("net/ping", payload)
@@ -231,17 +230,17 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			sgf := o.GamedataToSGF(payload)
 			evt := o.Room.UploadSGF(sgf)
 			o.Room.Broadcast(evt, false)
-		} else if topic == fmt.Sprintf("review/%d/full_state",gameID) { 
+		} else if topic == fmt.Sprintf("review/%d/full_state", gameID) {
 			/*
-			nodes := arr[1].([]interface{})
-			for _, node := range nodes {
-				log.Println(node)
-			}
+				nodes := arr[1].([]interface{})
+				for _, node := range nodes {
+					log.Println(node)
+				}
 			*/
 
 			// eventually we can pull height, game_name, player names, etc
-		} else if topic == fmt.Sprintf("review/%d/r",gameID) {
-			log.Println(fmt.Sprintf("review/%d/r",gameID))
+		} else if topic == fmt.Sprintf("review/%d/r", gameID) {
+			log.Println(fmt.Sprintf("review/%d/r", gameID))
 			payload := arr[1].(map[string]interface{})
 			if _, ok := payload["m"]; !ok {
 				continue
@@ -256,21 +255,21 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 
 			for i := 0; i < len(moves); i += 2 {
 				if i+1 < len(moves) {
-					coordStr := moves[i:i+2]
+					coordStr := moves[i : i+2]
 
-					if coordStr == "!1"{
+					if coordStr == "!1" {
 						//Force next move black
 						currentColor = Black
 					} else if coordStr == "!2" {
 						//Force next move white
 						currentColor = White
-					} else if coordStr == ".."{
+					} else if coordStr == ".." {
 						//Pass
-						movesArr = append(movesArr, &PatternMove{nil,currentColor})
+						movesArr = append(movesArr, &PatternMove{nil, currentColor})
 						currentColor = Opposite(currentColor)
 					} else {
 						coord := LettersToCoord(coordStr)
-						movesArr = append(movesArr, &PatternMove{coord,currentColor})
+						movesArr = append(movesArr, &PatternMove{coord, currentColor})
 						currentColor = Opposite(currentColor)
 					}
 				}
@@ -300,12 +299,11 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 // 	log.Println(sgf)
 // 	// Still needs to put all the stones into the SGF
 
-
 // 	return sgf
 // }
 
 func (o *OGSConnector) GamedataToSGF(gamedata map[string]interface{}) string {
-	sgf := o.GameInfoToSGF(gamedata,"game")
+	sgf := o.GameInfoToSGF(gamedata, "game")
 	sgf += o.initStateToSGF(gamedata)
 
 	for index, m := range gamedata["moves"].([]interface{}) {
@@ -327,13 +325,13 @@ func (o *OGSConnector) GamedataToSGF(gamedata map[string]interface{}) string {
 
 func (o *OGSConnector) GameInfoToSGF(gamedata map[string]interface{}, ogsType string) string {
 	sgf := ""
-	
+
 	size := int(gamedata["width"].(float64))
 	komi := gamedata["komi"].(float64)
 	name := gamedata["game_name"].(string)
 	rules := gamedata["rules"].(string)
 
-	if(ogsType == "game"){
+	if ogsType == "game" {
 		black_id := int(gamedata["black_player_id"].(float64))
 		white_id := int(gamedata["white_player_id"].(float64))
 		black, err := GetUser(black_id)
@@ -347,7 +345,7 @@ func (o *OGSConnector) GameInfoToSGF(gamedata map[string]interface{}, ogsType st
 		sgf = fmt.Sprintf(
 			"(;GM[1]FF[4]CA[UTF-8]SZ[%d]PB[%s]PW[%s]RU[%s]KM[%f]GN[%s]",
 			size, black, white, rules, komi, name)
-	}else{
+	} else {
 		players := gamedata["players"].(map[string]interface{})
 		blackPlayer := players["black"].(map[string]interface{})
 		whitePlayer := players["white"].(map[string]interface{})

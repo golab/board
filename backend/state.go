@@ -92,8 +92,8 @@ type State struct {
 	Timeout     float64
 	Size        int
 	Board       *Board
-	Clipboard	*TreeNode
-	Explorer 	*Explorer
+	Clipboard   *TreeNode
+	Explorer    *Explorer
 }
 
 func (s *State) Prefs() string {
@@ -414,10 +414,9 @@ func (s *State) AddNode(coord *Coord, col Color, fields map[string][]string, ind
 }
 
 type PatternMove struct {
-    Coord *Coord  // nil for passes
-    Color Color
+	Coord *Coord // nil for passes
+	Color Color
 }
-
 
 func (s *State) AddPatternNodes(moves []*PatternMove) {
 	node := s.Root
@@ -426,18 +425,18 @@ func (s *State) AddPatternNodes(moves []*PatternMove) {
 	for _, move := range moves {
 		found := false
 
-		for _, child := range node.Down{
-			if (child.XY == nil && move.Coord == nil) || 
-               (child.XY != nil && move.Coord != nil && 
-                child.XY.X == move.Coord.X && child.XY.Y == move.Coord.Y &&
-                child.Color == move.Color) {
+		for _, child := range node.Down {
+			if (child.XY == nil && move.Coord == nil) ||
+				(child.XY != nil && move.Coord != nil &&
+					child.XY.X == move.Coord.X && child.XY.Y == move.Coord.Y &&
+					child.Color == move.Color) {
 				node = child
 				found = true
 				break
 			}
 		}
 
-		if !found{
+		if !found {
 			s.GotoIndex(node.Index)
 
 			fields := make(map[string][]string)
@@ -445,18 +444,18 @@ func (s *State) AddPatternNodes(moves []*PatternMove) {
 			if move.Color == White {
 				key = "W"
 			}
-			
+
 			if move.Coord == nil {
 				fields[key] = []string{""}
 				s.AddPassNode(move.Color, fields, -1)
 			} else {
-				fields[key] = []string{move.Coord.ToLetters()} 
+				fields[key] = []string{move.Coord.ToLetters()}
 				s.AddNode(move.Coord, move.Color, fields, -1, false)
 			}
 			node = s.Current
 		}
 	}
-	s.GotoIndex(locationSave) 
+	s.GotoIndex(locationSave)
 }
 
 func (s *State) Cut() *Diff {
@@ -688,13 +687,11 @@ func (s *State) GenerateFullFrame(t TreeJSONType) *Frame {
 	return frame
 }
 
-
 // full frame or diff frame
 // explorer:
 //	- change current
 //	- change preferred path
 //	- change tree
-
 
 /*
 func (s *State) GenerateFrame(t ExplorerType, f FrameType, d *Diff) *Frame {

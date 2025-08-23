@@ -22,7 +22,6 @@ type EventHandler func(*EventJSON) *EventJSON
 
 type Middleware func(EventHandler) EventHandler
 
-
 // handlers
 
 func (room *Room) HandleIsProtected(evt *EventJSON) *EventJSON {
@@ -101,10 +100,14 @@ func (room *Room) HandleUploadSGF(evt *EventJSON) *EventJSON {
 
 func (room *Room) HandleRequestSGF(evt *EventJSON) *EventJSON {
 	var bcast *EventJSON
-	defer func(){if bcast != nil {bcast.UserID = evt.UserID}}()
+	defer func() {
+		if bcast != nil {
+			bcast.UserID = evt.UserID
+		}
+	}()
 
 	url := evt.Value.(string)
-	
+
 	if IsOGS(url) {
 
 		connectToOGS := false
@@ -125,8 +128,8 @@ func (room *Room) HandleRequestSGF(evt *EventJSON) *EventJSON {
 				return bcast
 			}
 			connectToOGS = !ended
-		} else if ogsType == "review" || ogsType == "demo"   {
-			ogsType = "review" 
+		} else if ogsType == "review" || ogsType == "demo" {
+			ogsType = "review"
 			connectToOGS = true
 		}
 
@@ -146,10 +149,10 @@ func (room *Room) HandleRequestSGF(evt *EventJSON) *EventJSON {
 				bcast = ErrorJSON("ogs connector error")
 				return bcast
 			}
-			go o.Loop(id,ogsType)
+			go o.Loop(id, ogsType)
 			room.OGSLink = o
 
-			if(ogsType == "game"){
+			if ogsType == "game" {
 				// finish here
 				return NopJSON()
 			}

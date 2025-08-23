@@ -41,7 +41,7 @@ type TreeNode struct {
 	PreferredChild int
 	Fields         map[string][]string
 	Diff           *Diff
-	Depth		   int
+	Depth          int
 }
 
 func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields map[string][]string) *TreeNode {
@@ -149,6 +149,7 @@ func (n *TreeNode) RemoveField(key, value string) {
 }
 
 type TreeJSONType int
+
 const (
 	CurrentOnly TreeJSONType = iota
 	CurrentAndPreferred
@@ -158,17 +159,17 @@ const (
 
 type NodeJSON struct {
 	Color Color `json:"color"`
-	Down []int `json:"down"`
-	Depth int `json:"depth"`
+	Down  []int `json:"down"`
+	Depth int   `json:"depth"`
 }
 
 type TreeJSON struct {
-	Nodes map[int]*NodeJSON `json:"nodes"`
-	Current int `json:"current"`
-	Preferred []int `json:"preferred"`
-	Depth int `json:"depth"`
-	Up int `json:"up"`
-	Root int `json:"root"`
+	Nodes     map[int]*NodeJSON `json:"nodes"`
+	Current   int               `json:"current"`
+	Preferred []int             `json:"preferred"`
+	Depth     int               `json:"depth"`
+	Up        int               `json:"up"`
+	Root      int               `json:"root"`
 }
 
 func (s *State) CreateTreeJSON(t TreeJSONType) *TreeJSON {
@@ -192,14 +193,14 @@ func (s *State) CreateTreeJSON(t TreeJSONType) *TreeJSON {
 		} else if t == Full {
 			start = s.Root
 		}
-		Fmap(func(n *TreeNode){
+		Fmap(func(n *TreeNode) {
 			down := []int{}
 			for _, c := range n.Down {
 				down = append(down, c.Index)
 			}
-			nodes[n.Index] = &NodeJSON {
+			nodes[n.Index] = &NodeJSON{
 				Color: n.Color,
-				Down: down,
+				Down:  down,
 				Depth: n.Depth,
 			}
 
@@ -217,13 +218,13 @@ func (s *State) CreateTreeJSON(t TreeJSONType) *TreeJSON {
 		}
 	}
 
-	return &TreeJSON {
-		Nodes: nodes,
-		Current: s.Current.Index,
+	return &TreeJSON{
+		Nodes:     nodes,
+		Current:   s.Current.Index,
 		Preferred: preferred,
-		Depth: s.Root.MaxDepth(),
-		Up: up,
-		Root: root,
+		Depth:     s.Root.MaxDepth(),
+		Up:        up,
+		Root:      root,
 	}
 }
 
@@ -398,8 +399,8 @@ func (n *TreeNode) FillGrid(currentIndex int) *Explorer {
 type GridNode struct {
 	Coord *Coord `json:"coord"`
 	Color `json:"color"`
-	Index int `json:"index"`
-	Left *GridNode `json:"-"`
+	Index int       `json:"index"`
+	Left  *GridNode `json:"-"`
 	Right *GridNode `json:"-"`
 }
 
@@ -425,7 +426,7 @@ type Explorer struct {
 	PreferredNodes []*GridNode `json:"preferred_nodes"`
 	Current        *Coord      `json:"current"`
 	CurrentColor   Color       `json:"current_color"`
-	CurrentNode	   *GridNode   `json:"-"`
+	CurrentNode    *GridNode   `json:"-"`
 }
 
 func (e *Explorer) Left() *Coord {

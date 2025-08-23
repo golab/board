@@ -66,7 +66,6 @@ func (s *State) HandlePass(evt *EventJSON) (*Frame, error) {
 	return &Frame{DiffFrame, nil, nil, nil, nil, s.CreateTreeJSON(PartialNodes)}, nil
 }
 
-
 func (s *State) HandleRemoveStone(evt *EventJSON) (*Frame, error) {
 	c, err := InterfaceToCoord(evt.Value)
 	if err != nil {
