@@ -119,9 +119,8 @@ func (p *Parser) Parse() (*SGFNode, error) {
 			return nil, err
 		}
 		return Validate(root)
-	} else {
-		return nil, fmt.Errorf("unexpected %c", c)
 	}
+	return nil, fmt.Errorf("unexpected %c", c)
 }
 
 func (p *Parser) SkipWhitespace() {

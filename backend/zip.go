@@ -13,7 +13,7 @@ package main
 import (
 	"archive/zip"
 	"bytes"
-	"io/ioutil"
+	"io"
 )
 
 func IsZipFile(data []byte) bool {
@@ -36,7 +36,7 @@ func Decompress(data []byte) ([][]byte, error) {
 		if err != nil {
 			continue
 		}
-		fData, err := ioutil.ReadAll(rc)
+		fData, err := io.ReadAll(rc)
 		if err != nil {
 			continue
 		}

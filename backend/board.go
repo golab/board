@@ -109,7 +109,7 @@ func (cs CoordSet) Add(c *Coord) {
 
 func (cs CoordSet) String() string {
 	s := "["
-	for k, _ := range cs {
+	for k := range cs {
 		s += k
 		s += " "
 	}

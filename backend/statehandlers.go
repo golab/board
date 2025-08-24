@@ -278,7 +278,7 @@ func (s *State) HandleErasePen() (*Frame, error) {
 	return nil, nil
 }
 
-func (s *State) HandleCut(evt *EventJSON) (*Frame, error) {
+func (s *State) HandleCut() (*Frame, error) {
 	diff := s.Cut()
 	marks := s.GenerateMarks()
 	comments := s.GenerateComments()

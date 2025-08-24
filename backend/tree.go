@@ -71,7 +71,7 @@ func (n *TreeNode) RecomputeDepth() {
 
 func (n *TreeNode) HasChild(coord *Coord, col Color) (int, bool) {
 	for _, node := range n.Down {
-		if node.XY.Equal(coord) {
+		if node.XY.Equal(coord) && node.Color == col {
 			return node.Index, true
 		}
 	}
@@ -205,7 +205,7 @@ func (s *State) CreateTreeJSON(t TreeJSONType) *TreeJSON {
 	}
 
 	// preferred
-	var preferred []int = nil
+	var preferred []int
 	if t >= CurrentAndPreferred {
 		node := s.Root
 		preferred = []int{node.Index}

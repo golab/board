@@ -132,7 +132,7 @@ func (s *State) SetPreferred(index int) error {
 	cur := n
 	for {
 		if cur == nil {
-			return fmt.Errorf("Error in indexing")
+			return fmt.Errorf("error in indexing")
 		}
 		if cur.Up == nil {
 			break
@@ -646,11 +646,12 @@ func (s *State) GenerateMarks() *Marks {
 			if len(spl) != 5 {
 				continue
 			}
-			x0, err := strconv.ParseFloat(spl[0], 64)
-			y0, err := strconv.ParseFloat(spl[1], 64)
-			x1, err := strconv.ParseFloat(spl[2], 64)
-			y1, err := strconv.ParseFloat(spl[3], 64)
-			if err != nil {
+			x0, err0 := strconv.ParseFloat(spl[0], 64)
+			y0, err1 := strconv.ParseFloat(spl[1], 64)
+			x1, err2 := strconv.ParseFloat(spl[2], 64)
+			y1, err3 := strconv.ParseFloat(spl[3], 64)
+			hasErr := err0 != nil || err1 != nil || err2 != nil || err3 != nil
+			if hasErr {
 				continue
 			}
 			pen := &Pen{x0, y0, x1, y1, spl[4]}
@@ -706,7 +707,7 @@ func (s *State) AddEvent(evt *EventJSON) (*Frame, error) {
 	case "remove_mark":
 		return s.HandleRemoveMark(evt)
 	case "cut":
-		return s.HandleCut(evt)
+		return s.HandleCut()
 	case "left":
 		return s.HandleLeft()
 	case "right":
@@ -755,7 +756,7 @@ func (s *State) ToSGF(indexes bool) string {
 			if key == "IX" {
 				continue
 			}
-			result += fmt.Sprintf("%s", key)
+			result += key
 			for _, fieldValue := range multifield {
 				m := strings.ReplaceAll(fieldValue, "]", "\\]")
 				result += fmt.Sprintf("[%s]", m)
@@ -793,11 +794,11 @@ func FromSGF(data string) (*State, error) {
 
 	var size int64 = 19
 	if _, ok := root.Fields["SZ"]; ok {
-		size_field := root.Fields["SZ"]
-		if len(size_field) != 1 {
+		sizeField := root.Fields["SZ"]
+		if len(sizeField) != 1 {
 			return nil, fmt.Errorf("SZ cannot be a multifield")
 		}
-		size, err = strconv.ParseInt(size_field[0], 10, 64)
+		size, err = strconv.ParseInt(sizeField[0], 10, 64)
 		if err != nil {
 			return nil, err
 		}

@@ -45,12 +45,12 @@ func ReceiveEvent(ws *websocket.Conn) (*EventJSON, error) {
 
 func ReadPacket(ws *websocket.Conn) ([]byte, error) {
 	// read in 4 bytes (length of rest of message)
-	length_array := make([]byte, 4)
-	_, err := ws.Read(length_array)
+	lengthArray := make([]byte, 4)
+	_, err := ws.Read(lengthArray)
 	if err != nil {
 		return nil, err
 	}
-	length := binary.LittleEndian.Uint32(length_array)
+	length := binary.LittleEndian.Uint32(lengthArray)
 
 	// read in the rest of the data
 	var data []byte

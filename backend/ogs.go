@@ -99,11 +99,9 @@ func (o *OGSConnector) Connect(gameID int, ogsType string) error {
 	if ogsType == "game" {
 		payload["game_id"] = gameID
 		return o.Send("game/connect", payload)
-	} else {
-		payload["review_id"] = gameID
-		return o.Send("review/connect", payload)
 	}
-
+	payload["review_id"] = gameID
+	return o.Send("review/connect", payload)
 }
 
 func (o *OGSConnector) ChatConnect() error {
@@ -240,7 +238,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 
 			// eventually we can pull height, game_name, player names, etc
 		} else if topic == fmt.Sprintf("review/%d/r", gameID) {
-			log.Println(fmt.Sprintf("review/%d/r", gameID))
+			log.Printf("review/%d/r", gameID)
 			payload := arr[1].(map[string]interface{})
 			if _, ok := payload["m"]; !ok {
 				continue
@@ -332,13 +330,13 @@ func (o *OGSConnector) GameInfoToSGF(gamedata map[string]interface{}, ogsType st
 	rules := gamedata["rules"].(string)
 
 	if ogsType == "game" {
-		black_id := int(gamedata["black_player_id"].(float64))
-		white_id := int(gamedata["white_player_id"].(float64))
-		black, err := GetUser(black_id)
+		blackID := int(gamedata["black_player_id"].(float64))
+		whiteID := int(gamedata["white_player_id"].(float64))
+		black, err := GetUser(blackID)
 		if err != nil {
 			black = "Black"
 		}
-		white, err := GetUser(white_id)
+		white, err := GetUser(whiteID)
 		if err != nil {
 			white = "White"
 		}

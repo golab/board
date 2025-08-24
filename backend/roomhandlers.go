@@ -53,6 +53,11 @@ func HandlePing(evt *EventJSON) *EventJSON {
 
 func (room *Room) HandleUploadSGF(evt *EventJSON) *EventJSON {
 	var bcast *EventJSON
+	defer func() {
+		if bcast != nil {
+			bcast.UserID = evt.UserID
+		}
+	}()
 
 	// it might be a string
 	if str, ok := evt.Value.(string); ok {
@@ -60,6 +65,7 @@ func (room *Room) HandleUploadSGF(evt *EventJSON) *EventJSON {
 		decoded, err := base64.StdEncoding.DecodeString(str)
 		if err != nil {
 			bcast = ErrorJSON(err.Error())
+			return bcast
 		}
 		if IsZipFile(decoded) {
 			filesBytes, err := Decompress(decoded)
@@ -85,6 +91,7 @@ func (room *Room) HandleUploadSGF(evt *EventJSON) *EventJSON {
 			d, err := base64.StdEncoding.DecodeString(str)
 			if err != nil {
 				bcast = ErrorJSON(err.Error())
+				return bcast
 			}
 			sgfs = append(sgfs, string(d))
 		}
@@ -223,7 +230,7 @@ func (room *Room) HandleUpdateSettings(evt *EventJSON) *EventJSON {
 	// can be changed
 	// anyone already in the room is added
 	// person who set password automatically gets added
-	for connID, _ := range room.conns {
+	for connID := range room.conns {
 		room.auth[connID] = true
 	}
 	room.password = hashed
@@ -233,10 +240,18 @@ func (room *Room) HandleUpdateSettings(evt *EventJSON) *EventJSON {
 
 func (room *Room) HandleEvent(evt *EventJSON) *EventJSON {
 	var bcast *EventJSON
+	defer func() {
+		if bcast != nil {
+			bcast.UserID = evt.UserID
+		}
+	}()
+
 	frame, err := room.State.AddEvent(evt)
 	if err != nil {
 		bcast = ErrorJSON(err.Error())
+		return bcast
 	}
+
 	if frame != nil {
 		bcast = FrameJSON(frame)
 	} else {

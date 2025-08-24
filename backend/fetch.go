@@ -30,10 +30,10 @@ var okList = map[string]bool{
 	"raw.githubusercontent.com": true,
 }
 
-func OGSCheckEnded(ogsUrl string) (bool, error) {
-	ogsUrl = strings.Replace(ogsUrl, ".com", ".com/api/v1", 1)
-	ogsUrl = strings.Replace(ogsUrl, "game", "games", 1)
-	s, err := Fetch(ogsUrl)
+func OGSCheckEnded(ogsURL string) (bool, error) {
+	ogsURL = strings.Replace(ogsURL, ".com", ".com/api/v1", 1)
+	ogsURL = strings.Replace(ogsURL, "game", "games", 1)
+	s, err := Fetch(ogsURL)
 	if err != nil {
 		return false, err
 	}
@@ -49,21 +49,21 @@ func OGSCheckEnded(ogsUrl string) (bool, error) {
 	return resp.Ended != "" || resp.Source == "sgf", nil
 }
 
-func FetchOGS(ogsUrl string) (string, error) {
-	spl := strings.Split(ogsUrl, "/")
+func FetchOGS(ogsURL string) (string, error) {
+	spl := strings.Split(ogsURL, "/")
 	ogsType := spl[len(spl)-2]
 
 	if ogsType == "game" {
-		ogsUrl = strings.Replace(ogsUrl, ".com", ".com/api/v1", 1)
-		ogsUrl = strings.Replace(ogsUrl, "game", "games", 1)
-		ogsUrl += "/sgf"
+		ogsURL = strings.Replace(ogsURL, ".com", ".com/api/v1", 1)
+		ogsURL = strings.Replace(ogsURL, "game", "games", 1)
+		ogsURL += "/sgf"
 	} else {
-		ogsUrl = strings.Replace(ogsUrl, ".com", ".com/api/v1", 1)
-		ogsUrl = strings.Replace(ogsUrl, "review", "reviews", 1)
-		ogsUrl = strings.Replace(ogsUrl, "demo", "reviews", 1)
-		ogsUrl += "/sgf"
+		ogsURL = strings.Replace(ogsURL, ".com", ".com/api/v1", 1)
+		ogsURL = strings.Replace(ogsURL, "review", "reviews", 1)
+		ogsURL = strings.Replace(ogsURL, "demo", "reviews", 1)
+		ogsURL += "/sgf"
 	}
-	return Fetch(ogsUrl)
+	return Fetch(ogsURL)
 }
 
 func Fetch(urlStr string) (string, error) {
@@ -98,7 +98,7 @@ func ApprovedFetch(urlStr string) (string, error) {
 		return "", err
 	}
 	if _, ok := okList[u.Hostname()]; !ok {
-		return "", fmt.Errorf("Unapproved URL. Contact us to add %s", u.Hostname())
+		return "", fmt.Errorf("unapproved URL. contact us to add %s", u.Hostname())
 	}
 	if u.Hostname() == "online-go.com" {
 		return FetchOGS(urlStr)

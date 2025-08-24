@@ -42,9 +42,9 @@ func main() {
 
 	// create new websocket server
 	ws := websocket.Server{
-		cfg,
-		nil,
-		s.Handler,
+		Config:    cfg,
+		Handshake: nil,
+		Handler:   s.Handler,
 	}
 	http.Handle("/", ws)
 

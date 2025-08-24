@@ -26,10 +26,7 @@ func Hash(input string) string {
 
 func CorrectPassword(input, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(input))
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func CreateDir(dir string) bool {

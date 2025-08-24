@@ -13,7 +13,6 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -72,7 +71,7 @@ func (s *Server) Save() {
 			continue
 		}
 
-		err = ioutil.WriteFile(path, data, 0644)
+		err = os.WriteFile(path, data, 0644)
 		if err != nil {
 			log.Println(err)
 		}
@@ -89,7 +88,7 @@ func (s *Server) Load() {
 		log.Println(e)
 		id := e.Name()
 		path := filepath.Join(dir, id)
-		data, err := ioutil.ReadFile(path)
+		data, err := os.ReadFile(path)
 		if err != nil {
 			continue
 		}
@@ -118,7 +117,8 @@ func (s *Server) Load() {
 		loc := load.Loc
 		if loc != "" {
 			dirs := strings.Split(loc, ",")
-			for _ = range dirs {
+			// don't need to assign to a variable if we don't use it
+			for range dirs {
 				state.Right()
 			}
 		}
@@ -192,7 +192,7 @@ func (s *Server) ReadMessages() {
 
 		// read each file
 		path := filepath.Join(MessagePath(), file.Name())
-		data, err := ioutil.ReadFile(path)
+		data, err := os.ReadFile(path)
 		if err != nil {
 			continue
 		}
