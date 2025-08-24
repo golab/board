@@ -166,11 +166,18 @@ func page404(w http.ResponseWriter, r *http.Request) {
 
 func serveStatic(w http.ResponseWriter, r *http.Request, fname string) {
 	path := fmt.Sprintf("%s/%s", "static", fname)
+	// TODO: make sure this is locked down
+	// TODO: make sure this uses the 404 page when the file isn't found
 	http.ServeFile(w, r, path)
 }
 
 func favicon(w http.ResponseWriter, r *http.Request) {
 	serveStatic(w, r, "favicon.svg")
+}
+
+func image(w http.ResponseWriter, r *http.Request) {
+	image := chi.URLParam(r, "image")
+	serveStatic(w, r, image)
 }
 
 // socket stuff
@@ -248,6 +255,8 @@ func main() {
 	r.Get("/favicon.ico", favicon)
 	r.Post("/new", newBoard)
 	r.Get("/upload", upload)
+
+	r.Get("/static/{image}", image)
 
 	r.Get("/b/{boardID}", board)
 	r.Get("/b/{boardID}/sgf", sgf)
