@@ -1,6 +1,6 @@
 if [[ "$1" == "build" ]]
 then
-    rm build/* 2> /dev/null
+    rm build/* 2> /dev/null 2> /dev/null
     go build -C frontend -o ../build/
     go build -C backend -o ../build/
 elif [[ "$1" == "frontend" ]]

@@ -14,12 +14,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"log"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jarednogo/board/backend/loader"
 	"golang.org/x/net/websocket"
 )
 
@@ -52,13 +51,12 @@ func NewServer() *Server {
 
 func (s *Server) Save() {
 	for id, room := range s.rooms {
-		path := filepath.Join(RoomPath(), id)
-		log.Printf("Saving %s", path)
+		log.Printf("Saving %s", id)
 
 		// TODO: the term "handshake" has become obsolete
 		// as this is not the same process for client handshakes anymore
-		evt := room.State.InitData("handshake")
-		dataStruct := &LoadJSON{}
+		evt := room.State.InitData()
+		dataStruct := &loader.LoadJSON{}
 		s, _ := evt.Value.(string)
 		err := json.Unmarshal([]byte(s), dataStruct)
 		if err != nil {
@@ -66,38 +64,16 @@ func (s *Server) Save() {
 		}
 
 		dataStruct.Password = room.password
-		data, err := json.Marshal(dataStruct)
-		if err != nil {
-			continue
-		}
-
-		err = os.WriteFile(path, data, 0644)
-		if err != nil {
-			log.Println(err)
-		}
+		loader.SaveRoom(id, dataStruct)
 	}
 }
 
 func (s *Server) Load() {
-	dir := RoomPath()
-	sgfs, err := os.ReadDir(dir)
-	if err != nil {
-		return
-	}
-	for _, e := range sgfs {
-		log.Println(e)
-		id := e.Name()
-		path := filepath.Join(dir, id)
-		data, err := os.ReadFile(path)
-		if err != nil {
-			continue
-		}
+	rooms := loader.LoadAllRooms()
 
-		load := &LoadJSON{}
-		err = json.Unmarshal(data, load)
-		if err != nil {
-			continue
-		}
+	for _, load := range rooms {
+
+		id := load.ID
 
 		sgf, err := base64.StdEncoding.DecodeString(load.SGF)
 		if err != nil {
@@ -123,7 +99,7 @@ func (s *Server) Load() {
 			}
 		}
 
-		log.Printf("Loading %s", path)
+		log.Printf("Loading %s", id)
 
 		r := NewRoom()
 		r.password = load.Password
@@ -158,16 +134,7 @@ func (s *Server) Heartbeat(roomID string) {
 	// delete the room from the server map
 	delete(s.rooms, roomID)
 
-	// delete the saved file (if it exists)
-	path := filepath.Join(RoomPath(), roomID)
-	if _, err := os.Stat(path); err == nil {
-		os.Remove(path)
-	}
-}
-
-type MessageJSON struct {
-	Text string `json:"message"`
-	TTL  int    `json:"ttl"`
+	loader.DeleteRoom(roomID)
 }
 
 type Message struct {
@@ -177,36 +144,11 @@ type Message struct {
 }
 
 func (s *Server) ReadMessages() {
-	// iterate through all files in the message path
-	files, err := os.ReadDir(MessagePath())
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	// check messages
-	for _, file := range files {
-		// might do something someday with nested directories
-		if file.IsDir() {
-			continue
-		}
+	messages := loader.LoadAllMessages()
+	defer loader.DeleteAllMessages()
 
-		// read each file
-		path := filepath.Join(MessagePath(), file.Name())
-		data, err := os.ReadFile(path)
-		if err != nil {
-			continue
-		}
-
-		// convert json to struct
-		msg := &MessageJSON{}
-		err = json.Unmarshal(data, msg)
-		if err != nil {
-			continue
-		}
-
-		// remove the file
-		os.Remove(path)
-
+	for _, msg := range messages {
 		// calculate the expiration time using TTL
 		now := time.Now()
 		expiresAt := now.Add(time.Duration(msg.TTL) * time.Second)
@@ -340,7 +282,7 @@ func (s *Server) HandleOp(ws *websocket.Conn, op, roomID string) {
 		data = room.State.ToSGF(true)
 	case "debug":
 		// send debug info
-		evt := room.State.InitData("handshake")
+		evt := room.State.InitData()
 		data, _ = evt.Value.(string)
 	}
 	EncodeSend(ws, data)

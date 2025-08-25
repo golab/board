@@ -12,9 +12,6 @@ package main
 
 import (
 	"golang.org/x/crypto/bcrypt"
-	"log"
-	"os"
-	"path/filepath"
 )
 
 func Hash(input string) string {
@@ -27,59 +24,6 @@ func Hash(input string) string {
 func CorrectPassword(input, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(input))
 	return err == nil
-}
-
-func CreateDir(dir string) bool {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err := os.MkdirAll(dir, 0755)
-		if err != nil {
-			return false
-		}
-	}
-	return true
-}
-
-func Path() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		home = "."
-	}
-	roomDir := filepath.Join(home, ".config", "tripleko")
-	return roomDir
-}
-
-func Subpath(p string) string {
-	return filepath.Join(Path(), p)
-}
-
-func RoomPath() string {
-	return Subpath("rooms")
-}
-
-func MessagePath() string {
-	return Subpath("messages")
-}
-
-func Setup() {
-	roomDir := RoomPath()
-	ok := CreateDir(roomDir)
-	if !ok {
-		log.Fatal("error creating room")
-	}
-	messageDir := MessagePath()
-	ok = CreateDir(messageDir)
-	if !ok {
-		log.Fatal("error creating room")
-	}
-}
-
-type LoadJSON struct {
-	SGF       string         `json:"sgf"`
-	Loc       string         `json:"loc"`
-	Prefs     map[string]int `json:"prefs"`
-	Buffer    int64          `json:"buffer"`
-	NextIndex int            `json:"next_index"`
-	Password  string         `json:"password"`
 }
 
 type EventJSON struct {

@@ -850,13 +850,13 @@ func FromSGF(data string) (*State, error) {
 	return state, nil
 }
 
-func (s *State) InitData(event string) *EventJSON {
+func (s *State) InitData() *EventJSON {
 	sgf := s.ToSGF(true)
 	encoded := base64.StdEncoding.EncodeToString([]byte(sgf))
 	loc := s.Locate()
 	prefs := s.Prefs()
 	value := fmt.Sprintf("{\"sgf\":\"%s\", \"loc\":\"%s\", \"prefs\":%s, \"buffer\":%d, \"next_index\":%d}", encoded, loc, prefs, s.InputBuffer, s.NextIndex)
-	evt := &EventJSON{event, value, 0, ""}
+	evt := &EventJSON{"init", value, 0, ""}
 	return evt
 
 	//return []byte(fmt.Sprintf("{\"event\":\"%s\",\"value\":%s}", event, value))

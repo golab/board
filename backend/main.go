@@ -18,6 +18,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/jarednogo/board/backend/loader"
 	"golang.org/x/net/websocket"
 )
 
@@ -30,7 +31,7 @@ func Serve(url string) {
 
 func main() {
 	// create dirs
-	Setup()
+	loader.Setup()
 
 	// create empty config
 	cfg := websocket.Config{}
