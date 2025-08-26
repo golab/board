@@ -46,6 +46,9 @@ type Server struct {
 }
 
 func NewServer() *Server {
+	// get database setup
+	loader.Setup()
+
 	return &Server{
 		make(map[string]*Room),
 		[]*Message{},
