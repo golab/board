@@ -35,36 +35,45 @@ type State struct {
 	Clipboard   *core.TreeNode
 }
 
-func (s *State) Prefs() string {
-	result := "{"
-	first := true
-	stack := []*core.TreeNode{s.Root}
-	for len(stack) > 0 {
-		i := len(stack) - 1
-		cur := stack[i]
-		stack = stack[:i]
+func (s *State) Prefs() map[string]int {
+	prefs := make(map[string]int)
+	for index, node := range s.Nodes {
+		key := fmt.Sprintf("%d", index)
+		prefs[key] = node.PreferredChild
+	}
+	return prefs
 
-		c := cur.PreferredChild
-		if first {
-			result = fmt.Sprintf("%s\"%d\":%d", result, cur.Index, c)
-			first = false
-		} else {
-			result = fmt.Sprintf("%s,\"%d\":%d", result, cur.Index, c)
-		}
+	/*
+		result := "{"
+		first := true
+		stack := []*core.TreeNode{s.Root}
+		for len(stack) > 0 {
+			i := len(stack) - 1
+			cur := stack[i]
+			stack = stack[:i]
 
-		if len(cur.Down) == 1 {
-			stack = append(stack, cur.Down[0])
-		} else if len(cur.Down) > 1 {
-			// go backward through array
-			for i := len(cur.Down) - 1; i >= 0; i-- {
-				n := cur.Down[i]
-				stack = append(stack, n)
+			c := cur.PreferredChild
+			if first {
+				result = fmt.Sprintf("%s\"%d\":%d", result, cur.Index, c)
+				first = false
+			} else {
+				result = fmt.Sprintf("%s,\"%d\":%d", result, cur.Index, c)
+			}
+
+			if len(cur.Down) == 1 {
+				stack = append(stack, cur.Down[0])
+			} else if len(cur.Down) > 1 {
+				// go backward through array
+				for i := len(cur.Down) - 1; i >= 0; i-- {
+					n := cur.Down[i]
+					stack = append(stack, n)
+				}
 			}
 		}
-	}
 
-	result += "}"
-	return result
+		result += "}"
+		return result
+	*/
 }
 
 func (s *State) SetPreferred(index int) error {
@@ -785,14 +794,30 @@ func FromSGF(data string) (*State, error) {
 	return state, nil
 }
 
-func (s *State) InitData() *core.EventJSON {
+type StateJSON struct {
+	SGF       string         `json:"sgf"`
+	Location  string         `json:"loc"`
+	Prefs     map[string]int `json:"prefs"`
+	Buffer    int64          `json:"buffer"`
+	NextIndex int            `json:"next_index"`
+}
+
+func (s *State) CreateStateJSON() *StateJSON {
 	sgf := s.ToSGF(true)
 	encoded := base64.StdEncoding.EncodeToString([]byte(sgf))
 	loc := s.Locate()
 	prefs := s.Prefs()
-	value := fmt.Sprintf("{\"sgf\":\"%s\", \"loc\":\"%s\", \"prefs\":%s, \"buffer\":%d, \"next_index\":%d}", encoded, loc, prefs, s.InputBuffer, s.NextIndex)
-	evt := &core.EventJSON{"init", value, 0, ""}
-	return evt
+	stateStruct := &StateJSON{
+		SGF:       encoded,
+		Location:  loc,
+		Prefs:     prefs,
+		Buffer:    s.InputBuffer,
+		NextIndex: s.NextIndex,
+	}
+	return stateStruct
+	//value := fmt.Sprintf("{\"sgf\":\"%s\", \"loc\":\"%s\", \"prefs\":%s, \"buffer\":%d, \"next_index\":%d}", encoded, loc, prefs, s.InputBuffer, s.NextIndex)
+	//evt := &core.EventJSON{"init", value, 0, ""}
+	//return evt
 
 	//return []byte(fmt.Sprintf("{\"event\":\"%s\",\"value\":%s}", event, value))
 

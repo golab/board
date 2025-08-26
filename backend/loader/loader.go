@@ -18,7 +18,7 @@ type MessageJSON struct {
 
 type LoadJSON struct {
 	SGF       string         `json:"sgf"`
-	Loc       string         `json:"loc"`
+	Location  string         `json:"loc"`
 	Prefs     map[string]int `json:"prefs"`
 	Buffer    int64          `json:"buffer"`
 	NextIndex int            `json:"next_index"`
@@ -137,7 +137,7 @@ func UpdateRoom(id string, data *LoadJSON) error {
 	_, err = db.ExecContext(
 		context.Background(),
 		`UPDATE rooms SET sgf = ?, loc = ?, prefs = ?, buffer = ?, nextindex = ?, password = ?  WHERE id = ?`,
-		data.SGF, data.Loc, prefs, data.Buffer, data.NextIndex, data.Password, id)
+		data.SGF, data.Location, prefs, data.Buffer, data.NextIndex, data.Password, id)
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func InsertRoom(id string, data *LoadJSON) error {
 	_, err = db.ExecContext(
 		context.Background(),
 		`INSERT INTO rooms (id, sgf, loc, prefs, buffer, nextindex, password) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		id, data.SGF, data.Loc, prefs, data.Buffer, data.NextIndex, data.Password)
+		id, data.SGF, data.Location, prefs, data.Buffer, data.NextIndex, data.Password)
 
 	if err != nil {
 		return err
@@ -196,7 +196,7 @@ func LoadAllRooms() []*LoadJSON {
 		prefs, _ := PrefsFromString(prefsString)
 		data := &LoadJSON{
 			SGF:       sgf,
-			Loc:       loc,
+			Location:  loc,
 			Prefs:     prefs,
 			Buffer:    int64(buffer),
 			NextIndex: nextIndex,
@@ -239,7 +239,7 @@ func SelectRoom(id string) []*LoadJSON {
 		prefs, _ := PrefsFromString(prefsString)
 		data := &LoadJSON{
 			SGF:       sgf,
-			Loc:       loc,
+			Location:  loc,
 			Prefs:     prefs,
 			Buffer:    int64(buffer),
 			NextIndex: nextIndex,

@@ -56,18 +56,21 @@ func (s *Server) Save() {
 	for id, r := range s.rooms {
 		log.Printf("Saving %s", id)
 
-		// TODO: the term "handshake" has become obsolete
-		// as this is not the same process for client handshakes anymore
-		evt := r.State.InitData()
-		dataStruct := &loader.LoadJSON{}
-		s, _ := evt.Value.(string)
-		err := json.Unmarshal([]byte(s), dataStruct)
-		if err != nil {
-			continue
-		}
+		stateJSON := r.State.CreateStateJSON()
 
-		dataStruct.Password = r.Password
-		loader.SaveRoom(id, dataStruct)
+		// embed stateJSON into save
+		save := &loader.LoadJSON{}
+		save.SGF = stateJSON.SGF
+		save.Location = stateJSON.Location
+		save.Prefs = stateJSON.Prefs
+		save.Buffer = stateJSON.Buffer
+		save.NextIndex = stateJSON.NextIndex
+
+		// add on last fields owned by the room instead of the state
+		save.Password = r.Password
+		save.ID = id
+
+		loader.SaveRoom(id, save)
 	}
 }
 
@@ -93,7 +96,7 @@ func (s *Server) Load() {
 		state.NextIndex = load.NextIndex
 		state.InputBuffer = load.Buffer
 
-		loc := load.Loc
+		loc := load.Location
 		if loc != "" {
 			dirs := strings.Split(loc, ",")
 			// don't need to assign to a variable if we don't use it
@@ -285,8 +288,9 @@ func (s *Server) HandleOp(ws *websocket.Conn, op, roomID string) {
 		data = r.State.ToSGF(true)
 	case "debug":
 		// send debug info
-		evt := r.State.InitData()
-		data, _ = evt.Value.(string)
+		stateJSON := r.State.CreateStateJSON()
+		dataBytes, _ := json.Marshal(stateJSON)
+		data = string(dataBytes)
 	}
 	socket.EncodeSend(ws, data)
 }
