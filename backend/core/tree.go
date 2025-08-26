@@ -69,6 +69,18 @@ func (n *TreeNode) RecomputeDepth() {
 	}, n)
 }
 
+func (n *TreeNode) Graft(branch *TreeNode) {
+	// add the clipboard branch to the children of the current node
+	n.Down = append(n.Down, branch)
+
+	// set the current node to be the parent of the clipboard branch
+	// this also sets the depth appropriately
+	branch.SetParent(n)
+
+	// adusts the depth of all the lower nodes
+	branch.RecomputeDepth()
+}
+
 func (n *TreeNode) HasChild(coord *Coord, col Color) (int, bool) {
 	for _, node := range n.Down {
 		if node.XY.Equal(coord) && node.Color == col {

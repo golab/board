@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/google/uuid"
 	"github.com/jarednogo/board/backend/core"
 	"github.com/jarednogo/board/backend/ogs"
 	"github.com/jarednogo/board/backend/socket"
@@ -106,4 +107,25 @@ func (r *Room) SendUserList() {
 	}
 
 	r.Broadcast(evt, false)
+}
+
+func (r *Room) NewConnection(ws *websocket.Conn) string {
+	// assign the new connection a new id
+	id := uuid.New().String()
+
+	// set the last user
+	r.LastUser = id
+
+	// store the new connection by id
+	r.Conns[id] = ws
+
+	// save current user
+	r.Nicks[id] = ""
+
+	// send initial state
+	frame := r.State.GenerateFullFrame(core.Full)
+	evt := core.FrameJSON(frame)
+	socket.SendEvent(ws, evt)
+
+	return id
 }

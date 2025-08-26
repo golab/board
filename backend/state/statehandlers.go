@@ -297,24 +297,19 @@ func (s *State) HandleClipboard() (*core.Frame, error) {
 	}
 
 	// keep a copy of the clipboard unaltered
-	clipboard := s.Clipboard.Copy()
+	branch := s.Clipboard.Copy()
 
 	// first give the copy indexes
+	// only possible with state context because of GetNextIndex
+	// consider other ways of reindexing, or maybe this should be its
+	// own function
 	core.Fmap(func(n *core.TreeNode) {
 		i := s.GetNextIndex()
 		n.Index = i
 		s.Nodes[i] = n
-	}, clipboard)
+	}, branch)
 
-	// add the clipboard branch to the children of the current node
-	s.Current.Down = append(s.Current.Down, clipboard)
-
-	// set the current node to be the parent of the clipboard branch
-	// this also sets the depth appropriately
-	clipboard.SetParent(s.Current)
-
-	// adusts the depth of all the lower nodes
-	clipboard.RecomputeDepth()
+	s.Current.Graft(branch)
 
 	marks := s.GenerateMarks()
 	return &core.Frame{core.DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(core.Full)}, nil

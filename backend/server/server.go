@@ -17,7 +17,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jarednogo/board/backend/core"
 	"github.com/jarednogo/board/backend/loader"
 	"github.com/jarednogo/board/backend/socket"
@@ -248,29 +247,6 @@ func (s *Server) GetOrCreateRoom(roomID string) *Room {
 	r := s.rooms[roomID]
 	//return r, created
 	return r
-}
-
-func (r *Room) NewConnection(ws *websocket.Conn) string {
-	// assign the new connection a new id
-	id := uuid.New().String()
-
-	// set the last user
-	r.LastUser = id
-
-	// store the new connection by id
-	r.Conns[id] = ws
-
-	// save current user
-	r.Nicks[id] = ""
-
-	// send initial state if it's not the first connection
-	//if !first {
-	frame := r.State.GenerateFullFrame(core.Full)
-	evt := core.FrameJSON(frame)
-	socket.SendEvent(ws, evt)
-	//}
-
-	return id
 }
 
 // these operate outside the main websocket loop
