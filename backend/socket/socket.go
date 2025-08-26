@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package main
+package socket
 
 import (
 	"encoding/base64"
@@ -16,10 +16,11 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/jarednogo/board/backend/core"
 	"golang.org/x/net/websocket"
 )
 
-func SendEvent(conn *websocket.Conn, evt *EventJSON) {
+func SendEvent(conn *websocket.Conn, evt *core.EventJSON) {
 	// marshal event back into data
 	data, err := json.Marshal(evt)
 	if err != nil {
@@ -29,14 +30,14 @@ func SendEvent(conn *websocket.Conn, evt *EventJSON) {
 	conn.Write(data)
 }
 
-func ReceiveEvent(ws *websocket.Conn) (*EventJSON, error) {
+func ReceiveEvent(ws *websocket.Conn) (*core.EventJSON, error) {
 	data, err := ReadPacket(ws)
 	if err != nil {
 		return nil, err
 	}
 
 	// turn data into json
-	evt := &EventJSON{}
+	evt := &core.EventJSON{}
 	if err := json.Unmarshal(data, evt); err != nil {
 		return nil, err
 	}

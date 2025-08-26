@@ -19,6 +19,7 @@ import (
 	"syscall"
 
 	"github.com/jarednogo/board/backend/loader"
+	"github.com/jarednogo/board/backend/server"
 	"golang.org/x/net/websocket"
 )
 
@@ -37,7 +38,7 @@ func main() {
 	cfg := websocket.Config{}
 
 	// create new server, load rooms, defer save
-	s := NewServer()
+	s := server.NewServer()
 	s.Load()
 	defer s.Save()
 

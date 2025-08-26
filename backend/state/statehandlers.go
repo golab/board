@@ -8,14 +8,15 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package main
+package state
 
 import (
 	"fmt"
+	"github.com/jarednogo/board/backend/core"
 )
 
-func (s *State) HandleAddStone(evt *EventJSON) (*Frame, error) {
-	c, err := InterfaceToCoord(evt.Value)
+func (s *State) HandleAddStone(evt *core.EventJSON) (*core.Frame, error) {
+	c, err := core.InterfaceToCoord(evt.Value)
 	if err != nil {
 		return nil, err
 	}
@@ -25,13 +26,13 @@ func (s *State) HandleAddStone(evt *EventJSON) (*Frame, error) {
 		return nil, nil
 	}
 
-	col := Color(evt.Color)
+	col := core.Color(evt.Color)
 
 	// if a child already exists with that coord and col, then actually
 	// this is just a gotoindex operation
 	if child, ok := s.Current.HasChild(c, col); ok {
 		s.GotoIndex(child)
-		return s.GenerateFullFrame(CurrentAndPreferred), nil
+		return s.GenerateFullFrame(core.CurrentAndPreferred), nil
 	}
 
 	// do nothing on a suicide move
@@ -41,7 +42,7 @@ func (s *State) HandleAddStone(evt *EventJSON) (*Frame, error) {
 
 	fields := make(map[string][]string)
 	key := "B"
-	if col == White {
+	if col == core.White {
 		key = "W"
 	}
 	fields[key] = []string{c.ToLetters()}
@@ -50,24 +51,24 @@ func (s *State) HandleAddStone(evt *EventJSON) (*Frame, error) {
 
 	marks := s.GenerateMarks()
 
-	return &Frame{DiffFrame, diff, marks, nil, nil, s.CreateTreeJSON(PartialNodes)}, nil
+	return &core.Frame{core.DiffFrame, diff, marks, nil, nil, s.CreateTreeJSON(core.PartialNodes)}, nil
 }
 
-func (s *State) HandlePass(evt *EventJSON) (*Frame, error) {
+func (s *State) HandlePass(evt *core.EventJSON) (*core.Frame, error) {
 	fields := make(map[string][]string)
-	col := Color(evt.Color)
+	col := core.Color(evt.Color)
 	key := "B"
-	if col == White {
+	if col == core.White {
 		key = "W"
 	}
 	fields[key] = []string{""}
-	s.AddPassNode(Color(evt.Color), fields, -1)
+	s.AddPassNode(core.Color(evt.Color), fields, -1)
 
-	return &Frame{DiffFrame, nil, nil, nil, nil, s.CreateTreeJSON(PartialNodes)}, nil
+	return &core.Frame{core.DiffFrame, nil, nil, nil, nil, s.CreateTreeJSON(core.PartialNodes)}, nil
 }
 
-func (s *State) HandleRemoveStone(evt *EventJSON) (*Frame, error) {
-	c, err := InterfaceToCoord(evt.Value)
+func (s *State) HandleRemoveStone(evt *core.EventJSON) (*core.Frame, error) {
+	c, err := core.InterfaceToCoord(evt.Value)
 	if err != nil {
 		return nil, err
 	}
@@ -82,11 +83,11 @@ func (s *State) HandleRemoveStone(evt *EventJSON) (*Frame, error) {
 	fields["AE"] = []string{c.ToLetters()}
 	diff := s.AddFieldNode(fields, -1)
 
-	return &Frame{DiffFrame, diff, nil, nil, nil, s.CreateTreeJSON(PartialNodes)}, nil
+	return &core.Frame{core.DiffFrame, diff, nil, nil, nil, s.CreateTreeJSON(core.PartialNodes)}, nil
 }
 
-func (s *State) HandleAddTriangle(evt *EventJSON) (*Frame, error) {
-	c, err := InterfaceToCoord(evt.Value)
+func (s *State) HandleAddTriangle(evt *core.EventJSON) (*core.Frame, error) {
+	c, err := core.InterfaceToCoord(evt.Value)
 	if err != nil {
 		return nil, err
 	}
@@ -101,8 +102,8 @@ func (s *State) HandleAddTriangle(evt *EventJSON) (*Frame, error) {
 	return nil, nil
 }
 
-func (s *State) HandleAddSquare(evt *EventJSON) (*Frame, error) {
-	c, err := InterfaceToCoord(evt.Value)
+func (s *State) HandleAddSquare(evt *core.EventJSON) (*core.Frame, error) {
+	c, err := core.InterfaceToCoord(evt.Value)
 	if err != nil {
 		return nil, err
 	}
@@ -117,9 +118,9 @@ func (s *State) HandleAddSquare(evt *EventJSON) (*Frame, error) {
 	return nil, nil
 }
 
-func (s *State) HandleAddLetter(evt *EventJSON) (*Frame, error) {
+func (s *State) HandleAddLetter(evt *core.EventJSON) (*core.Frame, error) {
 	val := evt.Value.(map[string]interface{})
-	c, err := InterfaceToCoord(val["coords"])
+	c, err := core.InterfaceToCoord(val["coords"])
 	if err != nil {
 		return nil, err
 	}
@@ -137,9 +138,9 @@ func (s *State) HandleAddLetter(evt *EventJSON) (*Frame, error) {
 	return nil, nil
 }
 
-func (s *State) HandleAddNumber(evt *EventJSON) (*Frame, error) {
+func (s *State) HandleAddNumber(evt *core.EventJSON) (*core.Frame, error) {
 	val := evt.Value.(map[string]interface{})
-	c, err := InterfaceToCoord(val["coords"])
+	c, err := core.InterfaceToCoord(val["coords"])
 	if err != nil {
 		return nil, err
 	}
@@ -157,8 +158,8 @@ func (s *State) HandleAddNumber(evt *EventJSON) (*Frame, error) {
 	return nil, nil
 }
 
-func (s *State) HandleRemoveMark(evt *EventJSON) (*Frame, error) {
-	c, err := InterfaceToCoord(evt.Value)
+func (s *State) HandleRemoveMark(evt *core.EventJSON) (*core.Frame, error) {
+	c, err := core.InterfaceToCoord(evt.Value)
 	if err != nil {
 		return nil, err
 	}
@@ -178,55 +179,55 @@ func (s *State) HandleRemoveMark(evt *EventJSON) (*Frame, error) {
 	return nil, nil
 }
 
-func (s *State) HandleLeft() (*Frame, error) {
+func (s *State) HandleLeft() (*core.Frame, error) {
 	diff := s.Left()
 	marks := s.GenerateMarks()
 	comments := s.GenerateComments()
-	return &Frame{DiffFrame, diff, marks, comments, nil, s.CreateTreeJSON(CurrentOnly)}, nil
+	return &core.Frame{core.DiffFrame, diff, marks, comments, nil, s.CreateTreeJSON(core.CurrentOnly)}, nil
 }
 
-func (s *State) HandleRight() (*Frame, error) {
+func (s *State) HandleRight() (*core.Frame, error) {
 	diff := s.Right()
 	marks := s.GenerateMarks()
 	comments := s.GenerateComments()
 
-	return &Frame{DiffFrame, diff, marks, comments, nil, s.CreateTreeJSON(CurrentOnly)}, nil
+	return &core.Frame{core.DiffFrame, diff, marks, comments, nil, s.CreateTreeJSON(core.CurrentOnly)}, nil
 }
 
-func (s *State) HandleUp() (*Frame, error) {
+func (s *State) HandleUp() (*core.Frame, error) {
 	s.Up()
 	// for the current mark
 	marks := s.GenerateMarks()
 
-	return &Frame{DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(CurrentAndPreferred)}, nil
+	return &core.Frame{core.DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(core.CurrentAndPreferred)}, nil
 }
 
-func (s *State) HandleDown() (*Frame, error) {
+func (s *State) HandleDown() (*core.Frame, error) {
 	s.Down()
 
 	// for the current mark
 	marks := s.GenerateMarks()
 
-	return &Frame{DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(CurrentAndPreferred)}, nil
+	return &core.Frame{core.DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(core.CurrentAndPreferred)}, nil
 }
 
-func (s *State) HandleRewind() (*Frame, error) {
+func (s *State) HandleRewind() (*core.Frame, error) {
 	s.Rewind()
-	return s.GenerateFullFrame(CurrentOnly), nil
+	return s.GenerateFullFrame(core.CurrentOnly), nil
 }
 
-func (s *State) HandleFastForward() (*Frame, error) {
+func (s *State) HandleFastForward() (*core.Frame, error) {
 	s.FastForward()
-	return s.GenerateFullFrame(CurrentOnly), nil
+	return s.GenerateFullFrame(core.CurrentOnly), nil
 }
 
-func (s *State) HandleGotoGrid(evt *EventJSON) (*Frame, error) {
+func (s *State) HandleGotoGrid(evt *core.EventJSON) (*core.Frame, error) {
 	index := int(evt.Value.(float64))
 	s.GotoIndex(index)
-	return s.GenerateFullFrame(CurrentAndPreferred), nil
+	return s.GenerateFullFrame(core.CurrentAndPreferred), nil
 }
 
-func (s *State) HandleGotoCoord(evt *EventJSON) (*Frame, error) {
+func (s *State) HandleGotoCoord(evt *core.EventJSON) (*core.Frame, error) {
 	coords := make([]int, 0)
 	// coerce the value to an array
 	val := evt.Value.([]interface{})
@@ -237,17 +238,17 @@ func (s *State) HandleGotoCoord(evt *EventJSON) (*Frame, error) {
 	x := coords[0]
 	y := coords[1]
 	s.GotoCoord(x, y)
-	return s.GenerateFullFrame(CurrentAndPreferred), nil
+	return s.GenerateFullFrame(core.CurrentAndPreferred), nil
 
 }
 
-func (s *State) HandleComment(evt *EventJSON) (*Frame, error) {
+func (s *State) HandleComment(evt *core.EventJSON) (*core.Frame, error) {
 	val := evt.Value.(string)
 	s.Current.AddField("C", val+"\n")
 	return nil, nil
 }
 
-func (s *State) HandleDraw(evt *EventJSON) (*Frame, error) {
+func (s *State) HandleDraw(evt *core.EventJSON) (*core.Frame, error) {
 	vals := evt.Value.([]interface{})
 	var x0 float64
 	var y0 float64
@@ -273,24 +274,24 @@ func (s *State) HandleDraw(evt *EventJSON) (*Frame, error) {
 
 }
 
-func (s *State) HandleErasePen() (*Frame, error) {
+func (s *State) HandleErasePen() (*core.Frame, error) {
 	delete(s.Current.Fields, "PX")
 	return nil, nil
 }
 
-func (s *State) HandleCut() (*Frame, error) {
+func (s *State) HandleCut() (*core.Frame, error) {
 	diff := s.Cut()
 	marks := s.GenerateMarks()
 	comments := s.GenerateComments()
-	return &Frame{DiffFrame, diff, marks, comments, nil, s.CreateTreeJSON(Full)}, nil
+	return &core.Frame{core.DiffFrame, diff, marks, comments, nil, s.CreateTreeJSON(core.Full)}, nil
 }
 
-func (s *State) HandleCopy() (*Frame, error) {
+func (s *State) HandleCopy() (*core.Frame, error) {
 	s.Clipboard = s.Current.Copy()
 	return nil, nil
 }
 
-func (s *State) HandleClipboard() (*Frame, error) {
+func (s *State) HandleClipboard() (*core.Frame, error) {
 	if s.Clipboard == nil {
 		return nil, nil
 	}
@@ -299,7 +300,7 @@ func (s *State) HandleClipboard() (*Frame, error) {
 	clipboard := s.Clipboard.Copy()
 
 	// first give the copy indexes
-	Fmap(func(n *TreeNode) {
+	core.Fmap(func(n *core.TreeNode) {
 		i := s.GetNextIndex()
 		n.Index = i
 		s.Nodes[i] = n
@@ -316,5 +317,5 @@ func (s *State) HandleClipboard() (*Frame, error) {
 	clipboard.RecomputeDepth()
 
 	marks := s.GenerateMarks()
-	return &Frame{DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(Full)}, nil
+	return &core.Frame{core.DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(core.Full)}, nil
 }

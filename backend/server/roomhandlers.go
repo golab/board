@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package main
+package server
 
 import (
 	"encoding/base64"
@@ -16,24 +16,30 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jarednogo/board/backend/core"
+	"github.com/jarednogo/board/backend/fetch"
+	"github.com/jarednogo/board/backend/ogs"
+	"github.com/jarednogo/board/backend/state"
+	"github.com/jarednogo/board/backend/zip"
 )
 
-type EventHandler func(*EventJSON) *EventJSON
+type EventHandler func(*core.EventJSON) *core.EventJSON
 
 type Middleware func(EventHandler) EventHandler
 
 // handlers
 
-func (room *Room) HandleIsProtected(evt *EventJSON) *EventJSON {
+func (room *Room) HandleIsProtected(evt *core.EventJSON) *core.EventJSON {
 	evt.Value = room.HasPassword()
 	room.SendTo(evt.UserID, evt)
 	return evt
 }
 
-func (room *Room) HandleCheckPassword(evt *EventJSON) *EventJSON {
+func (room *Room) HandleCheckPassword(evt *core.EventJSON) *core.EventJSON {
 	p := evt.Value.(string)
 
-	if !CorrectPassword(p, room.password) {
+	if !core.CorrectPassword(p, room.Password) {
 		evt.Value = ""
 	} else {
 		room.auth[evt.UserID] = true
@@ -42,17 +48,17 @@ func (room *Room) HandleCheckPassword(evt *EventJSON) *EventJSON {
 	return evt
 }
 
-func HandleDebug(evt *EventJSON) *EventJSON {
+func HandleDebug(evt *core.EventJSON) *core.EventJSON {
 	log.Println(evt.UserID, evt)
 	return evt
 }
 
-func HandlePing(evt *EventJSON) *EventJSON {
+func HandlePing(evt *core.EventJSON) *core.EventJSON {
 	return evt
 }
 
-func (room *Room) HandleUploadSGF(evt *EventJSON) *EventJSON {
-	var bcast *EventJSON
+func (room *Room) HandleUploadSGF(evt *core.EventJSON) *core.EventJSON {
+	var bcast *core.EventJSON
 	defer func() {
 		if bcast != nil {
 			bcast.UserID = evt.UserID
@@ -64,19 +70,19 @@ func (room *Room) HandleUploadSGF(evt *EventJSON) *EventJSON {
 
 		decoded, err := base64.StdEncoding.DecodeString(str)
 		if err != nil {
-			bcast = ErrorJSON(err.Error())
+			bcast = core.ErrorJSON(err.Error())
 			return bcast
 		}
-		if IsZipFile(decoded) {
-			filesBytes, err := Decompress(decoded)
+		if zip.IsZipFile(decoded) {
+			filesBytes, err := zip.Decompress(decoded)
 			if err != nil {
-				bcast = ErrorJSON(err.Error())
+				bcast = core.ErrorJSON(err.Error())
 			} else {
 				files := []string{}
 				for _, file := range filesBytes {
 					files = append(files, string(file))
 				}
-				merged := Merge(files)
+				merged := core.Merge(files)
 				bcast = room.UploadSGF(merged)
 			}
 		} else {
@@ -90,23 +96,23 @@ func (room *Room) HandleUploadSGF(evt *EventJSON) *EventJSON {
 			str := ifc.(string)
 			d, err := base64.StdEncoding.DecodeString(str)
 			if err != nil {
-				bcast = ErrorJSON(err.Error())
+				bcast = core.ErrorJSON(err.Error())
 				return bcast
 			}
 			sgfs = append(sgfs, string(d))
 		}
-		sgf := Merge(sgfs)
+		sgf := core.Merge(sgfs)
 		bcast = room.UploadSGF(sgf)
 	} else {
-		bcast = ErrorJSON("unreachable")
+		bcast = core.ErrorJSON("unreachable")
 	}
 
 	bcast.UserID = evt.UserID
 	return bcast
 }
 
-func (room *Room) HandleRequestSGF(evt *EventJSON) *EventJSON {
-	var bcast *EventJSON
+func (room *Room) HandleRequestSGF(evt *core.EventJSON) *core.EventJSON {
+	var bcast *core.EventJSON
 	defer func() {
 		if bcast != nil {
 			bcast.UserID = evt.UserID
@@ -115,13 +121,13 @@ func (room *Room) HandleRequestSGF(evt *EventJSON) *EventJSON {
 
 	url := evt.Value.(string)
 
-	if IsOGS(url) {
+	if fetch.IsOGS(url) {
 
 		connectToOGS := false
 
 		spl := strings.Split(url, "/")
 		if len(spl) < 2 {
-			bcast = ErrorJSON("url parsing error")
+			bcast = core.ErrorJSON("url parsing error")
 			return bcast
 		}
 
@@ -129,9 +135,9 @@ func (room *Room) HandleRequestSGF(evt *EventJSON) *EventJSON {
 		//log.Println(ogsType)
 
 		if ogsType == "game" {
-			ended, err := OGSCheckEnded(url)
+			ended, err := fetch.OGSCheckEnded(url)
 			if err != nil {
-				bcast = ErrorJSON(err.Error())
+				bcast = core.ErrorJSON(err.Error())
 				return bcast
 			}
 			connectToOGS = !ended
@@ -146,14 +152,14 @@ func (room *Room) HandleRequestSGF(evt *EventJSON) *EventJSON {
 			idStr := spl[len(spl)-1]
 			id64, err := strconv.ParseInt(idStr, 10, 64)
 			if err != nil {
-				bcast = ErrorJSON("int parsing error")
+				bcast = core.ErrorJSON("int parsing error")
 				return bcast
 			}
 			id := int(id64)
 
-			o, err := NewOGSConnector(room)
+			o, err := ogs.NewOGSConnector(room)
 			if err != nil {
-				bcast = ErrorJSON("ogs connector error")
+				bcast = core.ErrorJSON("ogs connector error")
 				return bcast
 			}
 			go o.Loop(id, ogsType)
@@ -161,16 +167,16 @@ func (room *Room) HandleRequestSGF(evt *EventJSON) *EventJSON {
 
 			if ogsType == "game" {
 				// finish here
-				return NopJSON()
+				return core.NopJSON()
 			}
 		}
 	}
 
-	data, err := ApprovedFetch(evt.Value.(string))
+	data, err := fetch.ApprovedFetch(evt.Value.(string))
 	if err != nil {
-		bcast = ErrorJSON(err.Error())
+		bcast = core.ErrorJSON(err.Error())
 	} else if data == "Permission denied" {
-		bcast = ErrorJSON("Error fetching SGF. Is it a private OGS game?")
+		bcast = core.ErrorJSON("Error fetching SGF. Is it a private OGS game?")
 	} else {
 		bcast = room.UploadSGF(string(data))
 	}
@@ -178,68 +184,74 @@ func (room *Room) HandleRequestSGF(evt *EventJSON) *EventJSON {
 	return bcast
 }
 
-func (room *Room) HandleTrash(evt *EventJSON) *EventJSON {
+func (room *Room) HandleTrash(evt *core.EventJSON) *core.EventJSON {
 
 	// reset room
 	oldBuffer := room.State.InputBuffer
-	room.State = NewState(room.State.Size, true)
+	room.State = state.NewState(room.State.Size, true)
 
 	// reuse old inputbuffer
 	room.State.InputBuffer = oldBuffer
 
-	frame := room.State.GenerateFullFrame(Full)
-	bcast := FrameJSON(frame)
+	frame := room.State.GenerateFullFrame(core.Full)
+	bcast := core.FrameJSON(frame)
 	bcast.UserID = evt.UserID
 	return bcast
 }
 
-func (room *Room) HandleUpdateNickname(evt *EventJSON) *EventJSON {
+func (room *Room) HandleUpdateNickname(evt *core.EventJSON) *core.EventJSON {
 	nickname := evt.Value.(string)
-	room.nicks[evt.UserID] = nickname
-	userEvt := &EventJSON{
+	room.Nicks[evt.UserID] = nickname
+	userEvt := &core.EventJSON{
 		"connected_users",
-		room.nicks,
+		room.Nicks,
 		0,
 		evt.UserID,
 	}
 	return userEvt
 }
 
-func (room *Room) HandleUpdateSettings(evt *EventJSON) *EventJSON {
+type Settings struct {
+	Buffer   int64
+	Size     int
+	Password string
+}
+
+func (room *Room) HandleUpdateSettings(evt *core.EventJSON) *core.EventJSON {
 	sMap := evt.Value.(map[string]interface{})
 	buffer := int64(sMap["buffer"].(float64))
 	size := int(sMap["size"].(float64))
 	nickname := sMap["nickname"].(string)
 
-	room.nicks[evt.UserID] = nickname
+	room.Nicks[evt.UserID] = nickname
 
 	password := sMap["password"].(string)
 	hashed := ""
 	if password != "" {
-		hashed = Hash(password)
+		hashed = core.Hash(password)
 	}
 	settings := &Settings{buffer, size, hashed}
 
 	room.State.InputBuffer = settings.Buffer
 	if settings.Size != room.State.Size {
 		// essentially trashing
-		room.State = NewState(settings.Size, true)
+		room.State = state.NewState(settings.Size, true)
 		room.State.InputBuffer = buffer
 	}
 
 	// can be changed
 	// anyone already in the room is added
 	// person who set password automatically gets added
-	for connID := range room.conns {
+	for connID := range room.Conns {
 		room.auth[connID] = true
 	}
-	room.password = hashed
+	room.Password = hashed
 
 	return evt
 }
 
-func (room *Room) HandleEvent(evt *EventJSON) *EventJSON {
-	var bcast *EventJSON
+func (room *Room) HandleEvent(evt *core.EventJSON) *core.EventJSON {
+	var bcast *core.EventJSON
 	defer func() {
 		if bcast != nil {
 			bcast.UserID = evt.UserID
@@ -248,12 +260,12 @@ func (room *Room) HandleEvent(evt *EventJSON) *EventJSON {
 
 	frame, err := room.State.AddEvent(evt)
 	if err != nil {
-		bcast = ErrorJSON(err.Error())
+		bcast = core.ErrorJSON(err.Error())
 		return bcast
 	}
 
 	if frame != nil {
-		bcast = FrameJSON(frame)
+		bcast = core.FrameJSON(frame)
 	} else {
 		bcast = evt
 	}
@@ -265,7 +277,7 @@ func (room *Room) HandleEvent(evt *EventJSON) *EventJSON {
 
 func (room *Room) BroadcastAfter(setTime bool) Middleware {
 	return func(handler EventHandler) EventHandler {
-		return func(evt *EventJSON) *EventJSON {
+		return func(evt *core.EventJSON) *core.EventJSON {
 			evt = handler(evt)
 			room.Broadcast(evt, setTime)
 			return evt
@@ -274,21 +286,21 @@ func (room *Room) BroadcastAfter(setTime bool) Middleware {
 }
 
 func (room *Room) BroadcastFullFrameAfter(handler EventHandler) EventHandler {
-	return func(evt *EventJSON) *EventJSON {
+	return func(evt *core.EventJSON) *core.EventJSON {
 		evt = handler(evt)
-		frame := room.State.GenerateFullFrame(Full)
-		bcast := FrameJSON(frame)
+		frame := room.State.GenerateFullFrame(core.Full)
+		bcast := core.FrameJSON(frame)
 		room.Broadcast(bcast, false)
 		return evt
 	}
 }
 
 func (room *Room) BroadcastConnectedUsersAfter(handler EventHandler) EventHandler {
-	return func(evt *EventJSON) *EventJSON {
+	return func(evt *core.EventJSON) *core.EventJSON {
 		evt = handler(evt)
-		userEvt := &EventJSON{
+		userEvt := &core.EventJSON{
 			"connected_users",
-			room.nicks,
+			room.Nicks,
 			0,
 			"",
 		}
@@ -300,7 +312,7 @@ func (room *Room) BroadcastConnectedUsersAfter(handler EventHandler) EventHandle
 }
 
 func (room *Room) CloseOGS(handler EventHandler) EventHandler {
-	return func(evt *EventJSON) *EventJSON {
+	return func(evt *core.EventJSON) *core.EventJSON {
 		if room.OGSLink != nil {
 			room.OGSLink.End()
 		}
@@ -309,10 +321,10 @@ func (room *Room) CloseOGS(handler EventHandler) EventHandler {
 }
 
 func (room *Room) Authorized(handler EventHandler) EventHandler {
-	return func(evt *EventJSON) *EventJSON {
+	return func(evt *core.EventJSON) *core.EventJSON {
 		id := evt.UserID
 		_, ok := room.auth[id]
-		if room.password == "" || ok {
+		if room.Password == "" || ok {
 			// only go to the next handler if authorized
 			evt = handler(evt)
 		}
@@ -322,7 +334,7 @@ func (room *Room) Authorized(handler EventHandler) EventHandler {
 
 // this one is to keep the same user from submitting multiple events too quickly
 func (room *Room) Slow(handler EventHandler) EventHandler {
-	return func(evt *EventJSON) *EventJSON {
+	return func(evt *core.EventJSON) *core.EventJSON {
 		id := evt.UserID
 		// check multiple events from the same user in a narrow window (50 ms)
 		now := time.Now()
@@ -342,10 +354,10 @@ func (room *Room) Slow(handler EventHandler) EventHandler {
 
 // this one is to keep people from tripping over each other
 func (room *Room) OutsideBuffer(handler EventHandler) EventHandler {
-	return func(evt *EventJSON) *EventJSON {
-		if room.lastUser != evt.UserID {
+	return func(evt *core.EventJSON) *core.EventJSON {
+		if room.LastUser != evt.UserID {
 			now := time.Now()
-			diff := now.Sub(*room.timeLastEvent)
+			diff := now.Sub(*room.TimeLastEvent)
 			if diff.Milliseconds() < room.State.InputBuffer {
 				// don't do the next handler if too fast
 				return evt

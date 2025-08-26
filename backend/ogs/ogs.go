@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package main
+package ogs
 
 import (
 	"encoding/json"
@@ -16,12 +16,14 @@ import (
 	"log"
 	"time"
 
-	//"github.com/gorilla/websocket"
 	"golang.org/x/net/websocket"
+
+	"github.com/jarednogo/board/backend/core"
+	"github.com/jarednogo/board/backend/fetch"
 )
 
 func GetUser(id int) (string, error) {
-	data, err := Fetch(fmt.Sprintf("http://online-go.com/api/v1/players/%d/", id))
+	data, err := fetch.Fetch(fmt.Sprintf("http://online-go.com/api/v1/players/%d/", id))
 	if err != nil {
 		return "", err
 	}
@@ -45,7 +47,7 @@ type Creds struct {
 
 func GetCreds() (*Creds, error) {
 	url := "https://online-go.com/api/v1/ui/config"
-	data, err := Fetch(url)
+	data, err := fetch.Fetch(url)
 	if err != nil {
 		return nil, err
 	}
@@ -58,15 +60,24 @@ func GetCreds() (*Creds, error) {
 	return resp, nil
 }
 
+type Room interface {
+	HeadColor() core.Color
+	PushHead(int, int, core.Color)
+	GenerateFullFrame(core.TreeJSONType) *core.Frame
+	AddPatternNodes([]*core.PatternMove)
+	Broadcast(*core.EventJSON, bool)
+	UploadSGF(string) *core.EventJSON
+}
+
 type OGSConnector struct {
 	Creds  *Creds
 	Socket *websocket.Conn
-	Room   *Room
+	Room   Room
 	First  int
 	Exit   bool
 }
 
-func NewOGSConnector(room *Room) (*OGSConnector, error) {
+func NewOGSConnector(room Room) (*OGSConnector, error) {
 	creds, err := GetCreds()
 	_ = creds
 	if err != nil {
@@ -208,15 +219,18 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			x := int(move[0].(float64))
 			y := int(move[1].(float64))
 
-			col := 1
-			curColor := o.Room.State.Head.Color
-			if curColor == 1 {
-				col = 2
+			col := core.Black
+			//curColor := o.Room.State.Head.Color
+			curColor := o.Room.HeadColor()
+			if curColor == core.Black {
+				col = core.White
 			}
-			o.Room.State.PushHead(x, y, col)
+			//o.Room.State.PushHead(x, y, col)
+			o.Room.PushHead(x, y, col)
 
-			frame := o.Room.State.GenerateFullFrame(Full)
-			evt := FrameJSON(frame)
+			//frame := o.Room.State.GenerateFullFrame(core.Full)
+			frame := o.Room.GenerateFullFrame(core.Full)
+			evt := core.FrameJSON(frame)
 			o.Room.Broadcast(evt, false)
 
 		} else if topic == fmt.Sprintf("game/%d/gamedata", gameID) {
@@ -245,10 +259,10 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			}
 			moves := payload["m"].(string)
 
-			movesArr := []*PatternMove{}
-			currentColor := Black
+			movesArr := []*core.PatternMove{}
+			currentColor := core.Black
 			if o.First == 1 {
-				currentColor = White
+				currentColor = core.White
 			}
 
 			for i := 0; i < len(moves); i += 2 {
@@ -257,26 +271,28 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 
 					if coordStr == "!1" {
 						//Force next move black
-						currentColor = Black
+						currentColor = core.Black
 					} else if coordStr == "!2" {
 						//Force next move white
-						currentColor = White
+						currentColor = core.White
 					} else if coordStr == ".." {
 						//Pass
-						movesArr = append(movesArr, &PatternMove{nil, currentColor})
-						currentColor = Opposite(currentColor)
+						movesArr = append(movesArr, &core.PatternMove{nil, currentColor})
+						currentColor = core.Opposite(currentColor)
 					} else {
-						coord := LettersToCoord(coordStr)
-						movesArr = append(movesArr, &PatternMove{coord, currentColor})
-						currentColor = Opposite(currentColor)
+						coord := core.LettersToCoord(coordStr)
+						movesArr = append(movesArr, &core.PatternMove{coord, currentColor})
+						currentColor = core.Opposite(currentColor)
 					}
 				}
 			}
-			o.Room.State.AddPatternNodes(movesArr)
+			//o.Room.State.AddPatternNodes(movesArr)
+			o.Room.AddPatternNodes(movesArr)
 
 			// Send full board update after adding pattern
-			frame := o.Room.State.GenerateFullFrame(Full)
-			evt := FrameJSON(frame)
+			//frame := o.Room.State.GenerateFullFrame(core.Full)
+			frame := o.Room.GenerateFullFrame(core.Full)
+			evt := core.FrameJSON(frame)
 			o.Room.Broadcast(evt, false)
 		} else {
 			//log.Println(topic)
@@ -306,7 +322,7 @@ func (o *OGSConnector) GamedataToSGF(gamedata map[string]interface{}) string {
 
 	for index, m := range gamedata["moves"].([]interface{}) {
 		arr := m.([]interface{})
-		c := &Coord{X: int(arr[0].(float64)), Y: int(arr[1].(float64))}
+		c := &core.Coord{X: int(arr[0].(float64)), Y: int(arr[1].(float64))}
 
 		col := "B"
 

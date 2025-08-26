@@ -8,51 +8,54 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package main
+package server
 
 import (
 	"encoding/json"
 	"fmt"
 	"log"
 
+	"github.com/jarednogo/board/backend/core"
+	"github.com/jarednogo/board/backend/ogs"
+	"github.com/jarednogo/board/backend/socket"
+	"github.com/jarednogo/board/backend/state"
 	"golang.org/x/net/websocket"
 	"time"
 )
 
 type Room struct {
-	conns         map[string]*websocket.Conn
-	State         *State
-	timeLastEvent *time.Time
-	lastUser      string
+	Conns         map[string]*websocket.Conn
+	State         *state.State
+	TimeLastEvent *time.Time
+	LastUser      string
 	lastMessages  map[string]*time.Time
-	open          bool
-	OGSLink       *OGSConnector
-	password      string
+	OGSLink       *ogs.OGSConnector
+	Password      string
 	auth          map[string]bool
-	nicks         map[string]string
+	Nicks         map[string]string
 }
 
 func NewRoom() *Room {
 	conns := make(map[string]*websocket.Conn)
-	state := NewState(19, true)
+	s := state.NewState(19, true)
 	now := time.Now()
 	msgs := make(map[string]*time.Time)
 	auth := make(map[string]bool)
 	nicks := make(map[string]string)
-	return &Room{conns, state, &now, "", msgs, true, nil, "", auth, nicks}
+	return &Room{conns, s, &now, "", msgs, nil, "", auth, nicks}
 }
 
 func (r *Room) HasPassword() bool {
-	return r.password != ""
+	return r.Password != ""
 }
 
-func (r *Room) SendTo(id string, evt *EventJSON) {
-	if ws, ok := r.conns[id]; ok {
-		SendEvent(ws, evt)
+func (r *Room) SendTo(id string, evt *core.EventJSON) {
+	if ws, ok := r.Conns[id]; ok {
+		socket.SendEvent(ws, evt)
 	}
 }
 
-func (r *Room) Broadcast(evt *EventJSON, setTime bool) {
+func (r *Room) Broadcast(evt *core.EventJSON, setTime bool) {
 	if evt.Event == "nop" {
 		return
 	}
@@ -67,48 +70,37 @@ func (r *Room) Broadcast(evt *EventJSON, setTime bool) {
 	}
 
 	// rebroadcast message
-	for _, conn := range r.conns {
+	for _, conn := range r.Conns {
 		conn.Write(data)
 	}
 
 	if setTime {
 		// set last user information
-		r.lastUser = id
+		r.LastUser = id
 		now := time.Now()
-		r.timeLastEvent = &now
+		r.TimeLastEvent = &now
 	}
 }
 
-func (r *Room) PushHead(x, y, col int) *EventJSON {
-	r.State.PushHead(x, y, col)
-	evt := &EventJSON{
-		Event:  "push_head",
-		Value:  []int{x, y},
-		Color:  col,
-		UserID: "",
-	}
-	return evt
-}
-
-func (r *Room) UploadSGF(sgf string) *EventJSON {
-	state, err := FromSGF(sgf)
+func (r *Room) UploadSGF(sgf string) *core.EventJSON {
+	s, err := state.FromSGF(sgf)
 	if err != nil {
 		log.Println(err)
 		msg := fmt.Sprintf("Error parsing SGF: %s", err)
-		return ErrorJSON(msg)
+		return core.ErrorJSON(msg)
 	}
-	r.State = state
+	r.State = s
 
 	// replace evt with initdata
-	frame := r.State.GenerateFullFrame(Full)
-	return FrameJSON(frame)
+	frame := r.State.GenerateFullFrame(core.Full)
+	return core.FrameJSON(frame)
 }
 
 func (r *Room) SendUserList() {
 	// send list of currently connected users
-	evt := &EventJSON{
+	evt := &core.EventJSON{
 		"connected_users",
-		r.nicks,
+		r.Nicks,
 		0,
 		"",
 	}

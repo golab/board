@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package main
+package core
 
 // Fmap applies a function f to every node under (and including) root
 func Fmap(f func(*TreeNode), root *TreeNode) {
@@ -142,85 +142,5 @@ func (n *TreeNode) RemoveField(key, value string) {
 	n.Fields[key] = append(n.Fields[key][:index], n.Fields[key][index+1:]...)
 	if len(n.Fields[key]) == 0 {
 		delete(n.Fields, key)
-	}
-}
-
-type TreeJSONType int
-
-const (
-	CurrentOnly TreeJSONType = iota
-	CurrentAndPreferred
-	PartialNodes
-	Full
-)
-
-type NodeJSON struct {
-	Color Color `json:"color"`
-	Down  []int `json:"down"`
-	Depth int   `json:"depth"`
-}
-
-type TreeJSON struct {
-	Nodes     map[int]*NodeJSON `json:"nodes"`
-	Current   int               `json:"current"`
-	Preferred []int             `json:"preferred"`
-	Depth     int               `json:"depth"`
-	Up        int               `json:"up"`
-	Root      int               `json:"root"`
-}
-
-func (s *State) CreateTreeJSON(t TreeJSONType) *TreeJSON {
-	// only really used when we have a partial tree
-	up := 0
-	root := 0
-
-	// nodes
-	var nodes map[int]*NodeJSON
-
-	if t >= PartialNodes {
-		nodes = make(map[int]*NodeJSON)
-		var start *TreeNode
-		// we can choose to send the full or just a partial tree
-		// based on which node we start on
-
-		if t == PartialNodes {
-			start = s.Current
-			up = start.Up.Index
-			root = start.Index
-		} else if t == Full {
-			start = s.Root
-		}
-		Fmap(func(n *TreeNode) {
-			down := []int{}
-			for _, c := range n.Down {
-				down = append(down, c.Index)
-			}
-			nodes[n.Index] = &NodeJSON{
-				Color: n.Color,
-				Down:  down,
-				Depth: n.Depth,
-			}
-
-		}, start)
-	}
-
-	// preferred
-	var preferred []int
-	if t >= CurrentAndPreferred {
-		node := s.Root
-		preferred = []int{node.Index}
-		for len(node.Down) != 0 {
-			node = node.Down[node.PreferredChild]
-			preferred = append(preferred, node.Index)
-		}
-	}
-
-	return &TreeJSON{
-		Nodes:     nodes,
-		Current:   s.Current.Index,
-		Preferred: preferred,
-		Depth:     s.Root.MaxDepth(),
-		Up:        up,
-		Root:      root,
 	}
 }

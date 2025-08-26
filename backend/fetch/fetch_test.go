@@ -8,10 +8,10 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package main_test
+package fetch_test
 
 import (
-	backend "github.com/jarednogo/board/backend"
+	"github.com/jarednogo/board/backend/fetch"
 	"testing"
 )
 
@@ -27,7 +27,7 @@ var ogsTests = []struct {
 func TestOGS(t *testing.T) {
 	for _, tt := range ogsTests {
 		t.Run(tt.url, func(t *testing.T) {
-			if backend.IsOGS(tt.url) != tt.ogs {
+			if fetch.IsOGS(tt.url) != tt.ogs {
 				t.Errorf("error checking for ogs url: %s", tt.url)
 			}
 		})

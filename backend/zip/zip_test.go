@@ -8,20 +8,20 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package main_test
+package zip_test
 
 import (
-	backend "github.com/jarednogo/board/backend"
+	"github.com/jarednogo/board/backend/zip"
 	"testing"
 )
 
 func TestZip(t *testing.T) {
 	data := []byte{80, 75, 3, 4, 10, 0, 0, 0, 0, 0, 131, 158, 9, 91, 32, 48, 58, 54, 6, 0, 0, 0, 6, 0, 0, 0, 5, 0, 28, 0, 102, 105, 108, 101, 49, 85, 84, 9, 0, 3, 69, 251, 151, 104, 69, 251, 151, 104, 117, 120, 11, 0, 1, 4, 232, 3, 0, 0, 4, 232, 3, 0, 0, 104, 101, 108, 108, 111, 10, 80, 75, 3, 4, 10, 0, 0, 0, 0, 0, 132, 158, 9, 91, 168, 97, 56, 221, 6, 0, 0, 0, 6, 0, 0, 0, 5, 0, 28, 0, 102, 105, 108, 101, 50, 85, 84, 9, 0, 3, 72, 251, 151, 104, 72, 251, 151, 104, 117, 120, 11, 0, 1, 4, 232, 3, 0, 0, 4, 232, 3, 0, 0, 119, 111, 114, 108, 100, 10, 80, 75, 1, 2, 30, 3, 10, 0, 0, 0, 0, 0, 131, 158, 9, 91, 32, 48, 58, 54, 6, 0, 0, 0, 6, 0, 0, 0, 5, 0, 24, 0, 0, 0, 0, 0, 1, 0, 0, 0, 164, 129, 0, 0, 0, 0, 102, 105, 108, 101, 49, 85, 84, 5, 0, 3, 69, 251, 151, 104, 117, 120, 11, 0, 1, 4, 232, 3, 0, 0, 4, 232, 3, 0, 0, 80, 75, 1, 2, 30, 3, 10, 0, 0, 0, 0, 0, 132, 158, 9, 91, 168, 97, 56, 221, 6, 0, 0, 0, 6, 0, 0, 0, 5, 0, 24, 0, 0, 0, 0, 0, 1, 0, 0, 0, 164, 129, 69, 0, 0, 0, 102, 105, 108, 101, 50, 85, 84, 5, 0, 3, 72, 251, 151, 104, 117, 120, 11, 0, 1, 4, 232, 3, 0, 0, 4, 232, 3, 0, 0, 80, 75, 5, 6, 0, 0, 0, 0, 2, 0, 2, 0, 150, 0, 0, 0, 138, 0, 0, 0, 0, 0}
-	if !backend.IsZipFile(data) {
+	if !zip.IsZipFile(data) {
 		t.Errorf("error detecting zip file")
 	}
 
-	files, err := backend.Decompress(data)
+	files, err := zip.Decompress(data)
 	if err != nil {
 		t.Error(err)
 	}

@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package main
+package server
 
 import (
 	"encoding/base64"
@@ -18,7 +18,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jarednogo/board/backend/core"
 	"github.com/jarednogo/board/backend/loader"
+	"github.com/jarednogo/board/backend/socket"
+	"github.com/jarednogo/board/backend/state"
 	"golang.org/x/net/websocket"
 )
 
@@ -50,12 +53,12 @@ func NewServer() *Server {
 }
 
 func (s *Server) Save() {
-	for id, room := range s.rooms {
+	for id, r := range s.rooms {
 		log.Printf("Saving %s", id)
 
 		// TODO: the term "handshake" has become obsolete
 		// as this is not the same process for client handshakes anymore
-		evt := room.State.InitData()
+		evt := r.State.InitData()
 		dataStruct := &loader.LoadJSON{}
 		s, _ := evt.Value.(string)
 		err := json.Unmarshal([]byte(s), dataStruct)
@@ -63,7 +66,7 @@ func (s *Server) Save() {
 			continue
 		}
 
-		dataStruct.Password = room.password
+		dataStruct.Password = r.Password
 		loader.SaveRoom(id, dataStruct)
 	}
 }
@@ -80,7 +83,7 @@ func (s *Server) Load() {
 			continue
 		}
 
-		state, err := FromSGF(string(sgf))
+		state, err := state.FromSGF(string(sgf))
 		if err != nil {
 			continue
 		}
@@ -102,7 +105,7 @@ func (s *Server) Load() {
 		log.Printf("Loading %s", id)
 
 		r := NewRoom()
-		r.password = load.Password
+		r.Password = load.Password
 		r.State = state
 		s.rooms[id] = r
 		go s.Heartbeat(id)
@@ -110,16 +113,15 @@ func (s *Server) Load() {
 }
 
 func (s *Server) Heartbeat(roomID string) {
-	room, ok := s.rooms[roomID]
+	r, ok := s.rooms[roomID]
 	if !ok {
 		return
 	}
 	for {
 		now := time.Now()
-		diff := now.Sub(*room.timeLastEvent)
+		diff := now.Sub(*r.TimeLastEvent)
 		log.Println(roomID, "Inactive for", diff)
-		if diff.Seconds() > room.State.Timeout {
-			room.open = false
+		if diff.Seconds() > r.State.Timeout {
 			break
 		}
 		time.Sleep(3600 * time.Second)
@@ -127,7 +129,7 @@ func (s *Server) Heartbeat(roomID string) {
 	log.Println("Cleaning up board due to inactivity:", roomID)
 
 	// close all the client connections
-	for _, conn := range room.conns {
+	for _, conn := range r.Conns {
 		conn.Close()
 	}
 
@@ -175,7 +177,7 @@ func (s *Server) SendMessages() {
 		keep = append(keep, m)
 
 		// make a new event to broadcast
-		evt := &EventJSON{
+		evt := &core.EventJSON{
 			"global",
 			m.Text,
 			0,
@@ -183,16 +185,16 @@ func (s *Server) SendMessages() {
 		}
 
 		// go through each room
-		for _, room := range s.rooms {
+		for _, r := range s.rooms {
 			// go through each client connection
-			for id, conn := range room.conns {
+			for id, conn := range r.Conns {
 				// check to see if we've already sent this message
 				// to this connection
 				if m.Notified[id] {
 					continue
 				}
 				// otherwise, send and record
-				SendEvent(conn, evt)
+				socket.SendEvent(conn, evt)
 				m.Notified[id] = true
 			}
 		}
@@ -215,51 +217,52 @@ func (s *Server) SendMessagesToOne(ws *websocket.Conn, id string) {
 	// send messages
 	for _, m := range s.messages {
 		// make a new event to send
-		evt := &EventJSON{
+		evt := &core.EventJSON{
 			"global",
 			m.Text,
 			0,
 			"",
 		}
 
-		SendEvent(ws, evt)
+		socket.SendEvent(ws, evt)
 		m.Notified[id] = true
 	}
 }
 
-func (s *Server) GetOrCreateRoom(roomID string) (*Room, bool) {
+func (s *Server) GetOrCreateRoom(roomID string) *Room {
 	// if the room they want doesn't exist, create it
-	created := false
+	//created := false
 	if _, ok := s.rooms[roomID]; !ok {
-		created = true
+		//created = true
 		log.Println("New room:", roomID)
 		r := NewRoom()
 		s.rooms[roomID] = r
 		go s.Heartbeat(roomID)
 	}
-	room := s.rooms[roomID]
-	return room, created
+	r := s.rooms[roomID]
+	//return r, created
+	return r
 }
 
-func (room *Room) NewConnection(ws *websocket.Conn, first bool) string {
+func (r *Room) NewConnection(ws *websocket.Conn) string {
 	// assign the new connection a new id
 	id := uuid.New().String()
 
 	// set the last user
-	room.lastUser = id
+	r.LastUser = id
 
 	// store the new connection by id
-	room.conns[id] = ws
+	r.Conns[id] = ws
 
 	// save current user
-	room.nicks[id] = ""
+	r.Nicks[id] = ""
 
 	// send initial state if it's not the first connection
-	if !first {
-		frame := room.State.GenerateFullFrame(Full)
-		evt := FrameJSON(frame)
-		SendEvent(ws, evt)
-	}
+	//if !first {
+	frame := r.State.GenerateFullFrame(core.Full)
+	evt := core.FrameJSON(frame)
+	socket.SendEvent(ws, evt)
+	//}
 
 	return id
 }
@@ -268,24 +271,24 @@ func (room *Room) NewConnection(ws *websocket.Conn, first bool) string {
 // see frontend/main.go suffixOp for corresponding receiver
 func (s *Server) HandleOp(ws *websocket.Conn, op, roomID string) {
 	data := ""
-	room, ok := s.rooms[roomID]
+	r, ok := s.rooms[roomID]
 	if !ok {
-		EncodeSend(ws, data)
+		socket.EncodeSend(ws, data)
 		return
 	}
 	switch op {
 	case "sgf":
 		// if the room doesn't exist, send empty string
-		data = room.State.ToSGF(false)
+		data = r.State.ToSGF(false)
 	case "sgfix":
 		// basically do the same thing but include indexes
-		data = room.State.ToSGF(true)
+		data = r.State.ToSGF(true)
 	case "debug":
 		// send debug info
-		evt := room.State.InitData()
+		evt := r.State.InitData()
 		data, _ = evt.Value.(string)
 	}
-	EncodeSend(ws, data)
+	socket.EncodeSend(ws, data)
 }
 
 // Echo the data received on the WebSocket.
@@ -305,74 +308,76 @@ func (s *Server) Handler(ws *websocket.Conn) {
 	}
 
 	// get or create the room
-	room, first := s.GetOrCreateRoom(roomID)
+	//r, first := s.GetOrCreateRoom(roomID)
+	r := s.GetOrCreateRoom(roomID)
 
 	// assign id to the new connection
-	id := room.NewConnection(ws, first)
+	//id := r.NewConnection(ws, first)
+	id := r.NewConnection(ws)
 	log.Println(url, "Connecting:", id)
 	s.SendMessagesToOne(ws, id)
 
 	// defer removing the client
-	defer delete(room.conns, id)
+	defer delete(r.Conns, id)
 
 	// send list of currently connected users
-	room.SendUserList()
+	r.SendUserList()
 
 	// send disconnection notification
 	// golang deferrals are called in LIFO order
-	defer room.SendUserList()
-	defer delete(room.nicks, id)
+	defer r.SendUserList()
+	defer delete(r.Nicks, id)
 
 	handlers := map[string]EventHandler{
-		"isprotected":   room.HandleIsProtected,
-		"checkpassword": room.HandleCheckPassword,
+		"isprotected":   r.HandleIsProtected,
+		"checkpassword": r.HandleCheckPassword,
 		"debug":         HandleDebug,
 		"ping":          HandlePing,
 
 		"upload_sgf": Chain(
-			room.HandleUploadSGF,
-			room.OutsideBuffer,
-			room.Authorized,
-			room.CloseOGS,
-			room.BroadcastAfter(false)),
+			r.HandleUploadSGF,
+			r.OutsideBuffer,
+			r.Authorized,
+			r.CloseOGS,
+			r.BroadcastAfter(false)),
 		"request_sgf": Chain(
-			room.HandleRequestSGF,
-			room.OutsideBuffer,
-			room.Authorized,
-			room.CloseOGS,
-			room.BroadcastAfter(false)),
+			r.HandleRequestSGF,
+			r.OutsideBuffer,
+			r.Authorized,
+			r.CloseOGS,
+			r.BroadcastAfter(false)),
 		"trash": Chain(
-			room.HandleTrash,
-			room.OutsideBuffer,
-			room.Authorized,
-			room.CloseOGS,
-			room.BroadcastAfter(false)),
+			r.HandleTrash,
+			r.OutsideBuffer,
+			r.Authorized,
+			r.CloseOGS,
+			r.BroadcastAfter(false)),
 		"update_nickname": Chain(
-			room.HandleUpdateNickname,
-			room.BroadcastAfter(false)),
+			r.HandleUpdateNickname,
+			r.BroadcastAfter(false)),
 		"update_settings": Chain(
-			room.HandleUpdateSettings,
-			room.Authorized,
-			room.BroadcastConnectedUsersAfter,
-			room.BroadcastAfter(false),
-			room.BroadcastFullFrameAfter),
+			r.HandleUpdateSettings,
+			r.Authorized,
+			r.BroadcastConnectedUsersAfter,
+			r.BroadcastAfter(false),
+			r.BroadcastFullFrameAfter),
 		"add_stone": Chain(
-			room.HandleEvent,
-			room.OutsideBuffer,
-			room.Authorized,
-			room.Slow,
-			room.BroadcastAfter(true)),
+			r.HandleEvent,
+			r.OutsideBuffer,
+			r.Authorized,
+			r.Slow,
+			r.BroadcastAfter(true)),
 		"_": Chain(
-			room.HandleEvent,
-			room.OutsideBuffer,
-			room.Authorized,
-			room.BroadcastAfter(true)),
+			r.HandleEvent,
+			r.OutsideBuffer,
+			r.Authorized,
+			r.BroadcastAfter(true)),
 	}
 
 	// main loop
 	for {
 		// receive the event
-		evt, err := ReceiveEvent(ws)
+		evt, err := socket.ReceiveEvent(ws)
 		if err != nil {
 			log.Println(id, err)
 			break
