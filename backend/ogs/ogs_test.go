@@ -12,7 +12,7 @@ package ogs_test
 
 import (
 	"encoding/json"
-	"github.com/jarednogo/board/backend/ogs"
+	//"github.com/jarednogo/board/backend/ogs"
 	"testing"
 )
 

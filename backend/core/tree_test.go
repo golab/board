@@ -12,21 +12,22 @@ package core_test
 
 import (
 	"github.com/jarednogo/board/backend/core"
+	"github.com/jarednogo/board/backend/state"
 	"testing"
 )
 
 func TestFmap(t *testing.T) {
-	state, err := backend.FromSGF("(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black](;B[pd];W[dd];B[pp];W[dp])(;B[dd];W[ee]))")
+	state, err := state.FromSGF("(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black](;B[pd];W[dd];B[pp];W[dp])(;B[dd];W[ee]))")
 	if err != nil {
 		t.Error(err)
 	}
 
-	backend.Fmap(func(n *backend.TreeNode) {
-		n.Color = backend.Opposite(n.Color)
+	core.Fmap(func(n *core.TreeNode) {
+		n.Color = core.Opposite(n.Color)
 	}, state.Root)
 
 	node := state.Nodes[1]
-	if node.Color != backend.White {
+	if node.Color != core.White {
 		t.Errorf("fmap failed")
 	}
 }

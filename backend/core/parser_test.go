@@ -35,7 +35,7 @@ var fieldTests = []struct {
 func TestParser(t *testing.T) {
 	for _, tt := range fieldTests {
 		t.Run(tt.input, func(t *testing.T) {
-			p := backend.NewParser(tt.input)
+			p := core.NewParser(tt.input)
 			root, err := p.Parse()
 			if err != nil {
 				t.Error(err)
@@ -63,7 +63,7 @@ var outputTests = []string{
 func TestToSGF(t *testing.T) {
 	for _, input := range outputTests {
 		t.Run(input, func(t *testing.T) {
-			p := backend.NewParser(input)
+			p := core.NewParser(input)
 			root, err := p.Parse()
 			if err != nil {
 				t.Error(err)
@@ -88,8 +88,8 @@ var mergeTests = []struct {
 func TestMerge(t *testing.T) {
 	for i, tt := range mergeTests {
 		t.Run(fmt.Sprintf("merge%d", i), func(t *testing.T) {
-			merged := backend.Merge(tt.input)
-			p := backend.NewParser(merged)
+			merged := core.Merge(tt.input)
+			p := core.NewParser(merged)
 			root, err := p.Parse()
 			if err != nil {
 				t.Error(err)
@@ -105,7 +105,7 @@ func TestMerge(t *testing.T) {
 
 func TestPass(t *testing.T) {
 	sgf := "(;GM[1];B[aa];W[bb];B[tt];W[ss])"
-	p := backend.NewParser(sgf)
+	p := core.NewParser(sgf)
 	root, err := p.Parse()
 	if err != nil {
 		t.Error(err)

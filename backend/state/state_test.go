@@ -17,7 +17,7 @@ import (
 )
 
 func TestState1(t *testing.T) {
-	s, err := backend.FromSGF("(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black];B[pd];W[dd];B[pp];W[dp];B[];W[])")
+	s, err := state.FromSGF("(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black];B[pd];W[dd];B[pp];W[dp];B[];W[])")
 	if err != nil {
 		t.Error(err)
 	}
@@ -28,7 +28,7 @@ func TestState1(t *testing.T) {
 
 func TestState2(t *testing.T) {
 	input := "(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black];B[pd];W[dd];B[pp];W[dp];B[];W[])"
-	s, err := backend.FromSGF(input)
+	s, err := state.FromSGF(input)
 	if err != nil {
 		t.Error(err)
 	}
