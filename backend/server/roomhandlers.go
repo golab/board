@@ -21,6 +21,7 @@ import (
 	"github.com/jarednogo/board/backend/fetch"
 	"github.com/jarednogo/board/backend/ogs"
 	"github.com/jarednogo/board/backend/state"
+	"github.com/jarednogo/board/backend/verify"
 	"github.com/jarednogo/board/backend/zip"
 )
 
@@ -39,7 +40,7 @@ func (room *Room) HandleIsProtected(evt *core.EventJSON) *core.EventJSON {
 func (room *Room) HandleCheckPassword(evt *core.EventJSON) *core.EventJSON {
 	p := evt.Value.(string)
 
-	if !core.CorrectPassword(p, room.Password) {
+	if !verify.CorrectPassword(p, room.Password) {
 		evt.Value = ""
 	} else {
 		room.auth[evt.UserID] = true
@@ -207,6 +208,7 @@ func (room *Room) HandleUpdateNickname(evt *core.EventJSON) *core.EventJSON {
 		room.Nicks,
 		0,
 		evt.UserID,
+		"",
 	}
 	return userEvt
 }
@@ -228,7 +230,7 @@ func (room *Room) HandleUpdateSettings(evt *core.EventJSON) *core.EventJSON {
 	password := sMap["password"].(string)
 	hashed := ""
 	if password != "" {
-		hashed = core.Hash(password)
+		hashed = verify.Hash(password)
 	}
 	settings := &Settings{buffer, size, hashed}
 
@@ -303,6 +305,7 @@ func (room *Room) BroadcastConnectedUsersAfter(handler EventHandler) EventHandle
 			room.Nicks,
 			0,
 			"",
+			"",
 		}
 
 		// broadcast connected_users
@@ -328,6 +331,25 @@ func (room *Room) Authorized(handler EventHandler) EventHandler {
 			// only go to the next handler if authorized
 			evt = handler(evt)
 		}
+		return evt
+	}
+}
+
+func (room *Room) Signed(handler EventHandler) EventHandler {
+	return func(evt *core.EventJSON) *core.EventJSON {
+		sig := evt.Signature
+		// the event value should be signable (i.e., a string)
+		val, ok := evt.Value.(string)
+		// if it's not a string, it's not signable
+		if !ok {
+			return evt
+		}
+		// if the signature doesn't check out, just return
+		if !verify.Verify(val, sig) {
+			return evt
+		}
+		// only continue on with the next handler if the signature checks out
+		evt = handler(evt)
 		return evt
 	}
 }

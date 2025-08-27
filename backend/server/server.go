@@ -187,6 +187,7 @@ func (s *Server) SendMessages() {
 			m.Text,
 			0,
 			"",
+			"",
 		}
 
 		// go through each room
@@ -226,6 +227,7 @@ func (s *Server) SendMessagesToOne(ws *websocket.Conn, id string) {
 			"global",
 			m.Text,
 			0,
+			"",
 			"",
 		}
 
@@ -350,6 +352,10 @@ func (s *Server) Handler(ws *websocket.Conn) {
 			r.Authorized,
 			r.Slow,
 			r.BroadcastAfter(true)),
+		"graft": Chain(
+			r.HandleEvent,
+			r.Signed,
+			r.BroadcastFullFrameAfter),
 		"_": Chain(
 			r.HandleEvent,
 			r.OutsideBuffer,

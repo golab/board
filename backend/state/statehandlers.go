@@ -13,6 +13,8 @@ package state
 import (
 	"fmt"
 	"github.com/jarednogo/board/backend/core"
+	"strconv"
+	"strings"
 )
 
 func (s *State) HandleAddStone(evt *core.EventJSON) (*core.Frame, error) {
@@ -313,4 +315,83 @@ func (s *State) HandleClipboard() (*core.Frame, error) {
 
 	marks := s.GenerateMarks()
 	return &core.Frame{core.DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(core.Full)}, nil
+}
+
+func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
+	v := evt.Value.(string)
+	tokens := strings.Split(v, " ")
+	if len(tokens) < 2 {
+		return nil, nil
+	}
+	mv64, err := strconv.ParseInt(tokens[0], 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	mv := int(mv64)
+
+	parentIndex := s.Root.TrunkNum(mv)
+	if parentIndex == -1 {
+		return nil, fmt.Errorf("trunk too short")
+	}
+	parent := s.Nodes[parentIndex]
+
+	save := s.Current.Index
+
+	var graft *core.TreeNode
+	up := parent
+
+	// go through each token
+	for _, tok := range tokens[1:] {
+
+		// convert to a Coord
+		coord, err := core.AlphanumericToCoord(tok)
+		if err != nil {
+			return nil, err
+		}
+
+		// go to the parent
+		s.GotoIndex(up.Index)
+
+		// get new color
+		col := core.Opposite(up.Color)
+
+		// each node needs an index
+		index := s.GetNextIndex()
+
+		// each node needs either B[] or W[] field
+		fields := make(map[string][]string)
+		var key string
+		if col == core.Black {
+			key = "B"
+		} else {
+			key = "W"
+		}
+		fields[key] = []string{coord.ToLetters()}
+
+		// create the node, up is the parent of the new node
+		node := core.NewTreeNode(coord, col, index, up, fields)
+
+		// add the node to the state's node map
+		s.Nodes[index] = node
+
+		// keep track of the first node
+		if graft == nil {
+			graft = node
+		}
+
+		// follow along so we can set child nodes
+		up.Down = append(up.Down, node)
+
+		// calculate the diff
+		diff := s.Board.Move(coord, col)
+		node.Diff = diff
+
+		// set the new parent for the next node
+		up = node
+	}
+
+	graft.RecomputeDepth()
+
+	s.GotoIndex(save)
+	return nil, nil
 }

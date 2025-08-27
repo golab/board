@@ -678,6 +678,8 @@ func (s *State) AddEvent(evt *core.EventJSON) (*core.Frame, error) {
 		return s.HandleCopy()
 	case "clipboard":
 		return s.HandleClipboard()
+	case "graft":
+		return s.HandleGraft(evt)
 	}
 	return nil, nil
 }

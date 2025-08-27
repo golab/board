@@ -53,6 +53,21 @@ func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields map[st
 	return node
 }
 
+// TrunkNum returns the node (index) using the given i
+// as distance along the trunk (assuming the trunk is long enough, otherwise -1)
+func (n *TreeNode) TrunkNum(i int) int {
+	cur := n
+	j := 0
+	for j < i {
+		if len(cur.Down) == 0 {
+			return -1
+		}
+		cur = cur.Down[0]
+		j++
+	}
+	return cur.Index
+}
+
 // SetParent exists to add the depth attribute
 func (n *TreeNode) SetParent(up *TreeNode) {
 	n.Up = up

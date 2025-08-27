@@ -101,8 +101,6 @@ func suffixOp(w http.ResponseWriter, r *http.Request, suffix string) {
 	length := binary.LittleEndian.Uint32(dataLen)
 
 	data, err := readBytes(ws, int(length))
-	//data := make([]byte, length)
-	//ws.Read(data)
 
 	decoded, err := base64.StdEncoding.DecodeString(string(data))
 	if err != nil {
@@ -180,11 +178,34 @@ func image(w http.ResponseWriter, r *http.Request) {
 	serveStatic(w, r, image)
 }
 
+// twitch stuff
+
+type ReqJSON struct {
+	Board  string `json:"board"`
+	Branch string `json:"branch"`
+}
+
+func twitch(w http.ResponseWriter, r *http.Request) {
+	var x ReqJSON
+	_ = json.NewDecoder(r.Body).Decode(&x)
+
+	sig := Sign(x.Branch)
+	e := &EventJSON{
+		Event:     "graft",
+		Value:     x.Branch,
+		Signature: sig,
+	}
+
+	websocketSend(e, x.Board)
+	w.WriteHeader(http.StatusOK)
+}
+
 // socket stuff
 
 type EventJSON struct {
-	Event string `json:"event"`
-	Value string `json:"value"`
+	Event     string `json:"event"`
+	Value     string `json:"value"`
+	Signature string `json:"signature"`
 }
 
 func websocketSend(e *EventJSON, boardID string) {
@@ -244,6 +265,12 @@ func uploadSGF(boardID, sgf string) {
 	websocketSend(e, boardID)
 }
 
+func apiV1Router() http.Handler {
+	r := chi.NewRouter()
+	r.Post("/twitch", twitch)
+	return r
+}
+
 func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.StripSlashes)
@@ -266,6 +293,8 @@ func main() {
 	r.Handle("/js/*", http.StripPrefix("/js/", http.FileServer(http.Dir("js"))))
 
 	r.NotFound(page404)
+
+	r.Mount("/api/v1", apiV1Router())
 
 	port := "8080"
 	host := "localhost"

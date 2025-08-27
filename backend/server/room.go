@@ -104,6 +104,7 @@ func (r *Room) SendUserList() {
 		r.Nicks,
 		0,
 		"",
+		"",
 	}
 
 	r.Broadcast(evt, false)

@@ -8,39 +8,27 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package core
+package verify_test
 
 import (
-	"golang.org/x/crypto/bcrypt"
+	"github.com/jarednogo/board/backend/verify"
+	"testing"
 )
 
-func Hash(input string) string {
-	hashedBytes, _ := bcrypt.GenerateFromPassword(
-		[]byte(input),
-		bcrypt.DefaultCost)
-	return string(hashedBytes)
+func TestHash1(t *testing.T) {
+	hash := "$2a$10$O5gxBye06fldX9Al9Upc8.nYkE33KWMTfxYF/sMt5TgEs66Vcg0JK"
+	password := "deadbeef"
+
+	if !verify.CorrectPassword(password, hash) {
+		t.Errorf("error checking password")
+	}
 }
 
-func CorrectPassword(input, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(input))
-	return err == nil
-}
-
-type EventJSON struct {
-	Event  string      `json:"event"`
-	Value  interface{} `json:"value"`
-	Color  int         `json:"color"`
-	UserID string      `json:"userid"`
-}
-
-func ErrorJSON(msg string) *EventJSON {
-	return &EventJSON{"error", msg, 0, ""}
-}
-
-func FrameJSON(frame *Frame) *EventJSON {
-	return &EventJSON{"frame", frame, 0, ""}
-}
-
-func NopJSON() *EventJSON {
-	return &EventJSON{"nop", nil, 0, ""}
+func TestVerify1(t *testing.T) {
+	msg := []byte("hello world")
+	mac := []byte{215, 112, 146, 4, 167, 84, 72, 161, 121, 43, 198, 224, 171, 180, 202, 215, 68, 15, 1, 60, 30, 190, 6, 42, 74, 126, 170, 101, 59, 165, 152, 36}
+	key := []byte{0xde, 0xad, 0xbe, 0xef}
+	if !verify.VerifyWithKey(msg, mac, key) {
+		t.Errorf("verify failed")
+	}
 }

@@ -12,6 +12,7 @@ package core
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -271,4 +272,53 @@ type TreeJSON struct {
 type PatternMove struct {
 	Coord *Coord // nil for passes
 	Color Color
+}
+
+type EventJSON struct {
+	Event     string      `json:"event"`
+	Value     interface{} `json:"value"`
+	Color     int         `json:"color"`
+	UserID    string      `json:"userid"`
+	Signature string      `json:"signature"`
+}
+
+func ErrorJSON(msg string) *EventJSON {
+	return &EventJSON{"error", msg, 0, "", ""}
+}
+
+func FrameJSON(frame *Frame) *EventJSON {
+	return &EventJSON{"frame", frame, 0, "", ""}
+}
+
+func NopJSON() *EventJSON {
+	return &EventJSON{"nop", nil, 0, "", ""}
+}
+
+func AlphanumericToCoord(s string) (*Coord, error) {
+	s = strings.ToLower(s)
+	if len(s) < 2 {
+		return nil, fmt.Errorf("failure to parse: %s", s)
+	}
+	letter := s[0]
+	if letter < 'a' || letter > 't' || letter == 'j' {
+		return nil, fmt.Errorf("bad character: %s", letter)
+	}
+
+	num64, err := strconv.ParseInt(s[1:], 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	num := int(num64)
+	if num < 1 || num > 19 {
+		return nil, fmt.Errorf("bad number: %d", num)
+	}
+	y := 18 - (num - 1)
+	var x int
+	if letter < 'j' {
+		x = int(letter - 'a')
+	} else {
+		x = int(letter - 'a' - 1)
+	}
+
+	return &Coord{x, y}, nil
 }
