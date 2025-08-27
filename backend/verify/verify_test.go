@@ -25,8 +25,8 @@ func TestHash1(t *testing.T) {
 }
 
 func TestVerify1(t *testing.T) {
-	msg := []byte("hello world")
-	mac := []byte{215, 112, 146, 4, 167, 84, 72, 161, 121, 43, 198, 224, 171, 180, 202, 215, 68, 15, 1, 60, 30, 190, 6, 42, 74, 126, 170, 101, 59, 165, 152, 36}
+	msg := "hello world"
+	mac := "d7709204a75448a1792bc6e0abb4cad7440f013c1ebe062a4a7eaa653ba59824"
 	key := []byte{0xde, 0xad, 0xbe, 0xef}
 	if !verify.VerifyWithKey(msg, mac, key) {
 		t.Errorf("verify failed")

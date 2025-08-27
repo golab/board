@@ -301,7 +301,7 @@ func AlphanumericToCoord(s string) (*Coord, error) {
 	}
 	letter := s[0]
 	if letter < 'a' || letter > 't' || letter == 'j' {
-		return nil, fmt.Errorf("bad character: %s", letter)
+		return nil, fmt.Errorf("bad character: %c", letter)
 	}
 
 	num64, err := strconv.ParseInt(s[1:], 10, 64)
