@@ -309,7 +309,21 @@ func (s *State) HandleClipboard() (*core.Frame, error) {
 		s.Nodes[i] = n
 	}, branch)
 
-	s.Current.Graft(branch)
+	// set parent and child relationships
+	branch.SetParent(s.Current)
+	s.Current.Down = append(s.Current.Down, branch)
+
+	// recompute depth
+	branch.RecomputeDepth()
+
+	// recompute diffs
+	core.Fmap(func(n *core.TreeNode) {
+		if n.IsMove() {
+			n.Diff = s.ComputeDiffMove(n.Index)
+		} else {
+			n.Diff = s.ComputeDiffSetup(n.Index)
+		}
+	}, branch)
 
 	marks := s.GenerateMarks()
 	return &core.Frame{core.DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(core.Full)}, nil
