@@ -334,6 +334,7 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 		return nil, fmt.Errorf("trunk too short")
 	}
 	parent := s.Nodes[parentIndex]
+	savedPref := parent.PreferredChild
 
 	save := s.Current.Index
 
@@ -393,5 +394,6 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 	graft.RecomputeDepth()
 
 	s.GotoIndex(save)
+	parent.PreferredChild = savedPref
 	return nil, nil
 }
