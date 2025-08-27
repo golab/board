@@ -11,6 +11,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package core
 
 // Fmap applies a function f to every node under (and including) root
+// even thought State contains Nodes and we can range over all the nodes,
+// Fmap is useful for two reasons:
+//   - it applies the function to the nodes in a consistent and hierarchical order
+//   - it can be applied to a branch only, just supply it with a starting node
+//     that isn't the root
 func Fmap(f func(*TreeNode), root *TreeNode) {
 	stack := []*TreeNode{root}
 	for len(stack) > 0 {

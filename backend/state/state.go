@@ -42,38 +42,6 @@ func (s *State) Prefs() map[string]int {
 		prefs[key] = node.PreferredChild
 	}
 	return prefs
-
-	/*
-		result := "{"
-		first := true
-		stack := []*core.TreeNode{s.Root}
-		for len(stack) > 0 {
-			i := len(stack) - 1
-			cur := stack[i]
-			stack = stack[:i]
-
-			c := cur.PreferredChild
-			if first {
-				result = fmt.Sprintf("%s\"%d\":%d", result, cur.Index, c)
-				first = false
-			} else {
-				result = fmt.Sprintf("%s,\"%d\":%d", result, cur.Index, c)
-			}
-
-			if len(cur.Down) == 1 {
-				stack = append(stack, cur.Down[0])
-			} else if len(cur.Down) > 1 {
-				// go backward through array
-				for i := len(cur.Down) - 1; i >= 0; i-- {
-					n := cur.Down[i]
-					stack = append(stack, n)
-				}
-			}
-		}
-
-		result += "}"
-		return result
-	*/
 }
 
 func (s *State) SetPreferred(index int) error {
@@ -97,48 +65,19 @@ func (s *State) SetPreferred(index int) error {
 	return nil
 }
 
+// ResetPrefs sets all prefs to 0
 func (s *State) ResetPrefs() {
-	stack := []*core.TreeNode{s.Root}
-	for len(stack) > 0 {
-		i := len(stack) - 1
-		cur := stack[i]
-		stack = stack[:i]
-
-		cur.PreferredChild = 0
-
-		if len(cur.Down) == 1 {
-			stack = append(stack, cur.Down[0])
-		} else if len(cur.Down) > 1 {
-			// go backward through array
-			for i := len(cur.Down) - 1; i >= 0; i-- {
-				n := cur.Down[i]
-				stack = append(stack, n)
-			}
-		}
+	for _, n := range s.Nodes {
+		n.PreferredChild = 0
 	}
 }
 
+// SetPrefs takes a map and sets
 func (s *State) SetPrefs(prefs map[string]int) {
-	stack := []*core.TreeNode{s.Root}
-	for len(stack) > 0 {
-		i := len(stack) - 1
-		cur := stack[i]
-		stack = stack[:i]
-
-		key := fmt.Sprintf("%d", cur.Index)
+	for _, n := range s.Nodes {
+		key := fmt.Sprintf("%d", n.Index)
 		p := prefs[key]
-
-		cur.PreferredChild = p
-
-		if len(cur.Down) == 1 {
-			stack = append(stack, cur.Down[0])
-		} else if len(cur.Down) > 1 {
-			// go backward through array
-			for i := len(cur.Down) - 1; i >= 0; i-- {
-				n := cur.Down[i]
-				stack = append(stack, n)
-			}
-		}
+		n.PreferredChild = p
 	}
 }
 
