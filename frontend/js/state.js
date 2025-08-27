@@ -282,6 +282,8 @@ class State {
 
         if (fields.has("AB")) {
             this.handicap = true;
+        } else {
+            this.handicap = false;
         }
 
         /*
