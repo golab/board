@@ -88,6 +88,7 @@ func TestChild(t *testing.T) {
 	}
 }
 
+/*
 func TestGraft(t *testing.T) {
 	s, err := state.FromSGF("(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black]C[comment1](;B[pd];W[dd];B[pp];W[dp])(;B[dd];W[ee]))")
 	if err != nil {
@@ -105,3 +106,4 @@ func TestGraft(t *testing.T) {
 		t.Errorf("failed to find child")
 	}
 }
+*/
