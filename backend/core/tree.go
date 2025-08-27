@@ -53,8 +53,6 @@ func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields map[st
 	return node
 }
 
-// TrunkNum returns the node (index) using the given i
-// as distance along the trunk (assuming the trunk is long enough, otherwise -1)
 func (n *TreeNode) TrunkNum(i int) int {
 	cur := n
 	j := 0
@@ -66,6 +64,16 @@ func (n *TreeNode) TrunkNum(i int) int {
 		j++
 	}
 	return cur.Index
+}
+
+func (n *TreeNode) IsMove() bool {
+	if _, ok := n.Fields["B"]; ok {
+		return true
+	}
+	if _, ok := n.Fields["W"]; ok {
+		return true
+	}
+	return false
 }
 
 // SetParent exists to add the depth attribute
@@ -82,18 +90,6 @@ func (n *TreeNode) RecomputeDepth() {
 			m.Depth = m.Up.Depth + 1
 		}
 	}, n)
-}
-
-func (n *TreeNode) Graft(branch *TreeNode) {
-	// add the clipboard branch to the children of the current node
-	n.Down = append(n.Down, branch)
-
-	// set the current node to be the parent of the clipboard branch
-	// this also sets the depth appropriately
-	branch.SetParent(n)
-
-	// adusts the depth of all the lower nodes
-	branch.RecomputeDepth()
 }
 
 func (n *TreeNode) HasChild(coord *Coord, col Color) (int, bool) {
