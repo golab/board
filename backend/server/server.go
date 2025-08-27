@@ -141,6 +141,7 @@ func (s *Server) Heartbeat(roomID string) {
 	// delete the room from the server map
 	delete(s.rooms, roomID)
 
+	// delete it from the database
 	loader.DeleteRoom(roomID)
 }
 

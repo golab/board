@@ -122,7 +122,7 @@ func (s *State) AddFieldNode(fields map[string][]string, index int) *core.Diff {
 	if index == -1 {
 		index = tmp
 	}
-	n := core.NewTreeNode(nil, -1, index, s.Current, fields)
+	n := core.NewTreeNode(nil, core.NoColor, index, s.Current, fields)
 	s.Nodes[index] = n
 	if s.Root == nil {
 		s.Root = n
@@ -916,7 +916,7 @@ func NewState(size int, initRoot bool) *State {
 		fields["KM"] = []string{"6.5"}
 
 		// coord, color, index, up, fields
-		root = core.NewTreeNode(nil, 0, 0, nil, fields)
+		root = core.NewTreeNode(nil, core.NoColor, 0, nil, fields)
 		nodes[0] = root
 		index = 1
 	}
