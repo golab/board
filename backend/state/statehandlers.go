@@ -318,28 +318,30 @@ func (s *State) HandleClipboard() (*core.Frame, error) {
 }
 
 func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
+	// convert the event value to a string and split into tokens
 	v := evt.Value.(string)
 	tokens := strings.Split(v, " ")
 	if len(tokens) < 2 {
 		return nil, nil
 	}
+
+	// convert the move number to an int
 	mv64, err := strconv.ParseInt(tokens[0], 10, 64)
 	if err != nil {
 		return nil, err
 	}
 	mv := int(mv64)
 
+	// interpret the move number as a trunk number, and find the
+	// corresponding index
 	parentIndex := s.Root.TrunkNum(mv)
 	if parentIndex == -1 {
 		return nil, fmt.Errorf("trunk too short")
 	}
-	parent := s.Nodes[parentIndex]
-	savedPref := parent.PreferredChild
 
-	save := s.Current.Index
-
-	var graft *core.TreeNode
-	up := parent
+	// setup the moves array and initial color
+	moves := []*core.PatternMove{}
+	col := s.Nodes[parentIndex].Color
 
 	// go through each token
 	for _, tok := range tokens[1:] {
@@ -350,50 +352,16 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 			return nil, err
 		}
 
-		// go to the parent
-		s.GotoIndex(up.Index)
-
 		// get new color
-		col := core.Opposite(up.Color)
+		col = core.Opposite(col)
 
-		// each node needs an index
-		index := s.GetNextIndex()
-
-		// each node needs either B[] or W[] field
-		fields := make(map[string][]string)
-		var key string
-		if col == core.Black {
-			key = "B"
-		} else {
-			key = "W"
-		}
-		fields[key] = []string{coord.ToLetters()}
-
-		// create the node, up is the parent of the new node
-		node := core.NewTreeNode(coord, col, index, up, fields)
-
-		// add the node to the state's node map
-		s.Nodes[index] = node
-
-		// keep track of the first node
-		if graft == nil {
-			graft = node
-		}
-
-		// follow along so we can set child nodes
-		up.Down = append(up.Down, node)
-
-		// calculate the diff
-		diff := s.Board.Move(coord, col)
-		node.Diff = diff
-
-		// set the new parent for the next node
-		up = node
+		// create a new move
+		move := &core.PatternMove{coord, col}
+		moves = append(moves, move)
 	}
 
-	graft.RecomputeDepth()
+	// call the state's graft function
+	s.Graft(parentIndex, moves)
 
-	s.GotoIndex(save)
-	parent.PreferredChild = savedPref
 	return nil, nil
 }

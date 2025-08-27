@@ -401,6 +401,60 @@ func (s *State) AddPatternNodes(moves []*core.PatternMove) {
 	s.GotoIndex(locationSave)
 }
 
+func (s *State) Graft(parentIndex int, moves []*core.PatternMove) {
+	parent := s.Nodes[parentIndex]
+	savedPref := parent.PreferredChild
+	save := s.Current.Index
+
+	var graft *core.TreeNode
+	up := parent
+
+	for _, move := range moves {
+
+		// go to the parent
+		s.GotoIndex(up.Index)
+
+		// each node needs an index
+		index := s.GetNextIndex()
+
+		// each node needs either B[] or W[] field
+		fields := make(map[string][]string)
+		var key string
+		if move.Color == core.Black {
+			key = "B"
+		} else {
+			key = "W"
+		}
+		fields[key] = []string{move.Coord.ToLetters()}
+
+		// create the node, up is the parent of the new node
+		node := core.NewTreeNode(move.Coord, move.Color, index, up, fields)
+
+		// keep track of the first node
+		if graft == nil {
+			graft = node
+		}
+
+		// add the node to the state's node map
+		s.Nodes[index] = node
+
+		// follow along so we can set child nodes
+		up.Down = append(up.Down, node)
+
+		// calculate the diff
+		diff := s.Board.Move(move.Coord, move.Color)
+		node.Diff = diff
+
+		// set the new parent for the next node
+		up = node
+	}
+
+	// cleanup
+	graft.RecomputeDepth()
+	s.GotoIndex(save)
+	parent.PreferredChild = savedPref
+}
+
 func (s *State) Cut() *core.Diff {
 	// store the current index
 	index := s.Current.Index
@@ -494,10 +548,6 @@ func (s *State) FastForward() {
 			break
 		}
 		s.Right()
-		/*
-		   index := s.Current.PreferredChild
-		   s.Current = s.Current.Down[index]
-		*/
 	}
 }
 
