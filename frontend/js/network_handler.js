@@ -391,7 +391,7 @@ class NetworkHandler {
     }
 
     send(payload) {
-        console.log("sending:", payload);
+        //console.log("sending:", payload);
         
         // first create the json payload
         let json_payload = JSON.stringify(payload);
@@ -406,7 +406,7 @@ class NetworkHandler {
 
 
     onmessage(event) {
-        console.log("receiving:", event.data);
+        //console.log("receiving:", event.data);
         let payload = JSON.parse(event.data);
         this.fromserver(payload);
     }
