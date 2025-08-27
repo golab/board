@@ -315,6 +315,9 @@ func (s *State) HandleClipboard() (*core.Frame, error) {
 	branch.SetParent(s.Current)
 	s.Current.Down = append(s.Current.Down, branch)
 
+	// save the parent pref
+	savedPref := s.Current.PreferredChild
+
 	// recompute depth
 	branch.RecomputeDepth()
 
@@ -326,6 +329,9 @@ func (s *State) HandleClipboard() (*core.Frame, error) {
 			n.Diff = s.ComputeDiffSetup(n.Index)
 		}
 	}, branch)
+
+	// restore savedpref
+	s.Current.PreferredChild = savedPref
 
 	marks := s.GenerateMarks()
 	return &core.Frame{core.DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(core.Full)}, nil
