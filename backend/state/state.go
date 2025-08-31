@@ -469,11 +469,16 @@ func (s *State) GotoIndex(index int) error {
 		return err
 	}
 	s.Rewind()
+	last := s.Current.Index
 	for {
 		if s.Current.Index == index {
 			break
 		}
 		s.Right()
+		// to prevent infinite loops
+		if s.Current.Index == last {
+			break
+		}
 	}
 	//s.Current = s.Nodes[index]
 	return nil
