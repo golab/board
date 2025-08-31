@@ -172,7 +172,7 @@ func (o *OGSConnector) ReadSocketToChan(socketchan chan byte) error {
 
 func (o *OGSConnector) Timeout() {
 	// sleep for six hours and then close the connection
-	time.Sleep(6 * time.Second)
+	time.Sleep(6 * time.Hour)
 	o.End()
 }
 
