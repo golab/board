@@ -170,6 +170,12 @@ func (o *OGSConnector) ReadSocketToChan(socketchan chan byte) error {
 	return nil
 }
 
+func (o *OGSConnector) Timeout() {
+	// sleep for six hours and then close the connection
+	time.Sleep(6 * time.Second)
+	o.End()
+}
+
 func (o *OGSConnector) End() {
 	o.Exit = true
 }
@@ -193,6 +199,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 
 	socketchan := make(chan byte)
 
+	go o.Timeout()
 	go o.Ping()
 	go o.ReadSocketToChan(socketchan)
 
