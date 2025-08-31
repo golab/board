@@ -115,3 +115,28 @@ func TestPass(t *testing.T) {
 		t.Errorf("error in reading [tt] pass")
 	}
 }
+
+func TestEmpty(t *testing.T) {
+	sgf := "()"
+	p := core.NewParser(sgf)
+	_, err := p.Parse()
+	if err != nil {
+		t.Error(err)
+	}
+
+}
+
+func FuzzParser(f *testing.F) {
+	testcases := []string{"(;)", "(;GM[1];B[aa];W[bb];B[];W[ss])", "(;GM[1];C[comment \"with\" quotes])"}
+	for _, tc := range testcases {
+		// add to seed corpus
+		f.Add(tc)
+	}
+
+	f.Fuzz(func(t *testing.T, orig string) {
+		p := core.NewParser(orig)
+		// looking for crashes or panics
+		_, _ = p.Parse()
+
+	})
+}

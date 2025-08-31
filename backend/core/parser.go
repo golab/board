@@ -373,6 +373,9 @@ func Merge(sgfs []string) string {
 }
 
 func Validate(node *SGFNode) (*SGFNode, error) {
+	if node == nil {
+		return nil, nil
+	}
 	fields := make(map[string][]string)
 	for key, value := range node.Fields {
 		if (key == "B" || key == "W") && len(value) == 1 && value[0] == "tt" {
