@@ -128,28 +128,28 @@ func ReadFrame(socketchan chan byte) ([]byte, error) {
 	started := false
 	depth := 0
 	for {
-		select {
-		case b, ok := <-socketchan:
-			if !ok {
-				return nil, nil
+		// when the websocket is closed, ok = false
+		b, ok := <-socketchan
+		if !ok {
+			// socket closed by reader
+			return nil, nil
+		}
+		if !started {
+			if b != '[' {
+				return nil, fmt.Errorf("invalid starting byte")
 			}
-			if !started {
-				if b != '[' {
-					return nil, fmt.Errorf("invalid starting byte")
-				}
+			depth++
+			data = append(data, b)
+			started = true
+		} else {
+			if b == '[' {
 				depth++
-				data = append(data, b)
-				started = true
-			} else {
-				if b == '[' {
-					depth++
-				} else if b == ']' {
-					depth--
-				}
-				data = append(data, b)
-				if depth == 0 && b == ']' {
-					return data, nil
-				}
+			} else if b == ']' {
+				depth--
+			}
+			data = append(data, b)
+			if depth == 0 && b == ']' {
+				return data, nil
 			}
 		}
 	}
@@ -159,7 +159,12 @@ func (o *OGSConnector) ReadSocketToChan(socketchan chan byte) error {
 	defer close(socketchan)
 	for {
 		data := make([]byte, 256)
-		n, _ := o.Socket.Read(data)
+		n, err := o.Socket.Read(data)
+		if err != nil {
+			// this will cause the websocket to close
+			// therefore ReadFrame will naturally come to an end
+			return err
+		}
 		for _, b := range data[:n] {
 			socketchan <- b
 		}
@@ -168,12 +173,6 @@ func (o *OGSConnector) ReadSocketToChan(socketchan chan byte) error {
 		}
 	}
 	return nil
-}
-
-func (o *OGSConnector) Timeout() {
-	// sleep for six hours and then close the connection
-	time.Sleep(6 * time.Hour)
-	o.End()
 }
 
 func (o *OGSConnector) End() {
@@ -189,7 +188,11 @@ func (o *OGSConnector) Ping() {
 		time.Sleep(25 * time.Second)
 		payload := make(map[string]interface{})
 		payload["client"] = time.Now().UnixMilli()
-		o.Send("net/ping", payload)
+		if err := o.Send("net/ping", payload); err != nil {
+			log.Println(err)
+			o.End()
+			return
+		}
 	}
 }
 
@@ -199,7 +202,6 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 
 	socketchan := make(chan byte)
 
-	go o.Timeout()
 	go o.Ping()
 	go o.ReadSocketToChan(socketchan)
 
@@ -209,10 +211,23 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 		if o.Exit {
 			break
 		}
-		data, _ := ReadFrame(socketchan)
+		data, err := ReadFrame(socketchan)
+
+		// break on error
+		if err != nil {
+			log.Println(err)
+			break
+		}
+
+		// if err == nil and data == nil
+		// then break
+		if data == nil {
+			log.Println("socket closed")
+			break
+		}
 
 		arr := make([]interface{}, 2)
-		err := json.Unmarshal(data, &arr)
+		err = json.Unmarshal(data, &arr)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -404,7 +419,7 @@ func (o *OGSConnector) initStateToSGF(gamedata map[string]interface{}) string {
 	if len(wstate) > 0 {
 		sgf += "AW"
 		for i := 0; i < len(wstate)/2; i++ {
-			sgf += fmt.Sprintf("AW[%s]", wstate[2*i:2*i+2])
+			sgf += fmt.Sprintf("[%s]", wstate[2*i:2*i+2])
 		}
 	}
 	return sgf
