@@ -27,11 +27,13 @@ function init() {
     add_style();
     let host = window.location.hostname;
     let path = window.location.pathname;
+    let port = window.location.port;
     var network_handler;
     if (config.debug) {
-        network_handler = new NetworkHandler(config.shared, "ws://" + host + ":" + config.port + path);
+        let url = "ws://" + host + ":" + port + "/socket" + path;
+        network_handler = new NetworkHandler(config.shared, url);
     } else {
-        let url = "wss://" + host + "/socket" + path
+        let url = "wss://" + host + "/socket" + path;
         network_handler = new NetworkHandler(config.shared, url);
     }
     let state = new State();

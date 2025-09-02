@@ -18,17 +18,12 @@ If you make a pull request, please use `test` as the target branch. The test dom
 
 1. Install golang
 
-2. Run the frontend
+2. Run the server
 ```bash
-$ bash run.sh frontend
+$ bash scripts/run.sh
 ```
 
-3. Run the backend
-```bash
-$ bash run.sh backend
-```
-
-4. Visit `http://localhost:8080` in your browser.
+3. Visit `http://localhost:8080` in your browser.
 
 ### Running locally with docker
 
@@ -42,7 +37,7 @@ $ docker build . -t board
 3. Run the docker container, binding the container ports to your host ports
 
 ```bash
-$ docker run -p 8080:8080 -p 9000:9000 board
+$ docker run -p 8080:8080 board
 ```
 
 4. Visit `http://localhost:8080` in your browser

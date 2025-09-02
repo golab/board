@@ -26,6 +26,7 @@ import (
 
 // the url starts with '/'
 func ParseURL(url string) (string, string, string) {
+	url = strings.TrimPrefix(url, "/socket")
 	tokens := strings.Split(url, "/")
 	if len(tokens) <= 1 {
 		return "", "", ""
@@ -48,10 +49,15 @@ func NewServer() *Server {
 	// get database setup
 	loader.Setup()
 
-	return &Server{
+	s := &Server{
 		make(map[string]*Room),
 		[]*Message{},
 	}
+
+	// start message loop
+	go s.MessageLoop()
+
+	return s
 }
 
 func (s *Server) Save() {
@@ -254,12 +260,12 @@ func (s *Server) GetOrCreateRoom(roomID string) *Room {
 
 // these operate outside the main websocket loop
 // see frontend/main.go suffixOp for corresponding receiver
-func (s *Server) HandleOp(ws *websocket.Conn, op, roomID string) {
+func (s *Server) HandleOp(op, roomID string) string {
 	data := ""
 	r, ok := s.rooms[roomID]
 	if !ok {
-		socket.EncodeSend(ws, data)
-		return
+		//socket.EncodeSend(ws, data)
+		return ""
 	}
 	switch op {
 	case "sgf":
@@ -274,7 +280,8 @@ func (s *Server) HandleOp(ws *websocket.Conn, op, roomID string) {
 		dataBytes, _ := json.Marshal(stateJSON)
 		data = string(dataBytes)
 	}
-	socket.EncodeSend(ws, data)
+	return data
+	//socket.EncodeSend(ws, data)
 }
 
 // Echo the data received on the WebSocket.
@@ -284,14 +291,16 @@ func (s *Server) Handler(ws *websocket.Conn) {
 	// first find the url they want
 	url := ws.Request().URL.String()
 
+	log.Println(url)
+
 	// currently not using the prefix, but i may someday
-	_, roomID, op := ParseURL(url)
+	_, roomID, _ := ParseURL(url)
 
 	// check for op suffix
-	if op != "" {
-		s.HandleOp(ws, op, roomID)
-		return
-	}
+	//if op != "" {
+	//	s.HandleOp(ws, op, roomID)
+	//	return
+	//}
 
 	// get or create the room
 	//r, first := s.GetOrCreateRoom(roomID)
@@ -384,3 +393,4 @@ func (s *Server) Handler(ws *websocket.Conn) {
 		}
 	}
 }
+

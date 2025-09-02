@@ -60,6 +60,13 @@ func Path() string {
 	if err != nil {
 		home = "."
 	}
+
+	newpath := filepath.Join(home, ".config", "tripleko")
+	err = os.MkdirAll(newpath, os.ModePerm)
+	if err != nil {
+		home = "."
+	}
+
 	dbPath := filepath.Join(home, ".config", "tripleko", "board.db")
 	return dbPath
 }

@@ -8,13 +8,15 @@ RUN update-ca-certificates
 
 ADD frontend /root/frontend
 ADD backend /root/backend
+ADD cmd /root/cmd
 
-RUN sed -i -e 's/localhost/0.0.0.0/g' /root/backend/main.go
-RUN sed -i -e 's/localhost/0.0.0.0/g' /root/frontend/main.go
+ADD go.mod /root/go.mod
+ADD go.sum /root/go.sum
+
+RUN sed -i -e 's/localhost/0.0.0.0/g' /root/cmd/main.go
 
 EXPOSE 8080
-EXPOSE 9000
 
-ADD run.sh /root
+ADD scripts/run.sh /root
 WORKDIR /root
-CMD ["bash", "/root/run.sh", "all"]
+CMD ["bash", "/root/run.sh"]
