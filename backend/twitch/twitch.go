@@ -16,6 +16,9 @@ type Chat struct {
 
 func Parse(chat string) (*Chat, error) {
 	chat = strings.TrimSpace(chat)
+	if !strings.HasPrefix(chat, "!") {
+		return nil, fmt.Errorf("not a command")
+	}
 	chat = strings.TrimPrefix(chat, "!")
 	tokens := strings.Split(chat, " ")
 	if len(tokens) == 0 {

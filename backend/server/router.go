@@ -86,7 +86,7 @@ func (s *Server) Twitch(w http.ResponseWriter, r *http.Request) {
 	text := evt.Message.Text
 	chat, err := twitch.Parse(text)
 	if err != nil {
-		log.Println(err)
+		//log.Println(err)
 		return
 	}
 

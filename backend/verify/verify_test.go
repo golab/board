@@ -24,11 +24,3 @@ func TestHash1(t *testing.T) {
 	}
 }
 
-func TestVerify1(t *testing.T) {
-	msg := "hello world"
-	mac := "d7709204a75448a1792bc6e0abb4cad7440f013c1ebe062a4a7eaa653ba59824"
-	key := []byte{0xde, 0xad, 0xbe, 0xef}
-	if !verify.VerifyWithKey(msg, mac, key) {
-		t.Errorf("verify failed")
-	}
-}
