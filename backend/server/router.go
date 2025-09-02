@@ -12,8 +12,8 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 
@@ -35,7 +35,7 @@ func (s *Server) Twitch(w http.ResponseWriter, r *http.Request) {
 
 	data, _ := io.ReadAll(r.Body)
 
-	evt := &core.EventJSON {
+	evt := &core.EventJSON{
 		Event: "graft",
 		Value: string(data),
 	}
@@ -87,7 +87,7 @@ func (s *Server) Upload(w http.ResponseWriter, r *http.Request) {
 			room.Authorized,
 			room.CloseOGS,
 			room.BroadcastAfter(false))
-		evt = &core.EventJSON {
+		evt = &core.EventJSON{
 			Event: "request_sgf",
 			Value: url,
 		}
@@ -98,7 +98,7 @@ func (s *Server) Upload(w http.ResponseWriter, r *http.Request) {
 			room.Authorized,
 			room.CloseOGS,
 			room.BroadcastAfter(false))
-		evt = &core.EventJSON {
+		evt = &core.EventJSON{
 			Event: "upload_sgf",
 			Value: sgf,
 		}
@@ -123,12 +123,9 @@ func sanitize(s string) string {
 	return string(ok)
 }
 
-
 func uuid4() string {
 	r, _ := uuid.NewRandom()
 	s := r.String()
 	// remove hyphens
 	return sanitize(s)
 }
-
-

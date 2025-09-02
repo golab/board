@@ -393,4 +393,3 @@ func (s *Server) Handler(ws *websocket.Conn) {
 		}
 	}
 }
-
