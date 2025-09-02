@@ -109,12 +109,12 @@ export function create_buttons(_state) {
 
     // scissors button
     let scissors_button = new_icon_button("bi-scissors", () => state.modals.show_modal("scissors-modal"));
-    add_tooltip(scissors_button, "Cut branch");
+    add_tooltip(scissors_button, "Cut branch (Ctrl+X / Cmd+X)");
     button_row2.appendChild(scissors_button);
 
     // clipboard button
     let clipboard_button = new_icon_button("bi-clipboard", () => state.network_handler.prepare_clipboard());
-    add_tooltip(clipboard_button, "Paste branch");
+    add_tooltip(clipboard_button, "Paste branch (Ctrl+V / Cmd+V)");
     button_row2.appendChild(clipboard_button);
 
     // trash everything
