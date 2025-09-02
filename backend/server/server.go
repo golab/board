@@ -362,10 +362,6 @@ func (s *Server) Handler(ws *websocket.Conn) {
 			r.Authorized,
 			r.Slow,
 			r.BroadcastAfter(true)),
-		"graft": Chain(
-			r.HandleEvent,
-			r.Signed,
-			r.BroadcastFullFrameAfter),
 		"_": Chain(
 			r.HandleEvent,
 			r.OutsideBuffer,

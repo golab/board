@@ -335,25 +335,6 @@ func (room *Room) Authorized(handler EventHandler) EventHandler {
 	}
 }
 
-func (room *Room) Signed(handler EventHandler) EventHandler {
-	return func(evt *core.EventJSON) *core.EventJSON {
-		sig := evt.Signature
-		// the event value should be signable (i.e., a string)
-		val, ok := evt.Value.(string)
-		// if it's not a string, it's not signable
-		if !ok {
-			return evt
-		}
-		// if the signature doesn't check out, just return
-		if !verify.Verify(val, sig) {
-			return evt
-		}
-		// only continue on with the next handler if the signature checks out
-		evt = handler(evt)
-		return evt
-	}
-}
-
 // this one is to keep the same user from submitting multiple events too quickly
 func (room *Room) Slow(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {

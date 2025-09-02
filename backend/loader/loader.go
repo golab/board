@@ -110,6 +110,98 @@ func Setup() {
 		log.Println(err)
 		return
 	}
+
+	// create the 'twitch' table if it doesn't exist
+	_, err = db.ExecContext(
+		context.Background(),
+		`CREATE TABLE IF NOT EXISTS twitch (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			broadcaster STRING NOT NULL,
+			roomid STRING NOT NULL
+		)`,
+	)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+func TwitchGetRoom(broadcaster string) string {
+	rooms, err := TwitchSelectRoom(broadcaster)
+	if err != nil || len(rooms) != 1 {
+		return ""
+	}
+	return rooms[0]
+}
+
+func TwitchSelectRoom(broadcaster string) ([]string, error) {
+	db, err := sql.Open("sqlite", "file:"+Path())
+	if err != nil {
+		return []string{}, err
+	}
+	defer db.Close()
+	rows, err := db.QueryContext(
+		context.Background(),
+		`SELECT roomid FROM twitch WHERE broadcaster = ?`,
+		broadcaster)
+	if err != nil {
+		log.Println(err)
+		return []string{}, err
+	}
+
+	defer rows.Close()
+	rooms := []string{}
+	for rows.Next() {
+		var roomid string
+		err = rows.Scan(&roomid)
+		if err != nil {
+			continue
+		}
+		rooms = append(rooms, roomid)
+	}
+
+	return rooms, nil
+}
+
+func TwitchSetRoom(broadcaster, roomid string) error {
+	rooms, err := TwitchSelectRoom(broadcaster)
+	if err != nil {
+		return err
+	}
+
+	if len(rooms) == 0 {
+		return TwitchInsertRoom(broadcaster, roomid)
+	} else {
+		return TwitchUpdateRoom(broadcaster, roomid)
+	}
+}
+
+func TwitchInsertRoom(broadcaster, roomid string) error {
+	db, err := sql.Open("sqlite", "file:"+Path())
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	_, err = db.ExecContext(
+		context.Background(),
+		`INSERT INTO twitch (broadcaster, roomid) VALUES (?, ?)`,
+		broadcaster, roomid)
+	return err
+}
+
+func TwitchUpdateRoom(broadcaster, roomid string) error {
+	db, err := sql.Open("sqlite", "file:"+Path())
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	_, err = db.ExecContext(
+		context.Background(),
+		`UPDATE twitch SET roomid = ? WHERE broadcaster = ?`,
+		roomid, broadcaster)
+	return err
 }
 
 func LoadRoom(id string) (*LoadJSON, error) {
@@ -155,10 +247,7 @@ func UpdateRoom(id string, data *LoadJSON) error {
 		context.Background(),
 		`UPDATE rooms SET sgf = ?, loc = ?, prefs = ?, buffer = ?, nextindex = ?, password = ?  WHERE id = ?`,
 		data.SGF, data.Location, prefs, data.Buffer, data.NextIndex, data.Password, id)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func InsertRoom(id string, data *LoadJSON) error {
@@ -178,10 +267,7 @@ func InsertRoom(id string, data *LoadJSON) error {
 		`INSERT INTO rooms (id, sgf, loc, prefs, buffer, nextindex, password) VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		id, data.SGF, data.Location, prefs, data.Buffer, data.NextIndex, data.Password)
 
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func LoadAllRooms() []*LoadJSON {
