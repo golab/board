@@ -23,4 +23,3 @@ func TestHash1(t *testing.T) {
 		t.Errorf("error checking password")
 	}
 }
-
