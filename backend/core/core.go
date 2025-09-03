@@ -12,6 +12,7 @@ package core
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -321,4 +322,12 @@ func AlphanumericToCoord(s string) (*Coord, error) {
 	}
 
 	return &Coord{x, y}, nil
+}
+
+func MyURL() string {
+	s := os.Getenv("MYURL")
+	if s == "" {
+		return "http://localhost:8080"
+	}
+	return s
 }

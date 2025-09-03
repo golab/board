@@ -25,8 +25,12 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
+	"github.com/jarednogo/board/backend/loader"
 	"github.com/jarednogo/board/backend/server"
+	"github.com/jarednogo/board/backend/twitch"
+	"github.com/jarednogo/board/backend/core"
 	"github.com/jarednogo/board/frontend"
 )
 
@@ -83,14 +87,73 @@ func includeCommon(w http.ResponseWriter, page string) {
 	templ.Execute(w, nil)
 }
 
-func twitch(w http.ResponseWriter, r *http.Request) {
+func twitchRegister(w http.ResponseWriter, r *http.Request) {
+	state := uuid.New().String()
+	log.Println(state)
+	expiration := time.Now().Add(2 * time.Minute)
+	http.SetCookie(w, &http.Cookie{
+		Name: "oauth_state",
+		Value: state,
+		HttpOnly: true,
+		Secure: true,
+		Expires: expiration,
+		Path: "/",
+	})
+	url := fmt.Sprintf("https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/apps/twitch/callback&scope=%s&state=%s", twitch.ClientID(), core.MyURL(), "channel:bot", state)
+	http.Redirect(w, r, url, http.StatusFound)
+}
+
+func twitchCallback(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	scope := r.URL.Query().Get("scope")
 	state := r.URL.Query().Get("state")
 
+	cookie, err := r.Cookie("oauth_state")
+	if err != nil || cookie.Value != state {
+		http.Error(w, "invalid state", http.StatusForbidden)
+		return
+	}
+
 	log.Println(code)
 	log.Println(scope)
 	log.Println(state)
+
+	if code != "" {
+
+		// use the code to get an access token
+		token, err := twitch.GetUserAccessToken(code)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
+
+		// use the user access token to get the user id
+		user, err := twitch.GetUsers(token)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
+
+		// get an app access token (one could imagine putting this
+		// in the subscribe function directly)
+		token, err = twitch.GetAppAccessToken()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
+
+		// subscribe, get subscription id
+		id, err := twitch.Subscribe(user, token)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
+
+		// store the id
+		loader.TwitchSetSubscription(user, id)
+
+		log.Println(id)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"message": "success"}`))
@@ -102,6 +165,10 @@ func about(w http.ResponseWriter, r *http.Request) {
 
 func index(w http.ResponseWriter, r *http.Request) {
 	includeCommon(w, "index.html")
+}
+
+func twitchMain(w http.ResponseWriter, r *http.Request) {
+	includeCommon(w, "twitch.html")
 }
 
 func board(w http.ResponseWriter, r *http.Request) {
@@ -153,10 +220,19 @@ func image(w http.ResponseWriter, r *http.Request) {
 	serveStatic(w, r, image)
 }
 
-func apiV1Router(s *server.Server) http.Handler {
+func apiV1Router() http.Handler {
 	r := chi.NewRouter()
-	r.Get("/twitch", twitch)
-	r.Post("/twitch", s.Twitch)
+	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"message": "pong"}`))
+	})
+	return r
+}
+
+func twitchRouter(s *server.Server) http.Handler {
+	r := chi.NewRouter()
+	r.Get("/register", twitchRegister)
+	r.Get("/callback", twitchCallback)
+	r.Post("/callback", s.Twitch)
 	return r
 }
 
@@ -183,6 +259,7 @@ func main() {
 	r.Get("/", index)
 	r.Get("/about", about)
 	r.Get("/board", board)
+	r.Get("/twitch", twitchMain)
 	r.Get("/favicon.ico", favicon)
 	r.Post("/new", newBoard)
 	r.Get("/upload", s.Upload)
@@ -202,8 +279,10 @@ func main() {
 
 	r.NotFound(page404)
 
+	r.Mount("/api/v1", apiV1Router())
+
 	// see server package for routes
-	r.Mount("/api/v1", apiV1Router(s))
+	r.Mount("/apps/twitch", twitchRouter(s))
 
 	// mount websocket
 	r.Get("/socket/b/{boardID}", func(w http.ResponseWriter, r *http.Request) {
