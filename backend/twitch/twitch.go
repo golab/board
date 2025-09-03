@@ -289,21 +289,28 @@ func Subscribe(user, token string) (string, error) {
 
 	log.Println(string(data))
 
-	var s map[string][]struct {
-		ID string `json:"id"`
-	}
+	var s map[string]interface{}
 	err = json.Unmarshal(data, &s)
 	if err != nil {
 		return "", err
 	}
 
 	if _, ok := s["data"]; !ok {
+		if msg, ok := s["message"]; ok {
+			// to handle existing subscription
+			return "", fmt.Errorf("%s", msg)
+		}
 		return "", fmt.Errorf("invalid data returned")
 	}
 
-	if len(s["data"]) == 0 {
+	entries := s["data"].([]interface{})
+	if len(entries) == 0 {
 		return "", fmt.Errorf("no subscriptions returned")
 	}
 
-	return s["data"][0].ID, nil
+	sub := entries[0].(map[string]interface{})
+	if _, ok := sub["id"]; !ok {
+		return "", fmt.Errorf("no subscription id returned")
+	}
+	return sub["id"].(string), nil
 }

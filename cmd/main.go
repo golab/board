@@ -155,8 +155,9 @@ func twitchCallback(w http.ResponseWriter, r *http.Request) {
 		log.Println(id)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(`{"message": "success"}`))
+	//w.Header().Set("Content-Type", "application/json")
+	//w.Write([]byte(`{"message": "success"}`))
+	w.Write([]byte("success"))
 }
 
 func about(w http.ResponseWriter, r *http.Request) {
