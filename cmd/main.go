@@ -27,10 +27,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jarednogo/board/backend/core"
 	"github.com/jarednogo/board/backend/loader"
 	"github.com/jarednogo/board/backend/server"
 	"github.com/jarednogo/board/backend/twitch"
-	"github.com/jarednogo/board/backend/core"
 	"github.com/jarednogo/board/frontend"
 )
 
@@ -87,19 +87,35 @@ func includeCommon(w http.ResponseWriter, page string) {
 	templ.Execute(w, nil)
 }
 
-func twitchRegister(w http.ResponseWriter, r *http.Request) {
+func twitchSubscribe(w http.ResponseWriter, r *http.Request) {
 	state := uuid.New().String()
 	log.Println(state)
 	expiration := time.Now().Add(2 * time.Minute)
 	http.SetCookie(w, &http.Cookie{
-		Name: "oauth_state",
-		Value: state,
+		Name:     "oauth_state",
+		Value:    state,
 		HttpOnly: true,
-		Secure: true,
-		Expires: expiration,
-		Path: "/",
+		Secure:   true,
+		Expires:  expiration,
+		Path:     "/",
 	})
 	url := fmt.Sprintf("https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/apps/twitch/callback&scope=%s&state=%s", twitch.ClientID(), core.MyURL(), "channel:bot", state)
+	http.Redirect(w, r, url, http.StatusFound)
+}
+
+func twitchUnsubscribe(w http.ResponseWriter, r *http.Request) {
+	state := uuid.New().String()
+	log.Println(state)
+	expiration := time.Now().Add(2 * time.Minute)
+	http.SetCookie(w, &http.Cookie{
+		Name:     "oauth_state",
+		Value:    state,
+		HttpOnly: true,
+		Secure:   true,
+		Expires:  expiration,
+		Path:     "/",
+	})
+	url := fmt.Sprintf("https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/apps/twitch/callback&state=%s", twitch.ClientID(), core.MyURL(), state)
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
@@ -142,17 +158,32 @@ func twitchCallback(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// subscribe, get subscription id
-		id, err := twitch.Subscribe(user, token)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusForbidden)
-			return
+		if scope == "" {
+			// unsubscribe logic
+
+			// get subscription id
+			id := loader.TwitchGetSubscription(user)
+
+			// unsubscribe
+			err := twitch.Unsubscribe(id, token)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusForbidden)
+				return
+			}
+			loader.TwitchDeleteSubscription(user)
+		} else {
+			// subscribe, get subscription id
+			id, err := twitch.Subscribe(user, token)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusForbidden)
+				return
+			}
+
+			// store the id
+			loader.TwitchSetSubscription(user, id)
+
+			log.Println(id)
 		}
-
-		// store the id
-		loader.TwitchSetSubscription(user, id)
-
-		log.Println(id)
 	}
 
 	//w.Header().Set("Content-Type", "application/json")
@@ -231,7 +262,8 @@ func apiV1Router() http.Handler {
 
 func twitchRouter(s *server.Server) http.Handler {
 	r := chi.NewRouter()
-	r.Get("/register", twitchRegister)
+	r.Get("/subscribe", twitchSubscribe)
+	r.Get("/unsubscribe", twitchUnsubscribe)
 	r.Get("/callback", twitchCallback)
 	r.Post("/callback", s.Twitch)
 	return r

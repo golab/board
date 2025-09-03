@@ -239,6 +239,34 @@ type SubscriptionRequest struct {
 	Transport map[string]string `json:"transport"`
 }
 
+func Unsubscribe(id, token string) error {
+	body := map[string]string{"id": id}
+
+	jsonData, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+
+	bodyReader := bytes.NewBuffer(jsonData)
+	url := fmt.Sprintf("https://api.twitch.tv/helix/eventsub/subscriptions")
+
+	req, err := http.NewRequest(http.MethodDelete, url, bodyReader)
+
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Add("Client-Id", ClientID())
+
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	// Send the request
+	_, err = client.Do(req)
+	return err
+}
+
 func Subscribe(user, token string) (string, error) {
 	body := SubscriptionRequest{
 		Type:    "channel.chat.message",
