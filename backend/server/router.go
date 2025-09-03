@@ -26,12 +26,6 @@ import (
 	"github.com/jarednogo/board/backend/twitch"
 )
 
-func (s *Server) ApiV1Router() http.Handler {
-	r := chi.NewRouter()
-	r.Post("/twitch", s.Twitch)
-	return r
-}
-
 func (s *Server) Twitch(w http.ResponseWriter, r *http.Request) {
 	// read the body into a []byte
 	body, _ := io.ReadAll(r.Body)
@@ -63,6 +57,12 @@ func (s *Server) Twitch(w http.ResponseWriter, r *http.Request) {
 	if !v {
 		log.Println("unverified message")
 		return
+	}
+
+	// try to pull the subscription
+	subsc := req.Subscription
+	if subsc != nil {
+		log.Println(subsc)
 	}
 
 	// try to pull out the event

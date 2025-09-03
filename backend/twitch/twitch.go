@@ -31,9 +31,13 @@ func Parse(chat string) (*Chat, error) {
 
 // the base response type for twitch messages
 type TwitchJSON struct {
-	Subscription interface{}      `json:"subscription"`
+	Subscription *Subscription    `json:"subscription"`
 	Event        *TwitchEventJSON `json:"event"`
 	Challenge    string           `json:"challenge"`
+}
+
+type Subscription struct {
+	ID string `json:"id"`
 }
 
 // the twitch event type

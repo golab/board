@@ -12,7 +12,7 @@ package main
 
 import (
 	"io/fs"
-	
+
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -23,11 +23,11 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"syscall"
 	"strings"
+	"syscall"
 
-    "github.com/jarednogo/board/frontend"
 	"github.com/jarednogo/board/backend/server"
+	"github.com/jarednogo/board/frontend"
 )
 
 // constants
@@ -81,6 +81,19 @@ func includeCommon(w http.ResponseWriter, page string) {
 		return
 	}
 	templ.Execute(w, nil)
+}
+
+func twitch(w http.ResponseWriter, r *http.Request) {
+	code := r.URL.Query().Get("code")
+	scope := r.URL.Query().Get("scope")
+	state := r.URL.Query().Get("state")
+
+	log.Println(code)
+	log.Println(scope)
+	log.Println(state)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message": "success"}`))
 }
 
 func about(w http.ResponseWriter, r *http.Request) {
@@ -140,14 +153,19 @@ func image(w http.ResponseWriter, r *http.Request) {
 	serveStatic(w, r, image)
 }
 
-// socket stuff
+func apiV1Router(s *server.Server) http.Handler {
+	r := chi.NewRouter()
+	r.Get("/twitch", twitch)
+	r.Post("/twitch", s.Twitch)
+	return r
+}
 
 func main() {
 	// websocket server setup
 	cfg := websocket.Config{}
-    s := server.NewServer()
-    s.Load()
-    defer s.Save()
+	s := server.NewServer()
+	s.Load()
+	defer s.Save()
 
 	// create new websocket server
 	ws := websocket.Server{
@@ -185,7 +203,7 @@ func main() {
 	r.NotFound(page404)
 
 	// see server package for routes
-	r.Mount("/api/v1", s.ApiV1Router())
+	r.Mount("/api/v1", apiV1Router(s))
 
 	// mount websocket
 	r.Get("/socket/b/{boardID}", func(w http.ResponseWriter, r *http.Request) {
