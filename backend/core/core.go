@@ -301,7 +301,7 @@ func AlphanumericToCoord(s string) (*Coord, error) {
 		return nil, fmt.Errorf("failure to parse: %s", s)
 	}
 	letter := s[0]
-	if letter < 'a' || letter > 't' || letter == 'j' {
+	if letter < 'a' || letter > 't' || letter == 'i' {
 		return nil, fmt.Errorf("bad character: %c", letter)
 	}
 
@@ -315,7 +315,7 @@ func AlphanumericToCoord(s string) (*Coord, error) {
 	}
 	y := 18 - (num - 1)
 	var x int
-	if letter < 'j' {
+	if letter < 'i' {
 		x = int(letter - 'a')
 	} else {
 		x = int(letter - 'a' - 1)
