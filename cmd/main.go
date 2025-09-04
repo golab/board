@@ -89,7 +89,6 @@ func includeCommon(w http.ResponseWriter, page string) {
 
 func twitchSubscribe(w http.ResponseWriter, r *http.Request) {
 	state := uuid.New().String()
-	log.Println(state)
 	expiration := time.Now().Add(2 * time.Minute)
 	http.SetCookie(w, &http.Cookie{
 		Name:     "oauth_state",
@@ -105,7 +104,6 @@ func twitchSubscribe(w http.ResponseWriter, r *http.Request) {
 
 func twitchUnsubscribe(w http.ResponseWriter, r *http.Request) {
 	state := uuid.New().String()
-	log.Println(state)
 	expiration := time.Now().Add(2 * time.Minute)
 	http.SetCookie(w, &http.Cookie{
 		Name:     "oauth_state",
@@ -129,10 +127,6 @@ func twitchCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid state", http.StatusForbidden)
 		return
 	}
-
-	log.Println(code)
-	log.Println(scope)
-	log.Println(state)
 
 	if code != "" {
 
@@ -170,7 +164,8 @@ func twitchCallback(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusForbidden)
 				return
 			}
-			loader.TwitchDeleteSubscription(user)
+			err = loader.TwitchDeleteSubscription(user)
+			log.Println("error in db while deleting:", err)
 		} else {
 			// subscribe, get subscription id
 			id, err := twitch.Subscribe(user, token)
@@ -180,9 +175,10 @@ func twitchCallback(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// store the id
-			loader.TwitchSetSubscription(user, id)
+			err = loader.TwitchSetSubscription(user, id)
+			log.Println("error in db while subscribing:", err)
 
-			log.Println(id)
+			log.Println("id of new subscription:", id, "for user:", user)
 		}
 	}
 

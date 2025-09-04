@@ -315,7 +315,7 @@ func Subscribe(user, token string) (string, error) {
 		return "", err
 	}
 
-	log.Println(string(data))
+	log.Println("subscribe response:", string(data))
 
 	var s map[string]interface{}
 	err = json.Unmarshal(data, &s)

@@ -117,8 +117,8 @@ func Setup() {
 		`CREATE TABLE IF NOT EXISTS twitch (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			broadcaster STRING NOT NULL,
-			roomid STRING NOT NULL,
-			subscriptionid STRING NOT NULL
+			roomid STRING,
+			subscriptionid STRING
 		)`,
 	)
 
@@ -170,15 +170,15 @@ func TwitchDeleteSubscription(broadcaster string) error {
 }
 
 func TwitchSetSubscription(broadcaster, subscriptionid string) error {
-	rooms, err := TwitchSelectRoom(broadcaster)
+	subscriptions, err := TwitchSelectSubscription(broadcaster)
 	if err != nil {
 		return err
 	}
 
-	if len(rooms) == 0 {
-		return TwitchInsertRoom(broadcaster, subscriptionid)
+	if len(subscriptions) == 0 {
+		return TwitchInsertSubscription(broadcaster, subscriptionid)
 	} else {
-		return TwitchUpdateRoom(broadcaster, subscriptionid)
+		return TwitchUpdateSubscription(broadcaster, subscriptionid)
 	}
 }
 
