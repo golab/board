@@ -28,8 +28,7 @@ function pack_int(n) {
 
 // it's really both a network handler and event handler
 class NetworkHandler {
-    constructor(shared, url) {
-        this.shared = shared;
+    constructor(url) {
         this.url = url;
         this.connect();
 
@@ -43,12 +42,10 @@ class NetworkHandler {
     }
 
     connect() {
-        if (this.shared) {
-            this.socket = new WebSocket(this.url);
-            this.socket.onmessage = (event) => this.onmessage(event);
-            this.socket.onopen = (event) => this.onopen(event);
-            this.socket.onclose = (event) => this.reconnect(event);
-        }
+        this.socket = new WebSocket(this.url);
+        this.socket.onmessage = (event) => this.onmessage(event);
+        this.socket.onopen = (event) => this.onopen(event);
+        this.socket.onclose = (event) => this.reconnect(event);
     }
 
     debug(message) {
@@ -89,10 +86,7 @@ class NetworkHandler {
     }
 
     ready_state() {
-        if (!this.shared) {
-            return WebSocket.OPEN;
-        }
-        return this.socket.readyState;
+        return WebSocket.OPEN;
     }
 
     // evidently necessary because unfocused tabs don't hide modals
@@ -380,14 +374,7 @@ class NetworkHandler {
             return;
         }
 
-        if (this.shared) {
-            this.send(payload);
-            return;
-        }
-
-        // only gets called if not shared
-        // because server repeats messages to everyone
-        this.fromserver(payload);
+        this.send(payload);
     }
 
     send(payload) {

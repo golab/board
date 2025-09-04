@@ -10,8 +10,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 import { State } from './state.js'
 import { NetworkHandler } from './network_handler.js'
-import * as config from './config.js';
-
 
 function add_style() {
     document.body.style.background = "#F5F5F5";
@@ -29,12 +27,12 @@ function init() {
     let path = window.location.pathname;
     let port = window.location.port;
     var network_handler;
-    if (config.debug) {
+    if (host == "localhost") {
         let url = "ws://" + host + ":" + port + "/socket" + path;
-        network_handler = new NetworkHandler(config.shared, url);
+        network_handler = new NetworkHandler(url);
     } else {
         let url = "wss://" + host + "/socket" + path;
-        network_handler = new NetworkHandler(config.shared, url);
+        network_handler = new NetworkHandler(url);
     }
     let state = new State();
 

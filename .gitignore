@@ -1,6 +1,7 @@
-env/
+env
 notes.txt
 scratch/
 
 build/
 testdata/
+
