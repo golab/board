@@ -342,3 +342,76 @@ func Subscribe(user, token string) (string, error) {
 	}
 	return sub["id"].(string), nil
 }
+
+func Subscriptions(token string) ([]*SubscriptionData, error) {
+	url := "https://api.twitch.tv/helix/eventsub/subscriptions"
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Add("Client-Id", ClientID())
+
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	// Send the request
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var s SubscriptionResponse
+	err = json.Unmarshal(data, &s)
+	if err != nil {
+		return nil, err
+	}
+	return s.Data, nil
+}
+
+func GetSubscription(user string) (string, error) {
+	token, err := GetAppAccessToken()
+	if err != nil {
+		return "", err
+	}
+
+	subs, err := Subscriptions(token)
+	if err != nil {
+		return "", err
+	}
+
+	for _, sub := range subs {
+		if u, ok := sub.Condition["broadcaster_user_id"]; ok && u == user {
+			return sub.ID, nil
+		}
+	}
+	return "", fmt.Errorf("subscription not found")
+}
+
+type SubscriptionResponse struct {
+	Total        int                 `json:"total"`
+	Data         []*SubscriptionData `json:"data"`
+	MaxTotalCost int                 `json:"max_total_cost"`
+	TotalCost    int                 `json:"total_cost"`
+	Pagination   interface{}         `json:"pagination"`
+}
+
+type SubscriptionData struct {
+	ID        string            `json:"id"`
+	Status    string            `json:"status"`
+	Type      string            `json:"type"`
+	Version   string            `json:"version"`
+	Condition map[string]string `json:"condition"`
+	CreatedAt string            `json:"created_at"`
+	Transport map[string]string `json:"transport"`
+	Cost      int               `json:"cost"`
+}

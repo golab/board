@@ -28,7 +28,6 @@ import (
 	"time"
 
 	"github.com/jarednogo/board/backend/core"
-	"github.com/jarednogo/board/backend/loader"
 	"github.com/jarednogo/board/backend/server"
 	"github.com/jarednogo/board/backend/twitch"
 	"github.com/jarednogo/board/frontend"
@@ -154,18 +153,19 @@ func twitchCallback(w http.ResponseWriter, r *http.Request) {
 
 		if scope == "" {
 			// unsubscribe logic
-
-			// get subscription id
-			id := loader.TwitchGetSubscription(user)
-
-			// unsubscribe
-			err := twitch.Unsubscribe(id, token)
+			id, err := twitch.GetSubscription(user)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusForbidden)
 				return
 			}
-			err = loader.TwitchDeleteSubscription(user)
-			log.Println("error in db while deleting:", err)
+
+			// unsubscribe
+			err = twitch.Unsubscribe(id, token)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusForbidden)
+				return
+			}
+			log.Println("unsubscribing:", id, user)
 		} else {
 			// subscribe, get subscription id
 			id, err := twitch.Subscribe(user, token)
@@ -173,10 +173,6 @@ func twitchCallback(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusForbidden)
 				return
 			}
-
-			// store the id
-			err = loader.TwitchSetSubscription(user, id)
-			log.Println("error in db while subscribing:", err)
 
 			log.Println("id of new subscription:", id, "for user:", user)
 		}

@@ -117,8 +117,7 @@ func Setup() {
 		`CREATE TABLE IF NOT EXISTS twitch (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			broadcaster STRING NOT NULL,
-			roomid STRING,
-			subscriptionid STRING
+			roomid STRING
 		)`,
 	)
 
@@ -126,87 +125,6 @@ func Setup() {
 		log.Println(err)
 		return
 	}
-}
-
-func TwitchGetSubscription(broadcaster string) string {
-	subscriptions, err := TwitchSelectSubscription(broadcaster)
-	if err != nil || len(subscriptions) != 1 {
-		return ""
-	}
-	return subscriptions[0]
-}
-
-func TwitchSelectSubscription(broadcaster string) ([]string, error) {
-	db, err := sql.Open("sqlite", "file:"+Path())
-	if err != nil {
-		return []string{}, err
-	}
-	defer db.Close()
-	rows, err := db.QueryContext(
-		context.Background(),
-		`SELECT subscriptionid FROM twitch WHERE broadcaster = ?`,
-		broadcaster)
-	if err != nil {
-		log.Println(err)
-		return []string{}, err
-	}
-
-	defer rows.Close()
-	subscriptions := []string{}
-	for rows.Next() {
-		var subscriptionid string
-		err = rows.Scan(&subscriptionid)
-		if err != nil {
-			continue
-		}
-		subscriptions = append(subscriptions, subscriptionid)
-	}
-
-	return subscriptions, nil
-}
-
-func TwitchDeleteSubscription(broadcaster string) error {
-	return TwitchSetSubscription(broadcaster, "")
-}
-
-func TwitchSetSubscription(broadcaster, subscriptionid string) error {
-	subscriptions, err := TwitchSelectSubscription(broadcaster)
-	if err != nil {
-		return err
-	}
-
-	if len(subscriptions) == 0 {
-		return TwitchInsertSubscription(broadcaster, subscriptionid)
-	} else {
-		return TwitchUpdateSubscription(broadcaster, subscriptionid)
-	}
-}
-
-func TwitchInsertSubscription(broadcaster, subscriptionid string) error {
-	db, err := sql.Open("sqlite", "file:"+Path())
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-	_, err = db.ExecContext(
-		context.Background(),
-		`INSERT INTO twitch (broadcaster, subscriptionid) VALUES (?, ?)`,
-		broadcaster, subscriptionid)
-	return err
-}
-
-func TwitchUpdateSubscription(broadcaster, subscriptionid string) error {
-	db, err := sql.Open("sqlite", "file:"+Path())
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	_, err = db.ExecContext(
-		context.Background(),
-		`UPDATE twitch SET subscriptionid = ? WHERE broadcaster = ?`,
-		subscriptionid, broadcaster)
-	return err
 }
 
 func TwitchGetRoom(broadcaster string) string {
