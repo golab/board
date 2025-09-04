@@ -23,17 +23,15 @@ function add_style() {
 
 function init() {
     add_style();
-    let host = window.location.hostname;
+
+    // http -> ws, https -> wss
+    let protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    let host = window.location.host;
     let path = window.location.pathname;
-    let port = window.location.port;
-    var network_handler;
-    if (host == "localhost") {
-        let url = "ws://" + host + ":" + port + "/socket" + path;
-        network_handler = new NetworkHandler(url);
-    } else {
-        let url = "wss://" + host + "/socket" + path;
-        network_handler = new NetworkHandler(url);
-    }
+
+    // prefix path with /socket
+    let url = protocol + "//" + host + "/socket" + path;
+    let network_handler = new NetworkHandler(url);
     let state = new State();
 
     state.set_network_handler(network_handler);
