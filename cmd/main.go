@@ -16,7 +16,6 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/google/uuid"
 	"golang.org/x/net/websocket"
 	"html/template"
 	"log"
@@ -25,36 +24,15 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/jarednogo/board/backend/core"
 	"github.com/jarednogo/board/backend/server"
-	"github.com/jarednogo/board/backend/twitch"
 	"github.com/jarednogo/board/frontend"
 )
 
 // constants
 const WSPORT = 9000
 const WSHOST = "localhost"
-
-func sanitize(s string) string {
-	ok := []rune{}
-	for _, c := range s {
-		if (c >= '0' && c <= '9') ||
-			(c >= 'A' && c <= 'Z') ||
-			(c >= 'a' && c <= 'z') {
-			ok = append(ok, c)
-		}
-	}
-	return string(ok)
-}
-
-func uuid4() string {
-	r, _ := uuid.NewRandom()
-	s := r.String()
-	// remove hyphens
-	return sanitize(s)
-}
 
 // html
 
@@ -86,103 +64,6 @@ func includeCommon(w http.ResponseWriter, page string) {
 	templ.Execute(w, nil)
 }
 
-func twitchSubscribe(w http.ResponseWriter, r *http.Request) {
-	state := uuid.New().String()
-	expiration := time.Now().Add(2 * time.Minute)
-	http.SetCookie(w, &http.Cookie{
-		Name:     "oauth_state",
-		Value:    state,
-		HttpOnly: true,
-		Secure:   true,
-		Expires:  expiration,
-		Path:     "/",
-	})
-	url := fmt.Sprintf("https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/apps/twitch/callback&scope=%s&state=%s", twitch.ClientID(), core.MyURL(), "channel:bot", state)
-	http.Redirect(w, r, url, http.StatusFound)
-}
-
-func twitchUnsubscribe(w http.ResponseWriter, r *http.Request) {
-	state := uuid.New().String()
-	expiration := time.Now().Add(2 * time.Minute)
-	http.SetCookie(w, &http.Cookie{
-		Name:     "oauth_state",
-		Value:    state,
-		HttpOnly: true,
-		Secure:   true,
-		Expires:  expiration,
-		Path:     "/",
-	})
-	url := fmt.Sprintf("https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/apps/twitch/callback&state=%s", twitch.ClientID(), core.MyURL(), state)
-	http.Redirect(w, r, url, http.StatusFound)
-}
-
-func twitchCallback(w http.ResponseWriter, r *http.Request) {
-	code := r.URL.Query().Get("code")
-	scope := r.URL.Query().Get("scope")
-	state := r.URL.Query().Get("state")
-
-	cookie, err := r.Cookie("oauth_state")
-	if err != nil || cookie.Value != state {
-		http.Error(w, "invalid state", http.StatusForbidden)
-		return
-	}
-
-	if code != "" {
-
-		// use the code to get an access token
-		token, err := twitch.GetUserAccessToken(code)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusForbidden)
-			return
-		}
-
-		// use the user access token to get the user id
-		user, err := twitch.GetUsers(token)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusForbidden)
-			return
-		}
-
-		// get an app access token (one could imagine putting this
-		// in the subscribe function directly)
-		token, err = twitch.GetAppAccessToken()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusForbidden)
-			return
-		}
-
-		if scope == "" {
-			// unsubscribe logic
-			id, err := twitch.GetSubscription(user)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusForbidden)
-				return
-			}
-
-			// unsubscribe
-			err = twitch.Unsubscribe(id, token)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusForbidden)
-				return
-			}
-			log.Println("unsubscribing:", id, user)
-		} else {
-			// subscribe, get subscription id
-			id, err := twitch.Subscribe(user, token)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusForbidden)
-				return
-			}
-
-			log.Println("id of new subscription:", id, "for user:", user)
-		}
-	}
-
-	//w.Header().Set("Content-Type", "application/json")
-	//w.Write([]byte(`{"message": "success"}`))
-	w.Write([]byte("success"))
-}
-
 func about(w http.ResponseWriter, r *http.Request) {
 	includeCommon(w, "about.html")
 }
@@ -197,7 +78,7 @@ func twitchMain(w http.ResponseWriter, r *http.Request) {
 
 func board(w http.ResponseWriter, r *http.Request) {
 	boardID := chi.URLParam(r, "boardID")
-	if boardID != sanitize(boardID) {
+	if boardID != core.Sanitize(boardID) {
 		page400(w, r)
 		return
 	}
@@ -206,9 +87,9 @@ func board(w http.ResponseWriter, r *http.Request) {
 
 func newBoard(w http.ResponseWriter, r *http.Request) {
 	boardID := r.FormValue("board_id")
-	boardID = sanitize(boardID)
+	boardID = core.Sanitize(boardID)
 	if len(strings.TrimSpace(boardID)) == 0 {
-		boardID = uuid4()
+		boardID = core.UUID4()
 	}
 	redirect := fmt.Sprintf("/b/%s", boardID)
 	http.Redirect(w, r, redirect, http.StatusFound)
@@ -244,23 +125,6 @@ func image(w http.ResponseWriter, r *http.Request) {
 	serveStatic(w, r, image)
 }
 
-func apiV1Router() http.Handler {
-	r := chi.NewRouter()
-	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{"message": "pong"}`))
-	})
-	return r
-}
-
-func twitchRouter(s *server.Server) http.Handler {
-	r := chi.NewRouter()
-	r.Get("/subscribe", twitchSubscribe)
-	r.Get("/unsubscribe", twitchUnsubscribe)
-	r.Get("/callback", twitchCallback)
-	r.Post("/callback", s.Twitch)
-	return r
-}
-
 func main() {
 	// websocket server setup
 	cfg := websocket.Config{}
@@ -283,20 +147,17 @@ func main() {
 
 	r.Get("/", index)
 	r.Get("/about", about)
-	r.Get("/board", board)
 	r.Get("/twitch", twitchMain)
 	r.Get("/favicon.ico", favicon)
 	r.Post("/new", newBoard)
+
 	r.Get("/upload", s.Upload)
 
 	r.Get("/static/{image}", image)
 
 	r.Get("/b/{boardID}", board)
-
 	r.Get("/b/{boardID}/sgf", s.Sgf)
-
 	r.Get("/b/{boardID}/sgfix", s.Sgfix)
-
 	r.Get("/b/{boardID}/debug", s.Debug)
 
 	jsFS, _ := fs.Sub(frontend.Content, "js")
@@ -304,10 +165,10 @@ func main() {
 
 	r.NotFound(page404)
 
-	r.Mount("/api/v1", apiV1Router())
+	r.Mount("/api/v1", server.ApiV1Router())
 
 	// see server package for routes
-	r.Mount("/apps/twitch", twitchRouter(s))
+	r.Mount("/apps/twitch", s.TwitchRouter())
 
 	// mount websocket
 	r.Get("/socket/b/{boardID}", func(w http.ResponseWriter, r *http.Request) {

@@ -12,6 +12,7 @@ package core
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"os"
 	"strconv"
 	"strings"
@@ -330,4 +331,23 @@ func MyURL() string {
 		return "http://localhost:8080"
 	}
 	return s
+}
+
+func Sanitize(s string) string {
+	ok := []rune{}
+	for _, c := range s {
+		if (c >= '0' && c <= '9') ||
+			(c >= 'A' && c <= 'Z') ||
+			(c >= 'a' && c <= 'z') {
+			ok = append(ok, c)
+		}
+	}
+	return string(ok)
+}
+
+func UUID4() string {
+	r, _ := uuid.NewRandom()
+	s := r.String()
+	// remove hyphens
+	return Sanitize(s)
 }
