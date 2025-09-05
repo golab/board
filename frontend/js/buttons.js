@@ -90,14 +90,22 @@ export function create_buttons(_state) {
 
     // color picker
     let color_picker = document.createElement("input");
+    color_picker.setAttribute("type", "color");
+    color_picker.setAttribute("id", "color-picker");
+    color_picker.setAttribute("class", "btn btn-light wide-button");
     add_tooltip(color_picker, "Select pen color");
+    color_picker.setAttribute("value", state.pen_color);
+
+    // it seemed at some point this was necessary, but forcing js to compute
+    // offsetHeight was causing some light mode / dark mode flashing
+    // so i have taken it out and it didn't seem like anything bad happened
+    // *shrug*
+    // i guess if there's problems in the future i can add it back in
+    /*
     // necessary because otherwise color picker doesn't behave like other buttons
     let h = button_row1.offsetHeight;
-    color_picker.setAttribute("id", "color-picker");
-    color_picker.setAttribute("type", "color");
-    color_picker.setAttribute("class", "btn btn-light wide-button");
-    color_picker.setAttribute("value", state.pen_color);
     color_picker.style.height = h + "px";
+    */
 
     color_picker.onchange = function() {state.pen_color = this.value};
     button_row2.appendChild(color_picker);
