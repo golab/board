@@ -79,7 +79,8 @@ class Result {
 
 function new_text_button(text, handler) {
     let button = document.createElement("button");
-    button.setAttribute("class", "btn btn-light wide-button");
+    let cls = prefer_dark_mode() ? "btn-dark" : "btn-light";
+    button.setAttribute("class", "btn " + cls + " wide-button");
     button.onclick = handler;
     button.innerHTML += text;
     return button;
@@ -87,7 +88,8 @@ function new_text_button(text, handler) {
 
 function new_icon_button(cls, handler) {
     let button = document.createElement("button");
-    button.setAttribute("class", "btn btn-light wide-button");
+    let dark_cls = prefer_dark_mode() ? "btn-dark" : "btn-light";
+    button.setAttribute("class", "btn " + dark_cls + " wide-button");
     button.onclick = handler;
     let obj = document.createElement("i");
     obj.setAttribute("class", cls);

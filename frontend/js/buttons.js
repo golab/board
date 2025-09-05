@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import { new_icon_button, add_tooltip } from './common.js';
+import { new_icon_button, add_tooltip, prefer_dark_mode } from './common.js';
 
 export function create_buttons(_state) {
     const state = _state;
@@ -97,7 +97,9 @@ export function create_buttons(_state) {
     let color_picker = document.createElement("input");
     color_picker.setAttribute("type", "color");
     color_picker.setAttribute("id", "color-picker");
-    color_picker.setAttribute("class", "btn btn-light wide-button");
+
+    let cls = prefer_dark_mode() ? "btn-dark" : "btn-light";
+    color_picker.setAttribute("class", "btn " + cls + " wide-button");
     add_tooltip(color_picker, "Select pen color");
     color_picker.setAttribute("value", state.pen_color);
 
@@ -191,7 +193,7 @@ export function create_buttons(_state) {
 
     // move number
     let num = document.createElement("button");
-    num.setAttribute("class", "btn btn-light disabled");
+    num.setAttribute("class", "btn " + cls + " disabled");
     num.setAttribute("id", "move-number");
     num.innerHTML = "0";
     arrows.appendChild(num);

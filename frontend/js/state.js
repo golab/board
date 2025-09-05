@@ -87,6 +87,7 @@ class State {
         create_buttons(this);
 
         this.modals = create_modals(this);
+
         if (prefer_dark_mode()) {
             this.dark_mode_toggle();
         }
