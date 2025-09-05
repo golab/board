@@ -33,6 +33,11 @@ export function create_buttons(_state) {
 
     // row 1
 
+    let ghost_button = new_icon_button("bi-app");
+    button_row1.appendChild(ghost_button);
+    let h = button_row1.offsetHeight;
+    ghost_button.style.display = "none";
+
     // toggle
     let toggle_button = new_icon_button("bi-circle-half", () => state.set_toggle());
     add_tooltip(toggle_button, "Place alternating stones (1)");
@@ -96,16 +101,9 @@ export function create_buttons(_state) {
     add_tooltip(color_picker, "Select pen color");
     color_picker.setAttribute("value", state.pen_color);
 
-    // it seemed at some point this was necessary, but forcing js to compute
-    // offsetHeight was causing some light mode / dark mode flashing
-    // so i have taken it out and it didn't seem like anything bad happened
-    // *shrug*
-    // i guess if there's problems in the future i can add it back in
-    /*
-    // necessary because otherwise color picker doesn't behave like other buttons
-    let h = button_row1.offsetHeight;
+    // necessary because otherwise color picker doesn't end up being as
+    // tall as the other buttons
     color_picker.style.height = h + "px";
-    */
 
     color_picker.onchange = function() {state.pen_color = this.value};
     button_row2.appendChild(color_picker);
