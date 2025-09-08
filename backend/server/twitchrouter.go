@@ -211,7 +211,7 @@ func (s *Server) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 			if len(tokens) == 0 {
 				return
 			}
-			roomID := tokens[0]
+			roomID := core.Sanitize(tokens[0])
 
 			log.Println("setting roomid", broadcaster, roomID)
 			loader.TwitchSetRoom(broadcaster, roomID)
