@@ -72,8 +72,8 @@ func index(w http.ResponseWriter, r *http.Request) {
 	includeCommon(w, "index.html")
 }
 
-func twitchMain(w http.ResponseWriter, r *http.Request) {
-	includeCommon(w, "twitch.html")
+func integrations(w http.ResponseWriter, r *http.Request) {
+	includeCommon(w, "integrations.html")
 }
 
 func board(w http.ResponseWriter, r *http.Request) {
@@ -147,7 +147,7 @@ func main() {
 
 	r.Get("/", index)
 	r.Get("/about", about)
-	r.Get("/twitch", twitchMain)
+	r.Get("/integrations", integrations)
 	r.Get("/favicon.ico", favicon)
 	r.Post("/new", newBoard)
 
