@@ -19,6 +19,7 @@ import (
 
 	"github.com/jarednogo/board/backend/core"
 	"github.com/jarednogo/board/backend/loader"
+	"github.com/jarednogo/board/backend/room"
 	"github.com/jarednogo/board/backend/socket"
 	"github.com/jarednogo/board/backend/state"
 	"golang.org/x/net/websocket"
@@ -41,7 +42,7 @@ func ParseURL(url string) (string, string, string) {
 }
 
 type Server struct {
-	rooms    map[string]*Room
+	rooms    map[string]*room.Room
 	messages []*Message
 }
 
@@ -50,7 +51,7 @@ func NewServer() *Server {
 	loader.Setup()
 
 	s := &Server{
-		make(map[string]*Room),
+		make(map[string]*room.Room),
 		[]*Message{},
 	}
 
@@ -94,30 +95,30 @@ func (s *Server) Load() {
 			continue
 		}
 
-		state, err := state.FromSGF(string(sgf))
+		st, err := state.FromSGF(string(sgf))
 		if err != nil {
 			continue
 		}
 
-		state.SetPrefs(load.Prefs)
+		st.SetPrefs(load.Prefs)
 
-		state.NextIndex = load.NextIndex
-		state.InputBuffer = load.Buffer
+		st.NextIndex = load.NextIndex
+		st.InputBuffer = load.Buffer
 
 		loc := load.Location
 		if loc != "" {
 			dirs := strings.Split(loc, ",")
 			// don't need to assign to a variable if we don't use it
 			for range dirs {
-				state.Right()
+				st.Right()
 			}
 		}
 
 		log.Printf("Loading %s", id)
 
-		r := NewRoom()
+		r := room.NewRoom()
 		r.Password = load.Password
-		r.State = state
+		r.State = st
 		s.rooms[id] = r
 		go s.Heartbeat(id)
 	}
@@ -243,13 +244,13 @@ func (s *Server) SendMessagesToOne(ws *websocket.Conn, id string) {
 	}
 }
 
-func (s *Server) GetOrCreateRoom(roomID string) *Room {
+func (s *Server) GetOrCreateRoom(roomID string) *room.Room {
 	// if the room they want doesn't exist, create it
 	//created := false
 	if _, ok := s.rooms[roomID]; !ok {
 		//created = true
 		log.Println("New room:", roomID)
-		r := NewRoom()
+		r := room.NewRoom()
 		s.rooms[roomID] = r
 		go s.Heartbeat(roomID)
 	}
@@ -323,51 +324,7 @@ func (s *Server) Handler(ws *websocket.Conn) {
 	defer r.SendUserList()
 	defer delete(r.Nicks, id)
 
-	handlers := map[string]EventHandler{
-		"isprotected":   r.HandleIsProtected,
-		"checkpassword": r.HandleCheckPassword,
-		"debug":         HandleDebug,
-		"ping":          HandlePing,
-
-		"upload_sgf": Chain(
-			r.HandleUploadSGF,
-			r.OutsideBuffer,
-			r.Authorized,
-			r.CloseOGS,
-			r.BroadcastAfter(false)),
-		"request_sgf": Chain(
-			r.HandleRequestSGF,
-			r.OutsideBuffer,
-			r.Authorized,
-			r.CloseOGS,
-			r.BroadcastAfter(false)),
-		"trash": Chain(
-			r.HandleTrash,
-			r.OutsideBuffer,
-			r.Authorized,
-			r.CloseOGS,
-			r.BroadcastAfter(false)),
-		"update_nickname": Chain(
-			r.HandleUpdateNickname,
-			r.BroadcastAfter(false)),
-		"update_settings": Chain(
-			r.HandleUpdateSettings,
-			r.Authorized,
-			r.BroadcastConnectedUsersAfter,
-			r.BroadcastAfter(false),
-			r.BroadcastFullFrameAfter),
-		"add_stone": Chain(
-			r.HandleEvent,
-			r.OutsideBuffer,
-			r.Authorized,
-			r.Slow,
-			r.BroadcastAfter(true)),
-		"_": Chain(
-			r.HandleEvent,
-			r.OutsideBuffer,
-			r.Authorized,
-			r.BroadcastAfter(true)),
-	}
+	handlers := r.CreateHandlers()
 
 	// main loop
 	for {

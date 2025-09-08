@@ -23,6 +23,7 @@ import (
 
 	"github.com/jarednogo/board/backend/core"
 	"github.com/jarednogo/board/backend/loader"
+	"github.com/jarednogo/board/backend/room"
 	"github.com/jarednogo/board/backend/twitch"
 )
 
@@ -234,11 +235,11 @@ func (s *Server) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Println("room found for", broadcaster, roomID)
-		room := s.GetOrCreateRoom(roomID)
+		r := s.GetOrCreateRoom(roomID)
 
-		handler := Chain(
-			room.HandleEvent,
-			room.BroadcastFullFrameAfter)
+		handler := room.Chain(
+			r.HandleEvent,
+			r.BroadcastFullFrameAfter)
 		handler(e)
 	}
 

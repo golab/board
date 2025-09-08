@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package server
+package room
 
 import (
 	"encoding/base64"
@@ -21,13 +21,61 @@ import (
 	"github.com/jarednogo/board/backend/fetch"
 	"github.com/jarednogo/board/backend/ogs"
 	"github.com/jarednogo/board/backend/state"
-	"github.com/jarednogo/board/backend/verify"
 	"github.com/jarednogo/board/backend/zip"
 )
 
 type EventHandler func(*core.EventJSON) *core.EventJSON
 
 type Middleware func(EventHandler) EventHandler
+
+// for use by server
+func (r *Room) CreateHandlers() map[string]EventHandler {
+	return map[string]EventHandler{
+		"isprotected":   r.HandleIsProtected,
+		"checkpassword": r.HandleCheckPassword,
+		"debug":         HandleDebug,
+		"ping":          HandlePing,
+
+		"upload_sgf": Chain(
+			r.HandleUploadSGF,
+			r.OutsideBuffer,
+			r.Authorized,
+			r.CloseOGS,
+			r.BroadcastAfter(false)),
+		"request_sgf": Chain(
+			r.HandleRequestSGF,
+			r.OutsideBuffer,
+			r.Authorized,
+			r.CloseOGS,
+			r.BroadcastAfter(false)),
+		"trash": Chain(
+			r.HandleTrash,
+			r.OutsideBuffer,
+			r.Authorized,
+			r.CloseOGS,
+			r.BroadcastAfter(false)),
+		"update_nickname": Chain(
+			r.HandleUpdateNickname,
+			r.BroadcastAfter(false)),
+		"update_settings": Chain(
+			r.HandleUpdateSettings,
+			r.Authorized,
+			r.BroadcastConnectedUsersAfter,
+			r.BroadcastAfter(false),
+			r.BroadcastFullFrameAfter),
+		"add_stone": Chain(
+			r.HandleEvent,
+			r.OutsideBuffer,
+			r.Authorized,
+			r.Slow,
+			r.BroadcastAfter(true)),
+		"_": Chain(
+			r.HandleEvent,
+			r.OutsideBuffer,
+			r.Authorized,
+			r.BroadcastAfter(true)),
+	}
+}
 
 // handlers
 
@@ -40,7 +88,7 @@ func (room *Room) HandleIsProtected(evt *core.EventJSON) *core.EventJSON {
 func (room *Room) HandleCheckPassword(evt *core.EventJSON) *core.EventJSON {
 	p := evt.Value.(string)
 
-	if !verify.CorrectPassword(p, room.Password) {
+	if !core.CorrectPassword(p, room.Password) {
 		evt.Value = ""
 	} else {
 		room.auth[evt.UserID] = true
@@ -230,7 +278,7 @@ func (room *Room) HandleUpdateSettings(evt *core.EventJSON) *core.EventJSON {
 	password := sMap["password"].(string)
 	hashed := ""
 	if password != "" {
-		hashed = verify.Hash(password)
+		hashed = core.Hash(password)
 	}
 	settings := &Settings{buffer, size, hashed}
 

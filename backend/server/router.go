@@ -18,6 +18,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/jarednogo/board/backend/core"
+	"github.com/jarednogo/board/backend/room"
 )
 
 func (s *Server) Debug(w http.ResponseWriter, r *http.Request) {
@@ -46,28 +47,28 @@ func (s *Server) Upload(w http.ResponseWriter, r *http.Request) {
 	if len(strings.TrimSpace(boardID)) == 0 {
 		boardID = core.UUID4()
 	}
-	room := s.GetOrCreateRoom(boardID)
+	newroom := s.GetOrCreateRoom(boardID)
 
-	var handler EventHandler
+	var handler room.EventHandler
 	var evt *core.EventJSON
 	if url != "" {
-		handler = Chain(
-			room.HandleRequestSGF,
-			room.OutsideBuffer,
-			room.Authorized,
-			room.CloseOGS,
-			room.BroadcastAfter(false))
+		handler = room.Chain(
+			newroom.HandleRequestSGF,
+			newroom.OutsideBuffer,
+			newroom.Authorized,
+			newroom.CloseOGS,
+			newroom.BroadcastAfter(false))
 		evt = &core.EventJSON{
 			Event: "request_sgf",
 			Value: url,
 		}
 	} else if sgf != "" {
-		handler = Chain(
-			room.HandleUploadSGF,
-			room.OutsideBuffer,
-			room.Authorized,
-			room.CloseOGS,
-			room.BroadcastAfter(false))
+		handler = room.Chain(
+			newroom.HandleUploadSGF,
+			newroom.OutsideBuffer,
+			newroom.Authorized,
+			newroom.CloseOGS,
+			newroom.BroadcastAfter(false))
 		evt = &core.EventJSON{
 			Event: "upload_sgf",
 			Value: sgf,
