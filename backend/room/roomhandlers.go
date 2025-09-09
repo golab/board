@@ -40,39 +40,41 @@ func (r *Room) CreateHandlers() map[string]EventHandler {
 			r.OutsideBuffer,
 			r.Authorized,
 			r.CloseOGS,
-			r.BroadcastAfter(false)),
+			r.BroadcastAfter),
 		"request_sgf": Chain(
 			r.HandleRequestSGF,
 			r.OutsideBuffer,
 			r.Authorized,
 			r.CloseOGS,
-			r.BroadcastAfter(false)),
+			r.BroadcastAfter),
 		"trash": Chain(
 			r.HandleTrash,
 			r.OutsideBuffer,
 			r.Authorized,
 			r.CloseOGS,
-			r.BroadcastAfter(false)),
+			r.BroadcastAfter),
 		"update_nickname": Chain(
 			r.HandleUpdateNickname,
-			r.BroadcastAfter(false)),
+			r.BroadcastAfter),
 		"update_settings": Chain(
 			r.HandleUpdateSettings,
 			r.Authorized,
 			r.BroadcastConnectedUsersAfter,
-			r.BroadcastAfter(false),
+			r.BroadcastAfter,
 			r.BroadcastFullFrameAfter),
 		"add_stone": Chain(
 			r.HandleEvent,
 			r.OutsideBuffer,
 			r.Authorized,
 			r.Slow,
-			r.BroadcastAfter(true)),
+			r.BroadcastAfter,
+			r.SetTimeAfter),
 		"_": Chain(
 			r.HandleEvent,
 			r.OutsideBuffer,
 			r.Authorized,
-			r.BroadcastAfter(true)),
+			r.BroadcastAfter,
+			r.SetTimeAfter),
 	}
 }
 
@@ -324,13 +326,22 @@ func (room *Room) HandleEvent(evt *core.EventJSON) *core.EventJSON {
 
 // middleware
 
-func (room *Room) BroadcastAfter(setTime bool) Middleware {
-	return func(handler EventHandler) EventHandler {
-		return func(evt *core.EventJSON) *core.EventJSON {
-			evt = handler(evt)
-			room.Broadcast(evt, setTime)
-			return evt
-		}
+func (room *Room) SetTimeAfter(handler EventHandler) EventHandler {
+	return func(evt *core.EventJSON) *core.EventJSON {
+		evt = handler(evt)
+		// set last user information
+		room.LastUser = evt.UserID
+		now := time.Now()
+		room.TimeLastEvent = &now
+		return evt
+	}
+}
+
+func (room *Room) BroadcastAfter(handler EventHandler) EventHandler {
+	return func(evt *core.EventJSON) *core.EventJSON {
+		evt = handler(evt)
+		room.Broadcast(evt)
+		return evt
 	}
 }
 
@@ -339,7 +350,7 @@ func (room *Room) BroadcastFullFrameAfter(handler EventHandler) EventHandler {
 		evt = handler(evt)
 		frame := room.State.GenerateFullFrame(core.Full)
 		bcast := core.FrameJSON(frame)
-		room.Broadcast(bcast, false)
+		room.Broadcast(bcast)
 		return evt
 	}
 }
@@ -356,7 +367,7 @@ func (room *Room) BroadcastConnectedUsersAfter(handler EventHandler) EventHandle
 		}
 
 		// broadcast connected_users
-		room.Broadcast(userEvt, false)
+		room.Broadcast(userEvt)
 		return evt
 	}
 }

@@ -244,7 +244,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			//frame := o.Room.State.GenerateFullFrame(core.Full)
 			frame := o.Room.GenerateFullFrame(core.Full)
 			evt := core.FrameJSON(frame)
-			o.Room.Broadcast(evt, false)
+			o.Room.Broadcast(evt)
 
 		} else if topic == fmt.Sprintf("game/%d/gamedata", gameID) {
 			payload := arr[1].(map[string]interface{})
@@ -254,7 +254,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			}
 			sgf := o.GamedataToSGF(payload)
 			evt := o.Room.UploadSGF(sgf)
-			o.Room.Broadcast(evt, false)
+			o.Room.Broadcast(evt)
 		} else if topic == fmt.Sprintf("review/%d/full_state", gameID) {
 			/*
 				nodes := arr[1].([]interface{})
@@ -306,7 +306,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			//frame := o.Room.State.GenerateFullFrame(core.Full)
 			frame := o.Room.GenerateFullFrame(core.Full)
 			evt := core.FrameJSON(frame)
-			o.Room.Broadcast(evt, false)
+			o.Room.Broadcast(evt)
 		} else {
 			//log.Println(topic)
 		}

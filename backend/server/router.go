@@ -57,7 +57,7 @@ func (s *Server) Upload(w http.ResponseWriter, r *http.Request) {
 			newroom.OutsideBuffer,
 			newroom.Authorized,
 			newroom.CloseOGS,
-			newroom.BroadcastAfter(false))
+			newroom.BroadcastAfter)
 		evt = &core.EventJSON{
 			Event: "request_sgf",
 			Value: url,
@@ -68,7 +68,7 @@ func (s *Server) Upload(w http.ResponseWriter, r *http.Request) {
 			newroom.OutsideBuffer,
 			newroom.Authorized,
 			newroom.CloseOGS,
-			newroom.BroadcastAfter(false))
+			newroom.BroadcastAfter)
 		evt = &core.EventJSON{
 			Event: "upload_sgf",
 			Value: sgf,

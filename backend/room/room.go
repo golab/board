@@ -55,7 +55,7 @@ func (r *Room) SendTo(id string, evt *core.EventJSON) {
 	}
 }
 
-func (r *Room) Broadcast(evt *core.EventJSON, setTime bool) {
+func (r *Room) Broadcast(evt *core.EventJSON) {
 	if evt.Event == "nop" {
 		return
 	}
@@ -72,13 +72,6 @@ func (r *Room) Broadcast(evt *core.EventJSON, setTime bool) {
 	// rebroadcast message
 	for _, conn := range r.Conns {
 		conn.Write(data)
-	}
-
-	if setTime {
-		// set last user information
-		r.LastUser = id
-		now := time.Now()
-		r.TimeLastEvent = &now
 	}
 }
 
@@ -106,7 +99,7 @@ func (r *Room) SendUserList() {
 		"",
 	}
 
-	r.Broadcast(evt, false)
+	r.Broadcast(evt)
 }
 
 func (r *Room) NewConnection(ws *websocket.Conn) string {
