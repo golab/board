@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-func IsWhitespace(c byte) bool {
+func IsWhitespace(c rune) bool {
 	return c == '\n' || c == ' ' || c == '\t' || c == '\r'
 }
 
@@ -102,12 +102,12 @@ func NewSGFNode(fields map[string][]string, index int) *SGFNode {
 }
 
 type Parser struct {
-	Text  string
+	Text  []rune
 	Index int
 }
 
 func NewParser(text string) *Parser {
-	return &Parser{text, 0}
+	return &Parser{[]rune(text), 0}
 }
 
 func (p *Parser) Parse() (*SGFNode, error) {
@@ -142,7 +142,7 @@ func (p *Parser) ParseKey() (string, error) {
 		} else if c < 'A' || c > 'Z' {
 			break
 		}
-		s += string([]byte{p.read()})
+		s += string([]rune{p.read()})
 	}
 	return s, nil
 }
@@ -276,7 +276,7 @@ func (p *Parser) ParseBranch() (*SGFNode, error) {
 	return root, nil
 }
 
-func (p *Parser) read() byte {
+func (p *Parser) read() rune {
 	if p.Index >= len(p.Text) {
 		return 0
 	}
@@ -285,7 +285,7 @@ func (p *Parser) read() byte {
 	return result
 }
 
-func (p *Parser) peek(n int) byte {
+func (p *Parser) peek(n int) rune {
 	if p.Index+n >= len(p.Text) {
 		return 0
 	}
