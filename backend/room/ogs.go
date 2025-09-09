@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package ogs
+package room
 
 import (
 	"encoding/json"
@@ -60,24 +60,15 @@ func GetCreds() (*Creds, error) {
 	return resp, nil
 }
 
-type Room interface {
-	HeadColor() core.Color
-	PushHead(int, int, core.Color)
-	GenerateFullFrame(core.TreeJSONType) *core.Frame
-	AddPatternNodes([]*core.PatternMove)
-	Broadcast(*core.EventJSON, bool)
-	UploadSGF(string) *core.EventJSON
-}
-
 type OGSConnector struct {
 	Creds  *Creds
 	Socket *websocket.Conn
-	Room   Room
+	Room   *Room
 	First  int
 	Exit   bool
 }
 
-func NewOGSConnector(room Room) (*OGSConnector, error) {
+func NewOGSConnector(room *Room) (*OGSConnector, error) {
 	creds, err := GetCreds()
 	_ = creds
 	if err != nil {

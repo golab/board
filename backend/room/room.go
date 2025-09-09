@@ -17,7 +17,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jarednogo/board/backend/core"
-	"github.com/jarednogo/board/backend/ogs"
 	"github.com/jarednogo/board/backend/socket"
 	"github.com/jarednogo/board/backend/state"
 	"golang.org/x/net/websocket"
@@ -30,7 +29,7 @@ type Room struct {
 	TimeLastEvent *time.Time
 	LastUser      string
 	lastMessages  map[string]*time.Time
-	OGSLink       *ogs.OGSConnector
+	OGSLink       *OGSConnector
 	Password      string
 	auth          map[string]bool
 	Nicks         map[string]string

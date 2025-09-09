@@ -19,7 +19,6 @@ import (
 
 	"github.com/jarednogo/board/backend/core"
 	"github.com/jarednogo/board/backend/fetch"
-	"github.com/jarednogo/board/backend/ogs"
 	"github.com/jarednogo/board/backend/state"
 	"github.com/jarednogo/board/backend/zip"
 )
@@ -206,7 +205,7 @@ func (room *Room) HandleRequestSGF(evt *core.EventJSON) *core.EventJSON {
 			}
 			id := int(id64)
 
-			o, err := ogs.NewOGSConnector(room)
+			o, err := NewOGSConnector(room)
 			if err != nil {
 				bcast = core.ErrorJSON("ogs connector error")
 				return bcast

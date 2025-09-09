@@ -15,6 +15,8 @@ import (
 )
 
 // helper functions for ogs
+// these were more important when ogs was its own package
+// still i'm keeping them around in case i split it out again
 
 func (r *Room) HeadColor() core.Color {
 	return r.State.Head.Color
