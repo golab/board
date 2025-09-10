@@ -341,22 +341,39 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 	// convert the event value to a string and split into tokens
 	v := evt.Value.(string)
 	tokens := strings.Split(v, " ")
-	if len(tokens) < 2 {
-		return nil, nil
-	}
+
+	/*
+		if len(tokens) < 2 {
+			return nil, nil
+		}
+	*/
+
+	// currently accepting the first arg as a move number or not
+	var parentIndex int
+	start := 0
 
 	// convert the move number to an int
 	mv64, err := strconv.ParseInt(tokens[0], 10, 64)
-	if err != nil {
-		return nil, err
-	}
-	mv := int(mv64)
 
-	// interpret the move number as a trunk number, and find the
-	// corresponding index
-	parentIndex := s.Root.TrunkNum(mv)
-	if parentIndex == -1 {
-		return nil, fmt.Errorf("trunk too short")
+	if err != nil {
+		parentIndex = s.Current.Index
+
+	} else {
+		start = 1
+
+		mv := int(mv64)
+
+		// interpret the move number as a trunk number, and find the
+		// corresponding index
+		parentIndex = s.Root.TrunkNum(mv)
+
+		if parentIndex == -1 {
+			return nil, fmt.Errorf("trunk too short")
+		}
+	}
+
+	if parentIndex == 0 {
+		return nil, fmt.Errorf("won't graft onto root")
 	}
 
 	// setup the moves array and initial color
@@ -364,7 +381,7 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 	col := s.Nodes[parentIndex].Color
 
 	// go through each token
-	for _, tok := range tokens[1:] {
+	for _, tok := range tokens[start:] {
 
 		// convert to a Coord
 		coord, err := core.AlphanumericToCoord(tok)

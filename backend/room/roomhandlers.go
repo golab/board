@@ -311,6 +311,7 @@ func (room *Room) HandleEvent(evt *core.EventJSON) *core.EventJSON {
 
 	frame, err := room.State.AddEvent(evt)
 	if err != nil {
+		log.Println(err)
 		bcast = core.ErrorJSON(err.Error())
 		return bcast
 	}
