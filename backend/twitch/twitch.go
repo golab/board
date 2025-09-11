@@ -17,11 +17,13 @@ import (
 	"github.com/jarednogo/board/backend/core"
 )
 
+// Chat is used to encode strings like "!command plus some args"
 type Chat struct {
 	Command string
 	Body    string
 }
 
+// Parse turns a string into a Chat
 func Parse(chat string) (*Chat, error) {
 	chat = strings.TrimSpace(chat)
 	if !strings.HasPrefix(chat, "!") {
@@ -37,29 +39,31 @@ func Parse(chat string) (*Chat, error) {
 	return &Chat{command, body}, nil
 }
 
-// the base response type for twitch messages
+// TwitchJSON is the base response type for twitch messages
 type TwitchJSON struct {
 	Subscription *Subscription    `json:"subscription"`
 	Event        *TwitchEventJSON `json:"event"`
 	Challenge    string           `json:"challenge"`
 }
 
+// Subscription only is used to get the id
 type Subscription struct {
 	ID string `json:"id"`
 }
 
-// the twitch event type
+// TwitchEventJSON is the twitch event type
 type TwitchEventJSON struct {
 	BroadcasterUserID string             `json:"broadcaster_user_id"`
 	ChatterUserID     string             `json:"chatter_user_id"`
 	Message           *TwitchMessageJSON `json:"message"`
 }
 
-// the twitch message type
+// TwitchMessageJSON is the twitch message type
 type TwitchMessageJSON struct {
 	Text string `json:"text"`
 }
 
+// Verify uses the env var TWITCHSECRET to validate a twitch POST
 func Verify(message, signature string) bool {
 	// get secret
 	secret := Secret()
@@ -73,19 +77,26 @@ func Verify(message, signature string) bool {
 	return hmac.Equal([]byte(signature), []byte(expected))
 }
 
+// TODO: should all of these be unexported?
+
+// Secret uses the env var
 func Secret() []byte {
 	s := os.Getenv("TWITCHSECRET")
 	return []byte(s)
 }
 
+// ClientID uses the env var
 func ClientID() string {
 	return os.Getenv("TWITCHCLIENTID")
 }
 
+// BotID uses the env var
 func BotID() string {
 	return os.Getenv("TWITCHBOTID")
 }
 
+// GetUserAccessToken is a prescribed pattern from twitch to get an access token
+// attached to a particular user
 func GetUserAccessToken(code string) (string, error) {
 	body := map[string]string{
 		"client_id":     ClientID(),
@@ -137,6 +148,8 @@ func GetUserAccessToken(code string) (string, error) {
 	return s.AccessToken, nil
 }
 
+// GetUsers specifically requires a user access token
+// TODO: getting the user access token should just be part of this function
 func GetUsers(token string) (string, error) {
 	url := "https://api.twitch.tv/helix/users"
 
@@ -184,6 +197,8 @@ func GetUsers(token string) (string, error) {
 	return s["data"][0].ID, nil
 }
 
+// GetAppAccessToken is a prescribed pattern from twitch to get an access token
+// associated with an application
 func GetAppAccessToken() (string, error) {
 	body := map[string]string{
 		"client_id":     ClientID(),
@@ -232,6 +247,7 @@ func GetAppAccessToken() (string, error) {
 	return s.AccessToken, nil
 }
 
+// SubscriptionRequest  is used to subscribe
 type SubscriptionRequest struct {
 	Type      string            `json:"type"`
 	Version   string            `json:"version"`
@@ -239,6 +255,8 @@ type SubscriptionRequest struct {
 	Transport map[string]string `json:"transport"`
 }
 
+// Unsubscribe from a twitch channel, requires an app access token
+// TODO: getting the access token should be part of this function
 func Unsubscribe(id, token string) error {
 	body := map[string]string{"id": id}
 
@@ -267,6 +285,8 @@ func Unsubscribe(id, token string) error {
 	return err
 }
 
+// Subscribe to a channel, requires an app access token
+// TODO: getting the access token should be part of this function
 func Subscribe(user, token string) (string, error) {
 	body := SubscriptionRequest{
 		Type:    "channel.chat.message",
@@ -343,6 +363,8 @@ func Subscribe(user, token string) (string, error) {
 	return sub["id"].(string), nil
 }
 
+// Subscriptions for a particular app
+// requires an app access token
 func Subscriptions(token string) ([]*SubscriptionData, error) {
 	url := "https://api.twitch.tv/helix/eventsub/subscriptions"
 
@@ -378,6 +400,7 @@ func Subscriptions(token string) ([]*SubscriptionData, error) {
 	return s.Data, nil
 }
 
+// GetSubscription check if we have a subscription to the user
 func GetSubscription(user string) (string, error) {
 	token, err := GetAppAccessToken()
 	if err != nil {
@@ -397,6 +420,7 @@ func GetSubscription(user string) (string, error) {
 	return "", fmt.Errorf("subscription not found")
 }
 
+// SubscriptionResponse models data from twitch
 type SubscriptionResponse struct {
 	Total        int                 `json:"total"`
 	Data         []*SubscriptionData `json:"data"`
@@ -405,6 +429,7 @@ type SubscriptionResponse struct {
 	Pagination   interface{}         `json:"pagination"`
 }
 
+// SubscriptionData models data from twitch
 type SubscriptionData struct {
 	ID        string            `json:"id"`
 	Status    string            `json:"status"`
