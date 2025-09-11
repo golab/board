@@ -53,7 +53,13 @@ func (s *State) HandleAddStone(evt *core.EventJSON) (*core.Frame, error) {
 
 	marks := s.GenerateMarks()
 
-	return &core.Frame{core.DiffFrame, diff, marks, nil, nil, s.CreateTreeJSON(core.PartialNodes)}, nil
+	return &core.Frame{
+		Type:     core.DiffFrame,
+		Diff:     diff,
+		Marks:    marks,
+		Comments: nil,
+		Metadata: nil,
+		TreeJSON: s.CreateTreeJSON(core.PartialNodes)}, nil
 }
 
 func (s *State) HandlePass(evt *core.EventJSON) (*core.Frame, error) {
@@ -66,7 +72,13 @@ func (s *State) HandlePass(evt *core.EventJSON) (*core.Frame, error) {
 	fields[key] = []string{""}
 	s.AddPassNode(core.Color(evt.Color), fields, -1)
 
-	return &core.Frame{core.DiffFrame, nil, nil, nil, nil, s.CreateTreeJSON(core.PartialNodes)}, nil
+	return &core.Frame{
+		Type:     core.DiffFrame,
+		Diff:     nil,
+		Marks:    nil,
+		Comments: nil,
+		Metadata: nil,
+		TreeJSON: s.CreateTreeJSON(core.PartialNodes)}, nil
 }
 
 func (s *State) HandleRemoveStone(evt *core.EventJSON) (*core.Frame, error) {
@@ -85,7 +97,13 @@ func (s *State) HandleRemoveStone(evt *core.EventJSON) (*core.Frame, error) {
 	fields["AE"] = []string{c.ToLetters()}
 	diff := s.AddFieldNode(fields, -1)
 
-	return &core.Frame{core.DiffFrame, diff, nil, nil, nil, s.CreateTreeJSON(core.PartialNodes)}, nil
+	return &core.Frame{
+		Type:     core.DiffFrame,
+		Diff:     diff,
+		Marks:    nil,
+		Comments: nil,
+		Metadata: nil,
+		TreeJSON: s.CreateTreeJSON(core.PartialNodes)}, nil
 }
 
 func (s *State) HandleAddTriangle(evt *core.EventJSON) (*core.Frame, error) {
@@ -185,7 +203,13 @@ func (s *State) HandleLeft() (*core.Frame, error) {
 	diff := s.Left()
 	marks := s.GenerateMarks()
 	comments := s.GenerateComments()
-	return &core.Frame{core.DiffFrame, diff, marks, comments, nil, s.CreateTreeJSON(core.CurrentOnly)}, nil
+	return &core.Frame{
+		Type:     core.DiffFrame,
+		Diff:     diff,
+		Marks:    marks,
+		Comments: comments,
+		Metadata: nil,
+		TreeJSON: s.CreateTreeJSON(core.CurrentOnly)}, nil
 }
 
 func (s *State) HandleRight() (*core.Frame, error) {
@@ -193,7 +217,13 @@ func (s *State) HandleRight() (*core.Frame, error) {
 	marks := s.GenerateMarks()
 	comments := s.GenerateComments()
 
-	return &core.Frame{core.DiffFrame, diff, marks, comments, nil, s.CreateTreeJSON(core.CurrentOnly)}, nil
+	return &core.Frame{
+		Type:     core.DiffFrame,
+		Diff:     diff,
+		Marks:    marks,
+		Comments: comments,
+		Metadata: nil,
+		TreeJSON: s.CreateTreeJSON(core.CurrentOnly)}, nil
 }
 
 func (s *State) HandleUp() (*core.Frame, error) {
@@ -201,7 +231,13 @@ func (s *State) HandleUp() (*core.Frame, error) {
 	// for the current mark
 	marks := s.GenerateMarks()
 
-	return &core.Frame{core.DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(core.CurrentAndPreferred)}, nil
+	return &core.Frame{
+		Type:     core.DiffFrame,
+		Diff:     nil,
+		Marks:    marks,
+		Comments: nil,
+		Metadata: nil,
+		TreeJSON: s.CreateTreeJSON(core.CurrentAndPreferred)}, nil
 }
 
 func (s *State) HandleDown() (*core.Frame, error) {
@@ -210,7 +246,13 @@ func (s *State) HandleDown() (*core.Frame, error) {
 	// for the current mark
 	marks := s.GenerateMarks()
 
-	return &core.Frame{core.DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(core.CurrentAndPreferred)}, nil
+	return &core.Frame{
+		Type:     core.DiffFrame,
+		Diff:     nil,
+		Marks:    marks,
+		Comments: nil,
+		Metadata: nil,
+		TreeJSON: s.CreateTreeJSON(core.CurrentAndPreferred)}, nil
 }
 
 func (s *State) HandleRewind() (*core.Frame, error) {
@@ -285,7 +327,13 @@ func (s *State) HandleCut() (*core.Frame, error) {
 	diff := s.Cut()
 	marks := s.GenerateMarks()
 	comments := s.GenerateComments()
-	return &core.Frame{core.DiffFrame, diff, marks, comments, nil, s.CreateTreeJSON(core.Full)}, nil
+	return &core.Frame{
+		Type:     core.DiffFrame,
+		Diff:     diff,
+		Marks:    marks,
+		Comments: comments,
+		Metadata: nil,
+		TreeJSON: s.CreateTreeJSON(core.Full)}, nil
 }
 
 func (s *State) HandleCopy() (*core.Frame, error) {
@@ -334,7 +382,13 @@ func (s *State) HandleClipboard() (*core.Frame, error) {
 	s.Current.PreferredChild = savedPref
 
 	marks := s.GenerateMarks()
-	return &core.Frame{core.DiffFrame, nil, marks, nil, nil, s.CreateTreeJSON(core.Full)}, nil
+	return &core.Frame{
+		Type:     core.DiffFrame,
+		Diff:     nil,
+		Marks:    marks,
+		Comments: nil,
+		Metadata: nil,
+		TreeJSON: s.CreateTreeJSON(core.Full)}, nil
 }
 
 func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
@@ -393,7 +447,7 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 		col = core.Opposite(col)
 
 		// create a new move
-		move := &core.PatternMove{coord, col}
+		move := &core.PatternMove{Coord: coord, Color: col}
 		moves = append(moves, move)
 	}
 

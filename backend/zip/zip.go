@@ -8,6 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+// zip provides simple functions for detecting and decompressing zip files
 package zip
 
 import (
@@ -16,10 +17,12 @@ import (
 	"io"
 )
 
+// IsZipFile checks the first two bytes to see if they are 0x504b
 func IsZipFile(data []byte) bool {
 	return len(data) > 2 && data[0] == 0x50 && data[1] == 0x4b
 }
 
+// Decompress will return an array of files (each file is a []byte)
 func Decompress(data []byte) ([][]byte, error) {
 	// create a reader from the byte slice
 	r := bytes.NewReader(data)

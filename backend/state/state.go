@@ -199,7 +199,7 @@ func (s *State) AddPassNode(col core.Color, fields map[string][]string, index in
 }
 
 func (s *State) PushHead(x, y int, col core.Color) {
-	coord := &core.Coord{x, y}
+	coord := &core.Coord{X: x, Y: y}
 	if x == -1 || y == -1 {
 		coord = nil
 	}
@@ -575,7 +575,7 @@ func (s *State) GenerateMarks() *core.Marks {
 			spl := strings.Split(lb, ":")
 			c := core.LettersToCoord(spl[0])
 			text := spl[1]
-			label := &core.Label{c, text}
+			label := &core.Label{Coord: c, Text: text}
 			labels = append(labels, label)
 		}
 		marks.Labels = labels
@@ -596,7 +596,7 @@ func (s *State) GenerateMarks() *core.Marks {
 			if hasErr {
 				continue
 			}
-			pen := &core.Pen{x0, y0, x1, y1, spl[4]}
+			pen := &core.Pen{X0: x0, Y0: y0, X1: x1, Y1: y1, Color: spl[4]}
 			pens = append(pens, pen)
 		}
 		marks.Pens = pens

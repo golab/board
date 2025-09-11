@@ -92,11 +92,10 @@ func (r *Room) UploadSGF(sgf string) *core.EventJSON {
 func (r *Room) SendUserList() {
 	// send list of currently connected users
 	evt := &core.EventJSON{
-		"connected_users",
-		r.Nicks,
-		0,
-		"",
-		"",
+		Event:  "connected_users",
+		Value:  r.Nicks,
+		Color:  0,
+		UserID: "",
 	}
 
 	r.Broadcast(evt)

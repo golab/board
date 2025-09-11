@@ -253,11 +253,10 @@ func (room *Room) HandleUpdateNickname(evt *core.EventJSON) *core.EventJSON {
 	nickname := evt.Value.(string)
 	room.Nicks[evt.UserID] = nickname
 	userEvt := &core.EventJSON{
-		"connected_users",
-		room.Nicks,
-		0,
-		evt.UserID,
-		"",
+		Event:  "connected_users",
+		Value:  room.Nicks,
+		Color:  0,
+		UserID: evt.UserID,
 	}
 	return userEvt
 }
@@ -360,11 +359,10 @@ func (room *Room) BroadcastConnectedUsersAfter(handler EventHandler) EventHandle
 	return func(evt *core.EventJSON) *core.EventJSON {
 		evt = handler(evt)
 		userEvt := &core.EventJSON{
-			"connected_users",
-			room.Nicks,
-			0,
-			"",
-			"",
+			Event:  "connected_users",
+			Value:  room.Nicks,
+			Color:  0,
+			UserID: "",
 		}
 
 		// broadcast connected_users

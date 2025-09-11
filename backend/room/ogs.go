@@ -290,11 +290,11 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 						currentColor = core.White
 					} else if coordStr == ".." {
 						//Pass
-						movesArr = append(movesArr, &core.PatternMove{nil, currentColor})
+						movesArr = append(movesArr, &core.PatternMove{Coord: nil, Color: currentColor})
 						currentColor = core.Opposite(currentColor)
 					} else {
 						coord := core.LettersToCoord(coordStr)
-						movesArr = append(movesArr, &core.PatternMove{coord, currentColor})
+						movesArr = append(movesArr, &core.PatternMove{Coord: coord, Color: currentColor})
 						currentColor = core.Opposite(currentColor)
 					}
 				}

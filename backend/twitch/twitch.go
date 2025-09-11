@@ -102,7 +102,7 @@ func GetUserAccessToken(code string) (string, error) {
 	}
 
 	bodyReader := bytes.NewBuffer(jsonData)
-	url := fmt.Sprintf("https://id.twitch.tv/oauth2/token")
+	url := "https://id.twitch.tv/oauth2/token"
 
 	req, err := http.NewRequest(http.MethodPost, url, bodyReader)
 
@@ -197,7 +197,7 @@ func GetAppAccessToken() (string, error) {
 	}
 
 	bodyReader := bytes.NewBuffer(jsonData)
-	url := fmt.Sprintf("https://id.twitch.tv/oauth2/token")
+	url := "https://id.twitch.tv/oauth2/token"
 
 	req, err := http.NewRequest(http.MethodPost, url, bodyReader)
 
@@ -248,7 +248,7 @@ func Unsubscribe(id, token string) error {
 	}
 
 	bodyReader := bytes.NewBuffer(jsonData)
-	url := fmt.Sprintf("https://api.twitch.tv/helix/eventsub/subscriptions")
+	url := "https://api.twitch.tv/helix/eventsub/subscriptions"
 
 	req, err := http.NewRequest(http.MethodDelete, url, bodyReader)
 
@@ -288,7 +288,7 @@ func Subscribe(user, token string) (string, error) {
 	}
 
 	bodyReader := bytes.NewBuffer(jsonData)
-	url := fmt.Sprintf("https://api.twitch.tv/helix/eventsub/subscriptions")
+	url := "https://api.twitch.tv/helix/eventsub/subscriptions"
 
 	req, err := http.NewRequest(http.MethodPost, url, bodyReader)
 

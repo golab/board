@@ -191,11 +191,10 @@ func (s *Server) SendMessages() {
 
 		// make a new event to broadcast
 		evt := &core.EventJSON{
-			"global",
-			m.Text,
-			0,
-			"",
-			"",
+			Event:  "global",
+			Value:  m.Text,
+			Color:  0,
+			UserID: "",
 		}
 
 		// go through each room
@@ -232,11 +231,10 @@ func (s *Server) SendMessagesToOne(ws *websocket.Conn, id string) {
 	for _, m := range s.messages {
 		// make a new event to send
 		evt := &core.EventJSON{
-			"global",
-			m.Text,
-			0,
-			"",
-			"",
+			Event:  "global",
+			Value:  m.Text,
+			Color:  0,
+			UserID: "",
 		}
 
 		socket.SendEvent(ws, evt)
