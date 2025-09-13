@@ -203,7 +203,7 @@ func (s *Server) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println(chat.Command, chat.Body)
+	log.Printf("received: chat.Command=%s, chat.Body=%s\n", chat.Command, chat.Body)
 
 	// make sure only the broadcaster can set the room
 	if chat.Command == "setboard" {
@@ -213,6 +213,10 @@ func (s *Server) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			roomID := core.Sanitize(tokens[0])
+			if len(roomID) == 0 {
+				log.Println("empty roomID")
+				return
+			}
 
 			log.Println("setting roomid", broadcaster, roomID)
 			loader.TwitchSetRoom(broadcaster, roomID)

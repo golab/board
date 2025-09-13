@@ -405,7 +405,12 @@ func (s *State) SmartGraft(parentIndex int, moves []*core.PatternMove) {
 	}
 
 	// cleanup
-	graft.RecomputeDepth()
+
+	// (this is only necessary if we added something)
+	if graft != nil {
+		graft.RecomputeDepth()
+	}
+
 	s.GotoIndex(save)
 	for index, pref := range savedPrefs {
 		s.Nodes[index].PreferredChild = pref
