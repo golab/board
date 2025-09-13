@@ -426,13 +426,18 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 		}
 	}
 
+	/*
 	if parentIndex == 0 {
 		return nil, fmt.Errorf("won't graft onto root")
 	}
+	*/
 
 	// setup the moves array and initial color
 	moves := []*core.PatternMove{}
 	col := s.Nodes[parentIndex].Color
+	if col == core.NoColor {
+		col = core.White
+	}
 
 	// go through each token
 	for _, tok := range tokens[start:] {
@@ -452,7 +457,7 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 	}
 
 	// call the state's graft function
-	s.Graft(parentIndex, moves)
+	s.SmartGraft(parentIndex, moves)
 
 	return nil, nil
 }
