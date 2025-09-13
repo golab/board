@@ -427,9 +427,9 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 	}
 
 	/*
-	if parentIndex == 0 {
-		return nil, fmt.Errorf("won't graft onto root")
-	}
+		if parentIndex == 0 {
+			return nil, fmt.Errorf("won't graft onto root")
+		}
 	*/
 
 	// setup the moves array and initial color
