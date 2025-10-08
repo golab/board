@@ -35,18 +35,14 @@ lint: ## Lint code
 	${PWD}/bin/golangci-lint run
 
 fuzz: ## Fuzz code
+	@echo "==> fuzz"
 	go test ./backend/core -fuzz=FuzzParser -fuzztime=60s
 
 coverage: ## Test coverage
+	@echo "==> coverage"
 	go test ./backend/... -coverprofile=cover.out
 	go tool cover -html=cover.out
 	rm cover.out
-
-build: ## Build the project
-	@echo "==> build"
-	mkdir -p build
-	rm build/* 2> /dev/null
-	go build -o build cmd/*
 
 test: ## Run tests
 	@echo "==> test"
@@ -54,7 +50,9 @@ test: ## Run tests
 
 run: build ## Build and run
 	@echo "==> run"
-	./bin/air ./build/main
+	mkdir -p build
+	rm build/* 2> /dev/null
+	./bin/air --build.cmd "go build -o build cmd/*" --build.bin "./build/main"
 
 clean: ## Remove build artifacts
 	@echo "==> clean"

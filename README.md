@@ -18,12 +18,17 @@ If you make a pull request, please use `test` as the target branch. The test dom
 
 1. Install golang
 
-2. Run the server
+2. Install local toolchain
 ```bash
-$ bash scripts/run.sh
+$ make setup
 ```
 
-3. Visit `http://localhost:8080` in your browser.
+3. Run the server
+```bash
+$ make run
+```
+
+4. Visit `http://localhost:8080` in your browser.
 
 ### Running locally with docker
 
