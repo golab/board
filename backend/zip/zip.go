@@ -44,7 +44,10 @@ func Decompress(data []byte) ([][]byte, error) {
 			continue
 		}
 		files = append(files, fData)
-		rc.Close()
+		err = rc.Close()
+		if err != nil {
+			return nil, err
+		}
 	}
 	return files, nil
 }

@@ -12,6 +12,7 @@ package server
 
 import (
 	"github.com/go-chi/chi/v5"
+	"log"
 	"net/http"
 )
 
@@ -19,7 +20,10 @@ import (
 func ApiV1Router() http.Handler {
 	r := chi.NewRouter()
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{"message": "pong"}`))
+		_, err := w.Write([]byte(`{"message": "pong"}`))
+		if err != nil {
+			log.Println(err)
+		}
 	})
 	return r
 }

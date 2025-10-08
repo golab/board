@@ -184,14 +184,15 @@ func (room *Room) HandleRequestSGF(evt *core.EventJSON) *core.EventJSON {
 		ogsType := spl[len(spl)-2]
 		//log.Println(ogsType)
 
-		if ogsType == "game" {
+		switch ogsType {
+		case "game":
 			ended, err := fetch.OGSCheckEnded(url)
 			if err != nil {
 				bcast = core.ErrorJSON(err.Error())
 				return bcast
 			}
 			connectToOGS = !ended
-		} else if ogsType == "review" || ogsType == "demo" {
+		case "review", "demo":
 			ogsType = "review"
 			connectToOGS = true
 		}
@@ -212,7 +213,7 @@ func (room *Room) HandleRequestSGF(evt *core.EventJSON) *core.EventJSON {
 				bcast = core.ErrorJSON("ogs connector error")
 				return bcast
 			}
-			go o.Loop(id, ogsType)
+			go o.Loop(id, ogsType) //nolint: errcheck
 			room.OGSLink = o
 
 			if ogsType == "game" {

@@ -51,7 +51,10 @@ func renderSinglePage(w http.ResponseWriter, page string) {
 	if templ == nil {
 		return
 	}
-	templ.Execute(w, nil)
+	err := templ.Execute(w, nil)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func includeCommon(w http.ResponseWriter, page string) {
@@ -61,7 +64,10 @@ func includeCommon(w http.ResponseWriter, page string) {
 	if templ == nil {
 		return
 	}
-	templ.Execute(w, nil)
+	err := templ.Execute(w, nil)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func about(w http.ResponseWriter, r *http.Request) {

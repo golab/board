@@ -224,10 +224,7 @@ func (s *State) PushHead(x, y int, col core.Color) {
 	s.Head.Down = append([]*core.TreeNode{n}, s.Head.Down...)
 
 	// tracking the head or not
-	tracking := false
-	if s.Current == s.Head {
-		tracking = true
-	}
+	tracking := s.Current == s.Head
 
 	var diff *core.Diff
 
@@ -237,13 +234,13 @@ func (s *State) PushHead(x, y int, col core.Color) {
 		save := s.Current.Index
 
 		// goto head
-		s.GotoIndex(s.Head.Index)
+		s.GotoIndex(s.Head.Index) //nolint: errcheck
 
 		// compute diff
 		diff = s.Board.Move(coord, col)
 
 		// go back to saved index
-		s.GotoIndex(save)
+		s.GotoIndex(save) //nolint: errcheck
 	} else {
 		// do nothing if it's a pass
 
@@ -323,7 +320,7 @@ func (s *State) AddPatternNodes(moves []*core.PatternMove) {
 		}
 
 		if !found {
-			s.GotoIndex(node.Index)
+			s.GotoIndex(node.Index) //nolint: errcheck
 
 			fields := make(map[string][]string)
 			key := "B"
@@ -341,7 +338,7 @@ func (s *State) AddPatternNodes(moves []*core.PatternMove) {
 			node = s.Current
 		}
 	}
-	s.GotoIndex(locationSave)
+	s.GotoIndex(locationSave) //nolint: errcheck
 }
 
 // SmartGraft doesn't duplicate existing moves
@@ -356,7 +353,7 @@ func (s *State) SmartGraft(parentIndex int, moves []*core.PatternMove) {
 	for _, move := range moves {
 
 		// go to the parent
-		s.GotoIndex(up.Index)
+		s.GotoIndex(up.Index) //nolint: errcheck
 
 		// save the preferences on each node that already exists
 		savedPrefs[up.Index] = up.PreferredChild
@@ -411,7 +408,7 @@ func (s *State) SmartGraft(parentIndex int, moves []*core.PatternMove) {
 		graft.RecomputeDepth()
 	}
 
-	s.GotoIndex(save)
+	s.GotoIndex(save) //nolint: errcheck
 	for index, pref := range savedPrefs {
 		s.Nodes[index].PreferredChild = pref
 	}
@@ -430,7 +427,7 @@ func (s *State) Graft(parentIndex int, moves []*core.PatternMove) {
 	for _, move := range moves {
 
 		// go to the parent
-		s.GotoIndex(up.Index)
+		s.GotoIndex(up.Index) //nolint: errcheck
 
 		// each node needs an index
 		index := s.GetNextIndex()
@@ -469,7 +466,7 @@ func (s *State) Graft(parentIndex int, moves []*core.PatternMove) {
 
 	// cleanup
 	graft.RecomputeDepth()
-	s.GotoIndex(save)
+	s.GotoIndex(save) //nolint: errcheck
 	parent.PreferredChild = savedPref
 }
 
@@ -545,10 +542,7 @@ func (s *State) GotoIndex(index int) error {
 	}
 	s.Rewind()
 	last := s.Current.Index
-	for {
-		if s.Current.Index == index {
-			break
-		}
+	for s.Current.Index != index {
 		s.Right()
 		// to prevent infinite loops
 		if s.Current.Index == last {
@@ -566,10 +560,7 @@ func (s *State) Rewind() {
 }
 
 func (s *State) FastForward() {
-	for {
-		if len(s.Current.Down) == 0 {
-			break
-		}
+	for len(s.Current.Down) != 0 {
 		s.Right()
 	}
 }
@@ -597,7 +588,7 @@ func (s *State) GotoCoord(x, y int) {
 	// look forward
 	for {
 		if cur.XY != nil && cur.XY.X == x && cur.XY.Y == y {
-			s.GotoIndex(cur.Index)
+			s.GotoIndex(cur.Index) //nolint: errcheck
 			return
 		}
 		if len(cur.Down) == 0 {
@@ -610,7 +601,7 @@ func (s *State) GotoCoord(x, y int) {
 	// look backward
 	for {
 		if cur.XY != nil && cur.XY.X == x && cur.XY.Y == y {
-			s.GotoIndex(cur.Index)
+			s.GotoIndex(cur.Index) //nolint: errcheck
 			return
 		}
 		if cur.Up == nil {
@@ -712,13 +703,13 @@ func (s *State) ComputeDiffMove(i int) *core.Diff {
 	}
 	// only for the purposes of checking the board (for removal of stones)
 	if n.Up != nil {
-		s.GotoIndex(n.Up.Index)
+		s.GotoIndex(n.Up.Index) //nolint: errcheck
 	} else {
 		s.Board.Clear()
 	}
 
 	// at the end, go back to the saved index
-	defer s.GotoIndex(save)
+	defer s.GotoIndex(save) //nolint: errcheck
 
 	diff := s.Board.Move(n.XY, n.Color)
 	return diff
@@ -733,13 +724,13 @@ func (s *State) ComputeDiffSetup(i int) *core.Diff {
 
 	// only for the purposes of checking the board (for removal of stones)
 	if n.Up != nil {
-		s.GotoIndex(n.Up.Index)
+		s.GotoIndex(n.Up.Index) //nolint: errcheck
 	} else {
 		s.Board.Clear()
 	}
 
 	// at the end, go back to the saved index
-	defer s.GotoIndex(save)
+	defer s.GotoIndex(save) //nolint: errcheck
 
 	// find the black stones to add
 	diffAdd := []*core.StoneSet{}
@@ -770,9 +761,10 @@ func (s *State) ComputeDiffSetup(i int) *core.Diff {
 		for _, v := range val {
 			coord := core.LettersToCoord(v)
 			col := s.Board.Get(coord)
-			if col == core.Black {
+			switch col {
+			case core.Black:
 				csBlack.Add(coord)
-			} else if col == core.White {
+			case core.White:
 				csWhite.Add(coord)
 			}
 		}
@@ -1020,11 +1012,12 @@ func (s *State) CreateTreeJSON(t core.TreeJSONType) *core.TreeJSON {
 		// we can choose to send the full or just a partial tree
 		// based on which node we start on
 
-		if t == core.PartialNodes {
+		switch t {
+		case core.PartialNodes:
 			start = s.Current
 			up = start.Up.Index
 			root = start.Index
-		} else if t == core.Full {
+		case core.Full:
 			start = s.Root
 		}
 		core.Fmap(func(n *core.TreeNode) {

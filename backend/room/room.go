@@ -71,7 +71,10 @@ func (r *Room) Broadcast(evt *core.EventJSON) {
 
 	// rebroadcast message
 	for _, conn := range r.Conns {
-		conn.Write(data)
+		_, err = conn.Write(data)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 

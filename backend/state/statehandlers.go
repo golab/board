@@ -33,7 +33,7 @@ func (s *State) HandleAddStone(evt *core.EventJSON) (*core.Frame, error) {
 	// if a child already exists with that coord and col, then actually
 	// this is just a gotoindex operation
 	if child, ok := s.Current.HasChild(c, col); ok {
-		s.GotoIndex(child)
+		s.GotoIndex(child) //nolint: errcheck
 		return s.GenerateFullFrame(core.CurrentAndPreferred), nil
 	}
 
@@ -267,7 +267,7 @@ func (s *State) HandleFastForward() (*core.Frame, error) {
 
 func (s *State) HandleGotoGrid(evt *core.EventJSON) (*core.Frame, error) {
 	index := int(evt.Value.(float64))
-	s.GotoIndex(index)
+	s.GotoIndex(index) //nolint: errcheck
 	return s.GenerateFullFrame(core.CurrentAndPreferred), nil
 }
 

@@ -12,6 +12,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -24,19 +25,28 @@ import (
 func (s *Server) Debug(w http.ResponseWriter, r *http.Request) {
 	boardID := chi.URLParam(r, "boardID")
 	data := s.HandleOp("debug", boardID)
-	w.Write([]byte(data))
+	_, err := w.Write([]byte(data))
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (s *Server) Sgfix(w http.ResponseWriter, r *http.Request) {
 	boardID := chi.URLParam(r, "boardID")
 	data := s.HandleOp("sgfix", boardID)
-	w.Write([]byte(data))
+	_, err := w.Write([]byte(data))
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (s *Server) Sgf(w http.ResponseWriter, r *http.Request) {
 	boardID := chi.URLParam(r, "boardID")
 	data := s.HandleOp("sgf", boardID)
-	w.Write([]byte(data))
+	_, err := w.Write([]byte(data))
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (s *Server) Upload(w http.ResponseWriter, r *http.Request) {

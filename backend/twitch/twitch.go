@@ -131,7 +131,7 @@ func GetUserAccessToken(code string) (string, error) {
 		return "", err
 	}
 
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint: errcheck
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -170,7 +170,7 @@ func GetUsers(token string) (string, error) {
 		return "", err
 	}
 
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint: errcheck
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -230,7 +230,7 @@ func GetAppAccessToken() (string, error) {
 		return "", err
 	}
 
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint: errcheck
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -328,7 +328,7 @@ func Subscribe(user, token string) (string, error) {
 		return "", err
 	}
 
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint: errcheck
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -385,7 +385,7 @@ func Subscriptions(token string) ([]*SubscriptionData, error) {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint: errcheck
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {

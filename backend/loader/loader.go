@@ -78,7 +78,7 @@ func Setup() {
 	if err != nil {
 		return
 	}
-	defer db.Close()
+	defer db.Close() //nolint: errcheck
 
 	// Create the 'rooms' table if it doesn't exist
 	_, err = db.ExecContext(
@@ -143,7 +143,7 @@ func TwitchSelectRoom(broadcaster string) ([]string, error) {
 	if err != nil {
 		return []string{}, err
 	}
-	defer db.Close()
+	defer db.Close() //nolint: errcheck
 	rows, err := db.QueryContext(
 		context.Background(),
 		`SELECT roomid FROM twitch WHERE broadcaster = ?`,
@@ -153,7 +153,7 @@ func TwitchSelectRoom(broadcaster string) ([]string, error) {
 		return []string{}, err
 	}
 
-	defer rows.Close()
+	defer rows.Close() //nolint: errcheck
 	rooms := []string{}
 	for rows.Next() {
 		var roomid string
@@ -185,7 +185,7 @@ func TwitchInsertRoom(broadcaster, roomid string) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Close() //nolint: errcheck
 	_, err = db.ExecContext(
 		context.Background(),
 		`INSERT INTO twitch (broadcaster, roomid) VALUES (?, ?)`,
@@ -198,7 +198,7 @@ func TwitchUpdateRoom(broadcaster, roomid string) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Close() //nolint: errcheck
 
 	_, err = db.ExecContext(
 		context.Background(),
@@ -230,7 +230,7 @@ func DeleteRoom(id string) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Close() //nolint: errcheck
 	_, err = db.Exec(`DELETE FROM messages WHERE id = ?`, id)
 	return err
 }
@@ -240,7 +240,7 @@ func UpdateRoom(id string, data *LoadJSON) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Close() //nolint: errcheck
 	prefs, err := Prefs(data.Prefs).ToString()
 	if err != nil {
 		return err
@@ -258,7 +258,7 @@ func InsertRoom(id string, data *LoadJSON) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Close() //nolint: errcheck
 
 	prefs, err := Prefs(data.Prefs).ToString()
 	if err != nil {
@@ -278,7 +278,7 @@ func LoadAllRooms() []*LoadJSON {
 	if err != nil {
 		return []*LoadJSON{}
 	}
-	defer db.Close()
+	defer db.Close() //nolint: errcheck
 
 	rows, err := db.QueryContext(
 		context.Background(),
@@ -288,7 +288,7 @@ func LoadAllRooms() []*LoadJSON {
 		return []*LoadJSON{}
 	}
 
-	defer rows.Close()
+	defer rows.Close() //nolint: errcheck
 	var rooms []*LoadJSON
 	for rows.Next() {
 		var id string
@@ -299,6 +299,9 @@ func LoadAllRooms() []*LoadJSON {
 		var nextIndex int
 		var password string
 		err = rows.Scan(&id, &sgf, &loc, &prefsString, &buffer, &nextIndex, &password)
+		if err != nil {
+			return []*LoadJSON{}
+		}
 		prefs, _ := PrefsFromString(prefsString)
 		data := &LoadJSON{
 			SGF:       sgf,
@@ -320,7 +323,7 @@ func SelectRoom(id string) []*LoadJSON {
 	if err != nil {
 		return []*LoadJSON{}
 	}
-	defer db.Close()
+	defer db.Close() //nolint: errcheck
 
 	rows, err := db.QueryContext(
 		context.Background(),
@@ -331,7 +334,7 @@ func SelectRoom(id string) []*LoadJSON {
 		return []*LoadJSON{}
 	}
 
-	defer rows.Close()
+	defer rows.Close() //nolint: errcheck
 	var rooms []*LoadJSON
 	for rows.Next() {
 		var id string
@@ -342,6 +345,9 @@ func SelectRoom(id string) []*LoadJSON {
 		var nextIndex int
 		var password string
 		err = rows.Scan(&id, &sgf, &loc, &prefsString, &buffer, &nextIndex, &password)
+		if err != nil {
+			return []*LoadJSON{}
+		}
 		prefs, _ := PrefsFromString(prefsString)
 		data := &LoadJSON{
 			SGF:       sgf,
@@ -363,7 +369,7 @@ func LoadAllMessages() []*MessageJSON {
 	if err != nil {
 		return []*MessageJSON{}
 	}
-	defer db.Close()
+	defer db.Close() //nolint: errcheck
 
 	rows, err := db.QueryContext(
 		context.Background(),
@@ -373,12 +379,16 @@ func LoadAllMessages() []*MessageJSON {
 		return []*MessageJSON{}
 	}
 
-	defer rows.Close()
+	defer rows.Close() //nolint: errcheck
 	var messages []*MessageJSON
 	for rows.Next() {
 		var text string
 		var ttl int
 		err = rows.Scan(&text, &ttl)
+		if err != nil {
+			log.Println(err)
+			return []*MessageJSON{}
+		}
 		msg := &MessageJSON{
 			Text: text,
 			TTL:  ttl,
@@ -392,9 +402,13 @@ func LoadAllMessages() []*MessageJSON {
 func DeleteAllMessages() {
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
+		log.Println(err)
 		return
 	}
-	defer db.Close()
+	defer db.Close() //nolint: errcheck
 
 	_, err = db.Exec(`DELETE FROM messages`)
+	if err != nil {
+		log.Println(err)
+	}
 }

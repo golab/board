@@ -89,9 +89,8 @@ func (o *OGSConnector) Send(topic string, payload map[string]interface{}) error 
 	if err != nil {
 		return err
 	}
-	//log.Println(string(data))
-	o.Socket.Write(data)
-	return nil
+	_, err = o.Socket.Write(data)
+	return err
 }
 
 func (o *OGSConnector) Connect(gameID int, ogsType string) error {
@@ -133,9 +132,10 @@ func ReadFrame(socketchan chan byte) ([]byte, error) {
 			data = append(data, b)
 			started = true
 		} else {
-			if b == '[' {
+			switch b {
+			case '[':
 				depth++
-			} else if b == ']' {
+			case ']':
 				depth--
 			}
 			data = append(data, b)
@@ -171,10 +171,7 @@ func (o *OGSConnector) End() {
 }
 
 func (o *OGSConnector) Ping() {
-	for {
-		if o.Exit {
-			break
-		}
+	for !o.Exit {
 		//30 seconds seemed just a little too long was causing connection issues
 		time.Sleep(25 * time.Second)
 		payload := make(map[string]interface{})
@@ -188,20 +185,23 @@ func (o *OGSConnector) Ping() {
 }
 
 func (o *OGSConnector) Loop(gameID int, ogsType string) error {
-	o.ChatConnect()
-	o.Connect(gameID, ogsType)
+	err := o.ChatConnect()
+	if err != nil {
+		return err
+	}
+	err = o.Connect(gameID, ogsType)
+	if err != nil {
+		return err
+	}
 
 	socketchan := make(chan byte)
 
 	go o.Ping()
-	go o.ReadSocketToChan(socketchan)
+	go o.ReadSocketToChan(socketchan) //nolint: errcheck
 
 	defer o.End()
 
-	for {
-		if o.Exit {
-			break
-		}
+	for !o.Exit {
 		data, err := ReadFrame(socketchan)
 
 		// break on error
@@ -282,17 +282,18 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 				if i+1 < len(moves) {
 					coordStr := moves[i : i+2]
 
-					if coordStr == "!1" {
+					switch coordStr {
+					case "!1":
 						//Force next move black
 						currentColor = core.Black
-					} else if coordStr == "!2" {
+					case "!2":
 						//Force next move white
 						currentColor = core.White
-					} else if coordStr == ".." {
+					case "..":
 						//Pass
 						movesArr = append(movesArr, &core.PatternMove{Coord: nil, Color: currentColor})
 						currentColor = core.Opposite(currentColor)
-					} else {
+					default:
 						coord := core.LettersToCoord(coordStr)
 						movesArr = append(movesArr, &core.PatternMove{Coord: coord, Color: currentColor})
 						currentColor = core.Opposite(currentColor)
@@ -307,8 +308,6 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			frame := o.Room.GenerateFullFrame(core.Full)
 			evt := core.FrameJSON(frame)
 			o.Room.Broadcast(evt)
-		} else {
-			//log.Println(topic)
 		}
 	}
 	return nil

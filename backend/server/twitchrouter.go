@@ -130,7 +130,10 @@ func twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
 
 	//w.Header().Set("Content-Type", "application/json")
 	//w.Write([]byte(`{"message": "success"}`))
-	w.Write([]byte("success"))
+	_, err = w.Write([]byte("success"))
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (s *Server) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
@@ -147,7 +150,10 @@ func (s *Server) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 
 	// on subscriptions, twitch sends a challenge that we need to respond to
 	if req.Challenge != "" {
-		w.Write([]byte(req.Challenge))
+		_, err = w.Write([]byte(req.Challenge))
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
@@ -206,7 +212,8 @@ func (s *Server) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 	log.Printf("received: chat.Command=%s, chat.Body=%s\n", chat.Command, chat.Body)
 
 	// make sure only the broadcaster can set the room
-	if chat.Command == "setboard" {
+	switch chat.Command {
+	case "setboard":
 		if broadcaster == chatter {
 			tokens := strings.Split(chat.Body, " ")
 			if len(tokens) == 0 {
@@ -219,11 +226,14 @@ func (s *Server) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 			}
 
 			log.Println("setting roomid", broadcaster, roomID)
-			loader.TwitchSetRoom(broadcaster, roomID)
+			err := loader.TwitchSetRoom(broadcaster, roomID)
+			if err != nil {
+				log.Println(err)
+			}
 		} else {
 			log.Println("unauthorized user tried to setboard")
 		}
-	} else if chat.Command == "branch" {
+	case "branch":
 		log.Println("grafting:", chat.Body)
 		branch := strings.ToLower(chat.Body)
 

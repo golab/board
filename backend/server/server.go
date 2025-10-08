@@ -79,7 +79,10 @@ func (s *Server) Save() {
 		save.Password = r.Password
 		save.ID = id
 
-		loader.SaveRoom(id, save)
+		err := loader.SaveRoom(id, save)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 
@@ -142,14 +145,20 @@ func (s *Server) Heartbeat(roomID string) {
 
 	// close all the client connections
 	for _, conn := range r.Conns {
-		conn.Close()
+		err := conn.Close()
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	// delete the room from the server map
 	delete(s.rooms, roomID)
 
 	// delete it from the database
-	loader.DeleteRoom(roomID)
+	err := loader.DeleteRoom(roomID)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 type Message struct {

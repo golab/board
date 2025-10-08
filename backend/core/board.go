@@ -308,9 +308,10 @@ func (b *Board) CurrentFrame() *Frame {
 	white := NewCoordSet()
 	for j, row := range b.Points {
 		for i, c := range row {
-			if c == Black {
+			switch c {
+			case Black:
 				black.Add(&Coord{i, j})
-			} else if c == White {
+			case White:
 				white.Add(&Coord{i, j})
 			}
 		}

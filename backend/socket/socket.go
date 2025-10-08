@@ -27,7 +27,11 @@ func SendEvent(conn *websocket.Conn, evt *core.EventJSON) {
 		log.Println(err)
 		return
 	}
-	conn.Write(data)
+	_, err = conn.Write(data)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 }
 
 func ReceiveEvent(ws *websocket.Conn) (*core.EventJSON, error) {
@@ -75,10 +79,7 @@ func ReadPacket(ws *websocket.Conn) ([]byte, error) {
 func ReadBytes(ws *websocket.Conn, size int) ([]byte, error) {
 	chunkSize := 64
 	message := []byte{}
-	for {
-		if len(message) >= size {
-			break
-		}
+	for len(message) < size {
 		l := size - len(message)
 		if l > chunkSize {
 			l = chunkSize
@@ -101,6 +102,12 @@ func EncodeSend(ws *websocket.Conn, data string) {
 	buf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(buf, length)
 
-	ws.Write(buf)
-	ws.Write([]byte(encoded))
+	_, err := ws.Write(buf)
+	if err != nil {
+		log.Println(err)
+	}
+	_, err = ws.Write([]byte(encoded))
+	if err != nil {
+		log.Println(err)
+	}
 }

@@ -2,6 +2,7 @@ env
 notes.txt
 scratch/
 
+bin/
 build/
 testdata/
-
+tmp/
