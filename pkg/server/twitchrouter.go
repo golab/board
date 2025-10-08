@@ -21,10 +21,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/jarednogo/board/backend/core"
-	"github.com/jarednogo/board/backend/loader"
-	"github.com/jarednogo/board/backend/room"
-	"github.com/jarednogo/board/backend/twitch"
+	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/loader"
+	"github.com/jarednogo/board/pkg/room"
+	"github.com/jarednogo/board/pkg/twitch"
 )
 
 func (s *Server) TwitchRouter() http.Handler {

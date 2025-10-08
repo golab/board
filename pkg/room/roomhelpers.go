@@ -8,19 +8,28 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package core_test
+package room
 
 import (
-	"testing"
-
-	"github.com/jarednogo/board/backend/core"
+	"github.com/jarednogo/board/pkg/core"
 )
 
-func TestHash1(t *testing.T) {
-	hash := "$2a$10$O5gxBye06fldX9Al9Upc8.nYkE33KWMTfxYF/sMt5TgEs66Vcg0JK"
-	password := "deadbeef"
+// helper functions for ogs
+// these were more important when ogs was its own package
+// still i'm keeping them around in case i split it out again
 
-	if !core.CorrectPassword(password, hash) {
-		t.Errorf("error checking password")
-	}
+func (r *Room) HeadColor() core.Color {
+	return r.State.Head.Color
+}
+
+func (r *Room) PushHead(x, y int, c core.Color) {
+	r.State.PushHead(x, y, c)
+}
+
+func (r *Room) GenerateFullFrame(t core.TreeJSONType) *core.Frame {
+	return r.State.GenerateFullFrame(t)
+}
+
+func (r *Room) AddPatternNodes(movesArr []*core.PatternMove) {
+	r.State.AddPatternNodes(movesArr)
 }

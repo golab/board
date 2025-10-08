@@ -16,7 +16,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jarednogo/board/backend/core"
+	"github.com/jarednogo/board/pkg/core"
 )
 
 const Letters = "ABCDEFGHIJKLNMOPQRSTUVWXYZ"

@@ -8,40 +8,29 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package state_test
+package fetch_test
 
 import (
-	//"fmt"
 	"testing"
 
-	"github.com/jarednogo/board/backend/state"
+	"github.com/jarednogo/board/pkg/fetch"
 )
 
-func TestState1(t *testing.T) {
-	s, err := state.FromSGF("(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black];B[pd];W[dd];B[pp];W[dp];B[];W[])")
-	if err != nil {
-		t.Error(err)
-	}
-	if s.Size != 19 {
-		t.Errorf("error with state")
-	}
+var ogsTests = []struct {
+	url string
+	ogs bool
+}{
+	{"https://online-go.com/game/00000001", true},
+	{"http://online-go.com/game/00000001", true},
+	{"https://test.com/game/00000001", false},
 }
 
-func TestState2(t *testing.T) {
-	input := "(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black];B[pd];W[dd];B[pp];W[dp];B[];W[])"
-	s, err := state.FromSGF(input)
-	if err != nil {
-		t.Error(err)
-	}
-
-	sgf := s.ToSGF(false)
-	sgfix := s.ToSGF(true)
-
-	if len(sgf) != len(input) {
-		t.Errorf("error with state to sgf, expected %d, got: %d", len(input), len(sgf))
-	}
-
-	if len(sgfix) != 132 {
-		t.Errorf("error with state to sgf (indexes), expected %d, got: %d", 132, len(sgfix))
+func TestOGS(t *testing.T) {
+	for _, tt := range ogsTests {
+		t.Run(tt.url, func(t *testing.T) {
+			if fetch.IsOGS(tt.url) != tt.ogs {
+				t.Errorf("error checking for ogs url: %s", tt.url)
+			}
+		})
 	}
 }

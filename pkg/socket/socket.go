@@ -16,7 +16,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/jarednogo/board/backend/core"
+	"github.com/jarednogo/board/pkg/core"
 	"golang.org/x/net/websocket"
 )
 

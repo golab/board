@@ -17,9 +17,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jarednogo/board/backend/core"
-	"github.com/jarednogo/board/backend/socket"
-	"github.com/jarednogo/board/backend/state"
+	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/socket"
+	"github.com/jarednogo/board/pkg/state"
 	"golang.org/x/net/websocket"
 )
 

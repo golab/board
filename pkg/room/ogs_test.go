@@ -8,28 +8,25 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package room
+package room_test
 
 import (
-	"github.com/jarednogo/board/backend/core"
+	"encoding/json"
+	"testing"
 )
 
-// helper functions for ogs
-// these were more important when ogs was its own package
-// still i'm keeping them around in case i split it out again
+func TestGamedata(t *testing.T) {
+	data := `{"white_player_id":0, "black_player_id":1, "game_name":"game", "komi":0.5, "width":19, "rules":"chinese", "initial_player":"black", "moves":[[15,15,3150],[3,15,1132],[3,3,1643],[15,3,1150]], "initial_state":{"black":"","white":""}}`
 
-func (r *Room) HeadColor() core.Color {
-	return r.State.Head.Color
-}
+	var payload interface{}
+	err := json.Unmarshal([]byte(data), &payload)
+	if err != nil {
+		t.Error(err)
+	}
+	_, ok := payload.(map[string]interface{})
+	if !ok {
+		t.Errorf("error while coercing interface to map[string]interface{}")
+	}
 
-func (r *Room) PushHead(x, y int, c core.Color) {
-	r.State.PushHead(x, y, c)
-}
-
-func (r *Room) GenerateFullFrame(t core.TreeJSONType) *core.Frame {
-	return r.State.GenerateFullFrame(t)
-}
-
-func (r *Room) AddPatternNodes(movesArr []*core.PatternMove) {
-	r.State.AddPatternNodes(movesArr)
+	// currently no way to do tests without making network connections
 }

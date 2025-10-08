@@ -8,32 +8,19 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package room_test
+package core_test
 
 import (
-	"encoding/json"
-	//"github.com/jarednogo/board/backend/room"
 	"testing"
+
+	"github.com/jarednogo/board/pkg/core"
 )
 
-func TestGamedata(t *testing.T) {
-	data := `{"white_player_id":0, "black_player_id":1, "game_name":"game", "komi":0.5, "width":19, "rules":"chinese", "initial_player":"black", "moves":[[15,15,3150],[3,15,1132],[3,3,1643],[15,3,1150]], "initial_state":{"black":"","white":""}}`
+func TestHash1(t *testing.T) {
+	hash := "$2a$10$O5gxBye06fldX9Al9Upc8.nYkE33KWMTfxYF/sMt5TgEs66Vcg0JK"
+	password := "deadbeef"
 
-	var payload interface{}
-	err := json.Unmarshal([]byte(data), &payload)
-	if err != nil {
-		t.Error(err)
+	if !core.CorrectPassword(password, hash) {
+		t.Errorf("error checking password")
 	}
-	_, ok := payload.(map[string]interface{})
-	if !ok {
-		t.Errorf("error while coercing interface to map[string]interface{}")
-	}
-
-	/*
-		// currently no way to do tests without making network connections
-		o := &backend.OGSConnector{}
-		sgf := o.GamedataToSGF(gamedata)
-		t.Errorf(sgf)
-	*/
-
 }

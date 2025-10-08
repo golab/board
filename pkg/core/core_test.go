@@ -14,7 +14,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/jarednogo/board/backend/core"
+	"github.com/jarednogo/board/pkg/core"
 )
 
 func TestDiff1(t *testing.T) {

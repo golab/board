@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jarednogo/board/backend/core"
+	"github.com/jarednogo/board/pkg/core"
 )
 
 func (s *State) HandleAddStone(evt *core.EventJSON) (*core.Frame, error) {

@@ -17,10 +17,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jarednogo/board/backend/core"
-	"github.com/jarednogo/board/backend/fetch"
-	"github.com/jarednogo/board/backend/state"
-	"github.com/jarednogo/board/backend/zip"
+	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/fetch"
+	"github.com/jarednogo/board/pkg/state"
+	"github.com/jarednogo/board/pkg/zip"
 )
 
 type EventHandler func(*core.EventJSON) *core.EventJSON

@@ -17,8 +17,8 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/jarednogo/board/backend/core"
-	"github.com/jarednogo/board/backend/room"
+	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/room"
 )
 
 func (s *Server) Debug(w http.ResponseWriter, r *http.Request) {

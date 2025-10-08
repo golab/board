@@ -16,8 +16,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/jarednogo/board/backend/core"
-	"github.com/jarednogo/board/backend/fetch"
+	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/fetch"
 	"golang.org/x/net/websocket"
 )
 

@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jarednogo/board/backend/core"
+	"github.com/jarednogo/board/pkg/core"
 )
 
 var oppTests = []struct {

@@ -23,9 +23,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jarednogo/board/backend/core"
-	"github.com/jarednogo/board/backend/server"
-	"github.com/jarednogo/board/frontend"
+	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/server"
+	"github.com/jarednogo/board/pkg/frontend"
 	"golang.org/x/net/websocket"
 )
 

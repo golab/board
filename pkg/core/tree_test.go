@@ -13,8 +13,8 @@ package core_test
 import (
 	"testing"
 
-	"github.com/jarednogo/board/backend/core"
-	"github.com/jarednogo/board/backend/state"
+	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/state"
 )
 
 func TestFmap(t *testing.T) {

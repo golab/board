@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jarednogo/board/backend/core"
+	"github.com/jarednogo/board/pkg/core"
 )
 
 // Chat is used to encode strings like "!command plus some args"
