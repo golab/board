@@ -13,9 +13,10 @@ package state
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/jarednogo/board/backend/core"
 	"strconv"
 	"strings"
+
+	"github.com/jarednogo/board/backend/core"
 )
 
 const Letters = "ABCDEFGHIJKLNMOPQRSTUVWXYZ"

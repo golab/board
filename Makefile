@@ -51,8 +51,8 @@ test: ## Run tests
 run: build ## Build and run
 	@echo "==> run"
 	mkdir -p build
-	rm build/* 2> /dev/null
-	./bin/air --build.cmd "go build -o build cmd/*" --build.bin "./build/main"
+	rm -f build/* 2> /dev/null
+	./bin/air --build.cmd 'go build -o build cmd/*' --build.bin "./build/main"
 
 clean: ## Remove build artifacts
 	@echo "==> clean"

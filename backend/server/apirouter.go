@@ -11,16 +11,25 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package server
 
 import (
-	"github.com/go-chi/chi/v5"
+	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 )
 
 // perhaps it will be func (s *Server) someday
-func ApiV1Router() http.Handler {
+func ApiV1Router(version string) http.Handler {
 	r := chi.NewRouter()
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		_, err := w.Write([]byte(`{"message": "pong"}`))
+		if err != nil {
+			log.Println(err)
+		}
+	})
+	r.Get("/version", func(w http.ResponseWriter, r *http.Request) {
+		msg := fmt.Sprintf(`{"message": "%s"}`, version)
+		_, err := w.Write([]byte(msg))
 		if err != nil {
 			log.Println(err)
 		}

@@ -16,12 +16,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
+
 	// blank import is utilized to register the driver with the
 	// database/sql package without directly using any of its
 	// exported functions or types in the importing file
 	_ "modernc.org/sqlite"
-	"os"
-	"path/filepath"
 )
 
 type MessageJSON struct {

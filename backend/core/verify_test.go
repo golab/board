@@ -11,8 +11,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package core_test
 
 import (
-	"github.com/jarednogo/board/backend/core"
 	"testing"
+
+	"github.com/jarednogo/board/backend/core"
 )
 
 func TestHash1(t *testing.T) {

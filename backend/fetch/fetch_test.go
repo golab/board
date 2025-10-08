@@ -11,8 +11,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package fetch_test
 
 import (
-	"github.com/jarednogo/board/backend/fetch"
 	"testing"
+
+	"github.com/jarednogo/board/backend/fetch"
 )
 
 var ogsTests = []struct {

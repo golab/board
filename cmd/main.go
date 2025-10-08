@@ -11,13 +11,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package main
 
 import (
-	"io/fs"
-
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"golang.org/x/net/websocket"
 	"html/template"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -25,14 +21,19 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jarednogo/board/backend/core"
 	"github.com/jarednogo/board/backend/server"
 	"github.com/jarednogo/board/frontend"
+	"golang.org/x/net/websocket"
 )
 
 // constants
 const WSPORT = 9000
 const WSHOST = "localhost"
+
+var version = "dev"
 
 // html
 
@@ -171,7 +172,7 @@ func main() {
 
 	r.NotFound(page404)
 
-	r.Mount("/api/v1", server.ApiV1Router())
+	r.Mount("/api/v1", server.ApiV1Router(version))
 
 	// see server package for routes
 	r.Mount("/apps/twitch", s.TwitchRouter())

@@ -16,10 +16,9 @@ import (
 	"log"
 	"time"
 
-	"golang.org/x/net/websocket"
-
 	"github.com/jarednogo/board/backend/core"
 	"github.com/jarednogo/board/backend/fetch"
+	"golang.org/x/net/websocket"
 )
 
 func GetUser(id int) (string, error) {

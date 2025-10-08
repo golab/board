@@ -13,10 +13,11 @@ package core
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 // Color is one of NoColor, Black, or White

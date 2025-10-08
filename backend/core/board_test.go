@@ -12,8 +12,9 @@ package core_test
 
 import (
 	"fmt"
-	"github.com/jarednogo/board/backend/core"
 	"testing"
+
+	"github.com/jarednogo/board/backend/core"
 )
 
 var oppTests = []struct {

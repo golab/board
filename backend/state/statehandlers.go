@@ -12,9 +12,10 @@ package state
 
 import (
 	"fmt"
-	"github.com/jarednogo/board/backend/core"
 	"strconv"
 	"strings"
+
+	"github.com/jarednogo/board/backend/core"
 )
 
 func (s *State) HandleAddStone(evt *core.EventJSON) (*core.Frame, error) {

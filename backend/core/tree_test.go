@@ -11,9 +11,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package core_test
 
 import (
+	"testing"
+
 	"github.com/jarednogo/board/backend/core"
 	"github.com/jarednogo/board/backend/state"
-	"testing"
 )
 
 func TestFmap(t *testing.T) {

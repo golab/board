@@ -17,7 +17,6 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-
 	"github.com/jarednogo/board/backend/core"
 	"github.com/jarednogo/board/backend/room"
 )

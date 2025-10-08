@@ -12,8 +12,9 @@ package state_test
 
 import (
 	//"fmt"
-	"github.com/jarednogo/board/backend/state"
 	"testing"
+
+	"github.com/jarednogo/board/backend/state"
 )
 
 func TestState1(t *testing.T) {

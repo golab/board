@@ -11,8 +11,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package zip_test
 
 import (
-	"github.com/jarednogo/board/backend/zip"
 	"testing"
+
+	"github.com/jarednogo/board/backend/zip"
 )
 
 func TestZip(t *testing.T) {

@@ -12,8 +12,9 @@ package core_test
 
 import (
 	"encoding/json"
-	"github.com/jarednogo/board/backend/core"
 	"testing"
+
+	"github.com/jarednogo/board/backend/core"
 )
 
 func TestDiff1(t *testing.T) {
