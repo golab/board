@@ -6,8 +6,7 @@ RUN apt-get install -y golang ca-certificates
 
 RUN update-ca-certificates
 
-ADD frontend /root/frontend
-ADD backend /root/backend
+ADD pkg /root/pkg
 ADD cmd /root/cmd
 
 ADD go.mod /root/go.mod
@@ -17,6 +16,7 @@ RUN sed -i -e 's/localhost/0.0.0.0/g' /root/cmd/main.go
 
 EXPOSE 8080
 
-ADD scripts/run.sh /root
 WORKDIR /root
-CMD ["bash", "/root/run.sh"]
+
+RUN go build cmd/*
+CMD ["/root/main"]
