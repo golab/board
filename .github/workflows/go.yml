@@ -23,12 +23,10 @@ jobs:
 
     - name: Test
       run:  |
-        cd backend
         go test -v ./...
 
     - name: Fmt
       run:  |
-        cd backend
         if [ "$(gofmt -l . | wc -l)" -gt 0 ]
         then
           echo "Go code is not formatted. Run 'gofmt -w .' to fix."
