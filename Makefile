@@ -36,11 +36,11 @@ lint: ## Lint code
 
 fuzz: ## Fuzz code
 	@echo "==> fuzz"
-	go test ./backend/core -fuzz=FuzzParser -fuzztime=60s
+	go test ./pkg/core -fuzz=FuzzParser -fuzztime=60s
 
 coverage: ## Test coverage
 	@echo "==> coverage"
-	go test ./backend/... -coverprofile=cover.out
+	go test ./... -coverprofile=cover.out
 	go tool cover -html=cover.out
 	rm cover.out
 
