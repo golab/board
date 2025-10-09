@@ -1,7 +1,7 @@
 # Base Makefile — default goal prints help (supports inline "##" and preceding "##" styles)
 .DEFAULT_GOAL := default
 
-.PHONY: default help build test fmt lint run run-live setup clean fuzz coverage
+.PHONY: default help build test fmt lint run setup clean fuzz coverage
 
 default: help
 
@@ -53,12 +53,8 @@ build: ## Build the binary
 	mkdir -p build
 	go build -o build cmd/*.go
 
-run: ## Run the binary
+run: setup ## Build and run with air (live reloading)
 	@echo "==> run"
-	go run cmd/*.go
-
-run-live: setup ## Build and run with air (live reloading)
-	@echo "==> run-live"
 	mkdir -p build
 	rm -f build/* 2> /dev/null
 	./bin/air --build.cmd 'go build -o build cmd/*.go' --build.bin "./build/main"
