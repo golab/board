@@ -54,6 +54,8 @@ $ make setup
 
 Create a branch based on the `test` branch.
 
+Use `make run-live` to build and run with `air` (which provides live reloading). 
+
 After making changes, run `make test` and `make lint` to ensure code uniformity.
 
 Make PRs against the `test` branch.

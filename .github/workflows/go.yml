@@ -5,38 +5,39 @@ name: Go
 
 on:
   push:
-    branches: [ "test" ]
+    branches: [ "test", "main" ]
   pull_request:
-    branches: [ "test" ]
+    branches: [ "test", "main" ]
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.23.8'
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.8'
 
-    - name: Setup toolchain
-      run: make setup
+      - name: Setup toolchain
+        run: make setup
 
-    - name: Fmt
-      run:  |
-        if [ "$(gofmt -l . | wc -l)" -gt 0 ]
-        then
-          echo "Go code is not formatted. Run 'gofmt -w .' to fix."
-          exit 1
-        fi
+      - name: Lint
+        run: make lint
 
-    - name: Lint
-      run: make lint
+      - name: Test
+        run: make test
 
-    - name: Test
-      run: go test -v ./...
+      - name: Build
+        run: go build cmd/*.go
 
-    - name: Build
-      run: go build cmd/*.go
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.8'

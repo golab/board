@@ -1,7 +1,7 @@
 # Base Makefile — default goal prints help (supports inline "##" and preceding "##" styles)
 .DEFAULT_GOAL := default
 
-.PHONY: default help build test fmt lint run setup clean fuzz coverage
+.PHONY: default help build test fmt lint run run-live setup clean fuzz coverage
 
 default: help
 
@@ -23,14 +23,14 @@ help: ## Show this help.
 
 setup: ## Setup environment
 	@echo "==> setup"
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b ${PWD}/bin v2.5.0
-	curl -sSfL https://raw.githubusercontent.com/air-verse/air/master/install.sh | sh -s -- -b ${PWD}/bin
+	@[ -x ${PWD}/bin/golangci-lint ] || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b ${PWD}/bin v2.5.0
+	@[ -x ${PWD}/bin/air ] || curl -sSfL https://raw.githubusercontent.com/air-verse/air/master/install.sh | sh -s -- -b ${PWD}/bin
 
 fmt: ## Format code
 	@echo "==> format"
 	gofmt -l -w .
 
-lint: ## Lint code
+lint: setup ## Lint code
 	@echo "==> lint"
 	${PWD}/bin/golangci-lint run
 
@@ -48,11 +48,20 @@ test: ## Run tests
 	@echo "==> test"
 	go test ./...
 
-run: build ## Build and run
+build: ## Build the binary
+	@echo "==> build"
+	mkdir -p build
+	go build -o build cmd/*.go
+
+run: ## Run the binary
 	@echo "==> run"
+	go run cmd/*.go
+
+run-live: setup ## Build and run with air (live reloading)
+	@echo "==> run-live"
 	mkdir -p build
 	rm -f build/* 2> /dev/null
-	./bin/air --build.cmd 'go build -o build cmd/*' --build.bin "./build/main"
+	./bin/air --build.cmd 'go build -o build cmd/*.go' --build.bin "./build/main"
 
 clean: ## Remove build artifacts
 	@echo "==> clean"
