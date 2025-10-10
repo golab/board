@@ -31,6 +31,7 @@ jobs:
         run: go build cmd/*.go
 
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,6 +42,7 @@ jobs:
           go-version: '1.23.8'
 
   create-invalidation:
+    needs: deploy
     runs-on: ubuntu-latest
     steps:
       - name: Install aws

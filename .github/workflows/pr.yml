@@ -4,7 +4,7 @@
 name: Pull Request
 
 on:
-  push:
+  pull-request:
     branches: [ "test" ]
 
 jobs:
