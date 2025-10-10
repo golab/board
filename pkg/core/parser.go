@@ -139,10 +139,15 @@ func (p *Parser) ParseKey() (string, error) {
 		c := p.peek(0)
 		if c == 0 {
 			return "", fmt.Errorf("bad key")
+		} else if c >= 'a' && c <= 'z' {
+			r := p.read()
+			r -= 32
+			s += string([]rune{r})
 		} else if c < 'A' || c > 'Z' {
 			break
+		} else {
+			s += string([]rune{p.read()})
 		}
-		s += string([]rune{p.read()})
 	}
 	return s, nil
 }

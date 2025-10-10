@@ -54,6 +54,6 @@ $ docker run -p 8080:8080 board
 
 1. Checkout a new local branch (base it off `test`)
 
-2. After making changes, run `make test` and `make lint` to ensure code uniformity.
+2. After making changes, run `make lint` and `make test` to ensure code uniformity.
 
 3. Make PRs against the `test` branch.
