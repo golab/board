@@ -50,14 +50,10 @@ func main() {
 	r.Use(middleware.StripSlashes)
 	r.Use(middleware.Logger)
 
-	r.Get("/upload", s.Upload)
-	r.Get("/b/{boardID}/sgf", s.Sgf)
-	r.Get("/b/{boardID}/sgfix", s.Sgfix)
-	r.Get("/b/{boardID}/debug", s.Debug)
+	r.Mount("/", s.WebRouter())
 
-	r.Mount("/", server.WebRouter())
-
-	r.Mount("/api/v1", server.ApiV1Router(version))
+	r.Mount("/api", server.ApiRouter(version))
+	r.Mount("/api/v1", server.ApiV1Router())
 
 	// see server package for routes
 	r.Mount("/apps/twitch", s.TwitchRouter())

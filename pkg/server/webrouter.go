@@ -21,7 +21,80 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/frontend"
+	"github.com/jarednogo/board/pkg/room"
 )
+
+// stateful
+
+func (s *Server) Debug(w http.ResponseWriter, r *http.Request) {
+	boardID := chi.URLParam(r, "boardID")
+	data := s.HandleOp("debug", boardID)
+	_, err := w.Write([]byte(data))
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (s *Server) Sgfix(w http.ResponseWriter, r *http.Request) {
+	boardID := chi.URLParam(r, "boardID")
+	data := s.HandleOp("sgfix", boardID)
+	_, err := w.Write([]byte(data))
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (s *Server) Sgf(w http.ResponseWriter, r *http.Request) {
+	boardID := chi.URLParam(r, "boardID")
+	data := s.HandleOp("sgf", boardID)
+	_, err := w.Write([]byte(data))
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (s *Server) Upload(w http.ResponseWriter, r *http.Request) {
+	url := r.URL.Query().Get("url")
+	sgf := r.URL.Query().Get("sgf")
+	boardID := r.URL.Query().Get("board_id")
+	boardID = core.Sanitize(boardID)
+	if len(strings.TrimSpace(boardID)) == 0 {
+		boardID = core.UUID4()
+	}
+	newroom := s.GetOrCreateRoom(boardID)
+
+	var handler room.EventHandler
+	var evt *core.EventJSON
+	if url != "" {
+		handler = room.Chain(
+			newroom.HandleRequestSGF,
+			newroom.OutsideBuffer,
+			newroom.Authorized,
+			newroom.CloseOGS,
+			newroom.BroadcastAfter)
+		evt = &core.EventJSON{
+			Event: "request_sgf",
+			Value: url,
+		}
+	} else if sgf != "" {
+		handler = room.Chain(
+			newroom.HandleUploadSGF,
+			newroom.OutsideBuffer,
+			newroom.Authorized,
+			newroom.CloseOGS,
+			newroom.BroadcastAfter)
+		evt = &core.EventJSON{
+			Event: "upload_sgf",
+			Value: sgf,
+		}
+	} else {
+		return
+	}
+	handler(evt)
+
+	redirect := fmt.Sprintf("/b/%s", boardID)
+	http.Redirect(w, r, redirect, http.StatusFound)
+}
 
 // html
 
@@ -120,8 +193,16 @@ func image(w http.ResponseWriter, r *http.Request) {
 	serveStatic(w, r, image)
 }
 
-func WebRouter() http.Handler {
+func (s *Server) WebRouter() http.Handler {
 	r := chi.NewRouter()
+
+	// stateful endpoints
+	r.Get("/upload", s.Upload)
+	r.Get("/b/{boardID}/sgf", s.Sgf)
+	r.Get("/b/{boardID}/sgfix", s.Sgfix)
+	r.Get("/b/{boardID}/debug", s.Debug)
+
+	// pure web endpoints
 	r.Get("/", index)
 	r.Get("/about", about)
 	r.Get("/integrations", integrations)
