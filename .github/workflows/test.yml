@@ -47,7 +47,7 @@ jobs:
           mkdir -p artifact
           GOOS=linux GOARCH=amd64 go build -o artifact cmd/*.go
           BIN=board-${{ steps.sha.outputs.sha }}
-          echo "$BIN" > ../artifact/name.txt
+          echo "$BIN" > ./artifact/name.txt
 
       - name: Upload artifact
         id: art
