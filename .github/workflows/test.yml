@@ -75,7 +75,13 @@ jobs:
           BIN_KEY="${{ steps.upload.outputs.s3key }}"
           INSTANCE_ID="${{ secrets.INSTANCE_ID }}"
           # create the inline shell script to run on the instance
-          read -r -d '' CMDS <<'CMD' || true
+          set -euo pipefail
+
+          # create temp file for the remote script
+          TMP_SCRIPT=$(mktemp /tmp/ssm-deploy-XXXX.sh)
+          chmod 700 "$TMP_SCRIPT"
+
+          cat > "$TMP_SCRIPT" <<'BASH'
 
 #!/bin/bash
 set -euo pipefail
@@ -108,7 +114,7 @@ if ! systemctl is-active --quiet "$SERVICE"; then
   exit 2
 fi
 echo "deployed $S3_KEY"
-CMD
+BASH
 
           # send the command
           aws ssm send-command \
