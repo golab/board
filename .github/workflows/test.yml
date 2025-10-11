@@ -7,6 +7,11 @@ on:
   push:
     branches: [ "test" ]
 
+env:
+  S3_PREFIX: releases   # folder prefix in bucket
+  REMOTE_SERVICE: board.service
+  REMOTE_RELEASE_BASE: /opt/board
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -26,3 +31,124 @@ jobs:
 
       - name: Test
         run: make test
+
+  build-upload-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.8'
+
+      - name: Build binary
+        id: build
+        run: |
+          mkdir artifact
+          GOOS=linux GOARCH=amd64 go build -o board cmd/*
+          BIN_NAME=board-${{ github.sha::8 }}
+          mv board artifact/"$BIN_NAME"
+          echo "bin=$BIN_NAME" > artifact/meta.txt
+
+      - name: Configure AWS credentials (OIDC assume-role)
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-session-name: github-actions-deploy
+
+      - name: Upload artifact to S3
+        id: upload
+        run: |
+          BIN=$(awk -F= '/bin=/{print $2}' artifact/meta.txt)
+          S3_KEY="${{ env.S3_PREFIX }}/${BIN}"
+          aws s3 cp artifact/$BIN "s3://${{ secrets.S3_BUCKET }}/$S3_KEY"
+          echo "s3key=$S3_KEY" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Send SSM command to target instance(s)
+        id: ssm
+        run: |
+          BIN_KEY="${{ steps.upload.outputs.s3key }}"
+          INSTANCE_ID="${{ secrets.INSTANCE_ID }}"
+          # create the inline shell script to run on the instance
+          read -r -d '' CMDS <<'CMD' || true
+
+#!/bin/bash
+set -euo pipefail
+S3_BUCKET="${S3_BUCKET}"
+S3_KEY="${S3_KEY}"
+RELEASE_BASE="${RELEASE_BASE}"
+SERVICE="${SERVICE}"
+GITHUB_SHA="${GITHUB_SHA}"
+
+TS=$(date -u +%Y%m%d%H%M%S)
+RELEASE_DIR="${RELEASE_BASE}/releases/${TS}-${GITHUB_SHA:0:8}"
+TMP="/tmp/$(basename "$S3_KEY")-$$"
+
+mkdir -p "$RELEASE_DIR"
+
+aws s3 cp "s3://$S3_BUCKET/$S3_KEY" "$TMP" --only-show-errors
+chmod +x "$TMP"
+mv "$TMP" "$RELEASE_DIR/board"
+chown root:root "$RELEASE_DIR/board" || true
+chmod 755 "$RELEASE_DIR/board"
+
+ln -sfn "$RELEASE_DIR" "$RELEASE_BASE/current"
+
+systemctl daemon-reload || true
+systemctl restart "$SERVICE"
+
+sleep 2
+if ! systemctl is-active --quiet "$SERVICE"; then
+  journalctl -u "$SERVICE" -n 200 --no-pager
+  exit 2
+fi
+echo "deployed $S3_KEY"
+CMD
+
+          # send the command
+          aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "deploy $BIN_KEY from GitHub Actions" \
+            --parameters commands="$(printf '%s\n' "$CMDS")" \
+            --timeout-seconds 600 \
+            --output json > /tmp/ssm_out.json
+          fi
+
+          cat /tmp/ssm_out.json
+        env:
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          S3_KEY: ${{ steps.upload.outputs.s3key }}
+          RELEASE_BASE: ${{ env.REMOTE_RELEASE_BASE }}
+          SERVICE: ${{ env.REMOTE_SERVICE }}
+          GITHUB_SHA: ${{ github.sha }}
+        shell: bash
+
+      - name: Wait for SSM command result (optional)
+        run: |
+          CMD_ID=$(jq -r '.Command.CommandId' /tmp/ssm_out.json)
+          INSTANCE_ID="${{ secrets.INSTANCE_ID }}"
+          echo "Waiting for command $CMD_ID on $INSTANCE_ID"
+          # poll GetCommandInvocation until status is Success or Failed
+          for i in $(seq 1 60); do
+            sleep 5
+            STATUS=$(aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" --query 'Status' --output text || true)
+            echo "ssm status: $STATUS"
+            if [[ "$STATUS" == "Success" ]]; then
+              echo "SSM command succeeded"
+              aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" --output json | jq -r '.StandardOutputContent'
+              exit 0
+            elif [[ "$STATUS" == "Failed" || "$STATUS" == "Cancelled" || "$STATUS" == "TimedOut" ]]; then
+              aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" --output json | jq -r '.StandardErrorContent'
+              exit 1
+            fi
+          done
+          echo "Timeout waiting for SSM command"
+          exit 1
+        shell: bash
+
