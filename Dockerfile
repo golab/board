@@ -1,10 +1,4 @@
-FROM ubuntu:latest
-
-RUN apt-get update && apt-get -y upgrade
-
-RUN apt-get install -y golang ca-certificates
-
-RUN update-ca-certificates
+FROM golang:1.23.8-alpine
 
 ADD pkg /root/pkg
 ADD cmd /root/cmd
