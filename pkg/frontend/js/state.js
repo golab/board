@@ -15,6 +15,7 @@ import { BoardGraphics } from './boardgraphics.js';
 import { TreeGraphics } from './treegraphics.js';
 
 import { create_comments } from './comments.js';
+import { create_layout } from './layout.js';
 import { create_buttons } from './buttons.js';
 import { create_modals } from './modals.js';
 
@@ -50,6 +51,7 @@ function b64_encode_unicode(str) {
 class State {
     constructor() {
         window.addEventListener("resize", (event) => this.resize(event));
+        create_layout();
         this.compute_consts();
         this.color = 1;
         this.toggling = true;

@@ -20,6 +20,7 @@ export {
     add_tooltip,
     get_viewport,
     prefer_dark_mode,
+    get_dims,
 }
 
 class Coord {
@@ -113,6 +114,15 @@ function is_touch_device() {
     return "ontouchstart" in window || window.DocumentTouch && document instanceof DocumentTouch;
 }
 
+function get_dims() {
+    let width = Math.max(
+        document.documentElement.clientWidth,
+        window.innerWidth || 0);
+    let height = Math.max(
+        document.documentElement.clientHeight,
+        window.innerHeight || 0);
+    return [width, height];
+}
 
 function get_viewport () {
   // https://stackoverflow.com/a/8876069
