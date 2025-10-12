@@ -18,6 +18,7 @@ export {
     new_text_button,
     new_icon_button,
     add_tooltip,
+    edit_tooltip,
     get_viewport,
     prefer_dark_mode,
     get_dims,
@@ -107,7 +108,16 @@ function add_tooltip(element, title, show=500, hide=0) {
     element.setAttribute("data-bs-placement", "bottom");
     element.setAttribute("data-bs-trigger", "hover");
     element.setAttribute("data-bs-delay", JSON.stringify(delay));
+    // allow html in tooltip
+    element.setAttribute("data-bs-html", "true");
     element.setAttribute("data-bs-title", title);
+}
+
+function edit_tooltip(element, title) {
+    let tooltip = bootstrap.Tooltip.getInstance(element);
+    if (tooltip) {
+        tooltip.setContent({ '.tooltip-inner': title });
+    }
 }
 
 function is_touch_device() {

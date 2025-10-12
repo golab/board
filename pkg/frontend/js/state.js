@@ -14,6 +14,7 @@ import { Board, from_sgf } from './board.js';
 import { BoardGraphics } from './boardgraphics.js';
 import { TreeGraphics } from './treegraphics.js';
 
+import { edit_tooltip } from './common.js';
 import { create_comments } from './comments.js';
 import { create_layout } from './layout.js';
 import { create_buttons } from './buttons.js';
@@ -276,6 +277,8 @@ class State {
 
         if (fields.has("KM")) {
             gameinfo["Komi"] = fields.get("KM");
+            let white = document.getElementById("white-namecard");
+            edit_tooltip(white, "Capures:<br>Komi: " + gameinfo["Komi"]);
         }
 
         if (fields.has("DT")) {

@@ -225,11 +225,13 @@ export function create_buttons(_state) {
     let black = document.createElement("div");
     black.setAttribute("id", "black-namecard");
     black.classList.add("w-100", "text-white", "bg-dark", "justify-content-center");
+    add_tooltip(black, "Captures:");
     namecards.appendChild(black);
 
     let white = document.createElement("div");
     white.setAttribute("id", "white-namecard");
     white.classList.add("w-100", "text-black", "bg-light", "justify-content-center");
+    add_tooltip(white, "Captures:<br>Komi:");
     namecards.appendChild(white);
 
     return {};
