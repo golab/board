@@ -149,7 +149,9 @@ function layout() {
     let b = create_div("col-lg-4 col-sm-12 gx-0");
     let b1 = create_div("", "buttons-row2");
     b.appendChild(b1);
-    let c = create_div("col-lg-4");
+    let c = create_div("col-lg-4 gx-0 ps-lg-4");
+    let namecards = create_div("w-100", "namecards");
+    c.appendChild(namecards);
 
     row1.appendChild(a);
     row1.appendChild(b);
@@ -160,8 +162,10 @@ function layout() {
     let r = create_div("", "review");
     r.setAttribute("size", "19");
     let arrows = create_div("", "arrows");
+    let b3 = create_div("", "buttons-row3");
     d.appendChild(r);
     d.appendChild(arrows);
+    d.appendChild(b3);
 
     let e = create_div("col-lg-4 gx-0 ps-lg-4");
     let exp_container = create_div("", "explorer_container");
@@ -178,16 +182,16 @@ function layout() {
     row2.appendChild(d);
     row2.appendChild(e);
 
-    let row3 = create_div("row");
-    let f = create_div("col-lg-8 col-sm-12 gx-0");
-    let b3 = create_div("", "buttons-row3");
-    f.appendChild(b3);
+    //let row3 = create_div("row");
+    //let f = create_div("col-lg-8 col-sm-12 gx-0");
+    //let b3 = create_div("", "buttons-row3");
+    //f.appendChild(b3);
 
-    row3.appendChild(f);
+    //row3.appendChild(f);
 
     container_fluid.appendChild(row1);
     container_fluid.appendChild(row2);
-    container_fluid.appendChild(row3);
+    //container_fluid.appendChild(row3);
 
     return container_fluid;
 }

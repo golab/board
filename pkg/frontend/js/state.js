@@ -257,6 +257,8 @@ class State {
             gameinfo["Black"] = "Black";
         }
 
+        document.getElementById("black-namecard").innerHTML = gameinfo["Black"];
+
         if (fields.has("PW")) {
             let rank = "";
             if (fields.has("WR")) {
@@ -266,6 +268,7 @@ class State {
         } else {
             gameinfo["White"] = "White";
         }
+        document.getElementById("white-namecard").innerHTML = gameinfo["White"];
 
         if (fields.has("RE")) {
             gameinfo["Result"] = fields.get("RE");

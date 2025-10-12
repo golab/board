@@ -217,5 +217,20 @@ export function create_buttons(_state) {
     review.style.display = "flex";
     review.style.height = w + "px";
 
+    // name cards
+    let namecards = document.getElementById("namecards");
+    namecards.style.margin = "auto";
+    namecards.style.display = "flex";
+
+    let black = document.createElement("div");
+    black.setAttribute("id", "black-namecard");
+    black.classList.add("w-100", "text-white", "bg-dark", "justify-content-center");
+    namecards.appendChild(black);
+
+    let white = document.createElement("div");
+    white.setAttribute("id", "white-namecard");
+    white.classList.add("w-100", "text-black", "bg-light", "justify-content-center");
+    namecards.appendChild(white);
+
     return {};
 }
