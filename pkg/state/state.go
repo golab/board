@@ -178,7 +178,7 @@ func (s *State) AddFieldNode(fields map[string][]string, index int) *core.Diff {
 	*/
 
 	s.Board.ApplyDiff(diff)
-	s.Current.Diff = diff
+	s.Current.SetDiff(diff)
 	return diff
 }
 
@@ -259,7 +259,7 @@ func (s *State) PushHead(x, y int, col core.Color) {
 	s.Head = n
 
 	// set diff
-	s.Head.Diff = diff
+	s.Head.SetDiff(diff)
 }
 
 func (s *State) AddNode(coord *core.Coord, col core.Color, fields map[string][]string, index int, force bool) *core.Diff {
@@ -298,7 +298,7 @@ func (s *State) AddNode(coord *core.Coord, col core.Color, fields map[string][]s
 	}
 	s.Current = n
 	diff := s.Board.Move(coord, core.Color(col))
-	s.Current.Diff = diff
+	s.Current.SetDiff(diff)
 	return diff
 }
 
@@ -396,7 +396,7 @@ func (s *State) SmartGraft(parentIndex int, moves []*core.PatternMove) {
 
 		// calculate the diff
 		diff := s.Board.Move(move.Coord, move.Color)
-		node.Diff = diff
+		node.SetDiff(diff)
 
 		// set the new parent for the next node
 		up = node
@@ -459,7 +459,7 @@ func (s *State) Graft(parentIndex int, moves []*core.PatternMove) {
 
 		// calculate the diff
 		diff := s.Board.Move(move.Coord, move.Color)
-		node.Diff = diff
+		node.SetDiff(diff)
 
 		// set the new parent for the next node
 		up = node
@@ -688,7 +688,9 @@ func (s *State) GenerateComments() []string {
 }
 
 func (s *State) GenerateFullFrame(t core.TreeJSONType) *core.Frame {
-	frame := s.Board.CurrentFrame()
+	frame := &core.Frame{}
+	frame.Type = core.FullFrame
+	frame.Diff = s.Board.CurrentDiff()
 	frame.Marks = s.GenerateMarks()
 	frame.Metadata = s.GenerateMetadata()
 	frame.Comments = s.GenerateComments()

@@ -44,6 +44,8 @@ type TreeNode struct {
 	Fields         map[string][]string
 	Diff           *Diff
 	Depth          int
+	BlackScore     float64
+	WhiteScore     float64
 }
 
 func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields map[string][]string) *TreeNode {
@@ -51,11 +53,45 @@ func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields map[st
 		fields = make(map[string][]string)
 	}
 	down := []*TreeNode{}
-	node := &TreeNode{coord, col, down, nil, index, 0, fields, nil, 0}
+	node := &TreeNode{
+		XY:             coord,
+		Color:          col,
+		Down:           down,
+		Up:             nil,
+		Index:          index,
+		PreferredChild: 0,
+		Fields:         fields,
+		Diff:           nil,
+		Depth:          0,
+		BlackScore:     0.0,
+		WhiteScore:     0.0,
+	}
 	if up != nil {
 		node.SetParent(up)
 	}
 	return node
+}
+
+func (n *TreeNode) SetDiff(diff *Diff) {
+	n.Diff = diff
+	b := 0.0
+	w := 0.0
+	for _, ss := range diff.Remove {
+		switch ss.Color {
+		case White:
+			w += float64(len(ss.Coords))
+		case Black:
+			b += float64(len(ss.Coords))
+		}
+	}
+	baseB := 0.0
+	baseW := 0.0
+	if n.Up != nil {
+		baseB = n.Up.BlackScore
+		baseW = n.Up.WhiteScore
+	}
+	n.BlackScore = baseB + b
+	n.WhiteScore = baseW + w
 }
 
 func (n *TreeNode) TrunkNum(i int) int {

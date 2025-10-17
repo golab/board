@@ -373,9 +373,9 @@ func (s *State) HandleClipboard() (*core.Frame, error) {
 	// recompute diffs
 	core.Fmap(func(n *core.TreeNode) {
 		if n.IsMove() {
-			n.Diff = s.ComputeDiffMove(n.Index)
+			n.SetDiff(s.ComputeDiffMove(n.Index))
 		} else {
-			n.Diff = s.ComputeDiffSetup(n.Index)
+			n.SetDiff(s.ComputeDiffSetup(n.Index))
 		}
 	}, branch)
 

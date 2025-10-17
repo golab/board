@@ -303,7 +303,7 @@ func (b *Board) ApplyDiff(d *Diff) {
 	}
 }
 
-func (b *Board) CurrentFrame() *Frame {
+func (b *Board) CurrentDiff() *Diff {
 	black := NewCoordSet()
 	white := NewCoordSet()
 	for j, row := range b.Points {
@@ -318,7 +318,5 @@ func (b *Board) CurrentFrame() *Frame {
 	}
 	addBlack := NewStoneSet(black, Black)
 	addWhite := NewStoneSet(white, White)
-	diff := NewDiff([]*StoneSet{addBlack, addWhite}, nil)
-
-	return &Frame{FullFrame, diff, nil, nil, nil, nil}
+	return NewDiff([]*StoneSet{addBlack, addWhite}, nil)
 }
