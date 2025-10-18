@@ -320,3 +320,81 @@ func (b *Board) CurrentDiff() *Diff {
 	addWhite := NewStoneSet(white, White)
 	return NewDiff([]*StoneSet{addBlack, addWhite}, nil)
 }
+
+type EmptyPointType int
+
+const (
+	NotCovered EmptyPointType = iota
+	BlackPoint
+	WhitePoint
+	Dame
+)
+
+func (b *Board) FindArea(start *Coord) (CoordSet, EmptyPointType) {
+	if b.Get(start) != NoColor {
+		return nil, NotCovered
+	}
+
+	t := NotCovered
+
+	// initiate the stack
+	stack := []*Coord{start}
+
+	// initiate elements
+	elts := NewCoordSet()
+
+	// start DFS
+	for len(stack) > 0 {
+		// pop off the stack
+		point := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+
+		// add to elements
+		elts.Add(point)
+
+		// compute neighbors
+		nbs := b.Neighbors(point)
+		for _, nb := range nbs {
+			// if it's the right color
+			// and we haven't visited it yet
+			// add to the stack
+			if b.Get(nb) == NoColor && !elts.Has(nb) {
+				stack = append(stack, nb)
+			} else if b.Get(nb) == Black {
+				t |= BlackPoint
+			} else if b.Get(nb) == White {
+				t |= WhitePoint
+			}
+		}
+	}
+	return elts, t
+}
+
+func (b *Board) Score() {
+	grid := [][]EmptyPointType{}
+	for i := 0; i < b.Size; i++ {
+		grid = append(grid, make([]EmptyPointType, b.Size))
+	}
+
+	for i, row := range b.Points {
+		for j, c := range row {
+			switch c {
+			case Black, White:
+			case NoColor:
+				if grid[i][j] == NotCovered {
+					area, t := b.FindArea(&Coord{j, i})
+					for _, coord := range area {
+						grid[coord.Y][coord.X] = t
+					}
+				}
+			}
+		}
+	}
+
+	for _, row := range grid {
+		for _, x := range row {
+			fmt.Printf("%d ", x)
+		}
+		fmt.Println()
+	}
+}

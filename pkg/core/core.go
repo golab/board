@@ -39,12 +39,14 @@ const (
 
 // Frame provides the data for when the board needs to be updated (not the explorer)
 type Frame struct {
-	Type     FrameType `json:"type"`
-	Diff     *Diff     `json:"diff"`
-	Marks    *Marks    `json:"marks"`
-	Comments []string  `json:"comments"`
-	Metadata *Metadata `json:"metadata"`
-	TreeJSON *TreeJSON `json:"tree"`
+	Type      FrameType `json:"type"`
+	Diff      *Diff     `json:"diff"`
+	Marks     *Marks    `json:"marks"`
+	Comments  []string  `json:"comments"`
+	Metadata  *Metadata `json:"metadata"`
+	TreeJSON  *TreeJSON `json:"tree"`
+	BlackCaps int       `json:"black_caps"`
+	WhiteCaps int       `json:"white_caps"`
 }
 
 // Marks provides data for any marks on the board

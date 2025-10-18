@@ -295,6 +295,11 @@ class NetworkHandler {
         this.prepare(payload);
     }
 
+    prepare_score() {
+        let payload = {"event": "score"};
+        this.prepare(payload);
+    }
+
     prepare_settings(settings) {
         let payload = {"event": "update_settings", "value": settings};
         this.prepare(payload);

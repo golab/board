@@ -125,6 +125,11 @@ export function create_buttons(_state) {
     add_tooltip(clipboard_button, "Paste branch (Ctrl+V / Cmd+V)");
     button_row2.appendChild(clipboard_button);
 
+    // score button
+    let score_button = new_icon_button("bi-calculator", () => state.network_handler.prepare_score());
+    add_tooltip(score_button, "Score");
+    button_row2.appendChild(score_button);
+
     // trash everything
     let trash_button = new_icon_button("bi-trash", () => state.modals.show_modal("trash-modal"));
     add_tooltip(trash_button, "Reset board");
@@ -225,13 +230,27 @@ export function create_buttons(_state) {
     let black = document.createElement("div");
     black.setAttribute("id", "black-namecard");
     black.classList.add("w-100", "text-white", "bg-dark", "justify-content-center");
-    add_tooltip(black, "Captures:");
+    let black_name = document.createElement("span");
+    black_name.setAttribute("id", "black-name");
+    black.appendChild(black_name);
+    let black_caps = document.createElement("span");
+    black_caps.setAttribute("id", "black-caps");
+    black.appendChild(black_caps);
+
+    //add_tooltip(black, "Captures:");
     namecards.appendChild(black);
 
     let white = document.createElement("div");
     white.setAttribute("id", "white-namecard");
     white.classList.add("w-100", "text-black", "bg-light", "justify-content-center");
-    add_tooltip(white, "Captures:<br>Komi:");
+    //add_tooltip(white, "Captures:<br>Komi:");
+    let white_name = document.createElement("span");
+    white_name.setAttribute("id", "white-name");
+    white.appendChild(white_name);
+    let white_caps = document.createElement("span");
+    white_caps.setAttribute("id", "white-caps");
+    white.appendChild(white_caps);
+
     namecards.appendChild(white);
 
     return {};

@@ -197,6 +197,8 @@ func (s *State) AddPassNode(col core.Color, fields map[string][]string, index in
 	}
 	s.Current = n
 	// no need to add a diff
+	// but actually, SetDiff also sets the score
+	s.Current.SetDiff(nil)
 }
 
 func (s *State) PushHead(x, y int, col core.Color) {
@@ -695,6 +697,8 @@ func (s *State) GenerateFullFrame(t core.TreeJSONType) *core.Frame {
 	frame.Metadata = s.GenerateMetadata()
 	frame.Comments = s.GenerateComments()
 	frame.TreeJSON = s.CreateTreeJSON(t)
+	frame.BlackCaps = s.Current.BlackCaps
+	frame.WhiteCaps = s.Current.WhiteCaps
 	return frame
 }
 
@@ -829,6 +833,8 @@ func (s *State) AddEvent(evt *core.EventJSON) (*core.Frame, error) {
 		return s.HandleClipboard()
 	case "graft":
 		return s.HandleGraft(evt)
+	case "score":
+		return s.HandleScore()
 	}
 	return nil, nil
 }

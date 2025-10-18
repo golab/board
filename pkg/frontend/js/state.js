@@ -258,7 +258,7 @@ class State {
             gameinfo["Black"] = "Black";
         }
 
-        document.getElementById("black-namecard").innerHTML = gameinfo["Black"];
+        document.getElementById("black-name").innerHTML = gameinfo["Black"];
 
         if (fields.has("PW")) {
             let rank = "";
@@ -269,7 +269,7 @@ class State {
         } else {
             gameinfo["White"] = "White";
         }
-        document.getElementById("white-namecard").innerHTML = gameinfo["White"];
+        document.getElementById("white-name").innerHTML = gameinfo["White"];
 
         if (fields.has("RE")) {
             gameinfo["Result"] = fields.get("RE");
@@ -666,6 +666,14 @@ class State {
         document.body.removeChild(element);
     }
 
+    set_black_caps(n) {
+        document.getElementById("black-caps").innerHTML = " - " + n;
+    }
+
+    set_white_caps(n) {
+        document.getElementById("white-caps").innerHTML = " - " + n;
+    }
+
     handle_frame(frame) {
         // clear all marks
         this.marks = new Map();
@@ -700,6 +708,14 @@ class State {
 
         if (frame.comments != null) {
             this.handle_comments(frame.comments);
+        }
+
+        if (frame.black_caps != null) {
+            this.set_black_caps(frame.black_caps);
+        }
+
+        if (frame.white_caps != null) {
+            this.set_white_caps(frame.white_caps);
         }
 
         //if (frame.explorer != null) {

@@ -44,8 +44,8 @@ type TreeNode struct {
 	Fields         map[string][]string
 	Diff           *Diff
 	Depth          int
-	BlackScore     float64
-	WhiteScore     float64
+	BlackCaps      int
+	WhiteCaps      int
 }
 
 func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields map[string][]string) *TreeNode {
@@ -63,8 +63,8 @@ func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields map[st
 		Fields:         fields,
 		Diff:           nil,
 		Depth:          0,
-		BlackScore:     0.0,
-		WhiteScore:     0.0,
+		BlackCaps:      0,
+		WhiteCaps:      0,
 	}
 	if up != nil {
 		node.SetParent(up)
@@ -74,24 +74,26 @@ func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields map[st
 
 func (n *TreeNode) SetDiff(diff *Diff) {
 	n.Diff = diff
-	b := 0.0
-	w := 0.0
-	for _, ss := range diff.Remove {
-		switch ss.Color {
-		case White:
-			w += float64(len(ss.Coords))
-		case Black:
-			b += float64(len(ss.Coords))
+	b := 0
+	w := 0
+	if diff != nil {
+		for _, ss := range diff.Remove {
+			switch ss.Color {
+			case White:
+				b += len(ss.Coords)
+			case Black:
+				w += len(ss.Coords)
+			}
 		}
 	}
-	baseB := 0.0
-	baseW := 0.0
+	baseB := 0
+	baseW := 0
 	if n.Up != nil {
-		baseB = n.Up.BlackScore
-		baseW = n.Up.WhiteScore
+		baseB = n.Up.BlackCaps
+		baseW = n.Up.WhiteCaps
 	}
-	n.BlackScore = baseB + b
-	n.WhiteScore = baseW + w
+	n.BlackCaps = baseB + b
+	n.WhiteCaps = baseW + w
 }
 
 func (n *TreeNode) TrunkNum(i int) int {
