@@ -491,8 +491,45 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 }
 
 func (s *State) HandleScore() (*core.Frame, error) {
-	s.Board.Score()
-	fmt.Println()
-	fmt.Println(s.Board)
-	return nil, nil
+	blackArea, whiteArea, blackDead, whiteDead, dame := s.Board.Score(s.MarkedDead, s.MarkedDame)
+	//fmt.Println()
+	//fmt.Println(s.Board)
+	frame := &core.Frame{
+		BlackCaps: s.Current.BlackCaps + len(blackArea) + len(whiteDead),
+		WhiteCaps: s.Current.WhiteCaps + len(whiteArea) + len(blackDead),
+		BlackArea: blackArea,
+		WhiteArea: whiteArea,
+		Dame:      dame,
+	}
+
+	return frame, nil
+}
+
+func (s *State) HandleMarkDead(evt *core.EventJSON) (*core.Frame, error) {
+	c, err := core.InterfaceToCoord(evt.Value)
+	if err != nil {
+		return nil, err
+	}
+	x := c.X
+	y := c.Y
+	if x >= s.Size || y >= s.Size || x < 0 || y < 0 {
+		return nil, nil
+	}
+
+	if s.Board.Get(c) == core.NoColor {
+		dame, _ := s.Board.FindArea(c, core.NewCoordSet())
+		if s.MarkedDame.Has(c) {
+			s.MarkedDame.RemoveAll(dame)
+		} else {
+			s.MarkedDame.AddAll(dame)
+		}
+	} else {
+		gp := s.Board.FindGroup(c)
+		if s.MarkedDead.Has(c) {
+			s.MarkedDead.RemoveAll(gp.Coords)
+		} else {
+			s.MarkedDead.AddAll(gp.Coords)
+		}
+	}
+	return s.HandleScore()
 }

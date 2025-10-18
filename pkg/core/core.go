@@ -47,6 +47,9 @@ type Frame struct {
 	TreeJSON  *TreeJSON `json:"tree"`
 	BlackCaps int       `json:"black_caps"`
 	WhiteCaps int       `json:"white_caps"`
+	BlackArea []*Coord  `json:"black_area"`
+	WhiteArea []*Coord  `json:"white_area"`
+	Dame      []*Coord  `json:"dame"`
 }
 
 // Marks provides data for any marks on the board
@@ -113,6 +116,22 @@ func (cs CoordSet) Has(c *Coord) bool {
 // Add adds a coord to the set
 func (cs CoordSet) Add(c *Coord) {
 	cs[c.ToLetters()] = c
+}
+
+func (cs CoordSet) AddAll(ds CoordSet) {
+	for _, d := range ds {
+		cs.Add(d)
+	}
+}
+
+func (cs CoordSet) Remove(c *Coord) {
+	delete(cs, c.ToLetters())
+}
+
+func (cs CoordSet) RemoveAll(ds CoordSet) {
+	for _, d := range ds {
+		cs.Remove(d)
+	}
 }
 
 // String is for debugging

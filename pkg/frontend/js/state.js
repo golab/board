@@ -14,7 +14,6 @@ import { Board, from_sgf } from './board.js';
 import { BoardGraphics } from './boardgraphics.js';
 import { TreeGraphics } from './treegraphics.js';
 
-import { edit_tooltip } from './common.js';
 import { create_comments } from './comments.js';
 import { create_layout } from './layout.js';
 import { create_buttons } from './buttons.js';
@@ -277,8 +276,8 @@ class State {
 
         if (fields.has("KM")) {
             gameinfo["Komi"] = fields.get("KM");
-            let white = document.getElementById("white-namecard");
-            edit_tooltip(white, "Capures:<br>Komi: " + gameinfo["Komi"]);
+            let komi = document.getElementById("komi");
+            komi.innerHTML = " (" + gameinfo["Komi"] + ")";
         }
 
         if (fields.has("DT")) {
@@ -530,6 +529,11 @@ class State {
         this.board_graphics.clear_ghosts();
     }
 
+    trigger_score() {
+        this.mark = "score";
+        this.network_handler.prepare_score()
+    }
+
     upload() {
         let inp = document.getElementById("upload-sgf");
         inp.onchange = () => {
@@ -710,6 +714,8 @@ class State {
             this.handle_comments(frame.comments);
         }
 
+        //////// scoring logic
+
         if (frame.black_caps != null) {
             this.set_black_caps(frame.black_caps);
         }
@@ -717,6 +723,29 @@ class State {
         if (frame.white_caps != null) {
             this.set_white_caps(frame.white_caps);
         }
+
+        if (frame.black_area != null) {
+            for (let coord of frame.black_area) {
+                this.board_graphics.draw_black_area(coord.x, coord.y);
+                let id = coordtoid(coord);
+                this.marks.set(id, "score-black");
+            }
+        }
+
+        if (frame.white_area != null) {
+            for (let coord of frame.white_area) {
+                this.board_graphics.draw_white_area(coord.x, coord.y);
+                let id = coordtoid(coord);
+                this.marks.set(id, "score-white");
+            }
+
+        }
+
+        if (frame.dame != null) {
+            //console.log(frame.dame);
+        }
+
+        ///////////////////
 
         //if (frame.explorer != null) {
             //this.tree_graphics._update(frame.explorer);

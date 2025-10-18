@@ -223,6 +223,10 @@ class BoardGraphics {
                 let number = parseInt(spl[1]);
                 this.draw_backdrop(x,y);
                 this.draw_number(x, y, number, hexcolor, svg_id);
+            } else if (value == "score-black") {
+                this.draw_black_area(x, y);
+            } else if (value == "score-white") {
+                this.draw_white_area(x, y);
             }
         }
 
@@ -502,6 +506,41 @@ class BoardGraphics {
         this.draw_triangle(x, y, hexcolor, "ghost-marks");
     }
 
+    draw_black_area(x, y) {
+        let color = "#000000";
+        let id = "marks";
+        return this.draw_filled_square(x, y, color, id);
+    }
+
+    draw_white_area(x, y) {
+        let color = "#FFFFFF";
+        let id = "marks";
+        return this.draw_filled_square(x, y, color, id);
+    }
+
+    draw_filled_square(x, y, hexColor, id) {
+        if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
+            return;
+        }
+
+        let real_x = x*this.side + this.pad;
+        let real_y = y*this.side + this.pad;
+        let r = (this.side/3);
+        let b = r;
+        let rect = document.createElementNS(this.svgns, "rect");
+        rect.setAttribute("width", b);
+        rect.setAttribute("height", b);
+        rect.setAttribute("x", real_x-b/2);
+        rect.setAttribute("y", real_y-b/2);
+        rect.setAttribute("rx", 0);
+        rect.setAttribute("ry", 0);
+        rect.setAttribute("fill", hexColor);
+
+        let svg = this.svgs.get(id);
+        svg.appendChild(rect);
+        return rect;
+    }
+
     draw_square(x, y, hexColor, id) {
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
@@ -669,6 +708,31 @@ class BoardGraphics {
             hexcolor = "#FFFFFF77";
         }
         this.draw_circle(x, y, radius, hexcolor, "ghost", true, 0);
+    }
+
+    draw_ghost_cross(x, y) {
+        this.clear_svg("ghost-marks");
+        if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
+            return;
+        }
+
+        let hexcolor = "#AAAAAA99";
+        this.draw_cross(x, y, hexcolor, "ghost-marks");
+    }
+
+    draw_cross(x, y, hexColor, id) {
+        let real_x = x*this.side + this.pad;
+        let real_y = y*this.side + this.pad;
+
+        let r = (this.side/4);
+        let coord_pairs = [];
+        let A = [real_x-r, real_y-r];
+        let B = [real_x+r, real_y+r];
+        let C = [real_x-r, real_y+r];
+        let D = [real_x+r, real_y-r];
+        coord_pairs.push([A, B]);
+        coord_pairs.push([C, D]);
+        let t = this.svg_draw_polyline(coord_pairs, hexColor, id, 6*this.minstroke);
     }
 
     // this goes through used letters until we find the first unused
@@ -931,6 +995,8 @@ class BoardGraphics {
             this.draw_ghost_letter(x, y);
         } else if (this.state.mark == "number") {
             this.draw_ghost_number(x, y);
+        } else if (this.state.mark == "score") {
+            this.draw_ghost_cross(x, y);
         }
     }
 

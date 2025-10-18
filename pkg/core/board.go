@@ -330,7 +330,7 @@ const (
 	Dame
 )
 
-func (b *Board) FindArea(start *Coord) (CoordSet, EmptyPointType) {
+func (b *Board) FindArea(start *Coord, dead CoordSet) (CoordSet, EmptyPointType) {
 	if b.Get(start) != NoColor {
 		return nil, NotCovered
 	}
@@ -355,14 +355,11 @@ func (b *Board) FindArea(start *Coord) (CoordSet, EmptyPointType) {
 		// compute neighbors
 		nbs := b.Neighbors(point)
 		for _, nb := range nbs {
-			// if it's the right color
-			// and we haven't visited it yet
-			// add to the stack
 			if b.Get(nb) == NoColor && !elts.Has(nb) {
 				stack = append(stack, nb)
-			} else if b.Get(nb) == Black {
+			} else if b.Get(nb) == Black && !dead.Has(nb) {
 				t |= BlackPoint
-			} else if b.Get(nb) == White {
+			} else if b.Get(nb) == White && !dead.Has(nb) {
 				t |= WhitePoint
 			}
 		}
@@ -370,31 +367,72 @@ func (b *Board) FindArea(start *Coord) (CoordSet, EmptyPointType) {
 	return elts, t
 }
 
-func (b *Board) Score() {
+func (b *Board) Score(dead CoordSet, markedDame CoordSet) ([]*Coord, []*Coord, []*Coord, []*Coord, []*Coord) {
+	blackArea := NewCoordSet()
+	whiteArea := NewCoordSet()
+	blackDead := NewCoordSet()
+	whiteDead := NewCoordSet()
+	dame := NewCoordSet()
+
+	// make a new grid to keep track of territory
 	grid := [][]EmptyPointType{}
+
 	for i := 0; i < b.Size; i++ {
 		grid = append(grid, make([]EmptyPointType, b.Size))
 	}
 
-	for i, row := range b.Points {
-		for j, c := range row {
+	// add dead stones to the grid, then double count for both area and caps
+	for _, coord := range dead {
+		switch color := b.Get(coord); color {
+		case Black:
+			grid[coord.Y][coord.X] = WhitePoint
+			whiteArea.Add(coord)
+			blackDead.Add(coord)
+		case White:
+			grid[coord.Y][coord.X] = BlackPoint
+			blackArea.Add(coord)
+			whiteDead.Add(coord)
+		}
+	}
+
+	// add marked dame to dame
+	dame.AddAll(markedDame)
+
+	// go through every empty point in the grid
+	// anything that hasn't been handled yet gets assigned to either
+	// - black area
+	// - white area
+	// - dame
+	for j, row := range b.Points {
+		for i, c := range row {
 			switch c {
 			case Black, White:
 			case NoColor:
-				if grid[i][j] == NotCovered {
-					area, t := b.FindArea(&Coord{j, i})
+				if grid[j][i] == NotCovered {
+					area, t := b.FindArea(&Coord{i, j}, dead)
 					for _, coord := range area {
+						// this only happens because of marked dame
+						if dame.Has(coord) {
+							continue
+						}
 						grid[coord.Y][coord.X] = t
+						switch t {
+						case BlackPoint:
+							blackArea.Add(coord)
+						case WhitePoint:
+							whiteArea.Add(coord)
+						case Dame:
+							dame.Add(coord)
+						}
 					}
 				}
 			}
 		}
 	}
 
-	for _, row := range grid {
-		for _, x := range row {
-			fmt.Printf("%d ", x)
-		}
-		fmt.Println()
-	}
+	return blackArea.List(),
+		whiteArea.List(),
+		blackDead.List(),
+		whiteDead.List(),
+		dame.List()
 }

@@ -300,6 +300,11 @@ class NetworkHandler {
         this.prepare(payload);
     }
 
+    prepare_markdead(coord) {
+        let payload = {"event": "markdead", "value": coord};
+        this.prepare_payload(payload);
+    }
+
     prepare_settings(settings) {
         let payload = {"event": "update_settings", "value": settings};
         this.prepare(payload);
@@ -612,7 +617,9 @@ class NetworkHandler {
 
         let payload = {};
 
-        if (this.state.mark != "") {
+        if (this.state.mark == "score") {
+            payload = {"event": "markdead", value: coords};
+        } else if (this.state.mark != "") {
             if (this.state.mark == "pen") {
                 return;
             }

@@ -126,7 +126,7 @@ export function create_buttons(_state) {
     button_row2.appendChild(clipboard_button);
 
     // score button
-    let score_button = new_icon_button("bi-calculator", () => state.network_handler.prepare_score());
+    let score_button = new_icon_button("bi-calculator", () => state.trigger_score());
     add_tooltip(score_button, "Score");
     button_row2.appendChild(score_button);
 
@@ -243,13 +243,16 @@ export function create_buttons(_state) {
     let white = document.createElement("div");
     white.setAttribute("id", "white-namecard");
     white.classList.add("w-100", "text-black", "bg-light", "justify-content-center");
-    //add_tooltip(white, "Captures:<br>Komi:");
     let white_name = document.createElement("span");
     white_name.setAttribute("id", "white-name");
     white.appendChild(white_name);
     let white_caps = document.createElement("span");
     white_caps.setAttribute("id", "white-caps");
     white.appendChild(white_caps);
+
+    let komi = document.createElement("komi");
+    komi.setAttribute("id", "komi");
+    white.appendChild(komi);
 
     namecards.appendChild(white);
 

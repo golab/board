@@ -34,6 +34,8 @@ type State struct {
 	Size        int
 	Board       *core.Board
 	Clipboard   *core.TreeNode
+	MarkedDead  core.CoordSet
+	MarkedDame  core.CoordSet
 }
 
 func (s *State) Prefs() map[string]int {
@@ -118,7 +120,13 @@ func (s *State) GetNextIndex() int {
 	return i
 }
 
+func (s *State) AnyMove() {
+	s.MarkedDead = core.NewCoordSet()
+	s.MarkedDame = core.NewCoordSet()
+}
+
 func (s *State) AddFieldNode(fields map[string][]string, index int) *core.Diff {
+	s.AnyMove()
 	tmp := s.GetNextIndex()
 	if index == -1 {
 		index = tmp
@@ -183,6 +191,7 @@ func (s *State) AddFieldNode(fields map[string][]string, index int) *core.Diff {
 }
 
 func (s *State) AddPassNode(col core.Color, fields map[string][]string, index int) {
+	s.AnyMove()
 	tmp := s.GetNextIndex()
 	if index == -1 {
 		index = tmp
@@ -265,6 +274,7 @@ func (s *State) PushHead(x, y int, col core.Color) {
 }
 
 func (s *State) AddNode(coord *core.Coord, col core.Color, fields map[string][]string, index int, force bool) *core.Diff {
+	s.AnyMove()
 	if fields == nil {
 		fields = make(map[string][]string)
 	}
@@ -474,6 +484,7 @@ func (s *State) Graft(parentIndex int, moves []*core.PatternMove) {
 }
 
 func (s *State) Cut() *core.Diff {
+	s.AnyMove()
 	// store the current index
 	index := s.Current.Index
 
@@ -518,6 +529,7 @@ func (s *State) Cut() *core.Diff {
 }
 
 func (s *State) Left() *core.Diff {
+	s.AnyMove()
 	if s.Current.Up != nil {
 		d := s.Current.Diff.Invert()
 		s.Board.ApplyDiff(d)
@@ -528,6 +540,7 @@ func (s *State) Left() *core.Diff {
 }
 
 func (s *State) Right() *core.Diff {
+	s.AnyMove()
 	if len(s.Current.Down) > 0 {
 		index := s.Current.PreferredChild
 		s.Current = s.Current.Down[index]
@@ -557,6 +570,7 @@ func (s *State) GotoIndex(index int) error {
 }
 
 func (s *State) Rewind() {
+	s.AnyMove()
 	s.Current = s.Root
 	s.Board.Clear()
 	s.Board.ApplyDiff(s.Current.Diff)
@@ -835,6 +849,8 @@ func (s *State) AddEvent(evt *core.EventJSON) (*core.Frame, error) {
 		return s.HandleGraft(evt)
 	case "score":
 		return s.HandleScore()
+	case "markdead":
+		return s.HandleMarkDead(evt)
 	}
 	return nil, nil
 }
@@ -1004,7 +1020,7 @@ func NewState(size int, initRoot bool) *State {
 	board := core.NewBoard(size)
 	// default input buffer of 250
 	// default timeout of 86400
-	return &State{root, root, root, nodes, index, 250, 86400, size, board, nil}
+	return &State{root, root, root, nodes, index, 250, 86400, size, board, nil, core.NewCoordSet(), core.NewCoordSet()}
 }
 
 func (s *State) CreateTreeJSON(t core.TreeJSONType) *core.TreeJSON {
