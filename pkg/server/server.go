@@ -49,7 +49,7 @@ type Server struct {
 
 func NewServer() *Server {
 	// get database setup
-	db := loader.NewSqliteLoader()
+	db := loader.NewDefaultLoader()
 	db.Setup()
 
 	s := &Server{

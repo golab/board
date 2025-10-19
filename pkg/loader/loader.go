@@ -69,17 +69,16 @@ func Path() string {
 type Loader interface {
 	Setup()
 	TwitchGetRoom(string) string
-	TwitchSelectRoom(string) ([]string, error)
 	TwitchSetRoom(string, string) error
-	TwitchInsertRoom(string, string) error
-	TwitchUpdateRoom(string, string) error
-	LoadRoom(string) (*LoadJSON, error)
+
 	SaveRoom(string, *LoadJSON) error
-	DeleteRoom(string) error
-	UpdateRoom(string, *LoadJSON) error
-	InsertRoom(string, *LoadJSON) error
+	LoadRoom(string) (*LoadJSON, error)
 	LoadAllRooms() []*LoadJSON
-	SelectRoom(string) []*LoadJSON
+	DeleteRoom(string) error
 	LoadAllMessages() []*MessageJSON
 	DeleteAllMessages()
+}
+
+func NewDefaultLoader() Loader {
+	return NewSqliteLoader()
 }

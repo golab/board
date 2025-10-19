@@ -85,15 +85,30 @@ func (ldr *SqliteLoader) Setup() {
 	}
 }
 
+// Twitch logic
+
+func (ldr *SqliteLoader) TwitchSetRoom(broadcaster, roomid string) error {
+	rooms, err := ldr.twitchSelectRoom(broadcaster)
+	if err != nil {
+		return err
+	}
+
+	if len(rooms) == 0 {
+		return ldr.twitchInsertRoom(broadcaster, roomid)
+	} else {
+		return ldr.twitchUpdateRoom(broadcaster, roomid)
+	}
+}
+
 func (ldr *SqliteLoader) TwitchGetRoom(broadcaster string) string {
-	rooms, err := ldr.TwitchSelectRoom(broadcaster)
+	rooms, err := ldr.twitchSelectRoom(broadcaster)
 	if err != nil || len(rooms) != 1 {
 		return ""
 	}
 	return rooms[0]
 }
 
-func (ldr *SqliteLoader) TwitchSelectRoom(broadcaster string) ([]string, error) {
+func (ldr *SqliteLoader) twitchSelectRoom(broadcaster string) ([]string, error) {
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return []string{}, err
@@ -122,20 +137,7 @@ func (ldr *SqliteLoader) TwitchSelectRoom(broadcaster string) ([]string, error) 
 	return rooms, nil
 }
 
-func (ldr *SqliteLoader) TwitchSetRoom(broadcaster, roomid string) error {
-	rooms, err := ldr.TwitchSelectRoom(broadcaster)
-	if err != nil {
-		return err
-	}
-
-	if len(rooms) == 0 {
-		return ldr.TwitchInsertRoom(broadcaster, roomid)
-	} else {
-		return ldr.TwitchUpdateRoom(broadcaster, roomid)
-	}
-}
-
-func (ldr *SqliteLoader) TwitchInsertRoom(broadcaster, roomid string) error {
+func (ldr *SqliteLoader) twitchInsertRoom(broadcaster, roomid string) error {
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return err
@@ -148,7 +150,7 @@ func (ldr *SqliteLoader) TwitchInsertRoom(broadcaster, roomid string) error {
 	return err
 }
 
-func (ldr *SqliteLoader) TwitchUpdateRoom(broadcaster, roomid string) error {
+func (ldr *SqliteLoader) twitchUpdateRoom(broadcaster, roomid string) error {
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return err
@@ -163,20 +165,19 @@ func (ldr *SqliteLoader) TwitchUpdateRoom(broadcaster, roomid string) error {
 }
 
 func (ldr *SqliteLoader) LoadRoom(id string) (*LoadJSON, error) {
-	rows := ldr.SelectRoom(id)
+	rows := ldr.selectRoom(id)
 	if len(rows) != 1 {
 		return nil, fmt.Errorf("incorrect number of rows returned: %d", len(rows))
 	}
-	//fmt.Println("found:", id, rows[0])
 	return rows[0], nil
 }
 
 // Save could also reasonably be called InsertOrUpdate
 func (ldr *SqliteLoader) SaveRoom(id string, data *LoadJSON) error {
-	if len(ldr.SelectRoom(id)) != 0 {
-		return ldr.UpdateRoom(id, data)
+	if len(ldr.selectRoom(id)) != 0 {
+		return ldr.updateRoom(id, data)
 	} else {
-		return ldr.InsertRoom(id, data)
+		return ldr.insertRoom(id, data)
 	}
 }
 
@@ -190,7 +191,7 @@ func (ldr *SqliteLoader) DeleteRoom(id string) error {
 	return err
 }
 
-func (ldr *SqliteLoader) UpdateRoom(id string, data *LoadJSON) error {
+func (ldr *SqliteLoader) updateRoom(id string, data *LoadJSON) error {
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return err
@@ -208,7 +209,7 @@ func (ldr *SqliteLoader) UpdateRoom(id string, data *LoadJSON) error {
 	return err
 }
 
-func (ldr *SqliteLoader) InsertRoom(id string, data *LoadJSON) error {
+func (ldr *SqliteLoader) insertRoom(id string, data *LoadJSON) error {
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return err
@@ -273,7 +274,7 @@ func (ldr *SqliteLoader) LoadAllRooms() []*LoadJSON {
 	return rooms
 }
 
-func (ldr *SqliteLoader) SelectRoom(id string) []*LoadJSON {
+func (ldr *SqliteLoader) selectRoom(id string) []*LoadJSON {
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return []*LoadJSON{}
