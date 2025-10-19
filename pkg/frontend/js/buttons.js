@@ -132,7 +132,7 @@ export function create_buttons(_state) {
 
     // score button
     let score_button = new_icon_button("bi-calculator", () => state.trigger_score());
-    add_tooltip(score_button, "Score (Ctrl+Enter / Cmd+Enter");
+    add_tooltip(score_button, "Score (Ctrl+Enter / Cmd+Enter)");
     button_row2.appendChild(score_button);
 
     // trash everything
