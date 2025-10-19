@@ -277,7 +277,11 @@ class State {
         if (fields.has("KM")) {
             gameinfo["Komi"] = fields.get("KM");
             let komi = document.getElementById("komi");
-            komi.innerHTML = " (" + gameinfo["Komi"] + ")";
+            let komi_float = parseFloat(gameinfo["Komi"]);
+            if (komi_float == 375) {
+                komi_float = 7.5;
+            }
+            komi.innerHTML = " (" + komi_float + ")";
         }
 
         if (fields.has("DT")) {
