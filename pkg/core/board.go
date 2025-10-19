@@ -359,8 +359,12 @@ func (b *Board) FindArea(start *Coord, dead CoordSet) (CoordSet, EmptyPointType)
 				stack = append(stack, nb)
 			} else if b.Get(nb) == Black && !dead.Has(nb) {
 				t |= BlackPoint
+			} else if b.Get(nb) == Black {
+				t |= WhitePoint
 			} else if b.Get(nb) == White && !dead.Has(nb) {
 				t |= WhitePoint
+			} else if b.Get(nb) == White {
+				t |= BlackPoint
 			}
 		}
 	}
