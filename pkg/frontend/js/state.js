@@ -282,6 +282,8 @@ class State {
                 komi_float = 7.5;
             }
             komi.innerHTML = " (" + komi_float + ")";
+        } else {
+            komi.innerHTML = "";
         }
 
         if (fields.has("DT")) {
