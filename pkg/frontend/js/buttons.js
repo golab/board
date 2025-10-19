@@ -234,7 +234,7 @@ export function create_buttons(_state) {
 
     let black = document.createElement("div");
     black.setAttribute("id", "black-namecard");
-    black.classList.add("w-100", "text-white", "bg-dark", "justify-content-center");
+    black.classList.add("w-100", "text-white", "bg-dark", "justify-content-center", "align-content-center");
     let black_name = document.createElement("span");
     black_name.setAttribute("id", "black-name");
     black.appendChild(black_name);
@@ -247,7 +247,7 @@ export function create_buttons(_state) {
 
     let white = document.createElement("div");
     white.setAttribute("id", "white-namecard");
-    white.classList.add("w-100", "text-black", "bg-light", "justify-content-center");
+    white.classList.add("w-100", "text-black", "bg-light", "justify-content-center", "align-content-center");
     let white_name = document.createElement("span");
     white_name.setAttribute("id", "white-name");
     white.appendChild(white_name);

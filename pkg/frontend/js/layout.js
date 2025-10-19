@@ -150,7 +150,7 @@ function layout() {
     let b1 = create_div("", "buttons-row2");
     b.appendChild(b1);
     let c = create_div("col-lg-4 gx-0 ps-lg-4");
-    let namecards = create_div("w-100", "namecards");
+    let namecards = create_div("w-100 h-100", "namecards");
     c.appendChild(namecards);
 
     row1.appendChild(a);
