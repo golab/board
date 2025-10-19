@@ -731,6 +731,9 @@ func (s *State) ComputeDiffMove(i int) *core.Diff {
 
 	// at the end, go back to the saved index
 	defer s.GotoIndex(save) //nolint: errcheck
+	if n.XY == nil {
+		return nil
+	}
 
 	diff := s.Board.Move(n.XY, n.Color)
 	return diff

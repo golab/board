@@ -81,12 +81,12 @@ export function create_buttons(_state) {
     add_tooltip(letter_button, "Place letters (7)");
     button_row1.appendChild(letter_button);
 
-    // row 2
-
     // numbers
     let number_button = new_icon_button("bi-123", () => state.set_number());
     add_tooltip(number_button, "Place numbers (8)");
-    button_row2.appendChild(number_button);
+    button_row1.appendChild(number_button);
+
+    // row 2
 
     // pen
     let pen_button = new_icon_button("bi-pen", () => state.set_pen());
@@ -119,6 +119,11 @@ export function create_buttons(_state) {
     let scissors_button = new_icon_button("bi-scissors", () => state.modals.show_modal("scissors-modal"));
     add_tooltip(scissors_button, "Cut branch (Ctrl+X / Cmd+X)");
     button_row2.appendChild(scissors_button);
+
+    // copy button
+    let copy_button = new_icon_button("bi-copy", () => state.network_handler.prepare_copy());
+    add_tooltip(copy_button, "Copy branch (Ctrl+C / Cmd+C)");
+    button_row2.appendChild(copy_button);
 
     // clipboard button
     let clipboard_button = new_icon_button("bi-clipboard", () => state.network_handler.prepare_clipboard());

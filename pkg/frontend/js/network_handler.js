@@ -512,6 +512,11 @@ class NetworkHandler {
                     this.prepare_clipboard();
                 }
                 break;
+            case "Enter":
+                if (ctrl) {
+                    this.state.trigger_score();
+                }
+                break;
             default:
                 this.state.keys_down.set(event.key, true);
         }
