@@ -44,15 +44,18 @@ func ParseURL(url string) (string, string, string) {
 type Server struct {
 	rooms    map[string]*room.Room
 	messages []*Message
+	db       loader.Loader
 }
 
 func NewServer() *Server {
 	// get database setup
-	loader.Setup()
+	db := loader.NewSqliteLoader()
+	db.Setup()
 
 	s := &Server{
-		make(map[string]*room.Room),
-		[]*Message{},
+		rooms:    make(map[string]*room.Room),
+		messages: []*Message{},
+		db:       db,
 	}
 
 	// start message loop
@@ -79,7 +82,7 @@ func (s *Server) Save() {
 		save.Password = r.Password
 		save.ID = id
 
-		err := loader.SaveRoom(id, save)
+		err := s.db.SaveRoom(id, save)
 		if err != nil {
 			log.Println(err)
 		}
@@ -87,7 +90,7 @@ func (s *Server) Save() {
 }
 
 func (s *Server) Load() {
-	rooms := loader.LoadAllRooms()
+	rooms := s.db.LoadAllRooms()
 
 	for _, load := range rooms {
 
@@ -155,7 +158,7 @@ func (s *Server) Heartbeat(roomID string) {
 	delete(s.rooms, roomID)
 
 	// delete it from the database
-	err := loader.DeleteRoom(roomID)
+	err := s.db.DeleteRoom(roomID)
 	if err != nil {
 		log.Println(err)
 	}
@@ -169,8 +172,8 @@ type Message struct {
 
 func (s *Server) ReadMessages() {
 
-	messages := loader.LoadAllMessages()
-	defer loader.DeleteAllMessages()
+	messages := s.db.LoadAllMessages()
+	defer s.db.DeleteAllMessages()
 
 	for _, msg := range messages {
 		// calculate the expiration time using TTL

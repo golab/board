@@ -22,7 +22,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/jarednogo/board/pkg/core"
-	"github.com/jarednogo/board/pkg/loader"
 	"github.com/jarednogo/board/pkg/room"
 	"github.com/jarednogo/board/pkg/twitch"
 )
@@ -226,7 +225,7 @@ func (s *Server) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 			}
 
 			log.Println("setting roomid", broadcaster, roomID)
-			err := loader.TwitchSetRoom(broadcaster, roomID)
+			err := s.db.TwitchSetRoom(broadcaster, roomID)
 			if err != nil {
 				log.Println(err)
 			}
@@ -243,7 +242,7 @@ func (s *Server) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 			Value: branch,
 		}
 
-		roomID := loader.TwitchGetRoom(broadcaster)
+		roomID := s.db.TwitchGetRoom(broadcaster)
 		if roomID == "" {
 			log.Println("room not set for", broadcaster)
 			return
