@@ -1,3 +1,6 @@
+[![Test](https://github.com/jarednogo/board/actions/workflows/test.yml/badge.svg)](https://github.com/jarednogo/board/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 # Board
 
 This is the only online go board that allows for synchronous control across all participants.
