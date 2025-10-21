@@ -12,6 +12,7 @@ package core_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/jarednogo/board/pkg/core"
@@ -86,5 +87,83 @@ func TestInterface1(t *testing.T) {
 	if c.X != 3 || c.Y != 17 {
 		t.Errorf("wrong coord, expected (3, 17), got %v", c)
 	}
+}
 
+func TestCoordSetRemove(t *testing.T) {
+	cs := core.NewCoordSet()
+	cs.Add(&core.Coord{0, 1})
+	cs.Add(&core.Coord{0, 2})
+	cs.Add(&core.Coord{0, 3})
+	cs.Remove(&core.Coord{0, 2})
+	if cs.Has(&core.Coord{0, 2}) {
+		t.Errorf("error removing coord")
+	}
+}
+
+func TestCoordSetRemoveAll(t *testing.T) {
+	cs := core.NewCoordSet()
+	ds := core.NewCoordSet()
+	for x := 0; x < 10; x++ {
+		cs.Add(&core.Coord{0, x})
+		if x < 5 {
+			ds.Add(&core.Coord{0, x})
+		}
+	}
+
+	cs.RemoveAll(ds)
+	for x := 0; x < 5; x++ {
+		if cs.Has(&core.Coord{0, x}) {
+			t.Errorf("error removing multiple coords")
+		}
+	}
+}
+
+var alphaTests = []struct {
+	input    string
+	output   *core.Coord
+	hasError bool
+}{
+	{"a1", &core.Coord{0, 18}, false},
+	{"j1", &core.Coord{8, 18}, false},
+	{"i1", nil, true},
+}
+
+func TestAlphanumericToCoord(t *testing.T) {
+	for i, tt := range alphaTests {
+		t.Run(fmt.Sprintf("alpha%d", i), func(t *testing.T) {
+			coord, err := core.AlphanumericToCoord(tt.input, 19)
+			if tt.output != nil && !coord.Equal(tt.output) {
+				t.Errorf(
+					"wrong output in TestAlphanumeric: %v (expected %v)",
+					coord,
+					tt.output)
+			}
+			if err != nil && !tt.hasError {
+				t.Errorf("unexpected error")
+			}
+
+			if err == nil && tt.hasError {
+				t.Errorf("expected error")
+			}
+		})
+	}
+}
+
+var sanitizeTests = []struct {
+	input  string
+	output string
+}{
+	{"  AAA  ", "AAA"},
+	{"http://www.example.com?foo=bar&baz=bot", "httpwwwexamplecomfoobarbazbot"},
+}
+
+func TestSanitize(t *testing.T) {
+	for i, tt := range sanitizeTests {
+		t.Run(fmt.Sprintf("sanitize%d", i), func(t *testing.T) {
+			output := core.Sanitize(tt.input)
+			if tt.output != output {
+				t.Errorf("error in sanitize: got %s (expected %s)", output, tt.output)
+			}
+		})
+	}
 }

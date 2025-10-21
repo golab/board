@@ -192,6 +192,18 @@ func (s *StoneSet) Copy() *StoneSet {
 	return &StoneSet{coords, s.Color}
 }
 
+func (s *StoneSet) Equal(other *StoneSet) bool {
+	a := NewCoordSet()
+	b := NewCoordSet()
+	for _, c := range s.Coords {
+		a.Add(c)
+	}
+	for _, c := range other.Coords {
+		b.Add(c)
+	}
+	return a.Equal(b) && s.Color == other.Color
+}
+
 // String is for debugging
 func (s *StoneSet) String() string {
 	return fmt.Sprintf("%v - %v", s.Coords, s.Color)
@@ -259,6 +271,9 @@ func (c *Coord) ToLetters() string {
 
 // Equal compares two Coords
 func (c *Coord) Equal(other *Coord) bool {
+	if c == nil && other == nil {
+		return true
+	}
 	if c == nil || other == nil {
 		return false
 	}
@@ -366,7 +381,7 @@ func NopJSON() *EventJSON {
 }
 
 // AlphanumericToCoord converts a string like "c17" to a Coord
-func AlphanumericToCoord(s string) (*Coord, error) {
+func AlphanumericToCoord(s string, size int) (*Coord, error) {
 	s = strings.ToLower(s)
 	if len(s) < 2 {
 		return nil, fmt.Errorf("failure to parse: %s", s)
@@ -381,10 +396,10 @@ func AlphanumericToCoord(s string) (*Coord, error) {
 		return nil, err
 	}
 	num := int(num64)
-	if num < 1 || num > 19 {
+	if num < 1 || num > size {
 		return nil, fmt.Errorf("bad number: %d", num)
 	}
-	y := 18 - (num - 1)
+	y := size - num
 	var x int
 	if letter < 'i' {
 		x = int(letter - 'a')

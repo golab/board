@@ -72,6 +72,15 @@ func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields map[st
 	return node
 }
 
+func (n *TreeNode) ShallowEqual(m *TreeNode) bool {
+	return n.XY.Equal(m.XY) &&
+		n.Color == m.Color &&
+		len(n.Down) == len(m.Down) &&
+		n.Index == m.Index &&
+		n.PreferredChild == m.PreferredChild &&
+		n.Depth == m.Depth
+}
+
 func (n *TreeNode) SetDiff(diff *Diff) {
 	n.Diff = diff
 	b := 0
