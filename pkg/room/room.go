@@ -18,6 +18,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/room/plugin"
 	"github.com/jarednogo/board/pkg/socket"
 	"github.com/jarednogo/board/pkg/state"
 	"golang.org/x/net/websocket"
@@ -29,7 +30,7 @@ type Room struct {
 	TimeLastEvent *time.Time
 	LastUser      string
 	lastMessages  map[string]*time.Time
-	OGSLink       *OGSConnector
+	Plugins       map[string]plugin.Plugin
 	Password      string
 	auth          map[string]bool
 	Nicks         map[string]string
@@ -42,7 +43,8 @@ func NewRoom() *Room {
 	msgs := make(map[string]*time.Time)
 	auth := make(map[string]bool)
 	nicks := make(map[string]string)
-	return &Room{conns, s, &now, "", msgs, nil, "", auth, nicks}
+	plugins := make(map[string]plugin.Plugin)
+	return &Room{conns, s, &now, "", msgs, plugins, "", auth, nicks}
 }
 
 func (r *Room) HasPassword() bool {
@@ -123,4 +125,17 @@ func (r *Room) NewConnection(ws *websocket.Conn) string {
 	socket.SendEvent(ws, evt)
 
 	return id
+}
+
+func (r *Room) RegisterPlugin(p plugin.Plugin, args map[string]interface{}) {
+	key := args["key"].(string)
+	p.Start(args)
+	r.Plugins[key] = p
+}
+
+func (r *Room) DeregisterPlugin(key string) {
+	if p, ok := r.Plugins[key]; ok {
+		p.End()
+		delete(r.Plugins, key)
+	}
 }

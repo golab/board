@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package room
+package plugin
 
 import (
 	"encoding/json"
@@ -20,6 +20,15 @@ import (
 	"github.com/jarednogo/board/pkg/fetch"
 	"golang.org/x/net/websocket"
 )
+
+type Room interface {
+	HeadColor() core.Color
+	PushHead(int, int, core.Color)
+	GenerateFullFrame(core.TreeJSONType) *core.Frame
+	AddPatternNodes([]*core.PatternMove)
+	Broadcast(*core.EventJSON)
+	UploadSGF(string) *core.EventJSON
+}
 
 func GetUser(id int) (string, error) {
 	data, err := fetch.Fetch(fmt.Sprintf("http://online-go.com/api/v1/players/%d/", id))
@@ -62,12 +71,12 @@ func GetCreds() (*Creds, error) {
 type OGSConnector struct {
 	Creds  *Creds
 	Socket *websocket.Conn
-	Room   *Room
+	Room   Room
 	First  int
 	Exit   bool
 }
 
-func NewOGSConnector(room *Room) (*OGSConnector, error) {
+func NewOGSConnector(room Room) (*OGSConnector, error) {
 	creds, err := GetCreds()
 	_ = creds
 	if err != nil {
@@ -125,7 +134,7 @@ func ReadFrame(socketchan chan byte) ([]byte, error) {
 		}
 		if !started {
 			if b != '[' {
-				return nil, fmt.Errorf("invalid starting byte")
+				return nil, fmt.Errorf("invalid starting byte: %c", b)
 			}
 			depth++
 			data = append(data, b)
@@ -163,6 +172,13 @@ func (o *OGSConnector) ReadSocketToChan(socketchan chan byte) error {
 		}
 	}
 	return nil
+}
+
+func (o *OGSConnector) Start(args map[string]interface{}) {
+	id := args["id"].(int)
+	ogsType := args["ogsType"].(string)
+
+	go o.Loop(id, ogsType) //nolint:errcheck
 }
 
 func (o *OGSConnector) End() {

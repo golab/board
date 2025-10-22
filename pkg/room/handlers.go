@@ -19,6 +19,7 @@ import (
 
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/fetch"
+	"github.com/jarednogo/board/pkg/room/plugin"
 	"github.com/jarednogo/board/pkg/state"
 	"github.com/jarednogo/board/pkg/zip"
 )
@@ -208,13 +209,18 @@ func (room *Room) HandleRequestSGF(evt *core.EventJSON) *core.EventJSON {
 			}
 			id := int(id64)
 
-			o, err := NewOGSConnector(room)
+			o, err := plugin.NewOGSConnector(room)
 			if err != nil {
 				bcast = core.ErrorJSON("ogs connector error")
 				return bcast
 			}
-			go o.Loop(id, ogsType) //nolint: errcheck
-			room.OGSLink = o
+
+			args := map[string]interface{}{
+				"key":     "ogs",
+				"id":      id,
+				"ogsType": ogsType,
+			}
+			room.RegisterPlugin(o, args)
 
 			if ogsType == "game" {
 				// finish here
@@ -374,9 +380,7 @@ func (room *Room) BroadcastConnectedUsersAfter(handler EventHandler) EventHandle
 
 func (room *Room) CloseOGS(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {
-		if room.OGSLink != nil {
-			room.OGSLink.End()
-		}
+		room.DeregisterPlugin("ogs")
 		return handler(evt)
 	}
 }

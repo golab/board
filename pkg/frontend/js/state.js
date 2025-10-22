@@ -61,7 +61,7 @@ class State {
         this.password = "";
 
         // pen variables
-        this.pen_color = "#0000FF";
+        this.pen_color = "#48BBFF";
         this.ispointerdown = false;
         this.penx = null;
         this.peny = null;
