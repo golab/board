@@ -33,11 +33,6 @@ export function create_buttons(_state) {
 
     // row 1
 
-    let ghost_button = new_icon_button("bi-app");
-    button_row1.appendChild(ghost_button);
-    let h = button_row1.offsetHeight;
-    ghost_button.style.display = "none";
-
     // toggle
     let toggle_button = new_icon_button("bi-circle-half", () => state.set_toggle());
     add_tooltip(toggle_button, "Place alternating stones (1)");
@@ -98,17 +93,17 @@ export function create_buttons(_state) {
     color_picker.setAttribute("type", "color");
     color_picker.setAttribute("id", "color-picker");
 
-    let cls = prefer_dark_mode() ? "btn-dark" : "btn-light";
-    color_picker.setAttribute("class", "btn " + cls + " wide-button");
-    add_tooltip(color_picker, "Select pen color");
     color_picker.setAttribute("value", state.pen_color);
 
-    // necessary because otherwise color picker doesn't end up being as
-    // tall as the other buttons
-    color_picker.style.height = h + "px";
-
-    color_picker.onchange = function() {state.pen_color = this.value};
     button_row2.appendChild(color_picker);
+    color_picker.style.display = "none";
+
+    // palette button
+    let palette = new_icon_button("bi-palette", () => color_picker.click());
+    add_tooltip(palette, "Select pen color");
+    palette.style.background = state.pen_color;
+    button_row2.appendChild(palette);
+    color_picker.onchange = function() {state.pen_color = this.value; palette.style.background=this.value;};
 
     // eraser
     let eraser_button = new_icon_button("bi-eraser-fill", () => state.network_handler.prepare_erase_pen());
@@ -202,6 +197,7 @@ export function create_buttons(_state) {
     arrows.appendChild(back_button);
 
     // move number
+    let cls = prefer_dark_mode() ? "btn-dark" : "btn-light";
     let num = document.createElement("button");
     num.setAttribute("class", "btn " + cls + " disabled");
     num.setAttribute("id", "move-number");
@@ -261,5 +257,43 @@ export function create_buttons(_state) {
 
     namecards.appendChild(white);
 
-    return {};
+    function resize() {
+        let b1_container = document.getElementById("buttons-row1-container");
+        let b2_container = document.getElementById("buttons-row2-container");
+
+        let row1_length = children_width(button_row1);
+        let row2_length = children_width(button_row2);
+
+        let w1 = button_row1.children[0].offsetWidth;
+        let w2 = button_row2.children[0].offsetWidth;
+
+        console.log(w1, w2, b1_container.classList.contains("col-lg-8"));
+
+        if (w1 > 84 && w2 > 84 && b1_container.classList.contains("col-lg-8")) {
+            b1_container.classList.remove("col-lg-8");
+            b1_container.classList.add("col-lg-4");
+
+            b2_container.classList.remove("col-lg-8");
+            b2_container.classList.add("col-lg-4");
+        } else if (row1_length > b1_container.offsetWidth+5 ||
+            row2_length > b2_container.offsetWidth+5) {
+            b1_container.classList.remove("col-lg-4");
+            b1_container.classList.add("col-lg-8");
+
+            b2_container.classList.remove("col-lg-4");
+            b2_container.classList.add("col-lg-8");
+
+        }
+    }
+    return {resize,};
 }
+
+function children_width(elt) {
+    let width = 0;
+    for (let ch of elt.children) {
+        width += ch.offsetWidth;
+    }
+    return width;
+}
+
+

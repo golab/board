@@ -86,7 +86,7 @@ class State {
 
         this.board_graphics.draw_board();
 
-        create_buttons(this);
+        this.buttons = create_buttons(this);
 
         this.modals = create_modals(this);
 
@@ -149,6 +149,7 @@ class State {
         this.tree_graphics.resize();
         this.comments.resize();
         this.apply_pen();
+        this.buttons.resize();
     }
 
     get_index_up() {
@@ -379,14 +380,6 @@ class State {
             let cls = button.getAttribute("class");
             let new_cls = cls.replace(old_class, new_class);
             button.setAttribute("class", new_cls);
-        }
-
-        // change the color picker
-        let picker = document.getElementById("color-picker");
-        if (picker != null) {
-            let cls = picker.getAttribute("class");
-            let new_cls = cls.replace(old_class, new_class);
-            picker.setAttribute("class", new_cls);
         }
 
         // change the dark mode button

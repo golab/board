@@ -143,10 +143,10 @@ function layout() {
     container_fluid.classList.add("text-center");
 
     let row1 = create_div("row");
-    let a = create_div("col-lg-4 col-sm-12 gx-0");
+    let a = create_div("col-lg-4 col-sm-12 gx-0", "buttons-row1-container");
     let a1 = create_div("", "buttons-row1");
     a.appendChild(a1);
-    let b = create_div("col-lg-4 col-sm-12 gx-0");
+    let b = create_div("col-lg-4 col-sm-12 gx-0", "buttons-row2-container");
     let b1 = create_div("", "buttons-row2");
     b.appendChild(b1);
     let c = create_div("col-lg-4 gx-0 ps-lg-4");
