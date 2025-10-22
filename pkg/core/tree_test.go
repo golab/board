@@ -108,3 +108,30 @@ func TestGraft(t *testing.T) {
 	}
 }
 */
+
+func TestTrunkNum(t *testing.T) {
+	s, err := state.FromSGF("(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black](;B[pd];W[dd];B[pp];W[dp])(;B[dd];W[ee]))")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if tn := s.Root.TrunkNum(5); tn != -1 {
+		t.Errorf("error: expected -1 (got %d)", tn)
+	}
+
+	if tn := s.Root.TrunkNum(4); tn != 4 {
+		t.Errorf("error: expected 4 (got %d)", tn)
+	}
+}
+
+func TestCopy(t *testing.T) {
+	s, err := state.FromSGF("(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black](;B[pd];W[dd];B[pp];W[dp])(;B[dd];W[ee]))")
+	if err != nil {
+		t.Error(err)
+	}
+
+	c := s.Root.Copy()
+	if !s.Root.ShallowEqual(c) {
+		t.Errorf("error copying: %v %v", s.Root, c)
+	}
+}

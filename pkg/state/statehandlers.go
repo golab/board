@@ -471,7 +471,7 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 	for _, tok := range tokens[start:] {
 
 		// convert to a Coord
-		coord, err := core.AlphanumericToCoord(tok)
+		coord, err := core.AlphanumericToCoord(tok, s.Size)
 		if err != nil {
 			return nil, err
 		}

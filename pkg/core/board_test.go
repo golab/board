@@ -125,3 +125,98 @@ func TestBoard4(t *testing.T) {
 		t.Errorf("error in group coords, expected %v, got: %v", cs, gps[0].Coords)
 	}
 }
+
+func TestCurrentDiff(t *testing.T) {
+	b := core.NewBoard(19)
+	c1 := &core.Coord{0, 1}
+	c2 := &core.Coord{1, 0}
+	c3 := &core.Coord{2, 0}
+	c4 := &core.Coord{1, 1}
+	c5 := &core.Coord{0, 0}
+	b.Move(c1, core.Black)
+	b.Move(c2, core.Black)
+	b.Move(c3, core.White)
+	b.Move(c4, core.White)
+	b.Move(c5, core.White)
+
+	diff := b.CurrentDiff()
+
+	c := core.NewCoordSet()
+	c.Add(c1)
+	addBlack := core.NewStoneSet(c, core.Black)
+
+	d := core.NewCoordSet()
+	d.Add(c3)
+	d.Add(c4)
+	d.Add(c5)
+	addWhite := core.NewStoneSet(d, core.White)
+
+	if !diff.Add[0].Equal(addBlack) {
+		t.Errorf("addBlack wrong")
+	}
+
+	if !diff.Add[1].Equal(addWhite) {
+		t.Errorf("addWhite wrong")
+	}
+
+	if diff.Remove != nil {
+		t.Errorf("diff.Remove wrong")
+	}
+}
+
+func TestFindArea(t *testing.T) {
+	b := core.NewBoard(19)
+	for x := 0; x < 4; x++ {
+		b.Move(&core.Coord{x, 3 - x}, core.Black)
+	}
+	cs, tp := b.FindArea(&core.Coord{0, 0}, core.NewCoordSet())
+	if len(cs) != 6 {
+		t.Errorf("error finding empty area: got %d (expected 6)", len(cs))
+	}
+	if tp != core.BlackPoint {
+		t.Errorf("%v", tp)
+	}
+}
+
+func TestScore(t *testing.T) {
+	b := core.NewBoard(9)
+	for x := 0; x < 9; x++ {
+		b.Move(&core.Coord{x, 4}, core.Black)
+		b.Move(&core.Coord{x, 5}, core.White)
+	}
+
+	b.Move(&core.Coord{7, 3}, core.Black)
+	b.Move(&core.Coord{8, 3}, core.Black)
+
+	b.Move(&core.Coord{7, 6}, core.White)
+	b.Move(&core.Coord{8, 6}, core.White)
+
+	// dead stones
+	b.Move(&core.Coord{0, 0}, core.White)
+	b.Move(&core.Coord{8, 8}, core.Black)
+
+	markedDead := core.NewCoordSet()
+	markedDead.Add(&core.Coord{0, 0})
+	markedDead.Add(&core.Coord{8, 8})
+
+	markedDame := core.NewCoordSet()
+	markedDame.Add(&core.Coord{8, 4})
+	markedDame.Add(&core.Coord{8, 5})
+
+	blackArea, whiteArea, blackDead, whiteDead, dame := b.Score(markedDead, markedDame)
+	if len(blackArea) != 34 {
+		t.Errorf("blackArea wrong, expected 34 (got %d)", len(blackArea))
+	}
+	if len(whiteArea) != 25 {
+		t.Errorf("whiteArea wrong, expected 25 (got %d)", len(whiteArea))
+	}
+	if len(blackDead) != 1 {
+		t.Errorf("blackDead wrong, expected 0 (got %d)", len(blackDead))
+	}
+	if len(whiteDead) != 1 {
+		t.Errorf("whiteDead wrong, expected 0 (got %d)", len(whiteDead))
+	}
+	if len(dame) != 2 {
+		t.Errorf("dame wrong, expected 0 (got %d)", len(dame))
+	}
+}
