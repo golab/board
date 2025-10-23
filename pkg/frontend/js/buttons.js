@@ -224,13 +224,19 @@ export function create_buttons(_state) {
     review.style.height = w + "px";
 
     // name cards
-    let namecards = document.getElementById("namecards");
-    namecards.style.margin = "auto";
-    namecards.style.display = "flex";
+    let black_namecard_container = document.getElementById("black-namecard-container");
+    //let namecards = document.getElementById("namecards");
+    //namecards.style.margin = "auto";
+    //namecards.style.display = "flex";
+    //black_namecard_container.style.margin = "auto";
+    //black_namecard_container.style.display = "flex";
 
     let black = document.createElement("div");
     black.setAttribute("id", "black-namecard");
-    black.classList.add("w-100", "text-white", "bg-dark", "justify-content-center", "align-content-center");
+    black.style.whiteSpace = "nowrap";
+    black.style.overflow = "hidden";
+    black.style.textOverflow = "ellipsis";
+    black.classList.add("h-100", "w-100", "text-white", "bg-dark", "justify-content-center", "align-content-center");
     let black_name = document.createElement("span");
     black_name.setAttribute("id", "black-name");
     black.appendChild(black_name);
@@ -239,11 +245,19 @@ export function create_buttons(_state) {
     black.appendChild(black_caps);
 
     //add_tooltip(black, "Captures:");
-    namecards.appendChild(black);
+    black_namecard_container.appendChild(black);
+
+    let white_namecard_container = document.getElementById("white-namecard-container");
+    //white_namecard_container.style.margin = "auto";
+    //white_namecard_container.style.display = "flex";
 
     let white = document.createElement("div");
     white.setAttribute("id", "white-namecard");
-    white.classList.add("w-100", "text-black", "bg-light", "justify-content-center", "align-content-center");
+    white.style.whiteSpace = "nowrap";
+    white.style.overflow = "hidden";
+    white.style.textOverflow = "ellipsis";
+
+    white.classList.add("h-100", "w-100", "text-black", "bg-light", "justify-content-center", "align-content-center");
     let white_name = document.createElement("span");
     white_name.setAttribute("id", "white-name");
     white.appendChild(white_name);
@@ -251,13 +265,15 @@ export function create_buttons(_state) {
     white_caps.setAttribute("id", "white-caps");
     white.appendChild(white_caps);
 
-    let komi = document.createElement("komi");
+    let komi = document.createElement("span");
     komi.setAttribute("id", "komi");
     white.appendChild(komi);
 
-    namecards.appendChild(white);
+    white_namecard_container.appendChild(white);
+    //namecards.appendChild(white);
 
     function resize() {
+        console.log("resized buttons");
         let b1_container = document.getElementById("buttons-row1-container");
         let b2_container = document.getElementById("buttons-row2-container");
 
@@ -267,7 +283,6 @@ export function create_buttons(_state) {
         let w1 = button_row1.children[0].offsetWidth;
         let w2 = button_row2.children[0].offsetWidth;
 
-        console.log(w1, w2, b1_container.classList.contains("col-lg-8"));
 
         if (w1 > 84 && w2 > 84 && b1_container.classList.contains("col-lg-8")) {
             b1_container.classList.remove("col-lg-8");
@@ -275,14 +290,38 @@ export function create_buttons(_state) {
 
             b2_container.classList.remove("col-lg-8");
             b2_container.classList.add("col-lg-4");
-        } else if (row1_length > b1_container.offsetWidth+5 ||
-            row2_length > b2_container.offsetWidth+5) {
+
+            white_namecard_container.classList.remove("col-lg-4");
+            white_namecard_container.classList.add("col-lg-2");
+
+            black_namecard_container.classList.remove("col-lg-4");
+            black_namecard_container.classList.add("col-lg-2");
+
+            // move the black namecard down
+            let p = black_namecard_container.parentNode;
+            p.insertBefore(b2_container, black_namecard_container);
+
+            white_namecard_container.classList.remove("ps-lg-4");
+
+        } else if (row1_length > b1_container.offsetWidth+4 ||
+            row2_length > b2_container.offsetWidth+4) {
             b1_container.classList.remove("col-lg-4");
             b1_container.classList.add("col-lg-8");
 
             b2_container.classList.remove("col-lg-4");
             b2_container.classList.add("col-lg-8");
 
+            white_namecard_container.classList.remove("col-lg-2");
+            white_namecard_container.classList.add("col-lg-4");
+
+            black_namecard_container.classList.remove("col-lg-2");
+            black_namecard_container.classList.add("col-lg-4");
+
+            // move the black namecard up
+            let p = black_namecard_container.parentNode;
+            p.insertBefore(black_namecard_container, b2_container);
+
+            white_namecard_container.classList.add("ps-lg-4");
         }
     }
     return {resize,};
