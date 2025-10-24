@@ -121,13 +121,13 @@ func (room *Room) HandleUploadSGF(evt *core.EventJSON) *core.EventJSON {
 
 		decoded, err := base64.StdEncoding.DecodeString(str)
 		if err != nil {
-			bcast = core.ErrorJSON(err.Error())
+			bcast = core.ErrorEvent(err.Error())
 			return bcast
 		}
 		if zip.IsZipFile(decoded) {
 			filesBytes, err := zip.Decompress(decoded)
 			if err != nil {
-				bcast = core.ErrorJSON(err.Error())
+				bcast = core.ErrorEvent(err.Error())
 			} else {
 				files := []string{}
 				for _, file := range filesBytes {
@@ -147,7 +147,7 @@ func (room *Room) HandleUploadSGF(evt *core.EventJSON) *core.EventJSON {
 			str := ifc.(string)
 			d, err := base64.StdEncoding.DecodeString(str)
 			if err != nil {
-				bcast = core.ErrorJSON(err.Error())
+				bcast = core.ErrorEvent(err.Error())
 				return bcast
 			}
 			sgfs = append(sgfs, string(d))
@@ -155,7 +155,7 @@ func (room *Room) HandleUploadSGF(evt *core.EventJSON) *core.EventJSON {
 		sgf := core.Merge(sgfs)
 		bcast = room.UploadSGF(sgf)
 	} else {
-		bcast = core.ErrorJSON("unreachable")
+		bcast = core.ErrorEvent("unreachable")
 	}
 
 	bcast.UserID = evt.UserID
@@ -178,7 +178,7 @@ func (room *Room) HandleRequestSGF(evt *core.EventJSON) *core.EventJSON {
 
 		spl := strings.Split(url, "/")
 		if len(spl) < 2 {
-			bcast = core.ErrorJSON("url parsing error")
+			bcast = core.ErrorEvent("url parsing error")
 			return bcast
 		}
 
@@ -187,9 +187,9 @@ func (room *Room) HandleRequestSGF(evt *core.EventJSON) *core.EventJSON {
 
 		switch ogsType {
 		case "game":
-			ended, err := fetch.OGSCheckEnded(url)
+			ended, err := room.fetcher.OGSCheckEnded(url)
 			if err != nil {
-				bcast = core.ErrorJSON(err.Error())
+				bcast = core.ErrorEvent(err.Error())
 				return bcast
 			}
 			connectToOGS = !ended
@@ -204,14 +204,14 @@ func (room *Room) HandleRequestSGF(evt *core.EventJSON) *core.EventJSON {
 			idStr := spl[len(spl)-1]
 			id64, err := strconv.ParseInt(idStr, 10, 64)
 			if err != nil {
-				bcast = core.ErrorJSON("int parsing error")
+				bcast = core.ErrorEvent("int parsing error")
 				return bcast
 			}
 			id := int(id64)
 
-			o, err := plugin.NewOGSConnector(room)
+			o, err := plugin.NewOGSConnector(room, room.fetcher)
 			if err != nil {
-				bcast = core.ErrorJSON("ogs connector error")
+				bcast = core.ErrorEvent("ogs connector error")
 				return bcast
 			}
 
@@ -224,16 +224,16 @@ func (room *Room) HandleRequestSGF(evt *core.EventJSON) *core.EventJSON {
 
 			if ogsType == "game" {
 				// finish here
-				return core.NopJSON()
+				return core.NopEvent()
 			}
 		}
 	}
 
-	data, err := fetch.ApprovedFetch(evt.Value.(string))
+	data, err := room.fetcher.ApprovedFetch(evt.Value.(string))
 	if err != nil {
-		bcast = core.ErrorJSON(err.Error())
+		bcast = core.ErrorEvent(err.Error())
 	} else if data == "Permission denied" {
-		bcast = core.ErrorJSON("Error fetching SGF. Is it a private OGS game?")
+		bcast = core.ErrorEvent("Error fetching SGF. Is it a private OGS game?")
 	} else {
 		bcast = room.UploadSGF(string(data))
 	}
@@ -251,7 +251,7 @@ func (room *Room) HandleTrash(evt *core.EventJSON) *core.EventJSON {
 	room.State.InputBuffer = oldBuffer
 
 	frame := room.State.GenerateFullFrame(core.Full)
-	bcast := core.FrameJSON(frame)
+	bcast := core.FrameEvent(frame)
 	bcast.UserID = evt.UserID
 	return bcast
 }
@@ -318,12 +318,12 @@ func (room *Room) HandleEvent(evt *core.EventJSON) *core.EventJSON {
 	frame, err := room.State.AddEvent(evt)
 	if err != nil {
 		log.Println(err)
-		bcast = core.ErrorJSON(err.Error())
+		bcast = core.ErrorEvent(err.Error())
 		return bcast
 	}
 
 	if frame != nil {
-		bcast = core.FrameJSON(frame)
+		bcast = core.FrameEvent(frame)
 	} else {
 		bcast = evt
 	}
@@ -356,7 +356,7 @@ func (room *Room) BroadcastFullFrameAfter(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {
 		evt = handler(evt)
 		frame := room.State.GenerateFullFrame(core.Full)
-		bcast := core.FrameJSON(frame)
+		bcast := core.FrameEvent(frame)
 		room.Broadcast(bcast)
 		return evt
 	}

@@ -310,12 +310,12 @@ func (s *Server) Handler(ws *websocket.Conn) {
 
 	// assign id to the new connection
 	wrc := socket.NewWebsocketRoomConn(ws)
-	id := r.NewConnection(wrc)
+	id := r.RegisterConnection(wrc)
 	log.Println(url, "Connecting:", id)
 	s.SendMessagesToOne(wrc, id)
 
 	// defer removing the client
-	defer delete(r.Conns, id)
+	defer r.DeregisterConnection(id)
 
 	// send list of currently connected users
 	r.SendUserList()

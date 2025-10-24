@@ -17,6 +17,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/room/plugin"
 	"github.com/jarednogo/board/pkg/socket"
 	"github.com/jarednogo/board/pkg/state"
@@ -32,6 +33,7 @@ type Room struct {
 	Password      string
 	auth          map[string]bool
 	Nicks         map[string]string
+	fetcher       fetch.Fetcher
 }
 
 func NewRoom() *Room {
@@ -42,7 +44,22 @@ func NewRoom() *Room {
 	auth := make(map[string]bool)
 	nicks := make(map[string]string)
 	plugins := make(map[string]plugin.Plugin)
-	return &Room{conns, s, &now, "", msgs, plugins, "", auth, nicks}
+	return &Room{
+		Conns:         conns,
+		State:         s,
+		TimeLastEvent: &now,
+		LastUser:      "",
+		lastMessages:  msgs,
+		Plugins:       plugins,
+		Password:      "",
+		auth:          auth,
+		Nicks:         nicks,
+		fetcher:       fetch.NewDefaultFetcher(),
+	}
+}
+
+func (r *Room) SetFetcher(f fetch.Fetcher) {
+	r.fetcher = f
 }
 
 func (r *Room) HasPassword() bool {
@@ -59,23 +76,10 @@ func (r *Room) Broadcast(evt *core.EventJSON) {
 	if evt.Event == "nop" {
 		return
 	}
-	// augment event with connection id
-	//id := evt.UserID
-
-	// marshal event back into data
-	//data, err := json.Marshal(evt)
-	//if err != nil {
-	//	log.Println(id, err)
-	//	return
-	//}
 
 	// rebroadcast message
 	for _, conn := range r.Conns {
 		conn.SendEvent(evt)
-		//_, err = conn.Write(data)
-		//if err != nil {
-		//	log.Println(err)
-		//}
 	}
 }
 
@@ -84,13 +88,13 @@ func (r *Room) UploadSGF(sgf string) *core.EventJSON {
 	if err != nil {
 		log.Println(err)
 		msg := fmt.Sprintf("Error parsing SGF: %s", err)
-		return core.ErrorJSON(msg)
+		return core.ErrorEvent(msg)
 	}
 	r.State = s
 
 	// replace evt with frame data
 	frame := r.State.GenerateFullFrame(core.Full)
-	return core.FrameJSON(frame)
+	return core.FrameEvent(frame)
 }
 
 func (r *Room) SendUserList() {
@@ -105,7 +109,7 @@ func (r *Room) SendUserList() {
 	r.Broadcast(evt)
 }
 
-func (r *Room) NewConnection(rc socket.RoomConn) string {
+func (r *Room) RegisterConnection(rc socket.RoomConn) string {
 	// assign the new connection a new id
 	id := uuid.New().String()
 
@@ -120,10 +124,14 @@ func (r *Room) NewConnection(rc socket.RoomConn) string {
 
 	// send initial state
 	frame := r.State.GenerateFullFrame(core.Full)
-	evt := core.FrameJSON(frame)
+	evt := core.FrameEvent(frame)
 	rc.SendEvent(evt)
 
 	return id
+}
+
+func (r *Room) DeregisterConnection(id string) {
+	delete(r.Conns, id)
 }
 
 func (r *Room) RegisterPlugin(p plugin.Plugin, args map[string]interface{}) {
