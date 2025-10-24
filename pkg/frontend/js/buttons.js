@@ -273,7 +273,6 @@ export function create_buttons(_state) {
     //namecards.appendChild(white);
 
     function resize() {
-        console.log("resized buttons");
         let b1_container = document.getElementById("buttons-row1-container");
         let b2_container = document.getElementById("buttons-row2-container");
 
@@ -282,7 +281,6 @@ export function create_buttons(_state) {
 
         let w1 = button_row1.children[0].offsetWidth;
         let w2 = button_row2.children[0].offsetWidth;
-
 
         if (w1 > 84 && w2 > 84 && b1_container.classList.contains("col-lg-8")) {
             b1_container.classList.remove("col-lg-8");

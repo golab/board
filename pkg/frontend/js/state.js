@@ -149,7 +149,8 @@ class State {
         this.tree_graphics.resize();
         this.comments.resize();
         this.apply_pen();
-        this.buttons.resize();
+        // it's a little hacky, but the buttons were being very annoying
+        setTimeout(() => this.buttons.resize(), 100);
     }
 
     get_index_up() {
