@@ -149,8 +149,8 @@ function layout() {
     let b = create_div("col-lg-4 col-sm-12 gx-0", "buttons-row2-container");
     let b1 = create_div("", "buttons-row2");
     b.appendChild(b1);
-    let c1 = create_div("col-lg-2 col-sm-6 gx-0 ps-lg-4", "black-namecard-container");
-    let c2 = create_div("col-lg-2 col-sm-6 gx-0", "white-namecard-container");
+    let c1 = create_div("col-lg-2 col-6 gx-0 ps-lg-4", "black-namecard-container");
+    let c2 = create_div("col-lg-2 col-6 gx-0", "white-namecard-container");
     //let namecards = create_div("w-100 h-100", "namecards");
     //c.appendChild(namecards);
 
