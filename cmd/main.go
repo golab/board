@@ -20,7 +20,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jarednogo/board/pkg/server"
+	"github.com/jarednogo/board/pkg/hub"
 	"golang.org/x/net/websocket"
 )
 
@@ -33,15 +33,15 @@ var version = "dev"
 func main() {
 	// websocket server setup
 	cfg := websocket.Config{}
-	s := server.NewServer()
-	s.Load()
-	defer s.Save()
+	h := hub.NewHub()
+	h.Load()
+	defer h.Save()
 
 	// create new websocket server
 	ws := websocket.Server{
 		Config:    cfg,
 		Handshake: nil,
-		Handler:   s.Handler,
+		Handler:   h.Handler,
 	}
 
 	// http server setup
@@ -50,13 +50,13 @@ func main() {
 	r.Use(middleware.StripSlashes)
 	r.Use(middleware.Logger)
 
-	r.Mount("/", s.WebRouter())
+	r.Mount("/", h.WebRouter())
 
-	r.Mount("/api", server.ApiRouter(version))
-	r.Mount("/api/v1", server.ApiV1Router())
+	r.Mount("/api", hub.ApiRouter(version))
+	r.Mount("/api/v1", hub.ApiV1Router())
 
 	// see server package for routes
-	r.Mount("/apps/twitch", s.TwitchRouter())
+	r.Mount("/apps/twitch", h.TwitchRouter())
 
 	// mount websocket
 	r.Get("/socket/b/{boardID}", func(w http.ResponseWriter, r *http.Request) {

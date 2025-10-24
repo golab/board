@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package server
+package hub
 
 import (
 	"encoding/json"
@@ -26,12 +26,12 @@ import (
 	"github.com/jarednogo/board/pkg/twitch"
 )
 
-func (s *Server) TwitchRouter() http.Handler {
+func (h *Hub) TwitchRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Get("/subscribe", twitchSubscribe)
 	r.Get("/unsubscribe", twitchUnsubscribe)
 	r.Get("/callback", twitchCallbackGet)
-	r.Post("/callback", s.twitchCallbackPost)
+	r.Post("/callback", h.twitchCallbackPost)
 	return r
 }
 
@@ -135,7 +135,7 @@ func twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
+func (h *Hub) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 	// read the body into a []byte
 	body, _ := io.ReadAll(r.Body)
 
@@ -225,7 +225,7 @@ func (s *Server) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 			}
 
 			log.Println("setting roomid", broadcaster, roomID)
-			err := s.db.TwitchSetRoom(broadcaster, roomID)
+			err := h.db.TwitchSetRoom(broadcaster, roomID)
 			if err != nil {
 				log.Println(err)
 			}
@@ -242,13 +242,13 @@ func (s *Server) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 			Value: branch,
 		}
 
-		roomID := s.db.TwitchGetRoom(broadcaster)
+		roomID := h.db.TwitchGetRoom(broadcaster)
 		if roomID == "" {
 			log.Println("room not set for", broadcaster)
 			return
 		}
 		log.Println("room found for", broadcaster, roomID)
-		r := s.GetOrCreateRoom(roomID)
+		r := h.GetOrCreateRoom(roomID)
 
 		handler := room.Chain(
 			r.HandleEvent,
