@@ -219,7 +219,7 @@ func (s *Server) SendMessages() {
 					continue
 				}
 				// otherwise, send and record
-				socket.SendEvent(conn, evt)
+				conn.SendEvent(evt)
 				m.Notified[id] = true
 			}
 		}
@@ -238,7 +238,7 @@ func (s *Server) MessageLoop() {
 	}
 }
 
-func (s *Server) SendMessagesToOne(ws *websocket.Conn, id string) {
+func (s *Server) SendMessagesToOne(rc socket.RoomConn, id string) {
 	// send messages
 	for _, m := range s.messages {
 		// make a new event to send
@@ -249,7 +249,7 @@ func (s *Server) SendMessagesToOne(ws *websocket.Conn, id string) {
 			UserID: "",
 		}
 
-		socket.SendEvent(ws, evt)
+		rc.SendEvent(evt)
 		m.Notified[id] = true
 	}
 }
@@ -275,7 +275,6 @@ func (s *Server) HandleOp(op, roomID string) string {
 	data := ""
 	r, ok := s.rooms[roomID]
 	if !ok {
-		//socket.EncodeSend(ws, data)
 		return ""
 	}
 	switch op {
@@ -292,7 +291,6 @@ func (s *Server) HandleOp(op, roomID string) string {
 		data = string(dataBytes)
 	}
 	return data
-	//socket.EncodeSend(ws, data)
 }
 
 // Echo the data received on the WebSocket.
@@ -307,21 +305,14 @@ func (s *Server) Handler(ws *websocket.Conn) {
 	// currently not using the prefix, but i may someday
 	_, roomID, _ := ParseURL(url)
 
-	// check for op suffix
-	//if op != "" {
-	//	s.HandleOp(ws, op, roomID)
-	//	return
-	//}
-
 	// get or create the room
-	//r, first := s.GetOrCreateRoom(roomID)
 	r := s.GetOrCreateRoom(roomID)
 
 	// assign id to the new connection
-	//id := r.NewConnection(ws, first)
-	id := r.NewConnection(ws)
+	wrc := socket.NewWebsocketRoomConn(ws)
+	id := r.NewConnection(wrc)
 	log.Println(url, "Connecting:", id)
-	s.SendMessagesToOne(ws, id)
+	s.SendMessagesToOne(wrc, id)
 
 	// defer removing the client
 	defer delete(r.Conns, id)
@@ -339,7 +330,7 @@ func (s *Server) Handler(ws *websocket.Conn) {
 	// main loop
 	for {
 		// receive the event
-		evt, err := socket.ReceiveEvent(ws)
+		evt, err := wrc.ReceiveEvent()
 		if err != nil {
 			log.Println(id, err)
 			break

@@ -11,7 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package room
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -21,11 +20,10 @@ import (
 	"github.com/jarednogo/board/pkg/room/plugin"
 	"github.com/jarednogo/board/pkg/socket"
 	"github.com/jarednogo/board/pkg/state"
-	"golang.org/x/net/websocket"
 )
 
 type Room struct {
-	Conns         map[string]*websocket.Conn
+	Conns         map[string]socket.RoomConn
 	State         *state.State
 	TimeLastEvent *time.Time
 	LastUser      string
@@ -37,7 +35,7 @@ type Room struct {
 }
 
 func NewRoom() *Room {
-	conns := make(map[string]*websocket.Conn)
+	conns := make(map[string]socket.RoomConn)
 	s := state.NewState(19, true)
 	now := time.Now()
 	msgs := make(map[string]*time.Time)
@@ -52,8 +50,8 @@ func (r *Room) HasPassword() bool {
 }
 
 func (r *Room) SendTo(id string, evt *core.EventJSON) {
-	if ws, ok := r.Conns[id]; ok {
-		socket.SendEvent(ws, evt)
+	if rc, ok := r.Conns[id]; ok {
+		rc.SendEvent(evt)
 	}
 }
 
@@ -62,21 +60,22 @@ func (r *Room) Broadcast(evt *core.EventJSON) {
 		return
 	}
 	// augment event with connection id
-	id := evt.UserID
+	//id := evt.UserID
 
 	// marshal event back into data
-	data, err := json.Marshal(evt)
-	if err != nil {
-		log.Println(id, err)
-		return
-	}
+	//data, err := json.Marshal(evt)
+	//if err != nil {
+	//	log.Println(id, err)
+	//	return
+	//}
 
 	// rebroadcast message
 	for _, conn := range r.Conns {
-		_, err = conn.Write(data)
-		if err != nil {
-			log.Println(err)
-		}
+		conn.SendEvent(evt)
+		//_, err = conn.Write(data)
+		//if err != nil {
+		//	log.Println(err)
+		//}
 	}
 }
 
@@ -106,7 +105,7 @@ func (r *Room) SendUserList() {
 	r.Broadcast(evt)
 }
 
-func (r *Room) NewConnection(ws *websocket.Conn) string {
+func (r *Room) NewConnection(rc socket.RoomConn) string {
 	// assign the new connection a new id
 	id := uuid.New().String()
 
@@ -114,7 +113,7 @@ func (r *Room) NewConnection(ws *websocket.Conn) string {
 	r.LastUser = id
 
 	// store the new connection by id
-	r.Conns[id] = ws
+	r.Conns[id] = rc
 
 	// save current user
 	r.Nicks[id] = ""
@@ -122,7 +121,7 @@ func (r *Room) NewConnection(ws *websocket.Conn) string {
 	// send initial state
 	frame := r.State.GenerateFullFrame(core.Full)
 	evt := core.FrameJSON(frame)
-	socket.SendEvent(ws, evt)
+	rc.SendEvent(evt)
 
 	return id
 }

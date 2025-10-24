@@ -11,7 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package socket
 
 import (
-	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"log"
@@ -20,22 +19,37 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-func SendEvent(conn *websocket.Conn, evt *core.EventJSON) {
+type RoomConn interface {
+	SendEvent(evt *core.EventJSON)
+	ReceiveEvent() (*core.EventJSON, error)
+	Close() error
+}
+
+// WebsocketRoomConn is a thin wrapper around *websocket.Conn
+type WebsocketRoomConn struct {
+	ws *websocket.Conn
+}
+
+func NewWebsocketRoomConn(ws *websocket.Conn) RoomConn {
+	return &WebsocketRoomConn{ws}
+}
+
+func (wrc *WebsocketRoomConn) SendEvent(evt *core.EventJSON) {
 	// marshal event back into data
 	data, err := json.Marshal(evt)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	_, err = conn.Write(data)
+	_, err = wrc.ws.Write(data)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 }
 
-func ReceiveEvent(ws *websocket.Conn) (*core.EventJSON, error) {
-	data, err := ReadPacket(ws)
+func (wrc *WebsocketRoomConn) ReceiveEvent() (*core.EventJSON, error) {
+	data, err := wrc.readPacket()
 	if err != nil {
 		return nil, err
 	}
@@ -48,10 +62,14 @@ func ReceiveEvent(ws *websocket.Conn) (*core.EventJSON, error) {
 	return evt, nil
 }
 
-func ReadPacket(ws *websocket.Conn) ([]byte, error) {
+func (wrc *WebsocketRoomConn) Close() error {
+	return wrc.ws.Close()
+}
+
+func (wrc *WebsocketRoomConn) readPacket() ([]byte, error) {
 	// read in 4 bytes (length of rest of message)
 	lengthArray := make([]byte, 4)
-	_, err := ws.Read(lengthArray)
+	_, err := wrc.ws.Read(lengthArray)
 	if err != nil {
 		return nil, err
 	}
@@ -61,13 +79,13 @@ func ReadPacket(ws *websocket.Conn) ([]byte, error) {
 	var data []byte
 
 	if length > 1024 {
-		data, err = ReadBytes(ws, int(length))
+		data, err = wrc.readBytes(int(length))
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		data = make([]byte, length)
-		_, err := ws.Read(data)
+		_, err := wrc.ws.Read(data)
 
 		if err != nil {
 			return nil, err
@@ -76,7 +94,7 @@ func ReadPacket(ws *websocket.Conn) ([]byte, error) {
 	return data, nil
 }
 
-func ReadBytes(ws *websocket.Conn, size int) ([]byte, error) {
+func (wrc *WebsocketRoomConn) readBytes(size int) ([]byte, error) {
 	chunkSize := 64
 	message := []byte{}
 	for len(message) < size {
@@ -85,7 +103,7 @@ func ReadBytes(ws *websocket.Conn, size int) ([]byte, error) {
 			l = chunkSize
 		}
 		temp := make([]byte, l)
-		n, err := ws.Read(temp)
+		n, err := wrc.ws.Read(temp)
 		if err != nil {
 			return nil, err
 		}
@@ -93,21 +111,4 @@ func ReadBytes(ws *websocket.Conn, size int) ([]byte, error) {
 	}
 
 	return message, nil
-
-}
-
-func EncodeSend(ws *websocket.Conn, data string) {
-	encoded := base64.StdEncoding.EncodeToString([]byte(data))
-	length := uint32(len(encoded))
-	buf := make([]byte, 4)
-	binary.LittleEndian.PutUint32(buf, length)
-
-	_, err := ws.Write(buf)
-	if err != nil {
-		log.Println(err)
-	}
-	_, err = ws.Write([]byte(encoded))
-	if err != nil {
-		log.Println(err)
-	}
 }
