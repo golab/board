@@ -15,7 +15,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/room/plugin"
 	"github.com/jarednogo/board/pkg/socket"
@@ -79,6 +78,28 @@ func (r *Room) Broadcast(evt *core.EventJSON) {
 	}
 }
 
+func (r *Room) BroadcastHubMessage(m *core.Message) {
+	// make a new event to broadcast
+	evt := &core.EventJSON{
+		Event:  "global",
+		Value:  m.Text,
+		Color:  0,
+		UserID: "",
+	}
+
+	// go through each client connection
+	for id, conn := range r.Conns {
+		// check to see if we've already sent this message
+		// to this connection
+		if m.IsNotified(id) {
+			continue
+		}
+		// otherwise, send and record
+		conn.SendEvent(evt)
+		m.MarkNotified(id)
+	}
+}
+
 func (r *Room) UploadSGF(sgf string) *core.EventJSON {
 	s, err := state.FromSGF(sgf)
 	if err != nil {
@@ -106,8 +127,8 @@ func (r *Room) SendUserList() {
 }
 
 func (r *Room) NewConnection(rc socket.RoomConn) string {
-	// assign the new connection a new id
-	id := uuid.New().String()
+	// the room connection generates its own id
+	id := rc.GetID()
 
 	// set the last user
 	r.LastUser = id
@@ -124,6 +145,44 @@ func (r *Room) NewConnection(rc socket.RoomConn) string {
 	rc.SendEvent(evt)
 
 	return id
+}
+
+func (r *Room) Handle(rc socket.RoomConn) {
+	// assign id to the new connection
+	id := r.NewConnection(rc)
+
+	// defer removing the client
+	defer delete(r.Conns, id)
+
+	// send list of currently connected users
+	r.SendUserList()
+
+	// send disconnection notification
+	// golang deferrals are called in LIFO order
+	defer r.SendUserList()
+	defer delete(r.Nicks, id)
+
+	handlers := r.CreateHandlers()
+
+	// main loop
+	for {
+		// receive the event
+		evt, err := rc.ReceiveEvent()
+		if err != nil {
+			log.Println(id, err)
+			break
+		}
+
+		// augment with user id
+		evt.UserID = id
+
+		// handle the event
+		if handler, ok := handlers[evt.Event]; ok {
+			handler(evt)
+		} else {
+			handlers["_"](evt)
+		}
+	}
 }
 
 func (r *Room) RegisterPlugin(p plugin.Plugin, args map[string]interface{}) {

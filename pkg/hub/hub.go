@@ -42,7 +42,7 @@ func ParseURL(url string) (string, string, string) {
 
 type Hub struct {
 	rooms    map[string]*room.Room
-	messages []*Message
+	messages []*core.Message
 	db       loader.Loader
 }
 
@@ -53,7 +53,7 @@ func NewHub() *Hub {
 
 	s := &Hub{
 		rooms:    make(map[string]*room.Room),
-		messages: []*Message{},
+		messages: []*core.Message{},
 		db:       db,
 	}
 
@@ -163,31 +163,19 @@ func (h *Hub) Heartbeat(roomID string) {
 	}
 }
 
-type Message struct {
-	Text      string
-	ExpiresAt *time.Time
-	Notified  map[string]bool
-}
-
 func (h *Hub) ReadMessages() {
-
 	messages := h.db.LoadAllMessages()
 	defer h.db.DeleteAllMessages()
 
 	for _, msg := range messages {
-		// calculate the expiration time using TTL
-		now := time.Now()
-		expiresAt := now.Add(time.Duration(msg.TTL) * time.Second)
-
-		// add to server messages
-		m := &Message{msg.Text, &expiresAt, make(map[string]bool)}
+		m := core.NewMessage(msg.Text, msg.TTL)
 		h.messages = append(h.messages, m)
 	}
 }
 
 func (h *Hub) SendMessages() {
 	// go through each server message
-	keep := []*Message{}
+	keep := []*core.Message{}
 	for _, m := range h.messages {
 		// check time
 		now := time.Now()
@@ -200,27 +188,9 @@ func (h *Hub) SendMessages() {
 		// keep the unexpired messages
 		keep = append(keep, m)
 
-		// make a new event to broadcast
-		evt := &core.EventJSON{
-			Event:  "global",
-			Value:  m.Text,
-			Color:  0,
-			UserID: "",
-		}
-
 		// go through each room
 		for _, r := range h.rooms {
-			// go through each client connection
-			for id, conn := range r.Conns {
-				// check to see if we've already sent this message
-				// to this connection
-				if m.Notified[id] {
-					continue
-				}
-				// otherwise, send and record
-				conn.SendEvent(evt)
-				m.Notified[id] = true
-			}
+			r.BroadcastHubMessage(m)
 		}
 	}
 	// save the unexpired messages
@@ -234,22 +204,6 @@ func (h *Hub) MessageLoop() {
 
 		h.ReadMessages()
 		h.SendMessages()
-	}
-}
-
-func (h *Hub) SendMessagesToOne(rc socket.RoomConn, id string) {
-	// send messages
-	for _, m := range h.messages {
-		// make a new event to send
-		evt := &core.EventJSON{
-			Event:  "global",
-			Value:  m.Text,
-			Color:  0,
-			UserID: "",
-		}
-
-		rc.SendEvent(evt)
-		m.Notified[id] = true
 	}
 }
 
@@ -282,42 +236,8 @@ func (h *Hub) Handler(ws *websocket.Conn) {
 	// get or create the room
 	r := h.GetOrCreateRoom(roomID)
 
-	// assign id to the new connection
+	// wrap the socket and send to the room for handling
 	wrc := socket.NewWebsocketRoomConn(ws)
-	id := r.NewConnection(wrc)
-	log.Println(url, "Connecting:", id)
-	h.SendMessagesToOne(wrc, id)
-
-	// defer removing the client
-	defer delete(r.Conns, id)
-
-	// send list of currently connected users
-	r.SendUserList()
-
-	// send disconnection notification
-	// golang deferrals are called in LIFO order
-	defer r.SendUserList()
-	defer delete(r.Nicks, id)
-
-	handlers := r.CreateHandlers()
-
-	// main loop
-	for {
-		// receive the event
-		evt, err := wrc.ReceiveEvent()
-		if err != nil {
-			log.Println(id, err)
-			break
-		}
-
-		// augment with user id
-		evt.UserID = id
-
-		// handle the event
-		if handler, ok := handlers[evt.Event]; ok {
-			handler(evt)
-		} else {
-			handlers["_"](evt)
-		}
-	}
+	log.Println(url, "Connecting:", wrc.GetID())
+	r.Handle(wrc)
 }

@@ -16,9 +16,45 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/google/uuid"
 )
+
+type Message struct {
+	Text      string
+	ExpiresAt *time.Time
+	notified  map[string]bool
+	mu        sync.Mutex
+}
+
+func NewMessage(text string, ttl int) *Message {
+	// calculate the expiration time using TTL
+	now := time.Now()
+	expiresAt := now.Add(time.Duration(ttl) * time.Second)
+
+	return &Message{
+		Text:      text,
+		ExpiresAt: &expiresAt,
+		notified:  make(map[string]bool),
+		mu:        sync.Mutex{},
+	}
+}
+
+func (m *Message) MarkNotified(id string) {
+	m.mu.Lock()
+	m.notified[id] = true
+	m.mu.Unlock()
+}
+
+func (m *Message) IsNotified(id string) bool {
+	var n bool
+	m.mu.Lock()
+	_, n = m.notified[id]
+	m.mu.Unlock()
+	return n
+}
 
 // Color is one of NoColor, Black, or White
 type Color int

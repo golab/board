@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/google/uuid"
 	"github.com/jarednogo/board/pkg/core"
 	"golang.org/x/net/websocket"
 )
@@ -23,15 +24,24 @@ type RoomConn interface {
 	SendEvent(evt *core.EventJSON)
 	ReceiveEvent() (*core.EventJSON, error)
 	Close() error
+	GetID() string
 }
 
 // WebsocketRoomConn is a thin wrapper around *websocket.Conn
 type WebsocketRoomConn struct {
 	ws *websocket.Conn
+	id string
 }
 
 func NewWebsocketRoomConn(ws *websocket.Conn) RoomConn {
-	return &WebsocketRoomConn{ws}
+	// assign the new connection a new id
+	id := uuid.New().String()
+
+	return &WebsocketRoomConn{ws, id}
+}
+
+func (wrc *WebsocketRoomConn) GetID() string {
+	return wrc.id
 }
 
 func (wrc *WebsocketRoomConn) SendEvent(evt *core.EventJSON) {
