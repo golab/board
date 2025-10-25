@@ -221,9 +221,7 @@ func (h *Hub) GetOrCreateRoom(roomID string) *room.Room {
 	return r
 }
 
-// Echo the data received on the WebSocket.
-func (h *Hub) Handler(ws *websocket.Conn) {
-	// new connection
+func (h *Hub) HandlerWrapper(ws *websocket.Conn) {
 
 	// first find the url they want
 	url := ws.Request().URL.String()
@@ -233,11 +231,18 @@ func (h *Hub) Handler(ws *websocket.Conn) {
 	// currently not using the prefix, but i may someday
 	_, roomID, _ := ParseURL(url)
 
+	// wrap the socket
+	wrc := socket.NewWebsocketRoomConn(ws)
+	h.Handler(wrc, roomID)
+}
+
+func (h *Hub) Handler(rc socket.RoomConn, roomID string) {
+	// new connection
+
 	// get or create the room
 	r := h.GetOrCreateRoom(roomID)
 
-	// wrap the socket and send to the room for handling
-	wrc := socket.NewWebsocketRoomConn(ws)
-	log.Println(url, "Connecting:", wrc.GetID())
-	r.Handle(wrc)
+	// send to the room for handling
+	log.Println("Connecting:", rc.GetID())
+	r.Handle(rc)
 }

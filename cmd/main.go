@@ -21,7 +21,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jarednogo/board/pkg/hub"
-	"golang.org/x/net/websocket"
 )
 
 // constants
@@ -31,27 +30,22 @@ const WSHOST = "localhost"
 var version = "dev"
 
 func main() {
-	// websocket server setup
-	cfg := websocket.Config{}
+	// make a new hub
 	h := hub.NewHub()
 	h.Load()
 	defer h.Save()
 
-	// create new websocket server
-	ws := websocket.Server{
-		Config:    cfg,
-		Handshake: nil,
-		Handler:   h.Handler,
-	}
-
 	// http server setup
 
+	// initialize router and middlewares
 	r := chi.NewRouter()
 	r.Use(middleware.StripSlashes)
 	r.Use(middleware.Logger)
 
+	// web router
 	r.Mount("/", h.WebRouter())
 
+	// api routers
 	r.Mount("/api", hub.ApiRouter(version))
 	r.Mount("/api/v1", hub.ApiV1Router())
 
@@ -59,9 +53,7 @@ func main() {
 	r.Mount("/apps/twitch", h.TwitchRouter())
 
 	// mount websocket
-	r.Get("/socket/b/{boardID}", func(w http.ResponseWriter, r *http.Request) {
-		ws.ServeHTTP(w, r)
-	})
+	r.Mount("/socket", h.SocketRouter())
 
 	// start everything
 	port := "8080"
