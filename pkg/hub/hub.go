@@ -8,11 +8,10 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package server
+package hub
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"log"
 	"strings"
 	"time"
@@ -41,18 +40,18 @@ func ParseURL(url string) (string, string, string) {
 	return tokens[1], tokens[2], tokens[3]
 }
 
-type Server struct {
+type Hub struct {
 	rooms    map[string]*room.Room
 	messages []*Message
 	db       loader.Loader
 }
 
-func NewServer() *Server {
+func NewHub() *Hub {
 	// get database setup
 	db := loader.NewDefaultLoader()
 	db.Setup()
 
-	s := &Server{
+	s := &Hub{
 		rooms:    make(map[string]*room.Room),
 		messages: []*Message{},
 		db:       db,
@@ -64,8 +63,8 @@ func NewServer() *Server {
 	return s
 }
 
-func (s *Server) Save() {
-	for id, r := range s.rooms {
+func (h *Hub) Save() {
+	for id, r := range h.rooms {
 		log.Printf("Saving %s", id)
 
 		stateJSON := r.State.CreateStateJSON()
@@ -82,15 +81,15 @@ func (s *Server) Save() {
 		save.Password = r.Password
 		save.ID = id
 
-		err := s.db.SaveRoom(id, save)
+		err := h.db.SaveRoom(id, save)
 		if err != nil {
 			log.Println(err)
 		}
 	}
 }
 
-func (s *Server) Load() {
-	rooms := s.db.LoadAllRooms()
+func (h *Hub) Load() {
+	rooms := h.db.LoadAllRooms()
 
 	for _, load := range rooms {
 
@@ -125,13 +124,13 @@ func (s *Server) Load() {
 		r := room.NewRoom()
 		r.Password = load.Password
 		r.State = st
-		s.rooms[id] = r
-		go s.Heartbeat(id)
+		h.rooms[id] = r
+		go h.Heartbeat(id)
 	}
 }
 
-func (s *Server) Heartbeat(roomID string) {
-	r, ok := s.rooms[roomID]
+func (h *Hub) Heartbeat(roomID string) {
+	r, ok := h.rooms[roomID]
 	if !ok {
 		return
 	}
@@ -155,10 +154,10 @@ func (s *Server) Heartbeat(roomID string) {
 	}
 
 	// delete the room from the server map
-	delete(s.rooms, roomID)
+	delete(h.rooms, roomID)
 
 	// delete it from the database
-	err := s.db.DeleteRoom(roomID)
+	err := h.db.DeleteRoom(roomID)
 	if err != nil {
 		log.Println(err)
 	}
@@ -170,10 +169,10 @@ type Message struct {
 	Notified  map[string]bool
 }
 
-func (s *Server) ReadMessages() {
+func (h *Hub) ReadMessages() {
 
-	messages := s.db.LoadAllMessages()
-	defer s.db.DeleteAllMessages()
+	messages := h.db.LoadAllMessages()
+	defer h.db.DeleteAllMessages()
 
 	for _, msg := range messages {
 		// calculate the expiration time using TTL
@@ -182,14 +181,14 @@ func (s *Server) ReadMessages() {
 
 		// add to server messages
 		m := &Message{msg.Text, &expiresAt, make(map[string]bool)}
-		s.messages = append(s.messages, m)
+		h.messages = append(h.messages, m)
 	}
 }
 
-func (s *Server) SendMessages() {
+func (h *Hub) SendMessages() {
 	// go through each server message
 	keep := []*Message{}
-	for _, m := range s.messages {
+	for _, m := range h.messages {
 		// check time
 		now := time.Now()
 
@@ -210,7 +209,7 @@ func (s *Server) SendMessages() {
 		}
 
 		// go through each room
-		for _, r := range s.rooms {
+		for _, r := range h.rooms {
 			// go through each client connection
 			for id, conn := range r.Conns {
 				// check to see if we've already sent this message
@@ -225,22 +224,22 @@ func (s *Server) SendMessages() {
 		}
 	}
 	// save the unexpired messages
-	s.messages = keep
+	h.messages = keep
 }
 
-func (s *Server) MessageLoop() {
+func (h *Hub) MessageLoop() {
 	for {
 		// wait 5 seconds
 		time.Sleep(5 * time.Second)
 
-		s.ReadMessages()
-		s.SendMessages()
+		h.ReadMessages()
+		h.SendMessages()
 	}
 }
 
-func (s *Server) SendMessagesToOne(rc socket.RoomConn, id string) {
+func (h *Hub) SendMessagesToOne(rc socket.RoomConn, id string) {
 	// send messages
-	for _, m := range s.messages {
+	for _, m := range h.messages {
 		// make a new event to send
 		evt := &core.EventJSON{
 			Event:  "global",
@@ -254,47 +253,22 @@ func (s *Server) SendMessagesToOne(rc socket.RoomConn, id string) {
 	}
 }
 
-func (s *Server) GetOrCreateRoom(roomID string) *room.Room {
+func (h *Hub) GetOrCreateRoom(roomID string) *room.Room {
 	// if the room they want doesn't exist, create it
 	//created := false
-	if _, ok := s.rooms[roomID]; !ok {
+	if _, ok := h.rooms[roomID]; !ok {
 		//created = true
 		log.Println("New room:", roomID)
 		r := room.NewRoom()
-		s.rooms[roomID] = r
-		go s.Heartbeat(roomID)
+		h.rooms[roomID] = r
+		go h.Heartbeat(roomID)
 	}
-	r := s.rooms[roomID]
-	//return r, created
+	r := h.rooms[roomID]
 	return r
 }
 
-// these operate outside the main websocket loop
-// see frontend/main.go suffixOp for corresponding receiver
-func (s *Server) HandleOp(op, roomID string) string {
-	data := ""
-	r, ok := s.rooms[roomID]
-	if !ok {
-		return ""
-	}
-	switch op {
-	case "sgf":
-		// if the room doesn't exist, send empty string
-		data = r.State.ToSGF(false)
-	case "sgfix":
-		// basically do the same thing but include indexes
-		data = r.State.ToSGF(true)
-	case "debug":
-		// send debug info
-		stateJSON := r.State.CreateStateJSON()
-		dataBytes, _ := json.Marshal(stateJSON)
-		data = string(dataBytes)
-	}
-	return data
-}
-
 // Echo the data received on the WebSocket.
-func (s *Server) Handler(ws *websocket.Conn) {
+func (h *Hub) Handler(ws *websocket.Conn) {
 	// new connection
 
 	// first find the url they want
@@ -306,13 +280,13 @@ func (s *Server) Handler(ws *websocket.Conn) {
 	_, roomID, _ := ParseURL(url)
 
 	// get or create the room
-	r := s.GetOrCreateRoom(roomID)
+	r := h.GetOrCreateRoom(roomID)
 
 	// assign id to the new connection
 	wrc := socket.NewWebsocketRoomConn(ws)
 	id := r.RegisterConnection(wrc)
 	log.Println(url, "Connecting:", id)
-	s.SendMessagesToOne(wrc, id)
+	h.SendMessagesToOne(wrc, id)
 
 	// defer removing the client
 	defer r.DeregisterConnection(id)

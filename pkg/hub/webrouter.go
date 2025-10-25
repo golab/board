@@ -8,9 +8,10 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package server
+package hub
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -26,34 +27,56 @@ import (
 
 // stateful
 
-func (s *Server) Debug(w http.ResponseWriter, r *http.Request) {
+func (h *Hub) HandleOp(op, roomID string) string {
+	data := ""
+	r, ok := h.rooms[roomID]
+	if !ok {
+		return ""
+	}
+	switch op {
+	case "sgf":
+		// if the room doesn't exist, send empty string
+		data = r.State.ToSGF(false)
+	case "sgfix":
+		// basically do the same thing but include indexes
+		data = r.State.ToSGF(true)
+	case "debug":
+		// send debug info
+		stateJSON := r.State.CreateStateJSON()
+		dataBytes, _ := json.Marshal(stateJSON)
+		data = string(dataBytes)
+	}
+	return data
+}
+
+func (h *Hub) Debug(w http.ResponseWriter, r *http.Request) {
 	boardID := chi.URLParam(r, "boardID")
-	data := s.HandleOp("debug", boardID)
+	data := h.HandleOp("debug", boardID)
 	_, err := w.Write([]byte(data))
 	if err != nil {
 		log.Println(err)
 	}
 }
 
-func (s *Server) Sgfix(w http.ResponseWriter, r *http.Request) {
+func (h *Hub) Sgfix(w http.ResponseWriter, r *http.Request) {
 	boardID := chi.URLParam(r, "boardID")
-	data := s.HandleOp("sgfix", boardID)
+	data := h.HandleOp("sgfix", boardID)
 	_, err := w.Write([]byte(data))
 	if err != nil {
 		log.Println(err)
 	}
 }
 
-func (s *Server) Sgf(w http.ResponseWriter, r *http.Request) {
+func (h *Hub) Sgf(w http.ResponseWriter, r *http.Request) {
 	boardID := chi.URLParam(r, "boardID")
-	data := s.HandleOp("sgf", boardID)
+	data := h.HandleOp("sgf", boardID)
 	_, err := w.Write([]byte(data))
 	if err != nil {
 		log.Println(err)
 	}
 }
 
-func (s *Server) Upload(w http.ResponseWriter, r *http.Request) {
+func (h *Hub) Upload(w http.ResponseWriter, r *http.Request) {
 	url := r.URL.Query().Get("url")
 	sgf := r.URL.Query().Get("sgf")
 	boardID := r.URL.Query().Get("board_id")
@@ -61,7 +84,7 @@ func (s *Server) Upload(w http.ResponseWriter, r *http.Request) {
 	if len(strings.TrimSpace(boardID)) == 0 {
 		boardID = core.UUID4()
 	}
-	newroom := s.GetOrCreateRoom(boardID)
+	newroom := h.GetOrCreateRoom(boardID)
 
 	var handler room.EventHandler
 	var evt *core.EventJSON
@@ -193,14 +216,14 @@ func image(w http.ResponseWriter, r *http.Request) {
 	serveStatic(w, r, image)
 }
 
-func (s *Server) WebRouter() http.Handler {
+func (h *Hub) WebRouter() http.Handler {
 	r := chi.NewRouter()
 
 	// stateful endpoints
-	r.Get("/upload", s.Upload)
-	r.Get("/b/{boardID}/sgf", s.Sgf)
-	r.Get("/b/{boardID}/sgfix", s.Sgfix)
-	r.Get("/b/{boardID}/debug", s.Debug)
+	r.Get("/upload", h.Upload)
+	r.Get("/b/{boardID}/sgf", h.Sgf)
+	r.Get("/b/{boardID}/sgfix", h.Sgfix)
+	r.Get("/b/{boardID}/debug", h.Debug)
 
 	// pure web endpoints
 	r.Get("/", index)
