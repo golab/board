@@ -30,10 +30,23 @@ var okList = map[string]bool{
 	"raw.githubusercontent.com": true,
 }
 
-func OGSCheckEnded(ogsURL string) (bool, error) {
+type Fetcher interface {
+	OGSCheckEnded(string) (bool, error)
+	FetchOGS(string) (string, error)
+	Fetch(string) (string, error)
+	ApprovedFetch(string) (string, error)
+}
+
+type DefaultFetcher struct{}
+
+func NewDefaultFetcher() *DefaultFetcher {
+	return &DefaultFetcher{}
+}
+
+func (f *DefaultFetcher) OGSCheckEnded(ogsURL string) (bool, error) {
 	ogsURL = strings.Replace(ogsURL, ".com", ".com/api/v1", 1)
 	ogsURL = strings.Replace(ogsURL, "game", "games", 1)
-	s, err := Fetch(ogsURL)
+	s, err := f.Fetch(ogsURL)
 	if err != nil {
 		return false, err
 	}
@@ -49,7 +62,7 @@ func OGSCheckEnded(ogsURL string) (bool, error) {
 	return resp.Ended != "" || resp.Source == "sgf", nil
 }
 
-func FetchOGS(ogsURL string) (string, error) {
+func (f *DefaultFetcher) FetchOGS(ogsURL string) (string, error) {
 	spl := strings.Split(ogsURL, "/")
 	ogsType := spl[len(spl)-2]
 
@@ -63,10 +76,10 @@ func FetchOGS(ogsURL string) (string, error) {
 		ogsURL = strings.Replace(ogsURL, "demo", "reviews", 1)
 		ogsURL += "/sgf"
 	}
-	return Fetch(ogsURL)
+	return f.Fetch(ogsURL)
 }
 
-func Fetch(urlStr string) (string, error) {
+func (f *DefaultFetcher) Fetch(urlStr string) (string, error) {
 	resp, err := http.Get(urlStr)
 	if err != nil {
 		return "", err
@@ -92,7 +105,7 @@ func IsOGS(urlStr string) bool {
 	return false
 }
 
-func ApprovedFetch(urlStr string) (string, error) {
+func (f *DefaultFetcher) ApprovedFetch(urlStr string) (string, error) {
 	fmt.Println(urlStr)
 	u, err := url.Parse(urlStr)
 	if err != nil {
@@ -102,7 +115,7 @@ func ApprovedFetch(urlStr string) (string, error) {
 		return "", fmt.Errorf("unapproved URL. contact us to add %s", u.Hostname())
 	}
 	if u.Hostname() == "online-go.com" {
-		return FetchOGS(urlStr)
+		return f.FetchOGS(urlStr)
 	}
-	return Fetch(urlStr)
+	return f.Fetch(urlStr)
 }

@@ -30,8 +30,8 @@ type Room interface {
 	UploadSGF(string) *core.EventJSON
 }
 
-func GetUser(id int) (string, error) {
-	data, err := fetch.Fetch(fmt.Sprintf("http://online-go.com/api/v1/players/%d/", id))
+func GetUser(f fetch.Fetcher, id int) (string, error) {
+	data, err := f.Fetch(fmt.Sprintf("http://online-go.com/api/v1/players/%d/", id))
 	if err != nil {
 		return "", err
 	}
@@ -53,9 +53,9 @@ type Creds struct {
 	JWT  string `json:"user_jwt"`
 }
 
-func GetCreds() (*Creds, error) {
+func GetCreds(f fetch.Fetcher) (*Creds, error) {
 	url := "https://online-go.com/api/v1/ui/config"
-	data, err := fetch.Fetch(url)
+	data, err := f.Fetch(url)
 	if err != nil {
 		return nil, err
 	}
@@ -69,15 +69,16 @@ func GetCreds() (*Creds, error) {
 }
 
 type OGSConnector struct {
-	Creds  *Creds
-	Socket *websocket.Conn
-	Room   Room
-	First  int
-	Exit   bool
+	Creds   *Creds
+	Socket  *websocket.Conn
+	Room    Room
+	First   int
+	Exit    bool
+	fetcher fetch.Fetcher
 }
 
-func NewOGSConnector(room Room) (*OGSConnector, error) {
-	creds, err := GetCreds()
+func NewOGSConnector(room Room, f fetch.Fetcher) (*OGSConnector, error) {
+	creds, err := GetCreds(f)
 	_ = creds
 	if err != nil {
 		return nil, err
@@ -88,7 +89,13 @@ func NewOGSConnector(room Room) (*OGSConnector, error) {
 		return nil, err
 	}
 
-	return &OGSConnector{Creds: creds, Socket: ws, Room: room, Exit: false}, nil
+	return &OGSConnector{
+		Creds:   creds,
+		Socket:  ws,
+		Room:    room,
+		Exit:    false,
+		fetcher: f,
+	}, nil
 }
 
 func (o *OGSConnector) Send(topic string, payload map[string]interface{}) error {
@@ -258,7 +265,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 
 			//frame := o.Room.State.GenerateFullFrame(core.Full)
 			frame := o.Room.GenerateFullFrame(core.Full)
-			evt := core.FrameJSON(frame)
+			evt := core.FrameEvent(frame)
 			o.Room.Broadcast(evt)
 
 		} else if topic == fmt.Sprintf("game/%d/gamedata", gameID) {
@@ -321,7 +328,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			// Send full board update after adding pattern
 			//frame := o.Room.State.GenerateFullFrame(core.Full)
 			frame := o.Room.GenerateFullFrame(core.Full)
-			evt := core.FrameJSON(frame)
+			evt := core.FrameEvent(frame)
 			o.Room.Broadcast(evt)
 		}
 	}
@@ -375,11 +382,11 @@ func (o *OGSConnector) GameInfoToSGF(gamedata map[string]interface{}, ogsType st
 	if ogsType == "game" {
 		blackID := int(gamedata["black_player_id"].(float64))
 		whiteID := int(gamedata["white_player_id"].(float64))
-		black, err := GetUser(blackID)
+		black, err := GetUser(o.fetcher, blackID)
 		if err != nil {
 			black = "Black"
 		}
-		white, err := GetUser(whiteID)
+		white, err := GetUser(o.fetcher, whiteID)
 		if err != nil {
 			white = "White"
 		}

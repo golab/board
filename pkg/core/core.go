@@ -400,19 +400,23 @@ type EventJSON struct {
 	UserID string      `json:"userid"`
 }
 
-// ErrorJSON is a special case of an EventJSON
-func ErrorJSON(msg string) *EventJSON {
+func EmptyEvent() *EventJSON {
+	return &EventJSON{}
+}
+
+// ErrorEvent is a special case of an EventJSON
+func ErrorEvent(msg string) *EventJSON {
 	return &EventJSON{"error", msg, 0, ""}
 }
 
-// FrameJSON is a special case of an EventJSON
-func FrameJSON(frame *Frame) *EventJSON {
+// FrameEvent is a special case of an EventJSON
+func FrameEvent(frame *Frame) *EventJSON {
 	return &EventJSON{"frame", frame, 0, ""}
 }
 
-// NopJSON signals to the server to do nothing
+// NopEvent signals to the server to do nothing
 // (in particular, don't send to clients)
-func NopJSON() *EventJSON {
+func NopEvent() *EventJSON {
 	return &EventJSON{"nop", nil, 0, ""}
 }
 
