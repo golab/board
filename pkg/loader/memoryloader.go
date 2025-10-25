@@ -8,44 +8,45 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package socket
+package loader
 
-import (
-	"fmt"
-
-	"github.com/google/uuid"
-	"github.com/jarednogo/board/pkg/core"
-)
-
-type MockRoomConn struct {
-	QueuedEvents []*core.EventJSON
-	index        int
-	SavedEvents  []*core.EventJSON
-	id           string
+type MemoryLoader struct {
 }
 
-func NewMockRoomConn() *MockRoomConn {
-	id := uuid.New().String()
-	return &MockRoomConn{id: id}
+func NewMemoryLoader() *MemoryLoader {
+	return &MemoryLoader{}
 }
 
-func (mcr *MockRoomConn) SendEvent(evt *core.EventJSON) {
-	mcr.SavedEvents = append(mcr.SavedEvents, evt)
+func (ml *MemoryLoader) Setup() {
 }
 
-func (mcr *MockRoomConn) ReceiveEvent() (*core.EventJSON, error) {
-	if len(mcr.QueuedEvents) >= mcr.index {
-		return nil, fmt.Errorf("EOF")
-	}
-	i := mcr.index
-	mcr.index++
-	return mcr.QueuedEvents[i], nil
+func (ml *MemoryLoader) TwitchGetRoom(_ string) string {
+	return ""
 }
 
-func (mcr *MockRoomConn) Close() error {
+func (ml *MemoryLoader) TwitchSetRoom(_, _ string) error {
 	return nil
 }
 
-func (mcr *MockRoomConn) GetID() string {
-	return mcr.id
+func (ml *MemoryLoader) SaveRoom(_ string, _ *LoadJSON) error {
+	return nil
+}
+
+func (ml *MemoryLoader) LoadRoom(_ string) (*LoadJSON, error) {
+	return nil, nil
+}
+
+func (ml *MemoryLoader) LoadAllRooms() []*LoadJSON {
+	return nil
+}
+
+func (ml *MemoryLoader) DeleteRoom(_ string) error {
+	return nil
+}
+
+func (ml *MemoryLoader) LoadAllMessages() []*MessageJSON {
+	return nil
+}
+
+func (ml *MemoryLoader) DeleteAllMessages() {
 }

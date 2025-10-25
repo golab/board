@@ -8,44 +8,24 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package socket
+package hub_test
 
 import (
-	"fmt"
+	"testing"
 
-	"github.com/google/uuid"
-	"github.com/jarednogo/board/pkg/core"
+	//"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/pkg/hub"
+	"github.com/jarednogo/board/pkg/loader"
+	"github.com/jarednogo/board/pkg/socket"
 )
 
-type MockRoomConn struct {
-	QueuedEvents []*core.EventJSON
-	index        int
-	SavedEvents  []*core.EventJSON
-	id           string
-}
+func TestHub(t *testing.T) {
+	h := hub.NewHubWithDB(loader.NewMemoryLoader())
+	h.Load()
 
-func NewMockRoomConn() *MockRoomConn {
-	id := uuid.New().String()
-	return &MockRoomConn{id: id}
-}
+	mock1 := socket.NewMockRoomConn()
+	roomID := "someboard"
+	h.Handler(mock1, roomID)
 
-func (mcr *MockRoomConn) SendEvent(evt *core.EventJSON) {
-	mcr.SavedEvents = append(mcr.SavedEvents, evt)
-}
-
-func (mcr *MockRoomConn) ReceiveEvent() (*core.EventJSON, error) {
-	if len(mcr.QueuedEvents) >= mcr.index {
-		return nil, fmt.Errorf("EOF")
-	}
-	i := mcr.index
-	mcr.index++
-	return mcr.QueuedEvents[i], nil
-}
-
-func (mcr *MockRoomConn) Close() error {
-	return nil
-}
-
-func (mcr *MockRoomConn) GetID() string {
-	return mcr.id
+	h.Save()
 }

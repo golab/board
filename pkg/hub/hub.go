@@ -49,8 +49,11 @@ type Hub struct {
 func NewHub() *Hub {
 	// get database setup
 	db := loader.NewDefaultLoader()
-	db.Setup()
+	return NewHubWithDB(db)
+}
 
+func NewHubWithDB(db loader.Loader) *Hub {
+	db.Setup()
 	s := &Hub{
 		rooms:    make(map[string]*room.Room),
 		messages: []*core.Message{},
