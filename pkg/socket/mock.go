@@ -11,15 +11,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package socket
 
 import (
+	"github.com/google/uuid"
 	"github.com/jarednogo/board/pkg/core"
 )
 
 type MockRoomConn struct {
 	SavedEvents []*core.EventJSON
+	id          string
 }
 
 func NewMockRoomConn() *MockRoomConn {
-	return &MockRoomConn{}
+	id := uuid.New().String()
+	return &MockRoomConn{id: id}
 }
 
 func (mcr *MockRoomConn) SendEvent(evt *core.EventJSON) {
@@ -32,4 +35,8 @@ func (mcr *MockRoomConn) ReceiveEvent() (*core.EventJSON, error) {
 
 func (mcr *MockRoomConn) Close() error {
 	return nil
+}
+
+func (mcr *MockRoomConn) GetID() string {
+	return mcr.id
 }
