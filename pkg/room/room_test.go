@@ -13,6 +13,7 @@ package room_test
 import (
 	"testing"
 
+	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/room"
@@ -28,16 +29,14 @@ func TestBroadcast(t *testing.T) {
 	r.RegisterConnection(mock1)
 	r.RegisterConnection(mock2)
 
-	if len(mock1.SavedEvents) != 1 || len(mock2.SavedEvents) != 1 {
-		t.Errorf("expected both clients to receive the first frame event")
-	}
+	assert.Equal(t, len(mock1.SavedEvents), 1, "expected mock1 to receive first frame event")
+	assert.Equal(t, len(mock2.SavedEvents), 1, "expected mock2 to receive first frame event")
 
 	evt := core.EmptyEvent()
 	r.Broadcast(evt)
 
-	if len(mock1.SavedEvents) != 2 || len(mock2.SavedEvents) != 2 {
-		t.Errorf("expected both clients to receive a test event")
-	}
+	assert.Equal(t, len(mock1.SavedEvents), 2, "expected mock1 to recieve a test event")
+	assert.Equal(t, len(mock2.SavedEvents), 2, "expected mock2 to recieve a test event")
 }
 
 func TestPlugin(t *testing.T) {
@@ -46,14 +45,12 @@ func TestPlugin(t *testing.T) {
 	args := make(map[string]interface{})
 	args["key"] = "mock"
 	r.RegisterPlugin(mp, args)
-	if _, ok := r.Plugins["mock"]; !ok {
-		t.Fatalf("failed to register mock plugin")
-	}
+	_, ok := r.Plugins["mock"]
+	assert.True(t, ok, "failed to register mock plugin")
 
 	r.DeregisterPlugin("mock")
-	if _, ok := r.Plugins["mock"]; ok {
-		t.Errorf("failed to deregister mock plugin")
-	}
+	_, ok = r.Plugins["mock"]
+	assert.True(t, !ok, "failed to deregister mock plugin")
 }
 
 func TestSendUserList(t *testing.T) {
@@ -66,9 +63,7 @@ func TestSendUserList(t *testing.T) {
 		t.Fatalf("failed to send user list")
 	}
 
-	if mock.SavedEvents[1].Event != "connected_users" {
-		t.Errorf("failed to send correct event")
-	}
+	assert.Equal(t, mock.SavedEvents[1].Event, "connected_users", "failed to send correct event")
 }
 
 func TestSendTo(t *testing.T) {
@@ -78,9 +73,7 @@ func TestSendTo(t *testing.T) {
 	evt := core.EmptyEvent()
 	r.SendTo(id, evt)
 
-	if len(mock.SavedEvents) != 2 {
-		t.Errorf("expected client to receive a test event after SendTo")
-	}
+	assert.Equal(t, len(mock.SavedEvents), 2, "expected client to receive a test event")
 }
 
 func TestHandlers(t *testing.T) {
@@ -93,6 +86,10 @@ func TestHandlers(t *testing.T) {
 
 	evt.UserID = id
 	handlers["isprotected"](evt)
+
+	evt.Value = "foo"
+	resp := handlers["checkpassword"](evt)
+	assert.Zero(t, resp.Value.(string), "password string should be empty")
 }
 
 func TestFetcher(t *testing.T) {
