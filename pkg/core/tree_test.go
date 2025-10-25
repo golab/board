@@ -13,12 +13,13 @@ package core_test
 import (
 	"testing"
 
+	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/state"
 )
 
 func TestFmap(t *testing.T) {
-	s, err := state.FromSGF("(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black](;B[pd];W[dd];B[pp];W[dp])(;B[dd];W[ee]))")
+	s, err := state.FromSGF(sgfsamples.SimpleTwoBranches)
 	if err != nil {
 		t.Error(err)
 	}
@@ -35,7 +36,7 @@ func TestFmap(t *testing.T) {
 
 func TestField1(t *testing.T) {
 
-	s, err := state.FromSGF("(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black]C[comment1](;B[pd];W[dd];B[pp];W[dp])(;B[dd];W[ee]))")
+	s, err := state.FromSGF(sgfsamples.SimpleWithComment)
 	if err != nil {
 		t.Error(err)
 	}
@@ -63,7 +64,7 @@ func TestField1(t *testing.T) {
 }
 
 func TestDepth(t *testing.T) {
-	s, err := state.FromSGF("(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black]C[comment1](;B[pd];W[dd];B[pp];W[dp])(;B[dd];W[ee]))")
+	s, err := state.FromSGF(sgfsamples.SimpleWithComment)
 	if err != nil {
 		t.Error(err)
 	}
@@ -75,7 +76,7 @@ func TestDepth(t *testing.T) {
 }
 
 func TestChild(t *testing.T) {
-	s, err := state.FromSGF("(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black]C[comment1](;B[pd];W[dd];B[pp];W[dp])(;B[dd];W[ee]))")
+	s, err := state.FromSGF(sgfsamples.SimpleWithComment)
 	if err != nil {
 		t.Error(err)
 	}
@@ -89,28 +90,8 @@ func TestChild(t *testing.T) {
 	}
 }
 
-/*
-func TestGraft(t *testing.T) {
-	s, err := state.FromSGF("(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black]C[comment1](;B[pd];W[dd];B[pp];W[dp])(;B[dd];W[ee]))")
-	if err != nil {
-		t.Error(err)
-	}
-
-	branch := s.Nodes[3].Copy()
-
-	// didn't reindex, but that's not what this is testing
-	s.Root.Graft(branch)
-
-	coord := &core.Coord{15, 15}
-	_, has := s.Root.HasChild(coord, core.Black)
-	if !has {
-		t.Errorf("failed to find child")
-	}
-}
-*/
-
 func TestTrunkNum(t *testing.T) {
-	s, err := state.FromSGF("(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black](;B[pd];W[dd];B[pp];W[dp])(;B[dd];W[ee]))")
+	s, err := state.FromSGF(sgfsamples.SimpleTwoBranches)
 	if err != nil {
 		t.Error(err)
 	}
@@ -125,7 +106,7 @@ func TestTrunkNum(t *testing.T) {
 }
 
 func TestCopy(t *testing.T) {
-	s, err := state.FromSGF("(;PW[White]RU[Japanese]KM[6.5]GM[1]FF[4]CA[UTF-8]SZ[19]PB[Black](;B[pd];W[dd];B[pp];W[dp])(;B[dd];W[ee]))")
+	s, err := state.FromSGF(sgfsamples.SimpleTwoBranches)
 	if err != nil {
 		t.Error(err)
 	}

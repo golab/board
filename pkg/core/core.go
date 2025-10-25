@@ -390,6 +390,14 @@ type PatternMove struct {
 	Color Color
 }
 
+func NewPatternMove(x, y int, c Color) *PatternMove {
+	coord := &Coord{x, y}
+	return &PatternMove{
+		Coord: coord,
+		Color: c,
+	}
+}
+
 // EventJSON is the basic struct for sending and receiving messages over
 // the websockets
 // TODO: see if we can remove Color

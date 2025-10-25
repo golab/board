@@ -143,48 +143,6 @@ func (s *State) AddFieldNode(fields map[string][]string, index int) *core.Diff {
 
 	// compute diff
 	diff := s.ComputeDiffSetup(index)
-	/*
-		diffAdd := []*core.StoneSet{}
-		if val, ok := fields["AB"]; ok {
-			add := core.NewCoordSet()
-			for _, v := range val {
-				add.Add(core.LettersToCoord(v))
-			}
-			stoneSet := core.NewStoneSet(add, core.Black)
-			diffAdd = append(diffAdd, stoneSet)
-		}
-
-		if val, ok := fields["AW"]; ok {
-			add := core.NewCoordSet()
-			for _, v := range val {
-				add.Add(core.LettersToCoord(v))
-			}
-			stoneSet := core.NewStoneSet(add, core.White)
-			diffAdd = append(diffAdd, stoneSet)
-		}
-
-		diffRemove := []*core.StoneSet{}
-		if val, ok := fields["AE"]; ok {
-			csBlack := core.NewCoordSet()
-			csWhite := core.NewCoordSet()
-			for _, v := range val {
-				coord := core.LettersToCoord(v)
-				col := s.Board.Get(coord)
-				if col == core.Black {
-					csBlack.Add(coord)
-				} else if col == core.White {
-					csWhite.Add(coord)
-				}
-			}
-			removeBlack := core.NewStoneSet(csBlack, core.Black)
-			removeWhite := core.NewStoneSet(csWhite, core.White)
-			diffRemove = append(diffRemove, removeBlack)
-			diffRemove = append(diffRemove, removeWhite)
-		}
-
-		diff := core.NewDiff(diffAdd, diffRemove)
-	*/
-
 	s.Board.ApplyDiff(diff)
 	s.Current.SetDiff(diff)
 	return diff
@@ -962,6 +920,7 @@ func FromSGF(data string) (*State, error) {
 				stack = append(stack, "<")
 				stack = append(stack, node.Down[i])
 			}
+			// TODO: this might be wrong in some cases
 			state.Head = state.Current
 		}
 	}

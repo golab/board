@@ -7,7 +7,7 @@ import (
 func Equal[V comparable](t *testing.T, got, expected V, msg string) {
 	t.Helper()
 	if got != expected {
-		t.Error(msg)
+		t.Errorf("%s: (expected %v, got %v)", msg, expected, got)
 	}
 }
 
@@ -18,4 +18,8 @@ func True(t *testing.T, got bool, msg string) {
 func Zero[V comparable](t *testing.T, got V, msg string) {
 	var expected V
 	Equal(t, got, expected, msg)
+}
+
+func NotNil(t *testing.T, err error, msg string) {
+	True(t, err == nil, msg)
 }
