@@ -163,3 +163,57 @@ func TestStateJSON(t *testing.T) {
 	assert.Equal(t, tr.Up, 0, "up")
 	assert.Equal(t, tr.Root, 0, "root")
 }
+
+func TestGenerateMarks(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
+	assert.NotNil(t, err, "error should be nil")
+
+	s.Right()
+
+	// add a triangle
+	evt := &core.EventJSON{Value: []interface{}{9.0, 9.0}}
+	_, err = s.HandleAddTriangle(evt)
+	assert.NotNil(t, err, "err should be nil")
+
+	// add a square
+	evt = &core.EventJSON{Value: []interface{}{10.0, 10.0}}
+	_, err = s.HandleAddSquare(evt)
+	assert.NotNil(t, err, "err should be nil")
+
+	// add a letter
+	value := map[string]interface{}{
+		"coords": []interface{}{11.0, 11.0},
+		"letter": "A",
+	}
+	evt = &core.EventJSON{Value: value}
+	_, err = s.HandleAddLetter(evt)
+	assert.NotNil(t, err, "err should be nil")
+
+	// add a number
+	value = map[string]interface{}{
+		"coords": []interface{}{12.0, 12.0},
+		"number": 1.0,
+	}
+	evt = &core.EventJSON{Value: value}
+	_, err = s.HandleAddNumber(evt)
+	assert.NotNil(t, err, "err should be nil")
+
+	marks := s.GenerateMarks()
+
+	assert.True(t, marks.Current.Equal(&core.Coord{X: 15, Y: 3}), "current")
+
+	assert.Equal(t, len(marks.Triangles), 1, "len(triangles)")
+	assert.True(t, marks.Triangles[0].Equal(&core.Coord{X: 9, Y: 9}), "triangles")
+
+	assert.Equal(t, len(marks.Squares), 1, "len(squares)")
+	assert.True(t, marks.Squares[0].Equal(&core.Coord{X: 10, Y: 10}), "squares")
+
+	assert.Equal(t, len(marks.Labels), 2, "len(labels)")
+
+	assert.True(t, marks.Labels[0].Coord.Equal(&core.Coord{X: 11, Y: 11}), "letter coord")
+	assert.True(t, marks.Labels[1].Coord.Equal(&core.Coord{X: 12, Y: 12}), "number coord")
+
+	assert.Equal(t, marks.Labels[0].Text, "A", "letter")
+	assert.Equal(t, marks.Labels[1].Text, "1", "number")
+
+}

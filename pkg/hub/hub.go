@@ -225,7 +225,6 @@ func (h *Hub) GetOrCreateRoom(roomID string) *room.Room {
 }
 
 func (h *Hub) HandlerWrapper(ws *websocket.Conn) {
-
 	// first find the url they want
 	url := ws.Request().URL.String()
 
