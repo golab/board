@@ -14,19 +14,41 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/hub"
 	"github.com/jarednogo/board/pkg/loader"
 	"github.com/jarednogo/board/pkg/socket"
 )
 
-func TestHub(t *testing.T) {
+func TestHub1(t *testing.T) {
 	h, err := hub.NewHubWithDB(loader.NewMemoryLoader())
 	assert.NoError(t, err, "new hub")
 	h.Load()
 
-	mock1 := socket.NewMockRoomConn()
+	mock := socket.NewMockRoomConn()
 	roomID := "someboard"
-	h.Handler(mock1, roomID)
+	h.Handler(mock, roomID)
 
 	h.Save()
+}
+
+func TestHub2(t *testing.T) {
+	h, err := hub.NewHubWithDB(loader.NewMemoryLoader())
+	assert.NoError(t, err, "new hub")
+
+	mock := socket.NewMockRoomConn()
+	mock.QueuedEvents = append(mock.QueuedEvents,
+		&core.EventJSON{
+			Event: "pass",
+			Value: 1.0,
+		},
+	)
+	roomID := "someboard"
+	h.Handler(mock, roomID)
+
+	// 3 events:
+	// initial frame
+	// connected users
+	// pass event
+	assert.Equal(t, len(mock.SavedEvents), 3, "mock.receivedEvents")
 }

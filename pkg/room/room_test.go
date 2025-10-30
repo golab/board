@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package room_test
 
 import (
+	"io"
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
@@ -37,6 +38,21 @@ func TestBroadcast(t *testing.T) {
 
 	assert.Equal(t, len(mock1.SavedEvents), 2, "expected mock1 to recieve a test event")
 	assert.Equal(t, len(mock2.SavedEvents), 2, "expected mock2 to recieve a test event")
+}
+
+func TestBroadcastMessage(t *testing.T) {
+	r := room.NewRoom("")
+	mock1 := socket.NewMockRoomConn()
+	mock2 := socket.NewMockRoomConn()
+
+	r.RegisterConnection(mock1)
+	r.RegisterConnection(mock2)
+
+	message := core.NewMessage("foobar", 30)
+	r.BroadcastHubMessage(message)
+
+	assert.Equal(t, len(mock1.SavedEvents), 2, "expected mock1 to recieve a test message")
+	assert.Equal(t, len(mock2.SavedEvents), 2, "expected mock2 to recieve a test message")
 }
 
 func TestPlugin(t *testing.T) {
@@ -95,4 +111,37 @@ func TestHandlers(t *testing.T) {
 func TestFetcher(t *testing.T) {
 	r := room.NewRoom("")
 	r.SetFetcher(fetch.NewMockFetcher())
+}
+
+func TestSaveLoad(t *testing.T) {
+	r := room.NewRoom("")
+	r.SetPassword("foobar")
+	l := r.Save()
+	r2, err := room.Load(l)
+	assert.NoError(t, err, "room.Load")
+	assert.True(t, r2.HasPassword(), "r.HasPassword")
+	assert.Equal(t, r2.GetPassword(), "foobar", "r.GetPassword")
+}
+
+func TestClose(t *testing.T) {
+	r := room.NewRoom("")
+	mock1 := socket.NewMockRoomConn()
+	mock2 := socket.NewMockRoomConn()
+	mock3 := socket.NewMockRoomConn()
+	r.RegisterConnection(mock1)
+	r.RegisterConnection(mock2)
+	r.RegisterConnection(mock3)
+	err := r.Close()
+	assert.NoError(t, err, "r.Close")
+	assert.True(t, mock1.Closed, "mock1 connection closed")
+	assert.True(t, mock2.Closed, "mock2 connection closed")
+	assert.True(t, mock3.Closed, "mock3 connection closed")
+}
+
+func TestHandle(t *testing.T) {
+	r := room.NewRoom("")
+	// mock initializes with zero events so automatically sends an error
+	mock := socket.NewMockRoomConn()
+	err := r.Handle(mock)
+	assert.ErrorIs(t, err, io.EOF, "r.Handle")
 }

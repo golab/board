@@ -26,3 +26,7 @@ func NoError(t *testing.T, err error, msg string) {
 		t.Errorf("%s: (expected nil error, got %v)", msg, err)
 	}
 }
+
+func ErrorIs(t *testing.T, got, expected error, msg string) {
+	Equal(t, got, expected, msg)
+}

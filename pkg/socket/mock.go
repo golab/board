@@ -11,7 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package socket
 
 import (
-	"fmt"
+	"io"
 
 	"github.com/google/uuid"
 	"github.com/jarednogo/board/pkg/core"
@@ -22,6 +22,7 @@ type MockRoomConn struct {
 	index        int
 	SavedEvents  []*core.EventJSON
 	id           string
+	Closed       bool
 }
 
 func NewMockRoomConn() *MockRoomConn {
@@ -36,7 +37,7 @@ func (mcr *MockRoomConn) SendEvent(evt *core.EventJSON) error {
 
 func (mcr *MockRoomConn) ReceiveEvent() (*core.EventJSON, error) {
 	if len(mcr.QueuedEvents) >= mcr.index {
-		return nil, fmt.Errorf("EOF")
+		return nil, io.EOF
 	}
 	i := mcr.index
 	mcr.index++
@@ -44,6 +45,7 @@ func (mcr *MockRoomConn) ReceiveEvent() (*core.EventJSON, error) {
 }
 
 func (mcr *MockRoomConn) Close() error {
+	mcr.Closed = true
 	return nil
 }
 

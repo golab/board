@@ -132,6 +132,9 @@ func (r *Room) Close() error {
 			errs = append(errs, err)
 		}
 	}
+	if len(errs) == 0 {
+		return nil
+	}
 	return fmt.Errorf("%v", errs)
 }
 
@@ -141,6 +144,14 @@ func (r *Room) SetFetcher(f fetch.Fetcher) {
 
 func (r *Room) HasPassword() bool {
 	return r.password != ""
+}
+
+func (r *Room) GetPassword() string {
+	return r.password
+}
+
+func (r *Room) SetPassword(p string) {
+	r.password = p
 }
 
 func (r *Room) SendTo(id string, evt *core.EventJSON) {
