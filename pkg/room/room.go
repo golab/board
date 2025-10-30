@@ -76,8 +76,8 @@ func Load(load *loader.LoadJSON) (*Room, error) {
 
 	st.SetPrefs(load.Prefs)
 
-	st.NextIndex = load.NextIndex
-	st.InputBuffer = load.Buffer
+	st.SetNextIndex(load.NextIndex)
+	st.SetInputBuffer(load.Buffer)
 
 	loc := load.Location
 	if loc != "" {
@@ -99,7 +99,7 @@ func (r *Room) ID() string {
 }
 
 func (r *Room) Timeout() float64 {
-	return r.state.Timeout
+	return r.state.GetTimeout()
 }
 
 func (r *Room) LastActive() *time.Time {

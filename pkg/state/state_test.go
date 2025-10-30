@@ -23,7 +23,7 @@ func TestState1(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleFourMoves)
 
 	assert.NotNil(t, err, "error should be nil")
-	assert.Equal(t, s.Size, 19, "error with state")
+	assert.Equal(t, s.Size(), 19, "error with state")
 }
 
 func TestState2(t *testing.T) {
@@ -70,18 +70,18 @@ func TestState4(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NotNil(t, err, "error should be nil")
 
-	assert.Equal(t, s.Head.Index, 8, "head index")
+	assert.Equal(t, s.Head().Index, 8, "head index")
 
 	// push a node to the head
 	s.PushHead(0, 0, core.Black)
-	assert.Equal(t, s.Current.Index, 0, "current index")
+	assert.Equal(t, s.Current().Index, 0, "current index")
 
 	// go to the most recently pushed node
 	s.GotoIndex(9) //nolint:errcheck
 
 	// since we're at the head, we will "track" along
 	s.PushHead(0, 1, core.White)
-	assert.Equal(t, s.Current.Index, 10, "current index")
+	assert.Equal(t, s.Current().Index, 10, "current index")
 }
 
 func TestAddPatternNodes(t *testing.T) {
@@ -97,10 +97,10 @@ func TestAddPatternNodes(t *testing.T) {
 
 	s.AddPatternNodes(moves)
 
-	assert.Equal(t, len(s.Current.Down), 1, "len(down)")
+	assert.Equal(t, len(s.Current().Down), 1, "len(down)")
 
 	s.FastForward()
-	assert.Equal(t, s.Current.Index, 3, "current index")
+	assert.Equal(t, s.Current().Index, 3, "current index")
 }
 
 func TestCut(t *testing.T) {
@@ -109,8 +109,8 @@ func TestCut(t *testing.T) {
 
 	s.GotoIndex(5) //nolint:errcheck
 	s.Cut()
-	assert.Equal(t, s.Current.Index, 4, "current index")
-	assert.Equal(t, len(s.Current.Down), 0, "failed cut")
+	assert.Equal(t, s.Current().Index, 4, "current index")
+	assert.Equal(t, len(s.Current().Down), 0, "failed cut")
 }
 
 func TestGraft(t *testing.T) {
@@ -129,22 +129,22 @@ func TestGraft(t *testing.T) {
 	s.GotoIndex(4) //nolint:errcheck
 	s.Down()
 	s.FastForward()
-	assert.Equal(t, s.Current.Index, 11, "current index")
+	assert.Equal(t, s.Current().Index, 11, "current index")
 
 	// smart graft
 	s.SmartGraft(4, moves)
 	s.FastForward()
-	assert.Equal(t, s.Current.Index, 12, "current index")
+	assert.Equal(t, s.Current().Index, 12, "current index")
 
 	// double-checking Up works
 	s.GotoIndex(4) //nolint:errcheck
 	s.Up()
 	s.FastForward()
-	assert.Equal(t, s.Current.Index, 8, "current index")
+	assert.Equal(t, s.Current().Index, 8, "current index")
 
 	// check for gotocoord
 	s.GotoCoord(3, 3)
-	assert.Equal(t, s.Current.Index, 2, "current index")
+	assert.Equal(t, s.Current().Index, 2, "current index")
 }
 
 func TestStateJSON(t *testing.T) {

@@ -240,11 +240,11 @@ func (room *Room) HandleRequestSGF(evt *core.EventJSON) *core.EventJSON {
 func (room *Room) HandleTrash(evt *core.EventJSON) *core.EventJSON {
 
 	// reset room
-	oldBuffer := room.state.InputBuffer
-	room.state = state.NewState(room.state.Size, true)
+	oldBuffer := room.state.GetInputBuffer()
+	room.state = state.NewState(room.state.Size(), true)
 
 	// reuse old inputbuffer
-	room.state.InputBuffer = oldBuffer
+	room.state.SetInputBuffer(oldBuffer)
 
 	frame := room.state.GenerateFullFrame(core.Full)
 	bcast := core.FrameEvent(frame)
@@ -284,11 +284,11 @@ func (room *Room) HandleUpdateSettings(evt *core.EventJSON) *core.EventJSON {
 	}
 	settings := &Settings{buffer, size, hashed}
 
-	room.state.InputBuffer = settings.Buffer
-	if settings.Size != room.state.Size {
+	room.state.SetInputBuffer(settings.Buffer)
+	if settings.Size != room.state.Size() {
 		// essentially trashing
 		room.state = state.NewState(settings.Size, true)
-		room.state.InputBuffer = buffer
+		room.state.SetInputBuffer(buffer)
 	}
 
 	// can be changed
@@ -416,7 +416,7 @@ func (room *Room) OutsideBuffer(handler EventHandler) EventHandler {
 		if room.lastUser != evt.UserID {
 			now := time.Now()
 			diff := now.Sub(*room.lastActive)
-			if diff.Milliseconds() < room.state.InputBuffer {
+			if diff.Milliseconds() < room.state.GetInputBuffer() {
 				// don't do the next handler if too fast
 				return evt
 			}

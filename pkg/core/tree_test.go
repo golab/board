@@ -26,9 +26,9 @@ func TestFmap(t *testing.T) {
 
 	core.Fmap(func(n *core.TreeNode) {
 		n.Color = core.Opposite(n.Color)
-	}, s.Root)
+	}, s.Root())
 
-	node := s.Nodes[1]
+	node := s.Nodes()[1]
 	if node.Color != core.White {
 		t.Errorf("fmap failed")
 	}
@@ -41,7 +41,7 @@ func TestField1(t *testing.T) {
 		t.Error(err)
 	}
 
-	root := s.Root
+	root := s.Root()
 	root.AddField("C", "some comment")
 
 	found := false
@@ -69,7 +69,7 @@ func TestDepth(t *testing.T) {
 		t.Error(err)
 	}
 
-	m := s.Root.MaxDepth()
+	m := s.Root().MaxDepth()
 	if m != 4 {
 		t.Errorf("max depth failed, expected 4, got: %d", m)
 	}
@@ -81,7 +81,7 @@ func TestChild(t *testing.T) {
 		t.Error(err)
 	}
 	coord := &core.Coord{3, 3}
-	ind, has := s.Root.HasChild(coord, core.Black)
+	ind, has := s.Root().HasChild(coord, core.Black)
 	if !has {
 		t.Errorf("failed to find child")
 	}
@@ -96,11 +96,11 @@ func TestTrunkNum(t *testing.T) {
 		t.Error(err)
 	}
 
-	if tn := s.Root.TrunkNum(5); tn != -1 {
+	if tn := s.Root().TrunkNum(5); tn != -1 {
 		t.Errorf("error: expected -1 (got %d)", tn)
 	}
 
-	if tn := s.Root.TrunkNum(4); tn != 4 {
+	if tn := s.Root().TrunkNum(4); tn != 4 {
 		t.Errorf("error: expected 4 (got %d)", tn)
 	}
 }
@@ -111,8 +111,9 @@ func TestCopy(t *testing.T) {
 		t.Error(err)
 	}
 
-	c := s.Root.Copy()
-	if !s.Root.ShallowEqual(c) {
-		t.Errorf("error copying: %v %v", s.Root, c)
+	root := s.Root()
+	c := root.Copy()
+	if !root.ShallowEqual(c) {
+		t.Errorf("error copying: %v %v", root, c)
 	}
 }

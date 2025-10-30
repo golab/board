@@ -20,7 +20,7 @@ import (
 // still i'm keeping them around in case i split it out again
 
 func (r *Room) HeadColor() core.Color {
-	return r.state.Head.Color
+	return r.state.HeadColor()
 }
 
 func (r *Room) PushHead(x, y int, c core.Color) {

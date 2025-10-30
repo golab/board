@@ -44,12 +44,14 @@ func TestScore(t *testing.T) {
 	markedDead := core.NewCoordSet()
 	for _, d := range dead {
 		coord := &core.Coord{X: d[0], Y: d[1]}
-		gp := s.Board.FindGroup(coord)
+		gp := s.Board().FindGroup(coord)
 		markedDead.AddAll(gp.Coords)
 	}
 
-	blackArea, whiteArea, blackDead, whiteDead, dame := s.Board.Score(
+	blackArea, whiteArea, blackDead, whiteDead, dame := s.Board().Score(
 		markedDead, core.NewCoordSet())
+
+	current := s.Current()
 
 	if len(blackArea) != 56 {
 		t.Errorf("expected len(blackArea) == 56 (got %d)", len(blackArea))
@@ -67,20 +69,20 @@ func TestScore(t *testing.T) {
 		t.Errorf("expected len(whiteDead) == 9 (got %d)", len(whiteDead))
 	}
 
-	if s.Current.BlackCaps != 27 {
-		t.Errorf("expected BlackCaps == 27 (got %d)", s.Current.BlackCaps)
+	if current.BlackCaps != 27 {
+		t.Errorf("expected BlackCaps == 27 (got %d)", current.BlackCaps)
 	}
 
-	if s.Current.WhiteCaps != 25 {
-		t.Errorf("expected WhiteCaps == 25 (got %d)", s.Current.WhiteCaps)
+	if current.WhiteCaps != 25 {
+		t.Errorf("expected WhiteCaps == 25 (got %d)", current.WhiteCaps)
 	}
 
 	if len(dame) != 7 {
 		t.Errorf("expected len(dame) == 7 (got %d)", len(dame))
 	}
 
-	blackScore := len(blackArea) + len(whiteDead) + s.Current.BlackCaps
-	whiteScore := len(whiteArea) + len(blackDead) + s.Current.WhiteCaps
+	blackScore := len(blackArea) + len(whiteDead) + current.BlackCaps
+	whiteScore := len(whiteArea) + len(blackDead) + current.WhiteCaps
 
 	if blackScore != 92 {
 		t.Errorf("expected blackScore == 92 (got %d)", blackScore)

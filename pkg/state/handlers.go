@@ -27,7 +27,7 @@ func (s *State) HandleAddStone(evt *core.EventJSON) (*core.Frame, error) {
 
 	x := c.X
 	y := c.Y
-	if x >= s.Size || y >= s.Size || x < 0 || y < 0 {
+	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
@@ -35,13 +35,13 @@ func (s *State) HandleAddStone(evt *core.EventJSON) (*core.Frame, error) {
 
 	// if a child already exists with that coord and col, then actually
 	// this is just a gotoindex operation
-	if child, ok := s.Current.HasChild(c, col); ok {
+	if child, ok := s.current.HasChild(c, col); ok {
 		s.GotoIndex(child) //nolint: errcheck
 		return s.GenerateFullFrame(core.CurrentAndPreferred), nil
 	}
 
 	// do nothing on a suicide move
-	if !s.Board.Legal(c, col) {
+	if !s.board.Legal(c, col) {
 		return nil, nil
 	}
 
@@ -63,8 +63,8 @@ func (s *State) HandleAddStone(evt *core.EventJSON) (*core.Frame, error) {
 		Comments:  nil,
 		Metadata:  nil,
 		TreeJSON:  s.CreateTreeJSON(core.PartialNodes),
-		BlackCaps: s.Current.BlackCaps,
-		WhiteCaps: s.Current.WhiteCaps,
+		BlackCaps: s.current.BlackCaps,
+		WhiteCaps: s.current.WhiteCaps,
 	}, nil
 }
 
@@ -86,8 +86,8 @@ func (s *State) HandlePass(evt *core.EventJSON) (*core.Frame, error) {
 		Comments:  nil,
 		Metadata:  nil,
 		TreeJSON:  s.CreateTreeJSON(core.PartialNodes),
-		BlackCaps: s.Current.BlackCaps,
-		WhiteCaps: s.Current.WhiteCaps,
+		BlackCaps: s.current.BlackCaps,
+		WhiteCaps: s.current.WhiteCaps,
 	}, nil
 }
 
@@ -99,7 +99,7 @@ func (s *State) HandleRemoveStone(evt *core.EventJSON) (*core.Frame, error) {
 
 	x := c.X
 	y := c.Y
-	if x >= s.Size || y >= s.Size || x < 0 || y < 0 {
+	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
@@ -114,8 +114,8 @@ func (s *State) HandleRemoveStone(evt *core.EventJSON) (*core.Frame, error) {
 		Comments:  nil,
 		Metadata:  nil,
 		TreeJSON:  s.CreateTreeJSON(core.PartialNodes),
-		BlackCaps: s.Current.BlackCaps,
-		WhiteCaps: s.Current.WhiteCaps,
+		BlackCaps: s.current.BlackCaps,
+		WhiteCaps: s.current.WhiteCaps,
 	}, nil
 }
 
@@ -127,11 +127,11 @@ func (s *State) HandleAddTriangle(evt *core.EventJSON) (*core.Frame, error) {
 
 	x := c.X
 	y := c.Y
-	if x >= s.Size || y >= s.Size || x < 0 || y < 0 {
+	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 	l := c.ToLetters()
-	s.Current.AddField("TR", l)
+	s.current.AddField("TR", l)
 	return nil, nil
 }
 
@@ -143,11 +143,11 @@ func (s *State) HandleAddSquare(evt *core.EventJSON) (*core.Frame, error) {
 
 	x := c.X
 	y := c.Y
-	if x >= s.Size || y >= s.Size || x < 0 || y < 0 {
+	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 	l := c.ToLetters()
-	s.Current.AddField("SQ", l)
+	s.current.AddField("SQ", l)
 	return nil, nil
 }
 
@@ -160,14 +160,14 @@ func (s *State) HandleAddLetter(evt *core.EventJSON) (*core.Frame, error) {
 
 	x := c.X
 	y := c.Y
-	if x >= s.Size || y >= s.Size || x < 0 || y < 0 {
+	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
 	l := c.ToLetters()
 	letter := val["letter"].(string)
 	lb := fmt.Sprintf("%s:%s", l, letter)
-	s.Current.AddField("LB", lb)
+	s.current.AddField("LB", lb)
 	return nil, nil
 }
 
@@ -180,14 +180,14 @@ func (s *State) HandleAddNumber(evt *core.EventJSON) (*core.Frame, error) {
 
 	x := c.X
 	y := c.Y
-	if x >= s.Size || y >= s.Size || x < 0 || y < 0 {
+	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
 	l := c.ToLetters()
 	number := int(val["number"].(float64))
 	lb := fmt.Sprintf("%s:%d", l, number)
-	s.Current.AddField("LB", lb)
+	s.current.AddField("LB", lb)
 	return nil, nil
 }
 
@@ -198,14 +198,14 @@ func (s *State) HandleRemoveMark(evt *core.EventJSON) (*core.Frame, error) {
 	}
 
 	l := c.ToLetters()
-	for key, values := range s.Current.Fields {
+	for key, values := range s.current.Fields {
 		for _, value := range values {
 			if key == "LB" && value[:2] == l {
-				s.Current.RemoveField("LB", value)
+				s.current.RemoveField("LB", value)
 			} else if key == "SQ" && value == l {
-				s.Current.RemoveField("SQ", l)
+				s.current.RemoveField("SQ", l)
 			} else if key == "TR" && value == l {
-				s.Current.RemoveField("TR", l)
+				s.current.RemoveField("TR", l)
 			}
 		}
 	}
@@ -223,8 +223,8 @@ func (s *State) HandleLeft() (*core.Frame, error) {
 		Comments:  comments,
 		Metadata:  nil,
 		TreeJSON:  s.CreateTreeJSON(core.CurrentOnly),
-		BlackCaps: s.Current.BlackCaps,
-		WhiteCaps: s.Current.WhiteCaps,
+		BlackCaps: s.current.BlackCaps,
+		WhiteCaps: s.current.WhiteCaps,
 	}, nil
 }
 
@@ -240,8 +240,8 @@ func (s *State) HandleRight() (*core.Frame, error) {
 		Comments:  comments,
 		Metadata:  nil,
 		TreeJSON:  s.CreateTreeJSON(core.CurrentOnly),
-		BlackCaps: s.Current.BlackCaps,
-		WhiteCaps: s.Current.WhiteCaps,
+		BlackCaps: s.current.BlackCaps,
+		WhiteCaps: s.current.WhiteCaps,
 	}, nil
 }
 
@@ -257,8 +257,8 @@ func (s *State) HandleUp() (*core.Frame, error) {
 		Comments:  nil,
 		Metadata:  nil,
 		TreeJSON:  s.CreateTreeJSON(core.CurrentAndPreferred),
-		BlackCaps: s.Current.BlackCaps,
-		WhiteCaps: s.Current.WhiteCaps,
+		BlackCaps: s.current.BlackCaps,
+		WhiteCaps: s.current.WhiteCaps,
 	}, nil
 }
 
@@ -275,8 +275,8 @@ func (s *State) HandleDown() (*core.Frame, error) {
 		Comments:  nil,
 		Metadata:  nil,
 		TreeJSON:  s.CreateTreeJSON(core.CurrentAndPreferred),
-		BlackCaps: s.Current.BlackCaps,
-		WhiteCaps: s.Current.WhiteCaps,
+		BlackCaps: s.current.BlackCaps,
+		WhiteCaps: s.current.WhiteCaps,
 	}, nil
 }
 
@@ -313,7 +313,7 @@ func (s *State) HandleGotoCoord(evt *core.EventJSON) (*core.Frame, error) {
 
 func (s *State) HandleComment(evt *core.EventJSON) (*core.Frame, error) {
 	val := evt.Value.(string)
-	s.Current.AddField("C", val+"\n")
+	s.current.AddField("C", val+"\n")
 	return nil, nil
 }
 
@@ -338,13 +338,13 @@ func (s *State) HandleDraw(evt *core.EventJSON) (*core.Frame, error) {
 	color := vals[4].(string)
 
 	value := fmt.Sprintf("%.4f:%.4f:%.4f:%.4f:%s", x0, y0, x1, y1, color)
-	s.Current.AddField("PX", value)
+	s.current.AddField("PX", value)
 	return nil, nil
 
 }
 
 func (s *State) HandleErasePen() (*core.Frame, error) {
-	delete(s.Current.Fields, "PX")
+	delete(s.current.Fields, "PX")
 	return nil, nil
 }
 
@@ -359,23 +359,23 @@ func (s *State) HandleCut() (*core.Frame, error) {
 		Comments:  comments,
 		Metadata:  nil,
 		TreeJSON:  s.CreateTreeJSON(core.Full),
-		BlackCaps: s.Current.BlackCaps,
-		WhiteCaps: s.Current.WhiteCaps,
+		BlackCaps: s.current.BlackCaps,
+		WhiteCaps: s.current.WhiteCaps,
 	}, nil
 }
 
 func (s *State) HandleCopy() (*core.Frame, error) {
-	s.Clipboard = s.Current.Copy()
+	s.clipboard = s.current.Copy()
 	return nil, nil
 }
 
 func (s *State) HandleClipboard() (*core.Frame, error) {
-	if s.Clipboard == nil {
+	if s.clipboard == nil {
 		return nil, nil
 	}
 
 	// keep a copy of the clipboard unaltered
-	branch := s.Clipboard.Copy()
+	branch := s.clipboard.Copy()
 
 	// first give the copy indexes
 	// only possible with state context because of GetNextIndex
@@ -384,15 +384,15 @@ func (s *State) HandleClipboard() (*core.Frame, error) {
 	core.Fmap(func(n *core.TreeNode) {
 		i := s.GetNextIndex()
 		n.Index = i
-		s.Nodes[i] = n
+		s.nodes[i] = n
 	}, branch)
 
 	// set parent and child relationships
-	branch.SetParent(s.Current)
-	s.Current.Down = append(s.Current.Down, branch)
+	branch.SetParent(s.current)
+	s.current.Down = append(s.current.Down, branch)
 
 	// save the parent pref
-	savedPref := s.Current.PreferredChild
+	savedPref := s.current.PreferredChild
 
 	// recompute depth
 	branch.RecomputeDepth()
@@ -407,7 +407,7 @@ func (s *State) HandleClipboard() (*core.Frame, error) {
 	}, branch)
 
 	// restore savedpref
-	s.Current.PreferredChild = savedPref
+	s.current.PreferredChild = savedPref
 
 	marks := s.GenerateMarks()
 	return &core.Frame{
@@ -417,8 +417,8 @@ func (s *State) HandleClipboard() (*core.Frame, error) {
 		Comments:  nil,
 		Metadata:  nil,
 		TreeJSON:  s.CreateTreeJSON(core.Full),
-		BlackCaps: s.Current.BlackCaps,
-		WhiteCaps: s.Current.WhiteCaps,
+		BlackCaps: s.current.BlackCaps,
+		WhiteCaps: s.current.WhiteCaps,
 	}, nil
 }
 
@@ -441,7 +441,7 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 	mv64, err := strconv.ParseInt(tokens[0], 10, 64)
 
 	if err != nil {
-		parentIndex = s.Current.Index
+		parentIndex = s.current.Index
 
 	} else {
 		start = 1
@@ -450,7 +450,7 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 
 		// interpret the move number as a trunk number, and find the
 		// corresponding index
-		parentIndex = s.Root.TrunkNum(mv)
+		parentIndex = s.root.TrunkNum(mv)
 
 		if parentIndex == -1 {
 			return nil, fmt.Errorf("trunk too short")
@@ -465,7 +465,7 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 
 	// setup the moves array and initial color
 	moves := []*core.PatternMove{}
-	col := s.Nodes[parentIndex].Color
+	col := s.nodes[parentIndex].Color
 	if col == core.NoColor {
 		col = core.White
 	}
@@ -474,7 +474,7 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 	for _, tok := range tokens[start:] {
 
 		// convert to a Coord
-		coord, err := core.AlphanumericToCoord(tok, s.Size)
+		coord, err := core.AlphanumericToCoord(tok, s.size)
 		if err != nil {
 			return nil, err
 		}
@@ -494,12 +494,12 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 }
 
 func (s *State) HandleScore() (*core.Frame, error) {
-	blackArea, whiteArea, blackDead, whiteDead, dame := s.Board.Score(s.MarkedDead, s.MarkedDame)
+	blackArea, whiteArea, blackDead, whiteDead, dame := s.board.Score(s.markedDead, s.markedDame)
 	//fmt.Println()
-	//fmt.Println(s.Board)
+	//fmt.Println(s.board)
 	frame := &core.Frame{
-		BlackCaps: s.Current.BlackCaps + len(blackArea) + len(whiteDead),
-		WhiteCaps: s.Current.WhiteCaps + len(whiteArea) + len(blackDead),
+		BlackCaps: s.current.BlackCaps + len(blackArea) + len(whiteDead),
+		WhiteCaps: s.current.WhiteCaps + len(whiteArea) + len(blackDead),
 		BlackArea: blackArea,
 		WhiteArea: whiteArea,
 		Dame:      dame,
@@ -515,23 +515,23 @@ func (s *State) HandleMarkDead(evt *core.EventJSON) (*core.Frame, error) {
 	}
 	x := c.X
 	y := c.Y
-	if x >= s.Size || y >= s.Size || x < 0 || y < 0 {
+	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
-	if s.Board.Get(c) == core.NoColor {
-		dame, _ := s.Board.FindArea(c, core.NewCoordSet())
-		if s.MarkedDame.Has(c) {
-			s.MarkedDame.RemoveAll(dame)
+	if s.board.Get(c) == core.NoColor {
+		dame, _ := s.board.FindArea(c, core.NewCoordSet())
+		if s.markedDame.Has(c) {
+			s.markedDame.RemoveAll(dame)
 		} else {
-			s.MarkedDame.AddAll(dame)
+			s.markedDame.AddAll(dame)
 		}
 	} else {
-		gp := s.Board.FindGroup(c)
-		if s.MarkedDead.Has(c) {
-			s.MarkedDead.RemoveAll(gp.Coords)
+		gp := s.board.FindGroup(c)
+		if s.markedDead.Has(c) {
+			s.markedDead.RemoveAll(gp.Coords)
 		} else {
-			s.MarkedDead.AddAll(gp.Coords)
+			s.markedDead.AddAll(gp.Coords)
 		}
 	}
 	return s.HandleScore()
