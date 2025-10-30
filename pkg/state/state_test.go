@@ -19,17 +19,17 @@ import (
 	"github.com/jarednogo/board/pkg/state"
 )
 
-func TestState1(t *testing.T) {
+func TestState(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleFourMoves)
 
-	assert.NotNil(t, err, "error should be nil")
+	assert.NoError(t, err, "error should be nil")
 	assert.Equal(t, s.Size(), 19, "error with state")
 }
 
 func TestState2(t *testing.T) {
 	input := sgfsamples.SimpleFourMoves
 	s, err := state.FromSGF(input)
-	assert.NotNil(t, err, "error should be nil")
+	assert.NoError(t, err, "error should be nil")
 
 	sgf := s.ToSGF(false)
 	sgfix := s.ToSGF(true)
@@ -41,7 +41,7 @@ func TestState2(t *testing.T) {
 
 func TestState3(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleTwoBranches)
-	assert.NotNil(t, err, "error should be nil")
+	assert.NoError(t, err, "error should be nil")
 
 	// index 5 is the start of the second branch from the root
 	s.GotoIndex(5) //nolint:errcheck
@@ -50,7 +50,7 @@ func TestState3(t *testing.T) {
 	assert.Equal(t, prefs["0"], 1, "prefs[0]")
 
 	err = s.SetPreferred(4)
-	assert.NotNil(t, err, "error should not be nil")
+	assert.NoError(t, err, "error should not be nil")
 
 	prefs = s.Prefs()
 	assert.Equal(t, prefs["0"], 0, "prefs[0]")
@@ -68,7 +68,7 @@ func TestState3(t *testing.T) {
 
 func TestState4(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NotNil(t, err, "error should be nil")
+	assert.NoError(t, err, "error should be nil")
 
 	assert.Equal(t, s.Head().Index, 8, "head index")
 
@@ -86,7 +86,7 @@ func TestState4(t *testing.T) {
 
 func TestAddPatternNodes(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.Empty)
-	assert.NotNil(t, err, "error should be nil")
+	assert.NoError(t, err, "error should be nil")
 
 	// add three new moves
 	moves := []*core.PatternMove{
@@ -105,7 +105,7 @@ func TestAddPatternNodes(t *testing.T) {
 
 func TestCut(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NotNil(t, err, "error should be nil")
+	assert.NoError(t, err, "error should be nil")
 
 	s.GotoIndex(5) //nolint:errcheck
 	s.Cut()
@@ -115,7 +115,7 @@ func TestCut(t *testing.T) {
 
 func TestGraft(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NotNil(t, err, "error should be nil")
+	assert.NoError(t, err, "error should be nil")
 
 	moves := []*core.PatternMove{
 		core.NewPatternMove(9, 9, core.Black),
@@ -149,7 +149,7 @@ func TestGraft(t *testing.T) {
 
 func TestStateJSON(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NotNil(t, err, "error should be nil")
+	assert.NoError(t, err, "error should be nil")
 
 	s.GotoIndex(4) //nolint:errcheck
 
@@ -166,19 +166,19 @@ func TestStateJSON(t *testing.T) {
 
 func TestGenerateMarks(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NotNil(t, err, "error should be nil")
+	assert.NoError(t, err, "error should be nil")
 
 	s.Right()
 
 	// add a triangle
 	evt := &core.EventJSON{Value: []interface{}{9.0, 9.0}}
 	_, err = s.HandleAddTriangle(evt)
-	assert.NotNil(t, err, "err should be nil")
+	assert.NoError(t, err, "err should be nil")
 
 	// add a square
 	evt = &core.EventJSON{Value: []interface{}{10.0, 10.0}}
 	_, err = s.HandleAddSquare(evt)
-	assert.NotNil(t, err, "err should be nil")
+	assert.NoError(t, err, "err should be nil")
 
 	// add a letter
 	value := map[string]interface{}{
@@ -187,7 +187,7 @@ func TestGenerateMarks(t *testing.T) {
 	}
 	evt = &core.EventJSON{Value: value}
 	_, err = s.HandleAddLetter(evt)
-	assert.NotNil(t, err, "err should be nil")
+	assert.NoError(t, err, "err should be nil")
 
 	// add a number
 	value = map[string]interface{}{
@@ -196,7 +196,7 @@ func TestGenerateMarks(t *testing.T) {
 	}
 	evt = &core.EventJSON{Value: value}
 	_, err = s.HandleAddNumber(evt)
-	assert.NotNil(t, err, "err should be nil")
+	assert.NoError(t, err, "err should be nil")
 
 	marks := s.GenerateMarks()
 

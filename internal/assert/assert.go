@@ -20,7 +20,7 @@ func Zero[V comparable](t *testing.T, got V, msg string) {
 	Equal(t, got, expected, msg)
 }
 
-func NotNil(t *testing.T, err error, msg string) {
+func NoError(t *testing.T, err error, msg string) {
 	t.Helper()
 	if err != nil {
 		t.Errorf("%s: (expected nil error, got %v)", msg, err)

@@ -21,7 +21,7 @@ import (
 
 func TestHub(t *testing.T) {
 	h, err := hub.NewHubWithDB(loader.NewMemoryLoader())
-	assert.NotNil(t, err, "new hub")
+	assert.NoError(t, err, "new hub")
 	h.Load()
 
 	mock1 := socket.NewMockRoomConn()
