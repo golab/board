@@ -44,14 +44,17 @@ type Hub struct {
 	db       loader.Loader
 }
 
-func NewHub() *Hub {
+func NewHub() (*Hub, error) {
 	// get database setup
 	db := loader.NewDefaultLoader()
 	return NewHubWithDB(db)
 }
 
-func NewHubWithDB(db loader.Loader) *Hub {
-	db.Setup()
+func NewHubWithDB(db loader.Loader) (*Hub, error) {
+	err := db.Setup()
+	if err != nil {
+		return nil, err
+	}
 	s := &Hub{
 		rooms:    make(map[string]*room.Room),
 		messages: []*core.Message{},
@@ -61,7 +64,7 @@ func NewHubWithDB(db loader.Loader) *Hub {
 	// start message loop
 	go s.MessageLoop()
 
-	return s
+	return s, nil
 }
 
 func (h *Hub) Save() {
@@ -78,11 +81,16 @@ func (h *Hub) Save() {
 }
 
 func (h *Hub) Load() {
-	rooms := h.db.LoadAllRooms()
+	rooms, err := h.db.LoadAllRooms()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	for _, load := range rooms {
 		r, err := room.Load(load)
 		if err != nil {
+			log.Println(err)
 			continue
 		}
 
@@ -126,8 +134,12 @@ func (h *Hub) Heartbeat(roomID string) {
 }
 
 func (h *Hub) ReadMessages() {
-	messages := h.db.LoadAllMessages()
-	defer h.db.DeleteAllMessages()
+	messages, err := h.db.LoadAllMessages()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer h.db.DeleteAllMessages() //nolint:errcheck
 
 	for _, msg := range messages {
 		m := core.NewMessage(msg.Text, msg.TTL)

@@ -13,14 +13,15 @@ package hub_test
 import (
 	"testing"
 
-	//"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/pkg/hub"
 	"github.com/jarednogo/board/pkg/loader"
 	"github.com/jarednogo/board/pkg/socket"
 )
 
 func TestHub(t *testing.T) {
-	h := hub.NewHubWithDB(loader.NewMemoryLoader())
+	h, err := hub.NewHubWithDB(loader.NewMemoryLoader())
+	assert.NotNil(t, err, "new hub")
 	h.Load()
 
 	mock1 := socket.NewMockRoomConn()

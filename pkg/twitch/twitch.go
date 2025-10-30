@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -335,7 +334,7 @@ func Subscribe(user, token string) (string, error) {
 		return "", err
 	}
 
-	log.Println("subscribe response:", string(data))
+	//log.Println("subscribe response:", string(data))
 
 	var s map[string]interface{}
 	err = json.Unmarshal(data, &s)

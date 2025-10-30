@@ -31,7 +31,11 @@ var version = "dev"
 
 func main() {
 	// make a new hub
-	h := hub.NewHub()
+	h, err := hub.NewHub()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	h.Load()
 	defer h.Save()
 

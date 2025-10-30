@@ -13,8 +13,10 @@ package loader
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
-	"log"
+	"os"
+	"path/filepath"
 
 	// blank import is utilized to register the driver with the
 	// database/sql package without directly using any of its
@@ -22,16 +24,51 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+func Path() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		home = "."
+	}
+
+	newpath := filepath.Join(home, ".config", "tripleko")
+	err = os.MkdirAll(newpath, os.ModePerm)
+	if err != nil {
+		home = "."
+	}
+
+	dbPath := filepath.Join(home, ".config", "tripleko", "board.db")
+	return dbPath
+}
+
+type Prefs map[string]int
+
+func (p Prefs) ToString() (string, error) {
+	data, err := json.Marshal(p)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+func PrefsFromString(s string) (Prefs, error) {
+	p := make(map[string]int)
+	err := json.Unmarshal([]byte(s), &p)
+	if err != nil {
+		return nil, err
+	}
+	return Prefs(p), nil
+}
+
 type SqliteLoader struct{}
 
 func NewSqliteLoader() *SqliteLoader {
 	return &SqliteLoader{}
 }
 
-func (ldr *SqliteLoader) Setup() {
+func (ldr *SqliteLoader) Setup() error {
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
-		return
+		return err
 	}
 	defer db.Close() //nolint: errcheck
 
@@ -50,8 +87,7 @@ func (ldr *SqliteLoader) Setup() {
 	)
 
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 
 	// Create the 'messages' table if it doesn't exist
@@ -65,8 +101,7 @@ func (ldr *SqliteLoader) Setup() {
 	)
 
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 
 	// create the 'twitch' table if it doesn't exist
@@ -79,10 +114,7 @@ func (ldr *SqliteLoader) Setup() {
 		)`,
 	)
 
-	if err != nil {
-		log.Println(err)
-		return
-	}
+	return err
 }
 
 // Twitch logic
@@ -119,7 +151,6 @@ func (ldr *SqliteLoader) twitchSelectRoom(broadcaster string) ([]string, error) 
 		`SELECT roomid FROM twitch WHERE broadcaster = ?`,
 		broadcaster)
 	if err != nil {
-		log.Println(err)
 		return []string{}, err
 	}
 
@@ -165,7 +196,10 @@ func (ldr *SqliteLoader) twitchUpdateRoom(broadcaster, roomid string) error {
 }
 
 func (ldr *SqliteLoader) LoadRoom(id string) (*LoadJSON, error) {
-	rows := ldr.selectRoom(id)
+	rows, err := ldr.selectRoom(id)
+	if err != nil {
+		return nil, err
+	}
 	if len(rows) != 1 {
 		return nil, fmt.Errorf("incorrect number of rows returned: %d", len(rows))
 	}
@@ -174,7 +208,11 @@ func (ldr *SqliteLoader) LoadRoom(id string) (*LoadJSON, error) {
 
 // Save could also reasonably be called InsertOrUpdate
 func (ldr *SqliteLoader) SaveRoom(id string, data *LoadJSON) error {
-	if len(ldr.selectRoom(id)) != 0 {
+	rows, err := ldr.selectRoom(id)
+	if err != nil {
+		return err
+	}
+	if len(rows) != 0 {
 		return ldr.updateRoom(id, data)
 	} else {
 		return ldr.insertRoom(id, data)
@@ -229,10 +267,10 @@ func (ldr *SqliteLoader) insertRoom(id string, data *LoadJSON) error {
 	return err
 }
 
-func (ldr *SqliteLoader) LoadAllRooms() []*LoadJSON {
+func (ldr *SqliteLoader) LoadAllRooms() ([]*LoadJSON, error) {
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
-		return []*LoadJSON{}
+		return nil, err
 	}
 	defer db.Close() //nolint: errcheck
 
@@ -240,8 +278,7 @@ func (ldr *SqliteLoader) LoadAllRooms() []*LoadJSON {
 		context.Background(),
 		`SELECT id, sgf, loc, prefs, buffer, nextindex, password FROM rooms`)
 	if err != nil {
-		log.Println(err)
-		return []*LoadJSON{}
+		return nil, err
 	}
 
 	defer rows.Close() //nolint: errcheck
@@ -256,7 +293,7 @@ func (ldr *SqliteLoader) LoadAllRooms() []*LoadJSON {
 		var password string
 		err = rows.Scan(&id, &sgf, &loc, &prefsString, &buffer, &nextIndex, &password)
 		if err != nil {
-			return []*LoadJSON{}
+			return nil, err
 		}
 		prefs, _ := PrefsFromString(prefsString)
 		data := &LoadJSON{
@@ -271,13 +308,13 @@ func (ldr *SqliteLoader) LoadAllRooms() []*LoadJSON {
 		rooms = append(rooms, data)
 	}
 
-	return rooms
+	return rooms, nil
 }
 
-func (ldr *SqliteLoader) selectRoom(id string) []*LoadJSON {
+func (ldr *SqliteLoader) selectRoom(id string) ([]*LoadJSON, error) {
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
-		return []*LoadJSON{}
+		return nil, err
 	}
 	defer db.Close() //nolint: errcheck
 
@@ -286,8 +323,7 @@ func (ldr *SqliteLoader) selectRoom(id string) []*LoadJSON {
 		`SELECT id, sgf, loc, prefs, buffer, nextindex, password FROM rooms WHERE id = ?`,
 		id)
 	if err != nil {
-		log.Println(err)
-		return []*LoadJSON{}
+		return nil, err
 	}
 
 	defer rows.Close() //nolint: errcheck
@@ -302,7 +338,7 @@ func (ldr *SqliteLoader) selectRoom(id string) []*LoadJSON {
 		var password string
 		err = rows.Scan(&id, &sgf, &loc, &prefsString, &buffer, &nextIndex, &password)
 		if err != nil {
-			return []*LoadJSON{}
+			return nil, err
 		}
 		prefs, _ := PrefsFromString(prefsString)
 		data := &LoadJSON{
@@ -317,13 +353,13 @@ func (ldr *SqliteLoader) selectRoom(id string) []*LoadJSON {
 		rooms = append(rooms, data)
 	}
 
-	return rooms
+	return rooms, nil
 }
 
-func (ldr *SqliteLoader) LoadAllMessages() []*MessageJSON {
+func (ldr *SqliteLoader) LoadAllMessages() ([]*MessageJSON, error) {
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
-		return []*MessageJSON{}
+		return nil, err
 	}
 	defer db.Close() //nolint: errcheck
 
@@ -331,8 +367,7 @@ func (ldr *SqliteLoader) LoadAllMessages() []*MessageJSON {
 		context.Background(),
 		`SELECT text, ttl FROM messages`)
 	if err != nil {
-		log.Println(err)
-		return []*MessageJSON{}
+		return nil, err
 	}
 
 	defer rows.Close() //nolint: errcheck
@@ -342,8 +377,7 @@ func (ldr *SqliteLoader) LoadAllMessages() []*MessageJSON {
 		var ttl int
 		err = rows.Scan(&text, &ttl)
 		if err != nil {
-			log.Println(err)
-			return []*MessageJSON{}
+			return nil, err
 		}
 		msg := &MessageJSON{
 			Text: text,
@@ -352,19 +386,16 @@ func (ldr *SqliteLoader) LoadAllMessages() []*MessageJSON {
 		messages = append(messages, msg)
 	}
 
-	return messages
+	return messages, nil
 }
 
-func (ldr *SqliteLoader) DeleteAllMessages() {
+func (ldr *SqliteLoader) DeleteAllMessages() error {
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 	defer db.Close() //nolint: errcheck
 
 	_, err = db.Exec(`DELETE FROM messages`)
-	if err != nil {
-		log.Println(err)
-	}
+	return err
 }

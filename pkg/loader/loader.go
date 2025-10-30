@@ -10,12 +10,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 package loader
 
-import (
-	"encoding/json"
-	"os"
-	"path/filepath"
-)
-
 type MessageJSON struct {
 	Text string `json:"message"`
 	TTL  int    `json:"ttl"`
@@ -31,52 +25,17 @@ type LoadJSON struct {
 	ID        string         `json:"id"`
 }
 
-type Prefs map[string]int
-
-func (p Prefs) ToString() (string, error) {
-	data, err := json.Marshal(p)
-	if err != nil {
-		return "", err
-	}
-	return string(data), nil
-}
-
-func PrefsFromString(s string) (Prefs, error) {
-	p := make(map[string]int)
-	err := json.Unmarshal([]byte(s), &p)
-	if err != nil {
-		return nil, err
-	}
-	return Prefs(p), nil
-}
-
-func Path() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		home = "."
-	}
-
-	newpath := filepath.Join(home, ".config", "tripleko")
-	err = os.MkdirAll(newpath, os.ModePerm)
-	if err != nil {
-		home = "."
-	}
-
-	dbPath := filepath.Join(home, ".config", "tripleko", "board.db")
-	return dbPath
-}
-
 type Loader interface {
-	Setup()
+	Setup() error
 	TwitchGetRoom(string) string
 	TwitchSetRoom(string, string) error
 
 	SaveRoom(string, *LoadJSON) error
 	LoadRoom(string) (*LoadJSON, error)
-	LoadAllRooms() []*LoadJSON
+	LoadAllRooms() ([]*LoadJSON, error)
 	DeleteRoom(string) error
-	LoadAllMessages() []*MessageJSON
-	DeleteAllMessages()
+	LoadAllMessages() ([]*MessageJSON, error)
+	DeleteAllMessages() error
 }
 
 func NewDefaultLoader() Loader {

@@ -17,7 +17,8 @@ func NewMemoryLoader() *MemoryLoader {
 	return &MemoryLoader{}
 }
 
-func (ml *MemoryLoader) Setup() {
+func (ml *MemoryLoader) Setup() error {
+	return nil
 }
 
 func (ml *MemoryLoader) TwitchGetRoom(_ string) string {
@@ -36,17 +37,18 @@ func (ml *MemoryLoader) LoadRoom(_ string) (*LoadJSON, error) {
 	return nil, nil
 }
 
-func (ml *MemoryLoader) LoadAllRooms() []*LoadJSON {
-	return nil
+func (ml *MemoryLoader) LoadAllRooms() ([]*LoadJSON, error) {
+	return nil, nil
 }
 
 func (ml *MemoryLoader) DeleteRoom(_ string) error {
 	return nil
 }
 
-func (ml *MemoryLoader) LoadAllMessages() []*MessageJSON {
-	return nil
+func (ml *MemoryLoader) LoadAllMessages() ([]*MessageJSON, error) {
+	return nil, nil
 }
 
-func (ml *MemoryLoader) DeleteAllMessages() {
+func (ml *MemoryLoader) DeleteAllMessages() error {
+	return nil
 }

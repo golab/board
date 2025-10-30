@@ -23,7 +23,6 @@ AB, AE, and AW are setup properties
 
 import (
 	"fmt"
-	"log"
 )
 
 type Group struct {
@@ -102,7 +101,6 @@ func (b *Board) Set(c *Coord, col Color) {
 
 func (b *Board) Get(c *Coord) Color {
 	if c.Y >= b.Size || c.X >= b.Size {
-		log.Println(c)
 		return NoColor
 	}
 	return b.Points[c.Y][c.X]
