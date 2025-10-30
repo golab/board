@@ -11,31 +11,34 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package room
 
 import (
+	"encoding/base64"
 	"fmt"
-	"log"
+	"strings"
 	"time"
 
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/fetch"
+	"github.com/jarednogo/board/pkg/loader"
 	"github.com/jarednogo/board/pkg/room/plugin"
 	"github.com/jarednogo/board/pkg/socket"
 	"github.com/jarednogo/board/pkg/state"
 )
 
 type Room struct {
-	Conns         map[string]socket.RoomConn
-	State         *state.State
-	TimeLastEvent *time.Time
-	LastUser      string
-	lastMessages  map[string]*time.Time
-	Plugins       map[string]plugin.Plugin
-	Password      string
-	auth          map[string]bool
-	Nicks         map[string]string
-	fetcher       fetch.Fetcher
+	conns        map[string]socket.RoomConn
+	state        *state.State
+	lastActive   *time.Time
+	lastUser     string
+	lastMessages map[string]*time.Time
+	plugins      map[string]plugin.Plugin
+	password     string
+	auth         map[string]bool
+	nicks        map[string]string
+	fetcher      fetch.Fetcher
+	id           string
 }
 
-func NewRoom() *Room {
+func NewRoom(id string) *Room {
 	conns := make(map[string]socket.RoomConn)
 	s := state.NewState(19, true)
 	now := time.Now()
@@ -44,17 +47,92 @@ func NewRoom() *Room {
 	nicks := make(map[string]string)
 	plugins := make(map[string]plugin.Plugin)
 	return &Room{
-		Conns:         conns,
-		State:         s,
-		TimeLastEvent: &now,
-		LastUser:      "",
-		lastMessages:  msgs,
-		Plugins:       plugins,
-		Password:      "",
-		auth:          auth,
-		Nicks:         nicks,
-		fetcher:       fetch.NewDefaultFetcher(),
+		conns:        conns,
+		state:        s,
+		lastActive:   &now,
+		lastUser:     "",
+		lastMessages: msgs,
+		plugins:      plugins,
+		password:     "",
+		auth:         auth,
+		nicks:        nicks,
+		fetcher:      fetch.NewDefaultFetcher(),
+		id:           id,
 	}
+}
+
+func Load(load *loader.LoadJSON) (*Room, error) {
+	id := load.ID
+
+	sgf, err := base64.StdEncoding.DecodeString(load.SGF)
+	if err != nil {
+		return nil, err
+	}
+
+	st, err := state.FromSGF(string(sgf))
+	if err != nil {
+		return nil, err
+	}
+
+	st.SetPrefs(load.Prefs)
+
+	st.NextIndex = load.NextIndex
+	st.InputBuffer = load.Buffer
+
+	loc := load.Location
+	if loc != "" {
+		dirs := strings.Split(loc, ",")
+		// don't need to assign to a variable if we don't use it
+		for range dirs {
+			st.Right()
+		}
+	}
+	r := NewRoom(id)
+	r.password = load.Password
+	r.state = st
+
+	return r, nil
+}
+
+func (r *Room) ID() string {
+	return r.id
+}
+
+func (r *Room) Timeout() float64 {
+	return r.state.Timeout
+}
+
+func (r *Room) LastActive() *time.Time {
+	return r.lastActive
+}
+
+func (r *Room) Save() *loader.LoadJSON {
+	stateJSON := r.state.CreateStateJSON()
+
+	// embed stateJSON into save
+	save := &loader.LoadJSON{}
+	save.SGF = stateJSON.SGF
+	save.Location = stateJSON.Location
+	save.Prefs = stateJSON.Prefs
+	save.Buffer = stateJSON.Buffer
+	save.NextIndex = stateJSON.NextIndex
+
+	// add on last fields owned by the room instead of the state
+	save.Password = r.password
+	save.ID = r.id
+	return save
+}
+
+func (r *Room) Close() error {
+	// close all the client connections
+	errs := []error{}
+	for _, conn := range r.conns {
+		err := conn.Close()
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return fmt.Errorf("%v", errs)
 }
 
 func (r *Room) SetFetcher(f fetch.Fetcher) {
@@ -62,12 +140,12 @@ func (r *Room) SetFetcher(f fetch.Fetcher) {
 }
 
 func (r *Room) HasPassword() bool {
-	return r.Password != ""
+	return r.password != ""
 }
 
 func (r *Room) SendTo(id string, evt *core.EventJSON) {
-	if rc, ok := r.Conns[id]; ok {
-		rc.SendEvent(evt)
+	if rc, ok := r.conns[id]; ok {
+		rc.SendEvent(evt) //nolint:errcheck
 	}
 }
 
@@ -77,8 +155,8 @@ func (r *Room) Broadcast(evt *core.EventJSON) {
 	}
 
 	// rebroadcast message
-	for _, conn := range r.Conns {
-		conn.SendEvent(evt)
+	for _, conn := range r.conns {
+		conn.SendEvent(evt) //nolint:errcheck
 	}
 }
 
@@ -92,14 +170,14 @@ func (r *Room) BroadcastHubMessage(m *core.Message) {
 	}
 
 	// go through each client connection
-	for id, conn := range r.Conns {
+	for id, conn := range r.conns {
 		// check to see if we've already sent this message
 		// to this connection
 		if m.IsNotified(id) {
 			continue
 		}
 		// otherwise, send and record
-		conn.SendEvent(evt)
+		conn.SendEvent(evt) //nolint:errcheck
 		m.MarkNotified(id)
 	}
 }
@@ -107,14 +185,13 @@ func (r *Room) BroadcastHubMessage(m *core.Message) {
 func (r *Room) UploadSGF(sgf string) *core.EventJSON {
 	s, err := state.FromSGF(sgf)
 	if err != nil {
-		log.Println(err)
 		msg := fmt.Sprintf("Error parsing SGF: %s", err)
 		return core.ErrorEvent(msg)
 	}
-	r.State = s
+	r.state = s
 
 	// replace evt with frame data
-	frame := r.State.GenerateFullFrame(core.Full)
+	frame := r.state.GenerateFullFrame(core.Full)
 	return core.FrameEvent(frame)
 }
 
@@ -122,7 +199,7 @@ func (r *Room) SendUserList() {
 	// send list of currently connected users
 	evt := &core.EventJSON{
 		Event:  "connected_users",
-		Value:  r.Nicks,
+		Value:  r.nicks,
 		Color:  0,
 		UserID: "",
 	}
@@ -132,30 +209,30 @@ func (r *Room) SendUserList() {
 
 func (r *Room) RegisterConnection(rc socket.RoomConn) string {
 	// the room connection generates its own id
-	id := rc.GetID()
+	id := rc.ID()
 
 	// set the last user
-	r.LastUser = id
+	r.lastUser = id
 
 	// store the new connection by id
-	r.Conns[id] = rc
+	r.conns[id] = rc
 
 	// save current user
-	r.Nicks[id] = ""
+	r.nicks[id] = ""
 
 	// send initial state
-	frame := r.State.GenerateFullFrame(core.Full)
+	frame := r.state.GenerateFullFrame(core.Full)
 	evt := core.FrameEvent(frame)
-	rc.SendEvent(evt)
+	rc.SendEvent(evt) //nolint:errcheck
 
 	return id
 }
 
 func (r *Room) DeregisterConnection(id string) {
-	delete(r.Conns, id)
+	delete(r.conns, id)
 }
 
-func (r *Room) Handle(rc socket.RoomConn) {
+func (r *Room) Handle(rc socket.RoomConn) error {
 	// assign id to the new connection
 	id := r.RegisterConnection(rc)
 
@@ -168,7 +245,7 @@ func (r *Room) Handle(rc socket.RoomConn) {
 	// send disconnection notification
 	// golang deferrals are called in LIFO order
 	defer r.SendUserList()
-	defer delete(r.Nicks, id)
+	defer delete(r.nicks, id)
 
 	handlers := r.CreateHandlers()
 
@@ -177,8 +254,7 @@ func (r *Room) Handle(rc socket.RoomConn) {
 		// receive the event
 		evt, err := rc.ReceiveEvent()
 		if err != nil {
-			log.Println(id, err)
-			break
+			return err
 		}
 
 		// augment with user id
@@ -196,12 +272,24 @@ func (r *Room) Handle(rc socket.RoomConn) {
 func (r *Room) RegisterPlugin(p plugin.Plugin, args map[string]interface{}) {
 	key := args["key"].(string)
 	p.Start(args)
-	r.Plugins[key] = p
+	r.plugins[key] = p
 }
 
 func (r *Room) DeregisterPlugin(key string) {
-	if p, ok := r.Plugins[key]; ok {
+	if p, ok := r.plugins[key]; ok {
 		p.End()
-		delete(r.Plugins, key)
+		delete(r.plugins, key)
 	}
+}
+
+func (r *Room) GetPlugin(key string) plugin.Plugin {
+	if p, ok := r.plugins[key]; ok {
+		return p
+	}
+	return nil
+}
+
+func (r *Room) HasPlugin(key string) bool {
+	_, ok := r.plugins[key]
+	return ok
 }

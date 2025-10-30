@@ -12,6 +12,7 @@ package room
 
 import (
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/state"
 )
 
 // helper functions for ogs
@@ -19,17 +20,25 @@ import (
 // still i'm keeping them around in case i split it out again
 
 func (r *Room) HeadColor() core.Color {
-	return r.State.Head.Color
+	return r.state.Head.Color
 }
 
 func (r *Room) PushHead(x, y int, c core.Color) {
-	r.State.PushHead(x, y, c)
+	r.state.PushHead(x, y, c)
 }
 
 func (r *Room) GenerateFullFrame(t core.TreeJSONType) *core.Frame {
-	return r.State.GenerateFullFrame(t)
+	return r.state.GenerateFullFrame(t)
 }
 
 func (r *Room) AddPatternNodes(movesArr []*core.PatternMove) {
-	r.State.AddPatternNodes(movesArr)
+	r.state.AddPatternNodes(movesArr)
+}
+
+func (r *Room) ToSGF(init bool) string {
+	return r.state.ToSGF(init)
+}
+
+func (r *Room) CreateStateJSON() *state.StateJSON {
+	return r.state.CreateStateJSON()
 }

@@ -12,7 +12,6 @@ package room
 
 import (
 	"encoding/base64"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -90,7 +89,7 @@ func (room *Room) HandleIsProtected(evt *core.EventJSON) *core.EventJSON {
 func (room *Room) HandleCheckPassword(evt *core.EventJSON) *core.EventJSON {
 	p := evt.Value.(string)
 
-	if !core.CorrectPassword(p, room.Password) {
+	if !core.CorrectPassword(p, room.password) {
 		evt.Value = ""
 	} else {
 		room.auth[evt.UserID] = true
@@ -100,7 +99,6 @@ func (room *Room) HandleCheckPassword(evt *core.EventJSON) *core.EventJSON {
 }
 
 func HandleDebug(evt *core.EventJSON) *core.EventJSON {
-	log.Println(evt.UserID, evt)
 	return evt
 }
 
@@ -183,7 +181,6 @@ func (room *Room) HandleRequestSGF(evt *core.EventJSON) *core.EventJSON {
 		}
 
 		ogsType := spl[len(spl)-2]
-		//log.Println(ogsType)
 
 		switch ogsType {
 		case "game":
@@ -198,7 +195,6 @@ func (room *Room) HandleRequestSGF(evt *core.EventJSON) *core.EventJSON {
 			connectToOGS = true
 		}
 
-		//log.Println(connectToOGS)
 		if connectToOGS {
 
 			idStr := spl[len(spl)-1]
@@ -244,13 +240,13 @@ func (room *Room) HandleRequestSGF(evt *core.EventJSON) *core.EventJSON {
 func (room *Room) HandleTrash(evt *core.EventJSON) *core.EventJSON {
 
 	// reset room
-	oldBuffer := room.State.InputBuffer
-	room.State = state.NewState(room.State.Size, true)
+	oldBuffer := room.state.InputBuffer
+	room.state = state.NewState(room.state.Size, true)
 
 	// reuse old inputbuffer
-	room.State.InputBuffer = oldBuffer
+	room.state.InputBuffer = oldBuffer
 
-	frame := room.State.GenerateFullFrame(core.Full)
+	frame := room.state.GenerateFullFrame(core.Full)
 	bcast := core.FrameEvent(frame)
 	bcast.UserID = evt.UserID
 	return bcast
@@ -258,10 +254,10 @@ func (room *Room) HandleTrash(evt *core.EventJSON) *core.EventJSON {
 
 func (room *Room) HandleUpdateNickname(evt *core.EventJSON) *core.EventJSON {
 	nickname := evt.Value.(string)
-	room.Nicks[evt.UserID] = nickname
+	room.nicks[evt.UserID] = nickname
 	userEvt := &core.EventJSON{
 		Event:  "connected_users",
-		Value:  room.Nicks,
+		Value:  room.nicks,
 		Color:  0,
 		UserID: evt.UserID,
 	}
@@ -280,7 +276,7 @@ func (room *Room) HandleUpdateSettings(evt *core.EventJSON) *core.EventJSON {
 	size := int(sMap["size"].(float64))
 	nickname := sMap["nickname"].(string)
 
-	room.Nicks[evt.UserID] = nickname
+	room.nicks[evt.UserID] = nickname
 
 	password := sMap["password"].(string)
 	hashed := ""
@@ -289,20 +285,20 @@ func (room *Room) HandleUpdateSettings(evt *core.EventJSON) *core.EventJSON {
 	}
 	settings := &Settings{buffer, size, hashed}
 
-	room.State.InputBuffer = settings.Buffer
-	if settings.Size != room.State.Size {
+	room.state.InputBuffer = settings.Buffer
+	if settings.Size != room.state.Size {
 		// essentially trashing
-		room.State = state.NewState(settings.Size, true)
-		room.State.InputBuffer = buffer
+		room.state = state.NewState(settings.Size, true)
+		room.state.InputBuffer = buffer
 	}
 
 	// can be changed
 	// anyone already in the room is added
 	// person who set password automatically gets added
-	for connID := range room.Conns {
+	for connID := range room.conns {
 		room.auth[connID] = true
 	}
-	room.Password = hashed
+	room.password = hashed
 
 	return evt
 }
@@ -315,9 +311,8 @@ func (room *Room) HandleEvent(evt *core.EventJSON) *core.EventJSON {
 		}
 	}()
 
-	frame, err := room.State.AddEvent(evt)
+	frame, err := room.state.AddEvent(evt)
 	if err != nil {
-		log.Println(err)
 		bcast = core.ErrorEvent(err.Error())
 		return bcast
 	}
@@ -337,9 +332,9 @@ func (room *Room) SetTimeAfter(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {
 		evt = handler(evt)
 		// set last user information
-		room.LastUser = evt.UserID
+		room.lastUser = evt.UserID
 		now := time.Now()
-		room.TimeLastEvent = &now
+		room.lastActive = &now
 		return evt
 	}
 }
@@ -355,7 +350,7 @@ func (room *Room) BroadcastAfter(handler EventHandler) EventHandler {
 func (room *Room) BroadcastFullFrameAfter(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {
 		evt = handler(evt)
-		frame := room.State.GenerateFullFrame(core.Full)
+		frame := room.state.GenerateFullFrame(core.Full)
 		bcast := core.FrameEvent(frame)
 		room.Broadcast(bcast)
 		return evt
@@ -367,7 +362,7 @@ func (room *Room) BroadcastConnectedUsersAfter(handler EventHandler) EventHandle
 		evt = handler(evt)
 		userEvt := &core.EventJSON{
 			Event:  "connected_users",
-			Value:  room.Nicks,
+			Value:  room.nicks,
 			Color:  0,
 			UserID: "",
 		}
@@ -389,7 +384,7 @@ func (room *Room) Authorized(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {
 		id := evt.UserID
 		_, ok := room.auth[id]
-		if room.Password == "" || ok {
+		if room.password == "" || ok {
 			// only go to the next handler if authorized
 			evt = handler(evt)
 		}
@@ -420,10 +415,10 @@ func (room *Room) Slow(handler EventHandler) EventHandler {
 // this one is to keep people from tripping over each other
 func (room *Room) OutsideBuffer(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {
-		if room.LastUser != evt.UserID {
+		if room.lastUser != evt.UserID {
 			now := time.Now()
-			diff := now.Sub(*room.TimeLastEvent)
-			if diff.Milliseconds() < room.State.InputBuffer {
+			diff := now.Sub(*room.lastActive)
+			if diff.Milliseconds() < room.state.InputBuffer {
 				// don't do the next handler if too fast
 				return evt
 			}

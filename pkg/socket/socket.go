@@ -13,7 +13,6 @@ package socket
 import (
 	"encoding/binary"
 	"encoding/json"
-	"log"
 
 	"github.com/google/uuid"
 	"github.com/jarednogo/board/pkg/core"
@@ -21,10 +20,10 @@ import (
 )
 
 type RoomConn interface {
-	SendEvent(evt *core.EventJSON)
+	SendEvent(evt *core.EventJSON) error
 	ReceiveEvent() (*core.EventJSON, error)
 	Close() error
-	GetID() string
+	ID() string
 }
 
 // WebsocketRoomConn is a thin wrapper around *websocket.Conn
@@ -40,22 +39,21 @@ func NewWebsocketRoomConn(ws *websocket.Conn) RoomConn {
 	return &WebsocketRoomConn{ws, id}
 }
 
-func (wrc *WebsocketRoomConn) GetID() string {
+func (wrc *WebsocketRoomConn) ID() string {
 	return wrc.id
 }
 
-func (wrc *WebsocketRoomConn) SendEvent(evt *core.EventJSON) {
+func (wrc *WebsocketRoomConn) SendEvent(evt *core.EventJSON) error {
 	// marshal event back into data
 	data, err := json.Marshal(evt)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 	_, err = wrc.ws.Write(data)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
+	return nil
 }
 
 func (wrc *WebsocketRoomConn) ReceiveEvent() (*core.EventJSON, error) {

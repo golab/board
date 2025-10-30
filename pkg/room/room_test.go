@@ -22,7 +22,7 @@ import (
 )
 
 func TestBroadcast(t *testing.T) {
-	r := room.NewRoom()
+	r := room.NewRoom("")
 	mock1 := socket.NewMockRoomConn()
 	mock2 := socket.NewMockRoomConn()
 
@@ -40,21 +40,21 @@ func TestBroadcast(t *testing.T) {
 }
 
 func TestPlugin(t *testing.T) {
-	r := room.NewRoom()
+	r := room.NewRoom("")
 	mp := plugin.NewMockPlugin()
 	args := make(map[string]interface{})
 	args["key"] = "mock"
 	r.RegisterPlugin(mp, args)
-	_, ok := r.Plugins["mock"]
+	ok := r.HasPlugin("mock")
 	assert.True(t, ok, "failed to register mock plugin")
 
 	r.DeregisterPlugin("mock")
-	_, ok = r.Plugins["mock"]
+	ok = r.HasPlugin("mock")
 	assert.True(t, !ok, "failed to deregister mock plugin")
 }
 
 func TestSendUserList(t *testing.T) {
-	r := room.NewRoom()
+	r := room.NewRoom("")
 	mock := socket.NewMockRoomConn()
 	r.RegisterConnection(mock)
 	r.SendUserList()
@@ -67,7 +67,7 @@ func TestSendUserList(t *testing.T) {
 }
 
 func TestSendTo(t *testing.T) {
-	r := room.NewRoom()
+	r := room.NewRoom("")
 	mock := socket.NewMockRoomConn()
 	id := r.RegisterConnection(mock)
 	evt := core.EmptyEvent()
@@ -77,7 +77,7 @@ func TestSendTo(t *testing.T) {
 }
 
 func TestHandlers(t *testing.T) {
-	r := room.NewRoom()
+	r := room.NewRoom("")
 	mock := socket.NewMockRoomConn()
 	id := r.RegisterConnection(mock)
 	handlers := r.CreateHandlers()
@@ -93,6 +93,6 @@ func TestHandlers(t *testing.T) {
 }
 
 func TestFetcher(t *testing.T) {
-	r := room.NewRoom()
+	r := room.NewRoom("")
 	r.SetFetcher(fetch.NewMockFetcher())
 }

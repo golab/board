@@ -29,8 +29,9 @@ func NewMockRoomConn() *MockRoomConn {
 	return &MockRoomConn{id: id}
 }
 
-func (mcr *MockRoomConn) SendEvent(evt *core.EventJSON) {
+func (mcr *MockRoomConn) SendEvent(evt *core.EventJSON) error {
 	mcr.SavedEvents = append(mcr.SavedEvents, evt)
+	return nil
 }
 
 func (mcr *MockRoomConn) ReceiveEvent() (*core.EventJSON, error) {
@@ -46,6 +47,6 @@ func (mcr *MockRoomConn) Close() error {
 	return nil
 }
 
-func (mcr *MockRoomConn) GetID() string {
+func (mcr *MockRoomConn) ID() string {
 	return mcr.id
 }

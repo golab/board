@@ -11,7 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package hub
 
 import (
-	"encoding/base64"
 	"log"
 	"strings"
 	"time"
@@ -20,7 +19,6 @@ import (
 	"github.com/jarednogo/board/pkg/loader"
 	"github.com/jarednogo/board/pkg/room"
 	"github.com/jarednogo/board/pkg/socket"
-	"github.com/jarednogo/board/pkg/state"
 	"golang.org/x/net/websocket"
 )
 
@@ -70,19 +68,7 @@ func (h *Hub) Save() {
 	for id, r := range h.rooms {
 		log.Printf("Saving %s", id)
 
-		stateJSON := r.State.CreateStateJSON()
-
-		// embed stateJSON into save
-		save := &loader.LoadJSON{}
-		save.SGF = stateJSON.SGF
-		save.Location = stateJSON.Location
-		save.Prefs = stateJSON.Prefs
-		save.Buffer = stateJSON.Buffer
-		save.NextIndex = stateJSON.NextIndex
-
-		// add on last fields owned by the room instead of the state
-		save.Password = r.Password
-		save.ID = id
+		save := r.Save()
 
 		err := h.db.SaveRoom(id, save)
 		if err != nil {
@@ -95,38 +81,13 @@ func (h *Hub) Load() {
 	rooms := h.db.LoadAllRooms()
 
 	for _, load := range rooms {
-
-		id := load.ID
-
-		sgf, err := base64.StdEncoding.DecodeString(load.SGF)
+		r, err := room.Load(load)
 		if err != nil {
 			continue
 		}
 
-		st, err := state.FromSGF(string(sgf))
-		if err != nil {
-			continue
-		}
-
-		st.SetPrefs(load.Prefs)
-
-		st.NextIndex = load.NextIndex
-		st.InputBuffer = load.Buffer
-
-		loc := load.Location
-		if loc != "" {
-			dirs := strings.Split(loc, ",")
-			// don't need to assign to a variable if we don't use it
-			for range dirs {
-				st.Right()
-			}
-		}
-
+		id := r.ID()
 		log.Printf("Loading %s", id)
-
-		r := room.NewRoom()
-		r.Password = load.Password
-		r.State = st
 		h.rooms[id] = r
 		go h.Heartbeat(id)
 	}
@@ -139,28 +100,26 @@ func (h *Hub) Heartbeat(roomID string) {
 	}
 	for {
 		now := time.Now()
-		diff := now.Sub(*r.TimeLastEvent)
+		diff := now.Sub(*r.LastActive())
 		log.Println(roomID, "Inactive for", diff)
-		if diff.Seconds() > r.State.Timeout {
+		if diff.Seconds() > r.Timeout() {
 			break
 		}
 		time.Sleep(3600 * time.Second)
 	}
 	log.Println("Cleaning up board due to inactivity:", roomID)
 
-	// close all the client connections
-	for _, conn := range r.Conns {
-		err := conn.Close()
-		if err != nil {
-			log.Println(err)
-		}
+	// close the room down
+	err := r.Close()
+	if err != nil {
+		log.Println("errors while closing:", err)
 	}
 
 	// delete the room from the server map
 	delete(h.rooms, roomID)
 
 	// delete it from the database
-	err := h.db.DeleteRoom(roomID)
+	err = h.db.DeleteRoom(roomID)
 	if err != nil {
 		log.Println(err)
 	}
@@ -212,11 +171,9 @@ func (h *Hub) MessageLoop() {
 
 func (h *Hub) GetOrCreateRoom(roomID string) *room.Room {
 	// if the room they want doesn't exist, create it
-	//created := false
 	if _, ok := h.rooms[roomID]; !ok {
-		//created = true
 		log.Println("New room:", roomID)
-		r := room.NewRoom()
+		r := room.NewRoom(roomID)
 		h.rooms[roomID] = r
 		go h.Heartbeat(roomID)
 	}
@@ -227,8 +184,6 @@ func (h *Hub) GetOrCreateRoom(roomID string) *room.Room {
 func (h *Hub) HandlerWrapper(ws *websocket.Conn) {
 	// first find the url they want
 	url := ws.Request().URL.String()
-
-	log.Println(url)
 
 	// currently not using the prefix, but i may someday
 	_, roomID, _ := ParseURL(url)
@@ -245,6 +200,15 @@ func (h *Hub) Handler(rc socket.RoomConn, roomID string) {
 	r := h.GetOrCreateRoom(roomID)
 
 	// send to the room for handling
-	log.Println("Connecting:", rc.GetID())
-	r.Handle(rc)
+	log.Printf(
+		"[*] New connection: %s to %s",
+		rc.ID(),
+		r.ID(),
+	)
+	log.Printf(
+		"[-] Disconnection: %s from %s (%v)",
+		rc.ID(),
+		r.ID(),
+		r.Handle(rc),
+	)
 }
