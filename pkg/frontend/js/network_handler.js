@@ -226,7 +226,7 @@ class NetworkHandler {
     }
 
     prepare_pass() {
-        let payload = {"event":"pass", "color":this.state.color};
+        let payload = {"event":"pass", "value":this.state.color};
         this.prepare(payload);
     }
 
@@ -663,7 +663,7 @@ class NetworkHandler {
                     return;
                 }
                 //payload = {"event": "stone-toggle", "value": coords, "color": this.state.color};
-                payload = {"event": "add_stone", "value": coords, "color": this.state.color};
+                payload = {"event": "add_stone", "value": {"coords": coords, "color": this.state.color}};
             }
         } else {
             if (stone_there) {
@@ -676,7 +676,7 @@ class NetworkHandler {
                     color = opposite(color);
                 }
                 //payload = {"event": "stone-manual", "value": coords, "color": color};
-                payload = {"event": "add_stone", "value": coords, "color": color};
+                payload = {"event": "add_stone", "value": {"coords": coords, "color": color}};
             }
         }
         this.prepare(payload);

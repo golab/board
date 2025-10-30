@@ -165,7 +165,6 @@ func (r *Room) BroadcastHubMessage(m *core.Message) {
 	evt := &core.EventJSON{
 		Event:  "global",
 		Value:  m.Text,
-		Color:  0,
 		UserID: "",
 	}
 
@@ -200,7 +199,6 @@ func (r *Room) SendUserList() {
 	evt := &core.EventJSON{
 		Event:  "connected_users",
 		Value:  r.nicks,
-		Color:  0,
 		UserID: "",
 	}
 

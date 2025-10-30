@@ -19,17 +19,19 @@ import (
 )
 
 func (s *State) HandleAddStone(evt *core.EventJSON) (*core.Frame, error) {
-	c, err := core.InterfaceToCoord(evt.Value)
+	val := evt.Value.(map[string]interface{})
+	c, err := core.InterfaceToCoord(val["coords"])
 	if err != nil {
 		return nil, err
 	}
+
 	x := c.X
 	y := c.Y
 	if x >= s.Size || y >= s.Size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
-	col := core.Color(evt.Color)
+	col := core.Color(val["color"].(float64))
 
 	// if a child already exists with that coord and col, then actually
 	// this is just a gotoindex operation
@@ -67,14 +69,15 @@ func (s *State) HandleAddStone(evt *core.EventJSON) (*core.Frame, error) {
 }
 
 func (s *State) HandlePass(evt *core.EventJSON) (*core.Frame, error) {
+	col := core.Color(evt.Value.(float64))
+
 	fields := make(map[string][]string)
-	col := core.Color(evt.Color)
 	key := "B"
 	if col == core.White {
 		key = "W"
 	}
 	fields[key] = []string{""}
-	s.AddPassNode(core.Color(evt.Color), fields, -1)
+	s.AddPassNode(col, fields, -1)
 
 	return &core.Frame{
 		Type:      core.DiffFrame,

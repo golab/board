@@ -404,7 +404,6 @@ func NewPatternMove(x, y int, c Color) *PatternMove {
 type EventJSON struct {
 	Event  string      `json:"event"`
 	Value  interface{} `json:"value"`
-	Color  int         `json:"color"`
 	UserID string      `json:"userid"`
 }
 
@@ -414,18 +413,18 @@ func EmptyEvent() *EventJSON {
 
 // ErrorEvent is a special case of an EventJSON
 func ErrorEvent(msg string) *EventJSON {
-	return &EventJSON{"error", msg, 0, ""}
+	return &EventJSON{"error", msg, ""}
 }
 
 // FrameEvent is a special case of an EventJSON
 func FrameEvent(frame *Frame) *EventJSON {
-	return &EventJSON{"frame", frame, 0, ""}
+	return &EventJSON{"frame", frame, ""}
 }
 
 // NopEvent signals to the server to do nothing
 // (in particular, don't send to clients)
 func NopEvent() *EventJSON {
-	return &EventJSON{"nop", nil, 0, ""}
+	return &EventJSON{"nop", nil, ""}
 }
 
 // AlphanumericToCoord converts a string like "c17" to a Coord
