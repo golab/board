@@ -36,7 +36,7 @@ func (mcr *MockRoomConn) SendEvent(evt *core.EventJSON) error {
 }
 
 func (mcr *MockRoomConn) ReceiveEvent() (*core.EventJSON, error) {
-	if len(mcr.QueuedEvents) >= mcr.index {
+	if mcr.index >= len(mcr.QueuedEvents) {
 		return nil, io.EOF
 	}
 	i := mcr.index

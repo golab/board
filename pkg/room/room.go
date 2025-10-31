@@ -246,6 +246,7 @@ func (r *Room) Handle(rc socket.RoomConn) error {
 	id := r.RegisterConnection(rc)
 
 	// defer removing the client
+	defer r.SendUserList()
 	defer r.DeregisterConnection(id)
 
 	// send list of currently connected users
@@ -253,7 +254,6 @@ func (r *Room) Handle(rc socket.RoomConn) error {
 
 	// send disconnection notification
 	// golang deferrals are called in LIFO order
-	defer r.SendUserList()
 	defer delete(r.nicks, id)
 
 	handlers := r.CreateHandlers()

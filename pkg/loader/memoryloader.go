@@ -10,11 +10,27 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 package loader
 
+import (
+	"fmt"
+)
+
 type MemoryLoader struct {
+	rooms    map[string]*LoadJSON
+	messages []*MessageJSON
 }
 
 func NewMemoryLoader() *MemoryLoader {
-	return &MemoryLoader{}
+	return &MemoryLoader{
+		rooms: make(map[string]*LoadJSON),
+	}
+}
+
+func (ml *MemoryLoader) AddMessage(text string, ttl int) {
+	ml.messages = append(ml.messages, &MessageJSON{text, ttl})
+}
+
+func (ml *MemoryLoader) MessageCount() int {
+	return len(ml.messages)
 }
 
 func (ml *MemoryLoader) Setup() error {
@@ -29,26 +45,36 @@ func (ml *MemoryLoader) TwitchSetRoom(_, _ string) error {
 	return nil
 }
 
-func (ml *MemoryLoader) SaveRoom(_ string, _ *LoadJSON) error {
+func (ml *MemoryLoader) SaveRoom(s string, l *LoadJSON) error {
+	ml.rooms[s] = l
 	return nil
 }
 
-func (ml *MemoryLoader) LoadRoom(_ string) (*LoadJSON, error) {
-	return nil, nil
+func (ml *MemoryLoader) LoadRoom(s string) (*LoadJSON, error) {
+	if l, ok := ml.rooms[s]; ok {
+		return l, nil
+	}
+	return nil, fmt.Errorf("room not found")
 }
 
 func (ml *MemoryLoader) LoadAllRooms() ([]*LoadJSON, error) {
-	return nil, nil
+	ls := []*LoadJSON{}
+	for _, l := range ml.rooms {
+		ls = append(ls, l)
+	}
+	return ls, nil
 }
 
-func (ml *MemoryLoader) DeleteRoom(_ string) error {
+func (ml *MemoryLoader) DeleteRoom(s string) error {
+	delete(ml.rooms, s)
 	return nil
 }
 
 func (ml *MemoryLoader) LoadAllMessages() ([]*MessageJSON, error) {
-	return nil, nil
+	return ml.messages, nil
 }
 
 func (ml *MemoryLoader) DeleteAllMessages() error {
+	ml.messages = []*MessageJSON{}
 	return nil
 }

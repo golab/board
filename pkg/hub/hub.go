@@ -67,6 +67,14 @@ func NewHubWithDB(db loader.Loader) (*Hub, error) {
 	return s, nil
 }
 
+func (h *Hub) RoomCount() int {
+	return len(h.rooms)
+}
+
+func (h *Hub) MessageCount() int {
+	return len(h.messages)
+}
+
 func (h *Hub) Save() {
 	for id, r := range h.rooms {
 		log.Printf("Saving %s", id)
