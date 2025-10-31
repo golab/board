@@ -400,7 +400,6 @@ func NewPatternMove(x, y int, c Color) *PatternMove {
 
 // EventJSON is the basic struct for sending and receiving messages over
 // the websockets
-// TODO: see if we can remove Color
 type EventJSON struct {
 	Event  string      `json:"event"`
 	Value  interface{} `json:"value"`

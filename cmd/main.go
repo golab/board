@@ -49,6 +49,9 @@ func main() {
 	// web router
 	r.Mount("/", h.WebRouter())
 
+	// extension router
+	r.Mount("/ext", h.ExtRouter())
+
 	// api routers
 	r.Mount("/api", hub.ApiRouter(version))
 	r.Mount("/api/v1", hub.ApiV1Router())

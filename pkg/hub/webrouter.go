@@ -22,7 +22,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/frontend"
-	"github.com/jarednogo/board/pkg/room"
 )
 
 // stateful
@@ -74,49 +73,6 @@ func (h *Hub) Sgf(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-}
-
-func (h *Hub) Upload(w http.ResponseWriter, r *http.Request) {
-	url := r.URL.Query().Get("url")
-	sgf := r.URL.Query().Get("sgf")
-	boardID := r.URL.Query().Get("board_id")
-	boardID = core.Sanitize(boardID)
-	if len(strings.TrimSpace(boardID)) == 0 {
-		boardID = core.UUID4()
-	}
-	newroom := h.GetOrCreateRoom(boardID)
-
-	var handler room.EventHandler
-	var evt *core.EventJSON
-	if url != "" {
-		handler = room.Chain(
-			newroom.HandleRequestSGF,
-			newroom.OutsideBuffer,
-			newroom.Authorized,
-			newroom.CloseOGS,
-			newroom.BroadcastAfter)
-		evt = &core.EventJSON{
-			Event: "request_sgf",
-			Value: url,
-		}
-	} else if sgf != "" {
-		handler = room.Chain(
-			newroom.HandleUploadSGF,
-			newroom.OutsideBuffer,
-			newroom.Authorized,
-			newroom.CloseOGS,
-			newroom.BroadcastAfter)
-		evt = &core.EventJSON{
-			Event: "upload_sgf",
-			Value: sgf,
-		}
-	} else {
-		return
-	}
-	handler(evt)
-
-	redirect := fmt.Sprintf("/b/%s", boardID)
-	http.Redirect(w, r, redirect, http.StatusFound)
 }
 
 // html
@@ -220,7 +176,6 @@ func (h *Hub) WebRouter() http.Handler {
 	r := chi.NewRouter()
 
 	// stateful endpoints
-	r.Get("/upload", h.Upload)
 	r.Get("/b/{boardID}/sgf", h.Sgf)
 	r.Get("/b/{boardID}/sgfix", h.Sgfix)
 	r.Get("/b/{boardID}/debug", h.Debug)

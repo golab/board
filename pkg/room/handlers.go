@@ -431,3 +431,15 @@ func Chain(h EventHandler, middleware ...Middleware) EventHandler {
 	}
 	return h
 }
+
+// HandleAny is only to be used in special occasions because it recreates
+// all the handlers
+func (room *Room) HandleAny(evt *core.EventJSON) *core.EventJSON {
+	handlers := room.CreateHandlers()
+	// handle the event
+	if handler, ok := handlers[evt.Event]; ok {
+		return handler(evt)
+	} else {
+		return handlers["_"](evt)
+	}
+}
