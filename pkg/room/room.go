@@ -14,6 +14,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/jarednogo/board/pkg/core"
@@ -36,6 +37,7 @@ type Room struct {
 	nicks        map[string]string
 	fetcher      fetch.Fetcher
 	id           string
+	mu           sync.Mutex
 }
 
 func NewRoom(id string) *Room {
@@ -103,6 +105,8 @@ func (r *Room) Timeout() float64 {
 }
 
 func (r *Room) LastActive() *time.Time {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	return r.lastActive
 }
 
@@ -165,6 +169,8 @@ func (r *Room) Broadcast(evt *core.EventJSON) {
 		return
 	}
 
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	// rebroadcast message
 	for _, conn := range r.conns {
 		conn.SendEvent(evt) //nolint:errcheck
@@ -179,6 +185,8 @@ func (r *Room) BroadcastHubMessage(m *core.Message) {
 		UserID: "",
 	}
 
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	// go through each client connection
 	for id, conn := range r.conns {
 		// check to see if we've already sent this message
@@ -223,6 +231,8 @@ func (r *Room) RegisterConnection(rc socket.RoomConn) string {
 	// the room connection generates its own id
 	id := rc.ID()
 
+	r.mu.Lock()
+
 	// set the last user
 	r.lastUser = id
 
@@ -231,6 +241,8 @@ func (r *Room) RegisterConnection(rc socket.RoomConn) string {
 
 	// save current user
 	r.nicks[id] = ""
+
+	r.mu.Unlock()
 
 	// send initial state
 	frame := r.state.GenerateFullFrame(core.Full)
@@ -241,6 +253,8 @@ func (r *Room) RegisterConnection(rc socket.RoomConn) string {
 }
 
 func (r *Room) DeregisterConnection(id string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	delete(r.conns, id)
 }
 
@@ -256,8 +270,11 @@ func (r *Room) Handle(rc socket.RoomConn) error {
 	r.SendUserList()
 
 	// send disconnection notification
-	// golang deferrals are called in LIFO order
-	defer delete(r.nicks, id)
+	defer func() {
+		r.mu.Lock()
+		delete(r.nicks, id)
+		r.mu.Unlock()
+	}()
 
 	handlers := r.CreateHandlers()
 

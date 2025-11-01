@@ -13,6 +13,7 @@ package hub
 import (
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/jarednogo/board/pkg/core"
@@ -42,6 +43,7 @@ type Hub struct {
 	rooms    map[string]*room.Room
 	messages []*core.Message
 	db       loader.Loader
+	mu       sync.Mutex
 }
 
 func NewHub() (*Hub, error) {
@@ -190,6 +192,8 @@ func (h *Hub) MessageLoop() {
 }
 
 func (h *Hub) GetOrCreateRoom(roomID string) *room.Room {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	// if the room they want doesn't exist, create it
 	if _, ok := h.rooms[roomID]; !ok {
 		log.Println("New room:", roomID)

@@ -12,6 +12,7 @@ package socket
 
 import (
 	"io"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/jarednogo/board/pkg/core"
@@ -23,6 +24,7 @@ type MockRoomConn struct {
 	SavedEvents  []*core.EventJSON
 	id           string
 	Closed       bool
+	mu           sync.Mutex
 }
 
 func NewMockRoomConn() *MockRoomConn {
@@ -34,6 +36,8 @@ func (mcr *MockRoomConn) OnConnect() {
 }
 
 func (mcr *MockRoomConn) SendEvent(evt *core.EventJSON) error {
+	mcr.mu.Lock()
+	defer mcr.mu.Unlock()
 	mcr.SavedEvents = append(mcr.SavedEvents, evt)
 	return nil
 }

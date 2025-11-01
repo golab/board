@@ -331,6 +331,8 @@ func (room *Room) SetTimeAfter(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {
 		evt = handler(evt)
 		// set last user information
+		room.mu.Lock()
+		defer room.mu.Unlock()
 		room.lastUser = evt.UserID
 		now := time.Now()
 		room.lastActive = &now

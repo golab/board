@@ -47,6 +47,10 @@ coverage: ## Test coverage
 	go tool cover -html=cover.out
 	rm cover.out
 
+test-race: ## Test for data races
+	@echo "==> test-race"
+	go test -race ./...
+
 test: ## Run tests
 	@echo "==> test"
 	go test ./...
