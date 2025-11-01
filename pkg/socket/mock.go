@@ -22,6 +22,7 @@ type MockRoomConn struct {
 	QueuedEvents []*core.EventJSON
 	index        int
 	SavedEvents  []*core.EventJSON
+	roomID       string
 	id           string
 	Closed       bool
 	mu           sync.Mutex
@@ -30,6 +31,14 @@ type MockRoomConn struct {
 func NewMockRoomConn() *MockRoomConn {
 	id := uuid.New().String()
 	return &MockRoomConn{id: id}
+}
+
+func (mcr *MockRoomConn) SetRoomID(s string) {
+	mcr.roomID = s
+}
+
+func (mcr *MockRoomConn) GetRoomID() string {
+	return mcr.roomID
 }
 
 func (mcr *MockRoomConn) OnConnect() {

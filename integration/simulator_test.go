@@ -1,7 +1,6 @@
 package integration_test
 
 import (
-	"sync"
 	"testing"
 
 	"github.com/jarednogo/board/integration"
@@ -9,32 +8,22 @@ import (
 )
 
 func TestSim(t *testing.T) {
-	sim, err := integration.NewSim(10)
+	// make a new simulator and add some clients
+	sim, err := integration.NewSim()
 	assert.NoError(t, err, "test sim")
 
-	var wg sync.WaitGroup
-	wg.Add(len(sim.Clients))
-
 	roomID := "someboard"
+	for i := 0; i < 10; i++ {
+		sim.AddClient(roomID)
+	}
 
 	// connect all the clients
-	for _, client := range sim.Clients {
-		go func() {
-			defer wg.Done()
-			sim.Hub.Handler(client, roomID)
-		}()
-	}
+	sim.ConnectAll()
 
-	// block until all the clients are connected
-	for _, client := range sim.Clients {
-		<-client.Ready()
-	}
+	/*
+		do stuff with the clients
+	*/
 
 	// disconnect all the clients
-	for _, client := range sim.Clients {
-		client.Disconnect()
-	}
-
-	// waits until all the clients are disconnected
-	wg.Wait()
+	sim.DisconnectAll()
 }
