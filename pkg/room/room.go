@@ -217,6 +217,9 @@ func (r *Room) SendUserList() {
 }
 
 func (r *Room) RegisterConnection(rc socket.RoomConn) string {
+	// currently a no-op, but useful for testing
+	rc.OnConnect()
+
 	// the room connection generates its own id
 	id := rc.ID()
 

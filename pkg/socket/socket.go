@@ -22,6 +22,7 @@ import (
 type RoomConn interface {
 	SendEvent(evt *core.EventJSON) error
 	ReceiveEvent() (*core.EventJSON, error)
+	OnConnect()
 	Close() error
 	ID() string
 }
@@ -54,6 +55,9 @@ func (wrc *WebsocketRoomConn) SendEvent(evt *core.EventJSON) error {
 		return err
 	}
 	return nil
+}
+
+func (wrc *WebsocketRoomConn) OnConnect() {
 }
 
 func (wrc *WebsocketRoomConn) ReceiveEvent() (*core.EventJSON, error) {

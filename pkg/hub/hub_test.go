@@ -12,6 +12,7 @@ package hub_test
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
@@ -106,6 +107,65 @@ func TestHub3(t *testing.T) {
 	assert.Equal(t, ml.MessageCount(), 0, "db message count")
 
 	h.SendMessages()
+
+	// one message lives long enough to be saved
+	assert.Equal(t, h.MessageCount(), 1, "hub message count")
+}
+
+func TestHub4(t *testing.T) {
+	ml := loader.NewMemoryLoader()
+	// messages that expire immediately
+	ml.AddMessage("hello world", 0)
+	ml.AddMessage("server message", 0)
+	// message that doesn't expire immediately
+	ml.AddMessage("save this message", 30)
+	h, err := hub.NewHubWithDB(ml)
+	assert.NoError(t, err, "new hub")
+
+	roomID := "someboard"
+	mock1 := socket.NewMockRoomConn()
+	h.Handler(mock1, roomID)
+
+	assert.Equal(t, h.RoomCount(), 1, "hub room count")
+
+	h.Save()
+
+	h.Load()
+
+	assert.Equal(t, h.RoomCount(), 1, "hub room count")
+
+	assert.Equal(t, h.MessageCount(), 0, "hub message count")
+	assert.Equal(t, ml.MessageCount(), 3, "db message count")
+
+	// reads messages from the db (deletes from the db)
+	h.ReadMessages()
+
+	assert.Equal(t, h.MessageCount(), 3, "hub message count")
+	assert.Equal(t, ml.MessageCount(), 0, "db message count")
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	mock2 := socket.NewBlockingMockRoomConn()
+	go func() {
+		defer wg.Done()
+		// mock2.OnConnect() will signal mock2.Ready
+		h.Handler(mock2, roomID)
+	}()
+
+	// block until handler has actually started
+	<-mock2.Ready()
+
+	h.SendMessages()
+	mock2.Disconnect()
+
+	wg.Wait()
+
+	// 3 events
+	// initial frame
+	// connected users
+	// one of the hub messages (the one with 30s ttl)
+	assert.Equal(t, len(mock2.SavedEvents), 3, "mock.receivedEvents")
 
 	// one message lives long enough to be saved
 	assert.Equal(t, h.MessageCount(), 1, "hub message count")

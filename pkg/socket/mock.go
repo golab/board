@@ -30,6 +30,9 @@ func NewMockRoomConn() *MockRoomConn {
 	return &MockRoomConn{id: id}
 }
 
+func (mcr *MockRoomConn) OnConnect() {
+}
+
 func (mcr *MockRoomConn) SendEvent(evt *core.EventJSON) error {
 	mcr.SavedEvents = append(mcr.SavedEvents, evt)
 	return nil
@@ -51,4 +54,43 @@ func (mcr *MockRoomConn) Close() error {
 
 func (mcr *MockRoomConn) ID() string {
 	return mcr.id
+}
+
+type BlockingMockRoomConn struct {
+	conn  chan bool
+	ready chan bool
+	*MockRoomConn
+}
+
+func NewBlockingMockRoomConn() *BlockingMockRoomConn {
+	return &BlockingMockRoomConn{
+		make(chan bool),
+		make(chan bool),
+		NewMockRoomConn(),
+	}
+}
+
+func (mcr *BlockingMockRoomConn) Ready() <-chan bool {
+	return mcr.ready
+}
+
+func (mcr *BlockingMockRoomConn) OnConnect() {
+	close(mcr.ready)
+}
+
+func (mcr *BlockingMockRoomConn) Disconnect() {
+	mcr.conn <- true
+}
+
+func (mcr *BlockingMockRoomConn) ReceiveEvent() (*core.EventJSON, error) {
+	if mcr.index >= len(mcr.QueuedEvents) {
+		// blocks until there's a value from mcr.conn
+		<-mcr.conn
+	}
+	return mcr.MockRoomConn.ReceiveEvent()
+}
+
+func (mcr *BlockingMockRoomConn) SendEvent(evt *core.EventJSON) error {
+	// signals to external caller that the room conn is ready
+	return mcr.MockRoomConn.SendEvent(evt)
 }
