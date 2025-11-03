@@ -25,9 +25,11 @@ import (
 	"github.com/jarednogo/board/pkg/state"
 )
 
+type engine = state.State
+
 type Room struct {
-	conns        map[string]socket.RoomConn
-	state        *state.State
+	conns map[string]socket.RoomConn
+	*engine
 	lastActive   *time.Time
 	lastUser     string
 	lastMessages map[string]*time.Time
@@ -37,6 +39,7 @@ type Room struct {
 	nicks        map[string]string
 	fetcher      fetch.Fetcher
 	id           string
+	handlers     map[string]EventHandler
 	mu           sync.Mutex
 }
 
@@ -48,9 +51,9 @@ func NewRoom(id string) *Room {
 	auth := make(map[string]bool)
 	nicks := make(map[string]string)
 	plugins := make(map[string]plugin.Plugin)
-	return &Room{
+	r := &Room{
 		conns:        conns,
-		state:        s,
+		engine:       s,
 		lastActive:   &now,
 		lastUser:     "",
 		lastMessages: msgs,
@@ -61,6 +64,9 @@ func NewRoom(id string) *Room {
 		fetcher:      fetch.NewDefaultFetcher(),
 		id:           id,
 	}
+	r.initHandlers()
+
+	return r
 }
 
 func Load(load *loader.LoadJSON) (*Room, error) {
@@ -91,17 +97,13 @@ func Load(load *loader.LoadJSON) (*Room, error) {
 	}
 	r := NewRoom(id)
 	r.password = load.Password
-	r.state = st
+	r.setState(st)
 
 	return r, nil
 }
 
 func (r *Room) ID() string {
 	return r.id
-}
-
-func (r *Room) Timeout() float64 {
-	return r.state.GetTimeout()
 }
 
 func (r *Room) LastActive() *time.Time {
@@ -111,7 +113,7 @@ func (r *Room) LastActive() *time.Time {
 }
 
 func (r *Room) Save() *loader.LoadJSON {
-	stateJSON := r.state.CreateStateJSON()
+	stateJSON := r.CreateStateJSON()
 
 	// embed stateJSON into save
 	save := &loader.LoadJSON{}
@@ -140,6 +142,10 @@ func (r *Room) Close() error {
 		return nil
 	}
 	return fmt.Errorf("%v", errs)
+}
+
+func (r *Room) setState(s *state.State) {
+	r.engine = s
 }
 
 func (r *Room) SetFetcher(f fetch.Fetcher) {
@@ -206,10 +212,10 @@ func (r *Room) UploadSGF(sgf string) *core.EventJSON {
 		msg := fmt.Sprintf("Error parsing SGF: %s", err)
 		return core.ErrorEvent(msg)
 	}
-	r.state = s
+	r.engine = s
 
 	// replace evt with frame data
-	frame := r.state.GenerateFullFrame(core.Full)
+	frame := r.GenerateFullFrame(core.Full)
 	return core.FrameEvent(frame)
 }
 
@@ -245,7 +251,7 @@ func (r *Room) RegisterConnection(rc socket.RoomConn) string {
 	r.mu.Unlock()
 
 	// send initial state
-	frame := r.state.GenerateFullFrame(core.Full)
+	frame := r.GenerateFullFrame(core.Full)
 	evt := core.FrameEvent(frame)
 	rc.SendEvent(evt) //nolint:errcheck
 
@@ -276,8 +282,6 @@ func (r *Room) Handle(rc socket.RoomConn) error {
 		r.mu.Unlock()
 	}()
 
-	handlers := r.CreateHandlers()
-
 	// main loop
 	for {
 		// receive the event
@@ -290,11 +294,7 @@ func (r *Room) Handle(rc socket.RoomConn) error {
 		evt.UserID = id
 
 		// handle the event
-		if handler, ok := handlers[evt.Event]; ok {
-			handler(evt)
-		} else {
-			handlers["_"](evt)
-		}
+		r.HandleAny(evt)
 	}
 }
 

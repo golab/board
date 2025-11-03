@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/loader"
 	"github.com/jarednogo/board/pkg/room"
@@ -46,9 +47,14 @@ type Hub struct {
 	mu       sync.Mutex
 }
 
-func NewHub() (*Hub, error) {
+func NewHub(cfg *config.Config) (*Hub, error) {
 	// get database setup
-	db := loader.NewDefaultLoader()
+	var db loader.Loader
+	if cfg.Testing {
+		db = loader.NewMemoryLoader()
+	} else {
+		db = loader.NewDefaultLoader()
+	}
 	return NewHubWithDB(db)
 }
 
@@ -120,7 +126,7 @@ func (h *Hub) Heartbeat(roomID string) {
 		now := time.Now()
 		diff := now.Sub(*r.LastActive())
 		log.Println(roomID, "Inactive for", diff)
-		if diff.Seconds() > r.Timeout() {
+		if diff.Seconds() > r.GetTimeout() {
 			break
 		}
 		time.Sleep(3600 * time.Second)

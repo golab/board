@@ -8,37 +8,54 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package room
+package config
 
 import (
-	"github.com/jarednogo/board/pkg/core"
-	"github.com/jarednogo/board/pkg/state"
+	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
-// helper functions for ogs
-// these were more important when ogs was its own package
-// still i'm keeping them around in case i split it out again
-
-func (r *Room) HeadColor() core.Color {
-	return r.state.HeadColor()
+type Config struct {
+	Testing bool         `yaml:"testing"`
+	Server  serverConfig `yaml:"server"`
+	Twitch  twitchConfig `yaml:"twitch"`
 }
 
-func (r *Room) PushHead(x, y int, c core.Color) {
-	r.state.PushHead(x, y, c)
+type serverConfig struct {
+	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
+	URL  string `yaml:"url"`
 }
 
-func (r *Room) GenerateFullFrame(t core.TreeJSONType) *core.Frame {
-	return r.state.GenerateFullFrame(t)
+type twitchConfig struct {
+	ClientID string `yaml:"client_id"`
+	Secret   string `yaml:"secret"`
+	BotID    string `yaml:"bot_id"`
 }
 
-func (r *Room) AddPatternNodes(movesArr []*core.PatternMove) {
-	r.state.AddPatternNodes(movesArr)
+func New(fname string) (*Config, error) {
+	data, err := os.ReadFile(fname)
+	if err != nil {
+		return nil, err
+	}
+
+	var cfg Config
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, err
+	}
+
+	return &cfg, nil
 }
 
-func (r *Room) ToSGF(init bool) string {
-	return r.state.ToSGF(init)
-}
-
-func (r *Room) CreateStateJSON() *state.StateJSON {
-	return r.state.CreateStateJSON()
+func Default() *Config {
+	s := serverConfig{
+		Host: "localhost",
+		Port: 8080,
+		URL:  "http://localhost:8080",
+	}
+	cfg := &Config{
+		Server: s,
+	}
+	return cfg
 }

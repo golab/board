@@ -23,70 +23,90 @@ import (
 	"github.com/jarednogo/board/pkg/zip"
 )
 
+type EventType string
+
+const (
+	EventTypeIsProtected    EventType = "isprotected"
+	EventTypeCheckPassword  EventType = "checkpassword"
+	EventTypeDebug          EventType = "debug"
+	EventTypePing           EventType = "ping"
+	EventTypeUploadSGF      EventType = "upload_sgf"
+	EventTypeRequestSGF     EventType = "request_sgf"
+	EventTypeTrash          EventType = "trash"
+	EventTypeUpdateNickname EventType = "update_nickname"
+	EventTypeUpdateSettings EventType = "update_settings"
+	EventTypeAddStone       EventType = "add_stone"
+	EventTypeGraft          EventType = "graft"
+	EventTypeDefault        EventType = "_"
+)
+
 type EventHandler func(*core.EventJSON) *core.EventJSON
 
 type Middleware func(EventHandler) EventHandler
 
 // for use by server
-func (r *Room) CreateHandlers() map[string]EventHandler {
-	return map[string]EventHandler{
-		"isprotected":   r.HandleIsProtected,
-		"checkpassword": r.HandleCheckPassword,
-		"debug":         HandleDebug,
-		"ping":          HandlePing,
+func (r *Room) initHandlers() {
+	r.handlers = map[string]EventHandler{
+		"isprotected":   r.handleIsProtected,
+		"checkpassword": r.handleCheckPassword,
+		"debug":         handleDebug,
+		"ping":          handlePing,
 
-		"upload_sgf": Chain(
-			r.HandleUploadSGF,
-			r.OutsideBuffer,
-			r.Authorized,
-			r.CloseOGS,
-			r.BroadcastAfter),
-		"request_sgf": Chain(
-			r.HandleRequestSGF,
-			r.OutsideBuffer,
-			r.Authorized,
-			r.CloseOGS,
-			r.BroadcastAfter),
-		"trash": Chain(
-			r.HandleTrash,
-			r.OutsideBuffer,
-			r.Authorized,
-			r.CloseOGS,
-			r.BroadcastAfter),
-		"update_nickname": Chain(
-			r.HandleUpdateNickname,
-			r.BroadcastAfter),
-		"update_settings": Chain(
-			r.HandleUpdateSettings,
-			r.Authorized,
-			r.BroadcastConnectedUsersAfter,
-			r.BroadcastAfter,
-			r.BroadcastFullFrameAfter),
-		"add_stone": Chain(
-			r.HandleEvent,
-			r.OutsideBuffer,
-			r.Authorized,
-			r.Slow,
-			r.BroadcastAfter,
-			r.SetTimeAfter),
-		"_": Chain(
-			r.HandleEvent,
-			r.OutsideBuffer,
-			r.Authorized,
-			r.BroadcastAfter,
-			r.SetTimeAfter),
+		"upload_sgf": chain(
+			r.handleUploadSGF,
+			r.outsideBuffer,
+			r.authorized,
+			r.closeOGS,
+			r.broadcastAfter),
+		"request_sgf": chain(
+			r.handleRequestSGF,
+			r.outsideBuffer,
+			r.authorized,
+			r.closeOGS,
+			r.broadcastAfter),
+		"trash": chain(
+			r.handleTrash,
+			r.outsideBuffer,
+			r.authorized,
+			r.closeOGS,
+			r.broadcastAfter),
+		"update_nickname": chain(
+			r.handleUpdateNickname,
+			r.broadcastAfter),
+		"update_settings": chain(
+			r.handleUpdateSettings,
+			r.authorized,
+			r.broadcastConnectedUsersAfter,
+			r.broadcastAfter,
+			r.broadcastFullFrameAfter),
+		"add_stone": chain(
+			r.handleEvent,
+			r.outsideBuffer,
+			r.authorized,
+			r.slow,
+			r.broadcastAfter,
+			r.setTimeAfter),
+		"graft": chain(
+			r.handleEvent,
+			r.broadcastFullFrameAfter),
+		"_": chain(
+			r.handleEvent,
+			r.outsideBuffer,
+			r.authorized,
+			r.broadcastAfter,
+			r.setTimeAfter),
 	}
 }
 
 // handlers
 
-func (room *Room) HandleIsProtected(evt *core.EventJSON) *core.EventJSON {
+func (room *Room) handleIsProtected(evt *core.EventJSON) *core.EventJSON {
 	evt.Value = room.HasPassword()
 	room.SendTo(evt.UserID, evt)
 	return evt
 }
 
-func (room *Room) HandleCheckPassword(evt *core.EventJSON) *core.EventJSON {
+func (room *Room) handleCheckPassword(evt *core.EventJSON) *core.EventJSON {
 	p := evt.Value.(string)
 
 	if !core.CorrectPassword(p, room.password) {
@@ -98,15 +118,15 @@ func (room *Room) HandleCheckPassword(evt *core.EventJSON) *core.EventJSON {
 	return evt
 }
 
-func HandleDebug(evt *core.EventJSON) *core.EventJSON {
+func handleDebug(evt *core.EventJSON) *core.EventJSON {
 	return evt
 }
 
-func HandlePing(evt *core.EventJSON) *core.EventJSON {
+func handlePing(evt *core.EventJSON) *core.EventJSON {
 	return evt
 }
 
-func (room *Room) HandleUploadSGF(evt *core.EventJSON) *core.EventJSON {
+func (room *Room) handleUploadSGF(evt *core.EventJSON) *core.EventJSON {
 	var bcast *core.EventJSON
 	defer func() {
 		if bcast != nil {
@@ -160,7 +180,7 @@ func (room *Room) HandleUploadSGF(evt *core.EventJSON) *core.EventJSON {
 	return bcast
 }
 
-func (room *Room) HandleRequestSGF(evt *core.EventJSON) *core.EventJSON {
+func (room *Room) handleRequestSGF(evt *core.EventJSON) *core.EventJSON {
 	var bcast *core.EventJSON
 	defer func() {
 		if bcast != nil {
@@ -237,22 +257,22 @@ func (room *Room) HandleRequestSGF(evt *core.EventJSON) *core.EventJSON {
 	return bcast
 }
 
-func (room *Room) HandleTrash(evt *core.EventJSON) *core.EventJSON {
+func (room *Room) handleTrash(evt *core.EventJSON) *core.EventJSON {
 
 	// reset room
-	oldBuffer := room.state.GetInputBuffer()
-	room.state = state.NewState(room.state.Size(), true)
+	oldBuffer := room.GetInputBuffer()
+	room.engine = state.NewState(room.Size(), true)
 
 	// reuse old inputbuffer
-	room.state.SetInputBuffer(oldBuffer)
+	room.SetInputBuffer(oldBuffer)
 
-	frame := room.state.GenerateFullFrame(core.Full)
+	frame := room.GenerateFullFrame(core.Full)
 	bcast := core.FrameEvent(frame)
 	bcast.UserID = evt.UserID
 	return bcast
 }
 
-func (room *Room) HandleUpdateNickname(evt *core.EventJSON) *core.EventJSON {
+func (room *Room) handleUpdateNickname(evt *core.EventJSON) *core.EventJSON {
 	nickname := evt.Value.(string)
 	room.nicks[evt.UserID] = nickname
 	userEvt := &core.EventJSON{
@@ -269,7 +289,7 @@ type Settings struct {
 	Password string
 }
 
-func (room *Room) HandleUpdateSettings(evt *core.EventJSON) *core.EventJSON {
+func (room *Room) handleUpdateSettings(evt *core.EventJSON) *core.EventJSON {
 	sMap := evt.Value.(map[string]interface{})
 	buffer := int64(sMap["buffer"].(float64))
 	size := int(sMap["size"].(float64))
@@ -284,11 +304,11 @@ func (room *Room) HandleUpdateSettings(evt *core.EventJSON) *core.EventJSON {
 	}
 	settings := &Settings{buffer, size, hashed}
 
-	room.state.SetInputBuffer(settings.Buffer)
-	if settings.Size != room.state.Size() {
+	room.SetInputBuffer(settings.Buffer)
+	if settings.Size != room.Size() {
 		// essentially trashing
-		room.state = state.NewState(settings.Size, true)
-		room.state.SetInputBuffer(buffer)
+		room.engine = state.NewState(settings.Size, true)
+		room.SetInputBuffer(buffer)
 	}
 
 	// can be changed
@@ -302,7 +322,7 @@ func (room *Room) HandleUpdateSettings(evt *core.EventJSON) *core.EventJSON {
 	return evt
 }
 
-func (room *Room) HandleEvent(evt *core.EventJSON) *core.EventJSON {
+func (room *Room) handleEvent(evt *core.EventJSON) *core.EventJSON {
 	var bcast *core.EventJSON
 	defer func() {
 		if bcast != nil {
@@ -310,7 +330,7 @@ func (room *Room) HandleEvent(evt *core.EventJSON) *core.EventJSON {
 		}
 	}()
 
-	frame, err := room.state.AddEvent(evt)
+	frame, err := room.AddEvent(evt)
 	if err != nil {
 		bcast = core.ErrorEvent(err.Error())
 		return bcast
@@ -327,7 +347,7 @@ func (room *Room) HandleEvent(evt *core.EventJSON) *core.EventJSON {
 
 // middleware
 
-func (room *Room) SetTimeAfter(handler EventHandler) EventHandler {
+func (room *Room) setTimeAfter(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {
 		evt = handler(evt)
 		// set last user information
@@ -340,7 +360,7 @@ func (room *Room) SetTimeAfter(handler EventHandler) EventHandler {
 	}
 }
 
-func (room *Room) BroadcastAfter(handler EventHandler) EventHandler {
+func (room *Room) broadcastAfter(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {
 		evt = handler(evt)
 		room.Broadcast(evt)
@@ -348,17 +368,17 @@ func (room *Room) BroadcastAfter(handler EventHandler) EventHandler {
 	}
 }
 
-func (room *Room) BroadcastFullFrameAfter(handler EventHandler) EventHandler {
+func (room *Room) broadcastFullFrameAfter(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {
 		evt = handler(evt)
-		frame := room.state.GenerateFullFrame(core.Full)
+		frame := room.GenerateFullFrame(core.Full)
 		bcast := core.FrameEvent(frame)
 		room.Broadcast(bcast)
 		return evt
 	}
 }
 
-func (room *Room) BroadcastConnectedUsersAfter(handler EventHandler) EventHandler {
+func (room *Room) broadcastConnectedUsersAfter(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {
 		evt = handler(evt)
 		userEvt := &core.EventJSON{
@@ -373,14 +393,14 @@ func (room *Room) BroadcastConnectedUsersAfter(handler EventHandler) EventHandle
 	}
 }
 
-func (room *Room) CloseOGS(handler EventHandler) EventHandler {
+func (room *Room) closeOGS(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {
 		room.DeregisterPlugin("ogs")
 		return handler(evt)
 	}
 }
 
-func (room *Room) Authorized(handler EventHandler) EventHandler {
+func (room *Room) authorized(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {
 		id := evt.UserID
 		_, ok := room.auth[id]
@@ -393,7 +413,7 @@ func (room *Room) Authorized(handler EventHandler) EventHandler {
 }
 
 // this one is to keep the same user from submitting multiple events too quickly
-func (room *Room) Slow(handler EventHandler) EventHandler {
+func (room *Room) slow(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {
 		id := evt.UserID
 		// check multiple events from the same user in a narrow window (50 ms)
@@ -413,12 +433,12 @@ func (room *Room) Slow(handler EventHandler) EventHandler {
 }
 
 // this one is to keep people from tripping over each other
-func (room *Room) OutsideBuffer(handler EventHandler) EventHandler {
+func (room *Room) outsideBuffer(handler EventHandler) EventHandler {
 	return func(evt *core.EventJSON) *core.EventJSON {
 		if room.lastUser != evt.UserID {
 			now := time.Now()
 			diff := now.Sub(*room.lastActive)
-			if diff.Milliseconds() < room.state.GetInputBuffer() {
+			if diff.Milliseconds() < room.GetInputBuffer() {
 				// don't do the next handler if too fast
 				return evt
 			}
@@ -427,7 +447,7 @@ func (room *Room) OutsideBuffer(handler EventHandler) EventHandler {
 	}
 }
 
-func Chain(h EventHandler, middleware ...Middleware) EventHandler {
+func chain(h EventHandler, middleware ...Middleware) EventHandler {
 	for i := len(middleware) - 1; i >= 0; i-- {
 		h = middleware[i](h)
 	}
@@ -437,11 +457,10 @@ func Chain(h EventHandler, middleware ...Middleware) EventHandler {
 // HandleAny is only to be used in special occasions because it recreates
 // all the handlers
 func (room *Room) HandleAny(evt *core.EventJSON) *core.EventJSON {
-	handlers := room.CreateHandlers()
 	// handle the event
-	if handler, ok := handlers[evt.Event]; ok {
+	if handler, ok := room.handlers[evt.Event]; ok {
 		return handler(evt)
 	} else {
-		return handlers["_"](evt)
+		return room.handlers["_"](evt)
 	}
 }

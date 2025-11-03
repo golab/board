@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,54 +19,38 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jarednogo/board/pkg/hub"
+	"github.com/jarednogo/board/pkg/config"
 )
 
-// constants
-const WSPORT = 9000
-const WSHOST = "localhost"
-
-var version = "dev"
-
 func main() {
-	// make a new hub
-	h, err := hub.NewHub()
+	// read in config
+	cfgFile := flag.String("f", "", "Path to config file")
+	flag.Parse()
+	var cfg *config.Config
+
+	if *cfgFile == "" {
+		cfg = config.Default()
+	} else if loadedCfg, err := config.New(*cfgFile); err != nil {
+		log.Println("failed to load config:", *cfgFile, err)
+		cfg = config.Default()
+	} else {
+		log.Println("successfully loaded config:", *cfgFile)
+		cfg = loadedCfg
+	}
+
+	log.Println("running config:", cfg)
+
+	// setup routes
+	r, err := Setup(cfg)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	h.Load()
-	defer h.Save()
-
-	// http server setup
-
-	// initialize router and middlewares
-	r := chi.NewRouter()
-	r.Use(middleware.StripSlashes)
-	r.Use(middleware.Logger)
-
-	// web router
-	r.Mount("/", h.WebRouter())
-
-	// extension router
-	r.Mount("/ext", h.ExtRouter())
-
-	// api routers
-	r.Mount("/api", hub.ApiRouter(version))
-	r.Mount("/api/v1", hub.ApiV1Router())
-
-	// see server package for routes
-	r.Mount("/apps/twitch", h.TwitchRouter())
-
-	// mount websocket
-	r.Mount("/socket", h.SocketRouter())
 
 	// start everything
-	port := "8080"
-	host := "localhost"
-	url := fmt.Sprintf("%s:%s", host, port)
+	host := cfg.Server.Host
+	port := cfg.Server.Port
+	url := fmt.Sprintf("%s:%d", host, port)
 
 	// get ready to catch signals
 	cancelChan := make(chan os.Signal, 1)

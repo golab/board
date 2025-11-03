@@ -2,15 +2,14 @@ FROM golang:1.23.8-alpine
 
 ADD pkg /root/pkg
 ADD cmd /root/cmd
+ADD config/config-docker.yaml /root/config.yaml
 
 ADD go.mod /root/go.mod
 ADD go.sum /root/go.sum
-
-RUN sed -i -e 's/localhost/0.0.0.0/g' /root/cmd/main.go
 
 EXPOSE 8080
 
 WORKDIR /root
 
-RUN go build cmd/*
-CMD ["/root/main"]
+RUN go build -o /root/main cmd/*
+CMD ["/root/main", "-f", "/root/config.yaml"]

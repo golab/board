@@ -22,7 +22,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/jarednogo/board/pkg/core"
-	"github.com/jarednogo/board/pkg/room"
 	"github.com/jarednogo/board/pkg/twitch"
 )
 
@@ -236,12 +235,6 @@ func (h *Hub) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 		log.Println("grafting:", chat.Body)
 		branch := strings.ToLower(chat.Body)
 
-		// create the event
-		e := &core.EventJSON{
-			Event: "graft",
-			Value: branch,
-		}
-
 		roomID := h.db.TwitchGetRoom(broadcaster)
 		if roomID == "" {
 			log.Println("room not set for", broadcaster)
@@ -250,10 +243,13 @@ func (h *Hub) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 		log.Println("room found for", broadcaster, roomID)
 		r := h.GetOrCreateRoom(roomID)
 
-		handler := room.Chain(
-			r.HandleEvent,
-			r.BroadcastFullFrameAfter)
-		handler(e)
+		// create the event
+		e := &core.EventJSON{
+			Event: "graft",
+			Value: branch,
+		}
+
+		r.HandleAny(e)
 	}
 
 	w.WriteHeader(http.StatusOK)

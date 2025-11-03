@@ -6,3 +6,4 @@ bin/
 build/
 testdata/
 tmp/
+config.yaml

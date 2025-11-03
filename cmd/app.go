@@ -8,63 +8,49 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package integration
+package main
 
 import (
-	"sync"
+	"net/http"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/hub"
-	"github.com/jarednogo/board/pkg/loader"
-	"github.com/jarednogo/board/pkg/socket"
 )
 
-type Sim struct {
-	Hub     *hub.Hub
-	Clients []*socket.BlockingMockRoomConn
-	wg      sync.WaitGroup
-}
+var version = "dev"
 
-func NewSim() (*Sim, error) {
-	ml := loader.NewMemoryLoader()
-	h, err := hub.NewHubWithDB(ml)
+func Setup(cfg *config.Config) (http.Handler, error) {
+	// make a new hub
+	h, err := hub.NewHub(cfg)
 	if err != nil {
 		return nil, err
 	}
+	h.Load()
 
-	sim := &Sim{
-		Hub: h,
-	}
+	// http server setup
 
-	return sim, nil
-}
+	// initialize router and middlewares
+	r := chi.NewRouter()
+	r.Use(middleware.StripSlashes)
+	r.Use(middleware.Logger)
 
-func (s *Sim) AddClient(roomID string) {
-	client := socket.NewBlockingMockRoomConn()
-	client.SetRoomID(roomID)
-	s.Clients = append(s.Clients, client)
-}
+	// web router
+	r.Mount("/", h.WebRouter())
 
-func (s *Sim) ConnectAll() {
-	for _, client := range s.Clients {
-		s.wg.Add(1)
-		go func() {
-			defer s.wg.Done()
-			s.Hub.Handler(client, client.GetRoomID())
-		}()
-	}
+	// extension router
+	r.Mount("/ext", h.ExtRouter())
 
-	// block until all the clients are connected
-	for _, client := range s.Clients {
-		<-client.Ready()
-	}
-}
+	// api routers
+	r.Mount("/api", hub.ApiRouter(version))
+	r.Mount("/api/v1", hub.ApiV1Router())
 
-func (s *Sim) DisconnectAll() {
-	// disconnect all the clients
-	for _, client := range s.Clients {
-		client.Disconnect()
-	}
+	// see server package for routes
+	r.Mount("/apps/twitch", h.TwitchRouter())
 
-	// waits until all the clients are disconnected
-	s.wg.Wait()
+	// mount websocket
+	r.Mount("/socket", h.SocketRouter())
+
+	return r, nil
 }

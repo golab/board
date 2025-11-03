@@ -8,63 +8,18 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package integration
+package main_test
 
 import (
-	"sync"
+	"testing"
 
-	"github.com/jarednogo/board/pkg/hub"
-	"github.com/jarednogo/board/pkg/loader"
-	"github.com/jarednogo/board/pkg/socket"
+	main "github.com/jarednogo/board/cmd"
+	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/pkg/config"
 )
 
-type Sim struct {
-	Hub     *hub.Hub
-	Clients []*socket.BlockingMockRoomConn
-	wg      sync.WaitGroup
-}
-
-func NewSim() (*Sim, error) {
-	ml := loader.NewMemoryLoader()
-	h, err := hub.NewHubWithDB(ml)
-	if err != nil {
-		return nil, err
-	}
-
-	sim := &Sim{
-		Hub: h,
-	}
-
-	return sim, nil
-}
-
-func (s *Sim) AddClient(roomID string) {
-	client := socket.NewBlockingMockRoomConn()
-	client.SetRoomID(roomID)
-	s.Clients = append(s.Clients, client)
-}
-
-func (s *Sim) ConnectAll() {
-	for _, client := range s.Clients {
-		s.wg.Add(1)
-		go func() {
-			defer s.wg.Done()
-			s.Hub.Handler(client, client.GetRoomID())
-		}()
-	}
-
-	// block until all the clients are connected
-	for _, client := range s.Clients {
-		<-client.Ready()
-	}
-}
-
-func (s *Sim) DisconnectAll() {
-	// disconnect all the clients
-	for _, client := range s.Clients {
-		client.Disconnect()
-	}
-
-	// waits until all the clients are disconnected
-	s.wg.Wait()
+func TestApp(t *testing.T) {
+	_, err := main.Setup(config.Default())
+	t.Logf("%v", err)
+	assert.NoError(t, err, "main")
 }

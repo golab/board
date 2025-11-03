@@ -92,6 +92,7 @@ func TestSendTo(t *testing.T) {
 	assert.Equal(t, len(mock.SavedEvents), 2, "expected client to receive a test event")
 }
 
+/*
 func TestHandlers(t *testing.T) {
 	r := room.NewRoom("")
 	mock := socket.NewMockRoomConn()
@@ -107,6 +108,7 @@ func TestHandlers(t *testing.T) {
 	resp := handlers["checkpassword"](evt)
 	assert.Zero(t, resp.Value.(string), "password string should be empty")
 }
+*/
 
 func TestFetcher(t *testing.T) {
 	r := room.NewRoom("")

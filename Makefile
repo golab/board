@@ -58,13 +58,13 @@ test: ## Run tests
 build: ## Build the binary
 	@echo "==> build"
 	mkdir -p build
-	go build -o build cmd/*.go
+	go build -o build/main cmd/*.go
 
 run: setup ## Build and run with air (live reloading)
 	@echo "==> run"
 	mkdir -p build
 	rm -f build/* 2> /dev/null
-	./bin/air --build.cmd 'go build -o build cmd/*.go' --build.bin "./build/main"
+	./bin/air --build.cmd 'go build -o build/main cmd/*.go' --build.bin "./build/main"
 
 clean: ## Remove build artifacts
 	@echo "==> clean"
