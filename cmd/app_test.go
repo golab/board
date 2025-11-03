@@ -11,6 +11,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package main_test
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	main "github.com/jarednogo/board/cmd"
@@ -18,8 +23,53 @@ import (
 	"github.com/jarednogo/board/pkg/config"
 )
 
-func TestApp(t *testing.T) {
-	_, err := main.Setup(config.Default())
-	t.Logf("%v", err)
+func TestPing(t *testing.T) {
+	r, err := main.Setup(config.Test())
 	assert.NoError(t, err, "main")
+
+	ts := httptest.NewServer(r)
+	defer ts.Close()
+
+	resp, err := http.Get(ts.URL + "/api/ping")
+	if err != nil {
+		assert.NoError(t, err, "ping")
+		return
+	}
+	defer resp.Body.Close() //nolint:errcheck
+
+	body, _ := io.ReadAll(resp.Body)
+	pong := struct {
+		Message string `json:"message"`
+	}{}
+
+	err = json.Unmarshal(body, &pong)
+	assert.NoError(t, err, "unmarshal")
+
+	if pong.Message != "pong" {
+		t.Fatalf("expected pong, got %s", body)
+	}
+}
+
+func TestTwitch(t *testing.T) {
+	r, err := main.Setup(config.Test())
+	assert.NoError(t, err, "main")
+
+	ts := httptest.NewServer(r)
+	defer ts.Close()
+
+	body := []byte(`{"event": {"message": {"text": "!setboard Board"}}}`)
+
+	_, err = http.Post(ts.URL+"/apps/twitch/callback", "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		assert.NoError(t, err, "setboard")
+		return
+	}
+
+	body = []byte(`{"event": {"message": {"text": "!branch k10 k11"}}}`)
+
+	_, err = http.Post(ts.URL+"/apps/twitch/callback", "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		assert.NoError(t, err, "branch")
+		return
+	}
 }

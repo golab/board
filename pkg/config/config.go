@@ -59,3 +59,9 @@ func Default() *Config {
 	}
 	return cfg
 }
+
+func Test() *Config {
+	c := Default()
+	c.Testing = true
+	return c
+}

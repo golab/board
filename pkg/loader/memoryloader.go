@@ -17,11 +17,13 @@ import (
 type MemoryLoader struct {
 	rooms    map[string]*LoadJSON
 	messages []*MessageJSON
+	twitch   map[string]string
 }
 
 func NewMemoryLoader() *MemoryLoader {
 	return &MemoryLoader{
-		rooms: make(map[string]*LoadJSON),
+		rooms:  make(map[string]*LoadJSON),
+		twitch: make(map[string]string),
 	}
 }
 
@@ -37,11 +39,16 @@ func (ml *MemoryLoader) Setup() error {
 	return nil
 }
 
-func (ml *MemoryLoader) TwitchGetRoom(_ string) string {
+func (ml *MemoryLoader) TwitchGetRoom(broadcaster string) string {
+	if roomID, ok := ml.twitch[broadcaster]; ok {
+		return roomID
+	}
 	return ""
 }
 
-func (ml *MemoryLoader) TwitchSetRoom(_, _ string) error {
+func (ml *MemoryLoader) TwitchSetRoom(broadcaster, roomID string) error {
+	ml.twitch[broadcaster] = roomID
+
 	return nil
 }
 
