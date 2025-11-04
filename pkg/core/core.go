@@ -13,7 +13,6 @@ package core
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -454,16 +453,6 @@ func AlphanumericToCoord(s string, size int) (*Coord, error) {
 	}
 
 	return &Coord{x, y}, nil
-}
-
-// MyURL gets the server url from an env var
-// this will be different on test vs main
-func MyURL() string {
-	s := os.Getenv("MYURL")
-	if s == "" {
-		return "http://localhost:8080"
-	}
-	return s
 }
 
 // Sanitize ensures strings only contain letters and numbers

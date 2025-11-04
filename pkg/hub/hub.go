@@ -45,6 +45,7 @@ type Hub struct {
 	messages []*core.Message
 	db       loader.Loader
 	mu       sync.Mutex
+	cfg      *config.Config
 }
 
 func NewHub(cfg *config.Config) (*Hub, error) {
@@ -55,10 +56,10 @@ func NewHub(cfg *config.Config) (*Hub, error) {
 	} else {
 		db = loader.NewDefaultLoader()
 	}
-	return NewHubWithDB(db)
+	return NewHubWithDB(db, cfg)
 }
 
-func NewHubWithDB(db loader.Loader) (*Hub, error) {
+func NewHubWithDB(db loader.Loader, cfg *config.Config) (*Hub, error) {
 	err := db.Setup()
 	if err != nil {
 		return nil, err
@@ -67,6 +68,7 @@ func NewHubWithDB(db loader.Loader) (*Hub, error) {
 		rooms:    make(map[string]*room.Room),
 		messages: []*core.Message{},
 		db:       db,
+		cfg:      cfg,
 	}
 
 	// start message loop

@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/hub"
 	"github.com/jarednogo/board/pkg/loader"
@@ -44,7 +45,7 @@ func TestParseURL(t *testing.T) {
 }
 
 func TestHub1(t *testing.T) {
-	h, err := hub.NewHubWithDB(loader.NewMemoryLoader())
+	h, err := hub.NewHubWithDB(loader.NewMemoryLoader(), config.Default())
 	assert.NoError(t, err, "new hub")
 	h.Load()
 
@@ -56,7 +57,7 @@ func TestHub1(t *testing.T) {
 }
 
 func TestHub2(t *testing.T) {
-	h, err := hub.NewHubWithDB(loader.NewMemoryLoader())
+	h, err := hub.NewHubWithDB(loader.NewMemoryLoader(), config.Default())
 	assert.NoError(t, err, "new hub")
 
 	mock := socket.NewMockRoomConn()
@@ -83,7 +84,7 @@ func TestHub3(t *testing.T) {
 	ml.AddMessage("server message", 0)
 	// message that doesn't expire immediately
 	ml.AddMessage("save this message", 30)
-	h, err := hub.NewHubWithDB(ml)
+	h, err := hub.NewHubWithDB(ml, config.Default())
 	assert.NoError(t, err, "new hub")
 
 	roomID := "someboard"
@@ -119,7 +120,7 @@ func TestHub4(t *testing.T) {
 	ml.AddMessage("server message", 0)
 	// message that doesn't expire immediately
 	ml.AddMessage("save this message", 30)
-	h, err := hub.NewHubWithDB(ml)
+	h, err := hub.NewHubWithDB(ml, config.Default())
 	assert.NoError(t, err, "new hub")
 
 	roomID := "someboard"

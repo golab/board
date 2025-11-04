@@ -1,3 +1,13 @@
+/*
+Copyright (c) 2025 Jared Nishikawa
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
 package twitch
 
 import (
@@ -9,11 +19,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"time"
-
-	"github.com/jarednogo/board/pkg/core"
 )
 
 // Chat is used to encode strings like "!command plus some args"
@@ -62,13 +69,11 @@ type TwitchMessageJSON struct {
 	Text string `json:"text"`
 }
 
-// Verify uses the env var TWITCHSECRET to validate a twitch POST
-func Verify(message, signature string) bool {
-	// get secret
-	secret := Secret()
+func Verify(secret, message, signature string) bool {
 	if len(secret) == 0 {
 		return true
 	}
+
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write([]byte(message))
 
@@ -76,33 +81,40 @@ func Verify(message, signature string) bool {
 	return hmac.Equal([]byte(signature), []byte(expected))
 }
 
-// TODO: should all of these be unexported?
-
-// Secret uses the env var
-func Secret() []byte {
-	s := os.Getenv("TWITCHSECRET")
-	return []byte(s)
+type TwitchClient interface {
+	GetUserAccessToken(string) (string, error)
+	GetUsers(string) (string, error)
+	GetAppAccessToken() (string, error)
+	Unsubscribe(string, string) error
+	Subscribe(string, string) (string, error)
+	GetSubscription(string) (string, error)
 }
 
-// ClientID uses the env var
-func ClientID() string {
-	return os.Getenv("TWITCHCLIENTID")
+type DefaultTwitchClient struct {
+	clientID string
+	secret   string
+	botID    string
+	url      string
 }
 
-// BotID uses the env var
-func BotID() string {
-	return os.Getenv("TWITCHBOTID")
+func NewDefaultTwitchClient(clientID, secret, botID, url string) *DefaultTwitchClient {
+	return &DefaultTwitchClient{
+		clientID: clientID,
+		secret:   secret,
+		botID:    botID,
+		url:      url,
+	}
 }
 
 // GetUserAccessToken is a prescribed pattern from twitch to get an access token
 // attached to a particular user
-func GetUserAccessToken(code string) (string, error) {
+func (t *DefaultTwitchClient) GetUserAccessToken(code string) (string, error) {
 	body := map[string]string{
-		"client_id":     ClientID(),
-		"client_secret": string(Secret()),
+		"client_id":     t.clientID,
+		"client_secret": t.secret,
 		"grant_type":    "authorization_code",
 		"code":          code,
-		"redirect_uri":  fmt.Sprintf("%s/apps/twitch/callback", core.MyURL()),
+		"redirect_uri":  fmt.Sprintf("%s/apps/twitch/callback", t.url),
 		"scope":         "channel:bot",
 	}
 
@@ -149,7 +161,7 @@ func GetUserAccessToken(code string) (string, error) {
 
 // GetUsers specifically requires a user access token
 // TODO: getting the user access token should just be part of this function
-func GetUsers(token string) (string, error) {
+func (t *DefaultTwitchClient) GetUsers(token string) (string, error) {
 	url := "https://api.twitch.tv/helix/users"
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -159,7 +171,7 @@ func GetUsers(token string) (string, error) {
 	}
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
-	req.Header.Add("Client-Id", ClientID())
+	req.Header.Add("Client-Id", t.clientID)
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
@@ -198,10 +210,10 @@ func GetUsers(token string) (string, error) {
 
 // GetAppAccessToken is a prescribed pattern from twitch to get an access token
 // associated with an application
-func GetAppAccessToken() (string, error) {
+func (t *DefaultTwitchClient) GetAppAccessToken() (string, error) {
 	body := map[string]string{
-		"client_id":     ClientID(),
-		"client_secret": string(Secret()),
+		"client_id":     t.clientID,
+		"client_secret": t.secret,
 		"grant_type":    "client_credentials",
 	}
 
@@ -256,7 +268,7 @@ type SubscriptionRequest struct {
 
 // Unsubscribe from a twitch channel, requires an app access token
 // TODO: getting the access token should be part of this function
-func Unsubscribe(id, token string) error {
+func (t *DefaultTwitchClient) Unsubscribe(id, token string) error {
 	body := map[string]string{"id": id}
 
 	jsonData, err := json.Marshal(body)
@@ -275,7 +287,7 @@ func Unsubscribe(id, token string) error {
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
-	req.Header.Add("Client-Id", ClientID())
+	req.Header.Add("Client-Id", t.clientID)
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
@@ -286,18 +298,18 @@ func Unsubscribe(id, token string) error {
 
 // Subscribe to a channel, requires an app access token
 // TODO: getting the access token should be part of this function
-func Subscribe(user, token string) (string, error) {
+func (t *DefaultTwitchClient) Subscribe(user, token string) (string, error) {
 	body := SubscriptionRequest{
 		Type:    "channel.chat.message",
 		Version: "1",
 		Condition: map[string]string{
 			"broadcaster_user_id": user,
-			"user_id":             BotID(),
+			"user_id":             t.botID,
 		},
 		Transport: map[string]string{
 			"method":   "webhook",
-			"callback": fmt.Sprintf("%s/apps/twitch/callback", core.MyURL()),
-			"secret":   string(Secret()),
+			"callback": fmt.Sprintf("%s/apps/twitch/callback", t.url),
+			"secret":   t.secret,
 		},
 	}
 
@@ -317,7 +329,7 @@ func Subscribe(user, token string) (string, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
-	req.Header.Add("Client-Id", ClientID())
+	req.Header.Add("Client-Id", t.clientID)
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
@@ -364,7 +376,7 @@ func Subscribe(user, token string) (string, error) {
 
 // Subscriptions for a particular app
 // requires an app access token
-func Subscriptions(token string) ([]*SubscriptionData, error) {
+func (t *DefaultTwitchClient) subscriptions(token string) ([]*SubscriptionData, error) {
 	url := "https://api.twitch.tv/helix/eventsub/subscriptions"
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -374,7 +386,7 @@ func Subscriptions(token string) ([]*SubscriptionData, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
-	req.Header.Add("Client-Id", ClientID())
+	req.Header.Add("Client-Id", t.clientID)
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
@@ -400,13 +412,13 @@ func Subscriptions(token string) ([]*SubscriptionData, error) {
 }
 
 // GetSubscription check if we have a subscription to the user
-func GetSubscription(user string) (string, error) {
-	token, err := GetAppAccessToken()
+func (t *DefaultTwitchClient) GetSubscription(user string) (string, error) {
+	token, err := t.GetAppAccessToken()
 	if err != nil {
 		return "", err
 	}
 
-	subs, err := Subscriptions(token)
+	subs, err := t.subscriptions(token)
 	if err != nil {
 		return "", err
 	}

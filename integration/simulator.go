@@ -13,6 +13,7 @@ package integration
 import (
 	"sync"
 
+	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/hub"
 	"github.com/jarednogo/board/pkg/loader"
 	"github.com/jarednogo/board/pkg/socket"
@@ -26,7 +27,7 @@ type Sim struct {
 
 func NewSim() (*Sim, error) {
 	ml := loader.NewMemoryLoader()
-	h, err := hub.NewHubWithDB(ml)
+	h, err := hub.NewHubWithDB(ml, config.Default())
 	if err != nil {
 		return nil, err
 	}

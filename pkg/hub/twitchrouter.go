@@ -27,14 +27,14 @@ import (
 
 func (h *Hub) TwitchRouter() http.Handler {
 	r := chi.NewRouter()
-	r.Get("/subscribe", twitchSubscribe)
-	r.Get("/unsubscribe", twitchUnsubscribe)
-	r.Get("/callback", twitchCallbackGet)
+	r.Get("/subscribe", h.twitchSubscribe)
+	r.Get("/unsubscribe", h.twitchUnsubscribe)
+	r.Get("/callback", h.twitchCallbackGet)
 	r.Post("/callback", h.twitchCallbackPost)
 	return r
 }
 
-func twitchSubscribe(w http.ResponseWriter, r *http.Request) {
+func (h *Hub) twitchSubscribe(w http.ResponseWriter, r *http.Request) {
 	state := uuid.New().String()
 	expiration := time.Now().Add(2 * time.Minute)
 	http.SetCookie(w, &http.Cookie{
@@ -45,11 +45,11 @@ func twitchSubscribe(w http.ResponseWriter, r *http.Request) {
 		Expires:  expiration,
 		Path:     "/",
 	})
-	url := fmt.Sprintf("https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/apps/twitch/callback&scope=%s&state=%s", twitch.ClientID(), core.MyURL(), "channel:bot", state)
+	url := fmt.Sprintf("https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/apps/twitch/callback&scope=%s&state=%s", h.cfg.Twitch.ClientID, h.cfg.Server.URL, "channel:bot", state)
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
-func twitchUnsubscribe(w http.ResponseWriter, r *http.Request) {
+func (h *Hub) twitchUnsubscribe(w http.ResponseWriter, r *http.Request) {
 	state := uuid.New().String()
 	expiration := time.Now().Add(2 * time.Minute)
 	http.SetCookie(w, &http.Cookie{
@@ -60,11 +60,11 @@ func twitchUnsubscribe(w http.ResponseWriter, r *http.Request) {
 		Expires:  expiration,
 		Path:     "/",
 	})
-	url := fmt.Sprintf("https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/apps/twitch/callback&state=%s", twitch.ClientID(), core.MyURL(), state)
+	url := fmt.Sprintf("https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/apps/twitch/callback&state=%s", h.cfg.Twitch.ClientID, h.cfg.Server.URL, state)
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
-func twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
+func (h *Hub) twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	scope := r.URL.Query().Get("scope")
 	state := r.URL.Query().Get("state")
@@ -75,17 +75,19 @@ func twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tc := twitch.NewDefaultTwitchClient(h.cfg.Twitch.ClientID, h.cfg.Twitch.Secret, h.cfg.Twitch.BotID, h.cfg.Server.URL)
+
 	if code != "" {
 
 		// use the code to get an access token
-		token, err := twitch.GetUserAccessToken(code)
+		token, err := tc.GetUserAccessToken(code)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusForbidden)
 			return
 		}
 
 		// use the user access token to get the user id
-		user, err := twitch.GetUsers(token)
+		user, err := tc.GetUsers(token)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusForbidden)
 			return
@@ -93,7 +95,7 @@ func twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
 
 		// get an app access token (one could imagine putting this
 		// in the subscribe function directly)
-		token, err = twitch.GetAppAccessToken()
+		token, err = tc.GetAppAccessToken()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusForbidden)
 			return
@@ -101,14 +103,14 @@ func twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
 
 		if scope == "" {
 			// unsubscribe logic
-			id, err := twitch.GetSubscription(user)
+			id, err := tc.GetSubscription(user)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusForbidden)
 				return
 			}
 
 			// unsubscribe
-			err = twitch.Unsubscribe(id, token)
+			err = tc.Unsubscribe(id, token)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusForbidden)
 				return
@@ -116,7 +118,7 @@ func twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
 			log.Println("unsubscribing:", id, user)
 		} else {
 			// subscribe, get subscription id
-			id, err := twitch.Subscribe(user, token)
+			id, err := tc.Subscribe(user, token)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusForbidden)
 				return
@@ -164,7 +166,7 @@ func (h *Hub) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 	message := msgid + timestamp + string(body)
 
 	// do verification
-	v := twitch.Verify(message, signature)
+	v := twitch.Verify(h.cfg.Twitch.Secret, message, signature)
 	if !v {
 		log.Println("unverified message")
 		return
