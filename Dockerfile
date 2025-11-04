@@ -11,5 +11,8 @@ EXPOSE 8080
 
 WORKDIR /root
 
-RUN go build -o /root/main cmd/*
+ARG VERSION=dev
+ENV VERSION=${VERSION}
+
+RUN go build -ldflags "-X main.version=$VERSION" -o /root/main cmd/*
 CMD ["/root/main", "-f", "/root/config.yaml"]

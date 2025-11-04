@@ -43,7 +43,7 @@ $ make run
 2. Build the docker container
 
 ```bash
-$ docker build . -t board
+$ docker build --build-arg VERSION=$(git describe --tags) -t board .
 ```
 
 3. Run the docker container, binding the container ports to your host ports
