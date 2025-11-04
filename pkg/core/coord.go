@@ -8,136 +8,13 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-// the core package provides basic functionality to all the major components of the code
 package core
 
 import (
 	"fmt"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
-
-	"github.com/google/uuid"
 )
-
-type Message struct {
-	Text      string
-	ExpiresAt *time.Time
-	notified  map[string]bool
-	mu        sync.Mutex
-}
-
-func NewMessage(text string, ttl int) *Message {
-	// calculate the expiration time using TTL
-	now := time.Now()
-	expiresAt := now.Add(time.Duration(ttl) * time.Second)
-
-	return &Message{
-		Text:      text,
-		ExpiresAt: &expiresAt,
-		notified:  make(map[string]bool),
-		mu:        sync.Mutex{},
-	}
-}
-
-func (m *Message) MarkNotified(id string) {
-	m.mu.Lock()
-	m.notified[id] = true
-	m.mu.Unlock()
-}
-
-func (m *Message) IsNotified(id string) bool {
-	var n bool
-	m.mu.Lock()
-	_, n = m.notified[id]
-	m.mu.Unlock()
-	return n
-}
-
-// Color is one of NoColor, Black, or White
-type Color int
-
-const (
-	NoColor Color = iota
-	Black
-	White
-)
-
-// FrameType can be either DiffFrame or FullFrame
-type FrameType int
-
-const (
-	DiffFrame = iota
-	FullFrame
-)
-
-// Frame provides the data for when the board needs to be updated (not the explorer)
-type Frame struct {
-	Type      FrameType `json:"type"`
-	Diff      *Diff     `json:"diff"`
-	Marks     *Marks    `json:"marks"`
-	Comments  []string  `json:"comments"`
-	Metadata  *Metadata `json:"metadata"`
-	TreeJSON  *TreeJSON `json:"tree"`
-	BlackCaps int       `json:"black_caps"`
-	WhiteCaps int       `json:"white_caps"`
-	BlackArea []*Coord  `json:"black_area"`
-	WhiteArea []*Coord  `json:"white_area"`
-	Dame      []*Coord  `json:"dame"`
-}
-
-// Marks provides data for any marks on the board
-type Marks struct {
-	Current   *Coord   `json:"current"`
-	Squares   []*Coord `json:"squares"`
-	Triangles []*Coord `json:"triangles"`
-	Labels    []*Label `json:"labels"`
-	Pens      []*Pen   `json:"pens"`
-}
-
-// Label can be any text, but typically single digits or letters
-type Label struct {
-	Coord *Coord `json:"coord"`
-	Text  string `json:"text"`
-}
-
-// Pen contains a start and end coordinate plus a color
-type Pen struct {
-	X0    float64 `json:"x0"`
-	Y0    float64 `json:"y0"`
-	X1    float64 `json:"x1"`
-	Y1    float64 `json:"y1"`
-	Color string  `json:"color"`
-}
-
-// Metadata provides the size of the board plus any fields (usually from the root node)
-type Metadata struct {
-	Size   int                 `json:"size"`
-	Fields map[string][]string `json:"fields"`
-}
-
-// Opposite: Black -> White, White -> Black, NoColor -> NoColor
-func Opposite(c Color) Color {
-	if c == Black {
-		return White
-	}
-	if c == White {
-		return Black
-	}
-	return NoColor
-}
-
-// String is just for debugging purposes
-func (c Color) String() string {
-	if c == Black {
-		return "B"
-	}
-	if c == White {
-		return "W"
-	}
-	return "+"
-}
 
 // CoordSet is used for quickly checking a set for existence of coords
 type CoordSet map[string]*Coord
@@ -353,34 +230,6 @@ func InterfaceToCoord(ifc interface{}) (*Coord, error) {
 	return &Coord{x, y}, nil
 }
 
-// TreeJSONType defines some options for how much data to send in a TreeJSON
-type TreeJSONType int
-
-const (
-	CurrentOnly TreeJSONType = iota
-	CurrentAndPreferred
-	PartialNodes
-	Full
-)
-
-// NodeJSON is a key component of TreeJSON
-type NodeJSON struct {
-	Color Color `json:"color"`
-	Down  []int `json:"down"`
-	Depth int   `json:"depth"`
-}
-
-// TreeJSON is the basic struct to encode information about the explorer
-// this makes up one part of a Frame
-type TreeJSON struct {
-	Nodes     map[int]*NodeJSON `json:"nodes"`
-	Current   int               `json:"current"`
-	Preferred []int             `json:"preferred"`
-	Depth     int               `json:"depth"`
-	Up        int               `json:"up"`
-	Root      int               `json:"root"`
-}
-
 // PatternMove is a Coord plus a Color
 // StoneSet is essentially an extension of PatternMove
 // TODO: consider renaming PatternMove
@@ -395,34 +244,6 @@ func NewPatternMove(x, y int, c Color) *PatternMove {
 		Coord: coord,
 		Color: c,
 	}
-}
-
-// EventJSON is the basic struct for sending and receiving messages over
-// the websockets
-type EventJSON struct {
-	Event  string      `json:"event"`
-	Value  interface{} `json:"value"`
-	UserID string      `json:"userid"`
-}
-
-func EmptyEvent() *EventJSON {
-	return &EventJSON{}
-}
-
-// ErrorEvent is a special case of an EventJSON
-func ErrorEvent(msg string) *EventJSON {
-	return &EventJSON{"error", msg, ""}
-}
-
-// FrameEvent is a special case of an EventJSON
-func FrameEvent(frame *Frame) *EventJSON {
-	return &EventJSON{"frame", frame, ""}
-}
-
-// NopEvent signals to the server to do nothing
-// (in particular, don't send to clients)
-func NopEvent() *EventJSON {
-	return &EventJSON{"nop", nil, ""}
 }
 
 // AlphanumericToCoord converts a string like "c17" to a Coord
@@ -453,25 +274,4 @@ func AlphanumericToCoord(s string, size int) (*Coord, error) {
 	}
 
 	return &Coord{x, y}, nil
-}
-
-// Sanitize ensures strings only contain letters and numbers
-func Sanitize(s string) string {
-	ok := []rune{}
-	for _, c := range s {
-		if (c >= '0' && c <= '9') ||
-			(c >= 'A' && c <= 'Z') ||
-			(c >= 'a' && c <= 'z') {
-			ok = append(ok, c)
-		}
-	}
-	return string(ok)
-}
-
-// UUID4 makes and sanitizes a new uuid
-func UUID4() string {
-	r, _ := uuid.NewRandom()
-	s := r.String()
-	// remove hyphens
-	return Sanitize(s)
 }
