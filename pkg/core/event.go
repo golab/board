@@ -39,6 +39,44 @@ func NopEvent() *EventJSON {
 	return &EventJSON{"nop", nil, ""}
 }
 
+// Diff contains two StoneSets (Add and Remove) and is a key component of a Frame
+type Diff struct {
+	Add    []*StoneSet `json:"add"`
+	Remove []*StoneSet `json:"remove"`
+}
+
+// NewDiff makes a Diff based on two StoneSets
+func NewDiff(add, remove []*StoneSet) *Diff {
+	return &Diff{
+		Add:    add,
+		Remove: remove,
+	}
+}
+
+// Copy makes a copy of the Diff
+func (d *Diff) Copy() *Diff {
+	if d == nil {
+		return nil
+	}
+	add := []*StoneSet{}
+	remove := []*StoneSet{}
+	for _, a := range d.Add {
+		add = append(add, a.Copy())
+	}
+	for _, r := range d.Remove {
+		remove = append(remove, r.Copy())
+	}
+	return NewDiff(add, remove)
+}
+
+// Invert simply exchanges Add and Remove
+func (d *Diff) Invert() *Diff {
+	if d == nil {
+		return nil
+	}
+	return NewDiff(d.Remove, d.Add)
+}
+
 // FrameType can be either DiffFrame or FullFrame
 type FrameType int
 
