@@ -41,7 +41,7 @@ func (h *Hub) HandleOp(op, roomID string) string {
 		data = r.ToSGF(true)
 	case "debug":
 		// send debug info
-		stateJSON := r.CreateStateJSON()
+		stateJSON := r.SaveState()
 		dataBytes, _ := json.Marshal(stateJSON)
 		data = string(dataBytes)
 	}

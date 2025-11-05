@@ -13,7 +13,6 @@ package room
 import (
 	"encoding/base64"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -88,13 +87,7 @@ func Load(load *loader.LoadJSON) (*Room, error) {
 	st.SetInputBuffer(load.Buffer)
 
 	loc := load.Location
-	if loc != "" {
-		dirs := strings.Split(loc, ",")
-		// don't need to assign to a variable if we don't use it
-		for range dirs {
-			st.Right()
-		}
-	}
+	st.SetLocation(loc)
 	r := NewRoom(id)
 	r.password = load.Password
 	r.setState(st)
@@ -112,8 +105,12 @@ func (r *Room) LastActive() *time.Time {
 	return r.lastActive
 }
 
+func (r *Room) SaveState() *state.StateJSON {
+	return r.engine.Save()
+}
+
 func (r *Room) Save() *loader.LoadJSON {
-	stateJSON := r.CreateStateJSON()
+	stateJSON := r.engine.Save()
 
 	// embed stateJSON into save
 	save := &loader.LoadJSON{}
