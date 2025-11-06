@@ -8,43 +8,42 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package socket
+package core
 
 import (
 	"encoding/binary"
 	"encoding/json"
 
 	"github.com/google/uuid"
-	"github.com/jarednogo/board/pkg/core"
 	"golang.org/x/net/websocket"
 )
 
-type RoomConn interface {
-	SendEvent(evt *core.Event) error
-	ReceiveEvent() (*core.Event, error)
+type EventChannel interface {
+	SendEvent(evt *Event) error
+	ReceiveEvent() (*Event, error)
 	OnConnect()
 	Close() error
 	ID() string
 }
 
-// WebsocketRoomConn is a thin wrapper around *websocket.Conn
-type WebsocketRoomConn struct {
+// WebsocketEventChannel is a thin wrapper around *websocket.Conn
+type WebsocketEventChannel struct {
 	ws *websocket.Conn
 	id string
 }
 
-func NewWebsocketRoomConn(ws *websocket.Conn) RoomConn {
+func NewWebsocketEventChannel(ws *websocket.Conn) EventChannel {
 	// assign the new connection a new id
 	id := uuid.New().String()
 
-	return &WebsocketRoomConn{ws, id}
+	return &WebsocketEventChannel{ws, id}
 }
 
-func (wrc *WebsocketRoomConn) ID() string {
+func (wrc *WebsocketEventChannel) ID() string {
 	return wrc.id
 }
 
-func (wrc *WebsocketRoomConn) SendEvent(evt *core.Event) error {
+func (wrc *WebsocketEventChannel) SendEvent(evt *Event) error {
 	// marshal event back into data
 	data, err := json.Marshal(evt)
 	if err != nil {
@@ -57,28 +56,28 @@ func (wrc *WebsocketRoomConn) SendEvent(evt *core.Event) error {
 	return nil
 }
 
-func (wrc *WebsocketRoomConn) OnConnect() {
+func (wrc *WebsocketEventChannel) OnConnect() {
 }
 
-func (wrc *WebsocketRoomConn) ReceiveEvent() (*core.Event, error) {
+func (wrc *WebsocketEventChannel) ReceiveEvent() (*Event, error) {
 	data, err := wrc.readPacket()
 	if err != nil {
 		return nil, err
 	}
 
 	// turn data into json
-	evt := &core.Event{}
+	evt := &Event{}
 	if err := json.Unmarshal(data, evt); err != nil {
 		return nil, err
 	}
 	return evt, nil
 }
 
-func (wrc *WebsocketRoomConn) Close() error {
+func (wrc *WebsocketEventChannel) Close() error {
 	return wrc.ws.Close()
 }
 
-func (wrc *WebsocketRoomConn) readPacket() ([]byte, error) {
+func (wrc *WebsocketEventChannel) readPacket() ([]byte, error) {
 	// read in 4 bytes (length of rest of message)
 	lengthArray := make([]byte, 4)
 	_, err := wrc.ws.Read(lengthArray)
@@ -106,7 +105,7 @@ func (wrc *WebsocketRoomConn) readPacket() ([]byte, error) {
 	return data, nil
 }
 
-func (wrc *WebsocketRoomConn) readBytes(size int) ([]byte, error) {
+func (wrc *WebsocketEventChannel) readBytes(size int) ([]byte, error) {
 	chunkSize := 64
 	message := []byte{}
 	for len(message) < size {

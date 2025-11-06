@@ -20,14 +20,13 @@ import (
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/loader"
 	"github.com/jarednogo/board/pkg/room/plugin"
-	"github.com/jarednogo/board/pkg/socket"
 	"github.com/jarednogo/board/pkg/state"
 )
 
 type engine = state.State
 
 type Room struct {
-	conns map[string]socket.RoomConn
+	conns map[string]core.EventChannel
 	*engine
 	lastActive   *time.Time
 	lastUser     string
@@ -43,7 +42,7 @@ type Room struct {
 }
 
 func NewRoom(id string) *Room {
-	conns := make(map[string]socket.RoomConn)
+	conns := make(map[string]core.EventChannel)
 	s := state.NewState(19, true)
 	now := time.Now()
 	msgs := make(map[string]*time.Time)
@@ -227,7 +226,7 @@ func (r *Room) SendUserList() {
 	r.Broadcast(evt)
 }
 
-func (r *Room) RegisterConnection(rc socket.RoomConn) string {
+func (r *Room) RegisterConnection(rc core.EventChannel) string {
 	// currently a no-op, but useful for testing
 	rc.OnConnect()
 
@@ -261,7 +260,7 @@ func (r *Room) DeregisterConnection(id string) {
 	delete(r.conns, id)
 }
 
-func (r *Room) Handle(rc socket.RoomConn) error {
+func (r *Room) Handle(rc core.EventChannel) error {
 	// assign id to the new connection
 	id := r.RegisterConnection(rc)
 

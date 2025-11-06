@@ -14,14 +14,14 @@ import (
 	"sync"
 
 	"github.com/jarednogo/board/pkg/config"
+	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/hub"
 	"github.com/jarednogo/board/pkg/loader"
-	"github.com/jarednogo/board/pkg/socket"
 )
 
 type Sim struct {
 	Hub     *hub.Hub
-	Clients []*socket.BlockingMockRoomConn
+	Clients []*core.BlockingMockEventChannel
 	wg      sync.WaitGroup
 }
 
@@ -40,7 +40,7 @@ func NewSim() (*Sim, error) {
 }
 
 func (s *Sim) AddClient(roomID string) {
-	client := socket.NewBlockingMockRoomConn()
+	client := core.NewBlockingMockEventChannel()
 	client.SetRoomID(roomID)
 	s.Clients = append(s.Clients, client)
 }

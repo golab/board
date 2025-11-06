@@ -20,7 +20,6 @@ import (
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/hub"
 	"github.com/jarednogo/board/pkg/loader"
-	"github.com/jarednogo/board/pkg/socket"
 )
 
 func TestParseURL(t *testing.T) {
@@ -49,7 +48,7 @@ func TestHub1(t *testing.T) {
 	assert.NoError(t, err, "new hub")
 	h.Load()
 
-	mock := socket.NewMockRoomConn()
+	mock := core.NewMockEventChannel()
 	roomID := "someboard"
 	h.Handler(mock, roomID)
 
@@ -60,7 +59,7 @@ func TestHub2(t *testing.T) {
 	h, err := hub.NewHubWithDB(loader.NewMemoryLoader(), config.Default())
 	assert.NoError(t, err, "new hub")
 
-	mock := socket.NewMockRoomConn()
+	mock := core.NewMockEventChannel()
 	mock.QueuedEvents = append(mock.QueuedEvents,
 		&core.Event{
 			Event: "pass",
@@ -88,7 +87,7 @@ func TestHub3(t *testing.T) {
 	assert.NoError(t, err, "new hub")
 
 	roomID := "someboard"
-	mock1 := socket.NewMockRoomConn()
+	mock1 := core.NewMockEventChannel()
 	h.Handler(mock1, roomID)
 
 	assert.Equal(t, h.RoomCount(), 1, "hub room count")
@@ -124,7 +123,7 @@ func TestHub4(t *testing.T) {
 	assert.NoError(t, err, "new hub")
 
 	roomID := "someboard"
-	mock1 := socket.NewMockRoomConn()
+	mock1 := core.NewMockEventChannel()
 	h.Handler(mock1, roomID)
 
 	assert.Equal(t, h.RoomCount(), 1, "hub room count")
@@ -147,7 +146,7 @@ func TestHub4(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	mock2 := socket.NewBlockingMockRoomConn()
+	mock2 := core.NewBlockingMockEventChannel()
 	go func() {
 		defer wg.Done()
 		// mock2.OnConnect() will signal mock2.Ready

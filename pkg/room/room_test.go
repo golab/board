@@ -19,13 +19,12 @@ import (
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/room"
 	"github.com/jarednogo/board/pkg/room/plugin"
-	"github.com/jarednogo/board/pkg/socket"
 )
 
 func TestBroadcast(t *testing.T) {
 	r := room.NewRoom("")
-	mock1 := socket.NewMockRoomConn()
-	mock2 := socket.NewMockRoomConn()
+	mock1 := core.NewMockEventChannel()
+	mock2 := core.NewMockEventChannel()
 
 	r.RegisterConnection(mock1)
 	r.RegisterConnection(mock2)
@@ -42,8 +41,8 @@ func TestBroadcast(t *testing.T) {
 
 func TestBroadcastMessage(t *testing.T) {
 	r := room.NewRoom("")
-	mock1 := socket.NewMockRoomConn()
-	mock2 := socket.NewMockRoomConn()
+	mock1 := core.NewMockEventChannel()
+	mock2 := core.NewMockEventChannel()
 
 	r.RegisterConnection(mock1)
 	r.RegisterConnection(mock2)
@@ -71,7 +70,7 @@ func TestPlugin(t *testing.T) {
 
 func TestSendUserList(t *testing.T) {
 	r := room.NewRoom("")
-	mock := socket.NewMockRoomConn()
+	mock := core.NewMockEventChannel()
 	r.RegisterConnection(mock)
 	r.SendUserList()
 	// first event is the frame immediately on connecting
@@ -84,7 +83,7 @@ func TestSendUserList(t *testing.T) {
 
 func TestSendTo(t *testing.T) {
 	r := room.NewRoom("")
-	mock := socket.NewMockRoomConn()
+	mock := core.NewMockEventChannel()
 	id := r.RegisterConnection(mock)
 	evt := core.EmptyEvent()
 	r.SendTo(id, evt)
@@ -95,7 +94,7 @@ func TestSendTo(t *testing.T) {
 /*
 func TestHandlers(t *testing.T) {
 	r := room.NewRoom("")
-	mock := socket.NewMockRoomConn()
+	mock := core.NewMockEventChannel()
 	id := r.RegisterConnection(mock)
 	handlers := r.CreateHandlers()
 	evt := core.EmptyEvent()
@@ -127,9 +126,9 @@ func TestSaveLoad(t *testing.T) {
 
 func TestClose(t *testing.T) {
 	r := room.NewRoom("")
-	mock1 := socket.NewMockRoomConn()
-	mock2 := socket.NewMockRoomConn()
-	mock3 := socket.NewMockRoomConn()
+	mock1 := core.NewMockEventChannel()
+	mock2 := core.NewMockEventChannel()
+	mock3 := core.NewMockEventChannel()
 	r.RegisterConnection(mock1)
 	r.RegisterConnection(mock2)
 	r.RegisterConnection(mock3)
@@ -143,7 +142,7 @@ func TestClose(t *testing.T) {
 func TestHandle(t *testing.T) {
 	r := room.NewRoom("")
 	// mock initializes with zero events so automatically sends an error
-	mock := socket.NewMockRoomConn()
+	mock := core.NewMockEventChannel()
 	err := r.Handle(mock)
 	assert.ErrorIs(t, err, io.EOF, "r.Handle")
 }

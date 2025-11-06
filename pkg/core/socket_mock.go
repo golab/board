@@ -8,50 +8,49 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package socket
+package core
 
 import (
 	"io"
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/jarednogo/board/pkg/core"
 )
 
-type MockRoomConn struct {
-	QueuedEvents []*core.Event
+type MockEventChannel struct {
+	QueuedEvents []*Event
 	index        int
-	SavedEvents  []*core.Event
+	SavedEvents  []*Event
 	roomID       string
 	id           string
 	Closed       bool
 	mu           sync.Mutex
 }
 
-func NewMockRoomConn() *MockRoomConn {
+func NewMockEventChannel() *MockEventChannel {
 	id := uuid.New().String()
-	return &MockRoomConn{id: id}
+	return &MockEventChannel{id: id}
 }
 
-func (mcr *MockRoomConn) SetRoomID(s string) {
+func (mcr *MockEventChannel) SetRoomID(s string) {
 	mcr.roomID = s
 }
 
-func (mcr *MockRoomConn) GetRoomID() string {
+func (mcr *MockEventChannel) GetRoomID() string {
 	return mcr.roomID
 }
 
-func (mcr *MockRoomConn) OnConnect() {
+func (mcr *MockEventChannel) OnConnect() {
 }
 
-func (mcr *MockRoomConn) SendEvent(evt *core.Event) error {
+func (mcr *MockEventChannel) SendEvent(evt *Event) error {
 	mcr.mu.Lock()
 	defer mcr.mu.Unlock()
 	mcr.SavedEvents = append(mcr.SavedEvents, evt)
 	return nil
 }
 
-func (mcr *MockRoomConn) ReceiveEvent() (*core.Event, error) {
+func (mcr *MockEventChannel) ReceiveEvent() (*Event, error) {
 	if mcr.index >= len(mcr.QueuedEvents) {
 		return nil, io.EOF
 	}
@@ -60,50 +59,50 @@ func (mcr *MockRoomConn) ReceiveEvent() (*core.Event, error) {
 	return mcr.QueuedEvents[i], nil
 }
 
-func (mcr *MockRoomConn) Close() error {
+func (mcr *MockEventChannel) Close() error {
 	mcr.Closed = true
 	return nil
 }
 
-func (mcr *MockRoomConn) ID() string {
+func (mcr *MockEventChannel) ID() string {
 	return mcr.id
 }
 
-type BlockingMockRoomConn struct {
+type BlockingMockEventChannel struct {
 	conn  chan bool
 	ready chan bool
-	*MockRoomConn
+	*MockEventChannel
 }
 
-func NewBlockingMockRoomConn() *BlockingMockRoomConn {
-	return &BlockingMockRoomConn{
+func NewBlockingMockEventChannel() *BlockingMockEventChannel {
+	return &BlockingMockEventChannel{
 		make(chan bool),
 		make(chan bool),
-		NewMockRoomConn(),
+		NewMockEventChannel(),
 	}
 }
 
-func (mcr *BlockingMockRoomConn) Ready() <-chan bool {
+func (mcr *BlockingMockEventChannel) Ready() <-chan bool {
 	return mcr.ready
 }
 
-func (mcr *BlockingMockRoomConn) OnConnect() {
+func (mcr *BlockingMockEventChannel) OnConnect() {
 	close(mcr.ready)
 }
 
-func (mcr *BlockingMockRoomConn) Disconnect() {
+func (mcr *BlockingMockEventChannel) Disconnect() {
 	mcr.conn <- true
 }
 
-func (mcr *BlockingMockRoomConn) ReceiveEvent() (*core.Event, error) {
+func (mcr *BlockingMockEventChannel) ReceiveEvent() (*Event, error) {
 	if mcr.index >= len(mcr.QueuedEvents) {
 		// blocks until there's a value from mcr.conn
 		<-mcr.conn
 	}
-	return mcr.MockRoomConn.ReceiveEvent()
+	return mcr.MockEventChannel.ReceiveEvent()
 }
 
-func (mcr *BlockingMockRoomConn) SendEvent(evt *core.Event) error {
+func (mcr *BlockingMockEventChannel) SendEvent(evt *Event) error {
 	// signals to external caller that the room conn is ready
-	return mcr.MockRoomConn.SendEvent(evt)
+	return mcr.MockEventChannel.SendEvent(evt)
 }
