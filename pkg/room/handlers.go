@@ -23,23 +23,6 @@ import (
 	"github.com/jarednogo/board/pkg/zip"
 )
 
-type EventType string
-
-const (
-	EventTypeIsProtected    EventType = "isprotected"
-	EventTypeCheckPassword  EventType = "checkpassword"
-	EventTypeDebug          EventType = "debug"
-	EventTypePing           EventType = "ping"
-	EventTypeUploadSGF      EventType = "upload_sgf"
-	EventTypeRequestSGF     EventType = "request_sgf"
-	EventTypeTrash          EventType = "trash"
-	EventTypeUpdateNickname EventType = "update_nickname"
-	EventTypeUpdateSettings EventType = "update_settings"
-	EventTypeAddStone       EventType = "add_stone"
-	EventTypeGraft          EventType = "graft"
-	EventTypeDefault        EventType = "_"
-)
-
 type EventHandler func(*core.EventJSON) *core.EventJSON
 
 type Middleware func(EventHandler) EventHandler
