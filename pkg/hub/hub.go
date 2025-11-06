@@ -114,13 +114,17 @@ func (h *Hub) Load() {
 
 		id := r.ID()
 		log.Printf("Loading %s", id)
+		h.mu.Lock()
 		h.rooms[id] = r
+		h.mu.Unlock()
 		go h.Heartbeat(id)
 	}
 }
 
 func (h *Hub) Heartbeat(roomID string) {
+	h.mu.Lock()
 	r, ok := h.rooms[roomID]
+	h.mu.Unlock()
 	if !ok {
 		return
 	}
