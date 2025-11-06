@@ -19,213 +19,185 @@ import (
 	"github.com/jarednogo/board/pkg/state"
 )
 
-func TestHandleAddStone(t *testing.T) {
+func TestCommandAddStone(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	evt := &core.EventJSON{
-		Value: map[string]interface{}{
-			"coords": []interface{}{9.0, 9.0},
-			"color":  1.0,
-		},
-	}
-	_, err = s.HandleAddStone(evt)
-	assert.NoError(t, err, "s.HandleAddStone")
+	coord := &core.Coord{X: 9, Y: 9}
+	color := core.Black
+	_, err = state.NewAddStoneCommand(coord, color).Execute(s)
+	assert.NoError(t, err, "s.CommandAddStone")
 
 }
 
-func TestHandlePass(t *testing.T) {
+func TestCommandPass(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	evt := &core.EventJSON{
-		Value: 1.0,
-	}
-
-	_, err = s.HandlePass(evt)
-	assert.NoError(t, err, "s.HandlePass")
+	_, err = state.NewPassCommand(core.Black).Execute(s)
+	assert.NoError(t, err, "s.CommandPass")
 }
 
-func TestHandleRemoveStone(t *testing.T) {
+func TestCommandRemoveStone(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	evt := &core.EventJSON{
-		Value: []interface{}{9.0, 9.0},
-	}
-
-	_, err = s.HandleRemoveStone(evt)
-	assert.NoError(t, err, "s.HandleRemoveStone")
+	coord := &core.Coord{X: 9, Y: 9}
+	_, err = state.NewRemoveStoneCommand(coord).Execute(s)
+	assert.NoError(t, err, "s.CommandRemoveStone")
 }
 
-func TestHandleRemoveMark(t *testing.T) {
+func TestCommandRemoveMark(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	evt := &core.EventJSON{
-		Value: []interface{}{9.0, 9.0},
-	}
-
-	_, err = s.HandleRemoveMark(evt)
-	assert.NoError(t, err, "s.HandleRemoveMark")
+	coord := &core.Coord{X: 9, Y: 9}
+	_, err = state.NewRemoveMarkCommand(coord).Execute(s)
+	assert.NoError(t, err, "s.CommandRemoveMark")
 }
 
-func TestHandleLeft(t *testing.T) {
+func TestCommandLeft(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	_, err = s.HandleLeft()
-	assert.NoError(t, err, "s.HandleLeft")
+	_, err = state.NewLeftCommand().Execute(s)
+	assert.NoError(t, err, "s.CommandLeft")
 }
 
-func TestHandleRight(t *testing.T) {
+func TestCommandRight(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	_, err = s.HandleRight()
-	assert.NoError(t, err, "s.HandleRight")
+	_, err = state.NewRightCommand().Execute(s)
+	assert.NoError(t, err, "s.CommandRight")
 }
 
-func TestHandleUp(t *testing.T) {
+func TestCommandUp(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	_, err = s.HandleUp()
-	assert.NoError(t, err, "s.HandleUp")
+	_, err = state.NewUpCommand().Execute(s)
+	assert.NoError(t, err, "s.CommandUp")
 }
 
-func TestHandleDown(t *testing.T) {
+func TestCommandDown(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	_, err = s.HandleDown()
-	assert.NoError(t, err, "s.HandleDown")
+	_, err = state.NewDownCommand().Execute(s)
+	assert.NoError(t, err, "s.CommandDown")
 }
 
-func TestHandleRewind(t *testing.T) {
+func TestCommandRewind(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	_, err = s.HandleRewind()
-	assert.NoError(t, err, "s.HandleRewind")
+	_, err = state.NewRewindCommand().Execute(s)
+	assert.NoError(t, err, "s.CommandRewind")
 }
 
-func TestHandleFastForward(t *testing.T) {
+func TestCommandFastForward(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	_, err = s.HandleFastForward()
-	assert.NoError(t, err, "s.HandleFastForward")
+	_, err = state.NewFastForwardCommand().Execute(s)
+	assert.NoError(t, err, "s.CommandFastForward")
 }
 
-func TestHandleGotoGrid(t *testing.T) {
+func TestCommandGotoGrid(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	evt := &core.EventJSON{
-		Value: 1.0,
-	}
+	index := 1
 
-	_, err = s.HandleGotoGrid(evt)
-	assert.NoError(t, err, "s.HandleGotoGrid")
+	_, err = state.NewGotoGridCommand(index).Execute(s)
+	assert.NoError(t, err, "s.CommandGotoGrid")
 }
 
-func TestHandleGotoCoord(t *testing.T) {
+func TestCommandGotoCoord(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	evt := &core.EventJSON{
-		Value: []interface{}{9.0, 9.0},
-	}
+	coord := &core.Coord{X: 9, Y: 9}
 
-	_, err = s.HandleGotoCoord(evt)
-	assert.NoError(t, err, "s.HandleGotoCoord")
+	_, err = state.NewGotoCoordCommand(coord).Execute(s)
+	assert.NoError(t, err, "s.CommandGotoCoord")
 }
 
-func TestHandleComment(t *testing.T) {
+func TestCommandComment(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	evt := &core.EventJSON{
-		Value: "some comment",
-	}
+	comment := "some comment"
 
-	_, err = s.HandleComment(evt)
-	assert.NoError(t, err, "s.HandleComment")
+	_, err = state.NewCommentCommand(comment).Execute(s)
+	assert.NoError(t, err, "s.CommandComment")
 }
 
-func TestHandleDraw(t *testing.T) {
+func TestCommandDraw(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	evt := &core.EventJSON{
-		Value: []interface{}{0.0, 0.0, 5.0, 5.0, "#000000"},
-	}
-
-	_, err = s.HandleDraw(evt)
-	assert.NoError(t, err, "s.HandleDraw")
+	_, err = state.NewDrawCommand(0.0, 0.0, 5.0, 5.0, "#000000").Execute(s)
+	assert.NoError(t, err, "s.CommandDraw")
 }
 
-func TestHandleErasePen(t *testing.T) {
+func TestCommandErasePen(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	_, err = s.HandleErasePen()
-	assert.NoError(t, err, "s.HandleErasePen")
+	_, err = state.NewErasePenCommand().Execute(s)
+	assert.NoError(t, err, "s.CommandErasePen")
 }
 
-func TestHandleCut(t *testing.T) {
+func TestCommandCut(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	_, err = s.HandleCut()
-	assert.NoError(t, err, "s.HandleCut")
+	_, err = state.NewCutCommand().Execute(s)
+	assert.NoError(t, err, "s.CommandCut")
 }
 
-func TestHandleCopy(t *testing.T) {
+func TestCommandCopy(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	_, err = s.HandleCopy()
-	assert.NoError(t, err, "s.HandleCopy")
+	_, err = state.NewCopyCommand().Execute(s)
+	assert.NoError(t, err, "s.CommandCopy")
 }
 
-func TestHandleClipboard(t *testing.T) {
+func TestCommandClipboard(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	_, err = s.HandleClipboard()
-	assert.NoError(t, err, "s.HandleClipboard")
+	_, err = state.NewClipboardCommand().Execute(s)
+	assert.NoError(t, err, "s.CommandClipboard")
 }
 
-func TestHandleGraft(t *testing.T) {
+func TestCommandGraft(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	evt := &core.EventJSON{
-		Value: "a1 b2 c3 d4",
-	}
+	text := "a1 b2 c3 d4"
 
-	_, err = s.HandleGraft(evt)
-	assert.NoError(t, err, "s.HandleGraft")
+	_, err = state.NewGraftCommand(text).Execute(s)
+	assert.NoError(t, err, "s.CommandGraft")
 }
 
-func TestHandleScore(t *testing.T) {
+func TestCommandScore(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	_, err = s.HandleScore()
-	assert.NoError(t, err, "s.HandleScore")
+	_, err = state.NewScoreCommand().Execute(s)
+	assert.NoError(t, err, "s.CommandScore")
 }
 
-func TestHandleMarkDead(t *testing.T) {
+func TestCommandMarkDead(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	evt := &core.EventJSON{
-		Value: []interface{}{9.0, 9.0},
-	}
+	coord := &core.Coord{X: 9, Y: 9}
 
-	_, err = s.HandleMarkDead(evt)
-	assert.NoError(t, err, "s.HandleMarkDead")
+	_, err = state.NewMarkDeadCommand(coord).Execute(s)
+	assert.NoError(t, err, "s.CommandMarkDead")
 }

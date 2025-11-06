@@ -18,41 +18,46 @@ import (
 	"github.com/jarednogo/board/pkg/core"
 )
 
-func (s *State) HandleAddStone(evt *core.EventJSON) (*core.Frame, error) {
-	val := evt.Value.(map[string]interface{})
-	c, err := core.InterfaceToCoord(val["coords"])
-	if err != nil {
-		return nil, err
-	}
+type Command interface {
+	Execute(*State) (*core.Frame, error)
+}
 
-	x := c.X
-	y := c.Y
+type addStoneCommand struct {
+	coord *core.Coord
+	color core.Color
+}
+
+func NewAddStoneCommand(coord *core.Coord, color core.Color) Command {
+	return &addStoneCommand{coord, color}
+}
+
+func (cmd *addStoneCommand) Execute(s *State) (*core.Frame, error) {
+	x := cmd.coord.X
+	y := cmd.coord.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
-	col := core.Color(val["color"].(float64))
-
 	// if a child already exists with that coord and col, then actually
 	// this is just a gotoindex operation
-	if child, ok := s.current.HasChild(c, col); ok {
+	if child, ok := s.current.HasChild(cmd.coord, cmd.color); ok {
 		s.gotoIndex(child) //nolint: errcheck
 		return s.GenerateFullFrame(core.CurrentAndPreferred), nil
 	}
 
 	// do nothing on a suicide move
-	if !s.board.Legal(c, col) {
+	if !s.board.Legal(cmd.coord, cmd.color) {
 		return nil, nil
 	}
 
 	fields := make(map[string][]string)
 	key := "B"
-	if col == core.White {
+	if cmd.color == core.White {
 		key = "W"
 	}
-	fields[key] = []string{c.ToLetters()}
+	fields[key] = []string{cmd.coord.ToLetters()}
 
-	diff := s.addNode(c, col, fields, -1, false)
+	diff := s.addNode(cmd.coord, cmd.color, fields, -1, false)
 
 	marks := s.generateMarks()
 
@@ -68,16 +73,22 @@ func (s *State) HandleAddStone(evt *core.EventJSON) (*core.Frame, error) {
 	}, nil
 }
 
-func (s *State) HandlePass(evt *core.EventJSON) (*core.Frame, error) {
-	col := core.Color(evt.Value.(float64))
+type passCommand struct {
+	color core.Color
+}
 
+func NewPassCommand(color core.Color) Command {
+	return &passCommand{color}
+}
+
+func (cmd *passCommand) Execute(s *State) (*core.Frame, error) {
 	fields := make(map[string][]string)
 	key := "B"
-	if col == core.White {
+	if cmd.color == core.White {
 		key = "W"
 	}
 	fields[key] = []string{""}
-	s.addPassNode(col, fields, -1)
+	s.addPassNode(cmd.color, fields, -1)
 
 	return &core.Frame{
 		Type:      core.DiffFrame,
@@ -91,20 +102,23 @@ func (s *State) HandlePass(evt *core.EventJSON) (*core.Frame, error) {
 	}, nil
 }
 
-func (s *State) HandleRemoveStone(evt *core.EventJSON) (*core.Frame, error) {
-	c, err := core.InterfaceToCoord(evt.Value)
-	if err != nil {
-		return nil, err
-	}
+type removeStoneCommand struct {
+	coord *core.Coord
+}
 
-	x := c.X
-	y := c.Y
+func NewRemoveStoneCommand(coord *core.Coord) Command {
+	return &removeStoneCommand{coord}
+}
+
+func (cmd *removeStoneCommand) Execute(s *State) (*core.Frame, error) {
+	x := cmd.coord.X
+	y := cmd.coord.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
 	fields := make(map[string][]string)
-	fields["AE"] = []string{c.ToLetters()}
+	fields["AE"] = []string{cmd.coord.ToLetters()}
 	diff := s.addFieldNode(fields, -1)
 
 	return &core.Frame{
@@ -119,85 +133,98 @@ func (s *State) HandleRemoveStone(evt *core.EventJSON) (*core.Frame, error) {
 	}, nil
 }
 
-func (s *State) HandleAddTriangle(evt *core.EventJSON) (*core.Frame, error) {
-	c, err := core.InterfaceToCoord(evt.Value)
-	if err != nil {
-		return nil, err
-	}
+type addTriangleCommand struct {
+	coord *core.Coord
+}
 
-	x := c.X
-	y := c.Y
+func NewAddTriangleCommand(coord *core.Coord) Command {
+	return &addTriangleCommand{coord}
+}
+
+func (cmd *addTriangleCommand) Execute(s *State) (*core.Frame, error) {
+	x := cmd.coord.X
+	y := cmd.coord.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
-	l := c.ToLetters()
+	l := cmd.coord.ToLetters()
 	s.current.AddField("TR", l)
 	return nil, nil
 }
 
-func (s *State) HandleAddSquare(evt *core.EventJSON) (*core.Frame, error) {
-	c, err := core.InterfaceToCoord(evt.Value)
-	if err != nil {
-		return nil, err
-	}
+type addSquareCommand struct {
+	coord *core.Coord
+}
 
-	x := c.X
-	y := c.Y
+func NewAddSquareCommand(coord *core.Coord) Command {
+	return &addSquareCommand{coord}
+}
+
+func (cmd *addSquareCommand) Execute(s *State) (*core.Frame, error) {
+	x := cmd.coord.X
+	y := cmd.coord.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
-	l := c.ToLetters()
+	l := cmd.coord.ToLetters()
 	s.current.AddField("SQ", l)
 	return nil, nil
 }
 
-func (s *State) HandleAddLetter(evt *core.EventJSON) (*core.Frame, error) {
-	val := evt.Value.(map[string]interface{})
-	c, err := core.InterfaceToCoord(val["coords"])
-	if err != nil {
-		return nil, err
-	}
+type addLetterCommand struct {
+	coord  *core.Coord
+	letter string
+}
 
-	x := c.X
-	y := c.Y
+func NewAddLetterCommand(coord *core.Coord, letter string) Command {
+	return &addLetterCommand{coord, letter}
+}
+
+func (cmd *addLetterCommand) Execute(s *State) (*core.Frame, error) {
+	x := cmd.coord.X
+	y := cmd.coord.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
-	l := c.ToLetters()
-	letter := val["letter"].(string)
-	lb := fmt.Sprintf("%s:%s", l, letter)
+	l := cmd.coord.ToLetters()
+	lb := fmt.Sprintf("%s:%s", l, cmd.letter)
 	s.current.AddField("LB", lb)
 	return nil, nil
 }
 
-func (s *State) HandleAddNumber(evt *core.EventJSON) (*core.Frame, error) {
-	val := evt.Value.(map[string]interface{})
-	c, err := core.InterfaceToCoord(val["coords"])
-	if err != nil {
-		return nil, err
-	}
+type addNumberCommand struct {
+	coord  *core.Coord
+	number int
+}
 
-	x := c.X
-	y := c.Y
+func NewAddNumberCommand(coord *core.Coord, number int) Command {
+	return &addNumberCommand{coord, number}
+}
+
+func (cmd *addNumberCommand) Execute(s *State) (*core.Frame, error) {
+	x := cmd.coord.X
+	y := cmd.coord.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
-	l := c.ToLetters()
-	number := int(val["number"].(float64))
-	lb := fmt.Sprintf("%s:%d", l, number)
+	l := cmd.coord.ToLetters()
+	lb := fmt.Sprintf("%s:%d", l, cmd.number)
 	s.current.AddField("LB", lb)
 	return nil, nil
 }
 
-func (s *State) HandleRemoveMark(evt *core.EventJSON) (*core.Frame, error) {
-	c, err := core.InterfaceToCoord(evt.Value)
-	if err != nil {
-		return nil, err
-	}
+type removeMarkCommand struct {
+	coord *core.Coord
+}
 
-	l := c.ToLetters()
+func NewRemoveMarkCommand(coord *core.Coord) Command {
+	return &removeMarkCommand{coord}
+}
+
+func (cmd *removeMarkCommand) Execute(s *State) (*core.Frame, error) {
+	l := cmd.coord.ToLetters()
 	for key, values := range s.current.Fields {
 		for _, value := range values {
 			if key == "LB" && value[:2] == l {
@@ -212,7 +239,13 @@ func (s *State) HandleRemoveMark(evt *core.EventJSON) (*core.Frame, error) {
 	return nil, nil
 }
 
-func (s *State) HandleLeft() (*core.Frame, error) {
+type leftCommand struct{}
+
+func NewLeftCommand() Command {
+	return &leftCommand{}
+}
+
+func (cmd *leftCommand) Execute(s *State) (*core.Frame, error) {
 	diff := s.left()
 	marks := s.generateMarks()
 	comments := s.generateComments()
@@ -228,7 +261,13 @@ func (s *State) HandleLeft() (*core.Frame, error) {
 	}, nil
 }
 
-func (s *State) HandleRight() (*core.Frame, error) {
+type rightCommand struct{}
+
+func NewRightCommand() Command {
+	return &rightCommand{}
+}
+
+func (cmd *rightCommand) Execute(s *State) (*core.Frame, error) {
 	diff := s.right()
 	marks := s.generateMarks()
 	comments := s.generateComments()
@@ -245,7 +284,13 @@ func (s *State) HandleRight() (*core.Frame, error) {
 	}, nil
 }
 
-func (s *State) HandleUp() (*core.Frame, error) {
+type upCommand struct{}
+
+func NewUpCommand() Command {
+	return &upCommand{}
+}
+
+func (cmd *upCommand) Execute(s *State) (*core.Frame, error) {
 	s.up()
 	// for the current mark
 	marks := s.generateMarks()
@@ -262,7 +307,13 @@ func (s *State) HandleUp() (*core.Frame, error) {
 	}, nil
 }
 
-func (s *State) HandleDown() (*core.Frame, error) {
+type downCommand struct{}
+
+func NewDownCommand() Command {
+	return &downCommand{}
+}
+
+func (cmd *downCommand) Execute(s *State) (*core.Frame, error) {
 	s.down()
 
 	// for the current mark
@@ -280,75 +331,111 @@ func (s *State) HandleDown() (*core.Frame, error) {
 	}, nil
 }
 
-func (s *State) HandleRewind() (*core.Frame, error) {
+type rewindCommand struct{}
+
+func NewRewindCommand() Command {
+	return &rewindCommand{}
+}
+
+func (cmd *rewindCommand) Execute(s *State) (*core.Frame, error) {
 	s.rewind()
 	return s.GenerateFullFrame(core.CurrentOnly), nil
 }
 
-func (s *State) HandleFastForward() (*core.Frame, error) {
+type fastForwardCommand struct{}
+
+func NewFastForwardCommand() Command {
+	return &fastForwardCommand{}
+}
+
+func (cmd *fastForwardCommand) Execute(s *State) (*core.Frame, error) {
 	s.fastForward()
 	return s.GenerateFullFrame(core.CurrentOnly), nil
 }
 
-func (s *State) HandleGotoGrid(evt *core.EventJSON) (*core.Frame, error) {
-	index := int(evt.Value.(float64))
-	s.gotoIndex(index) //nolint: errcheck
+type gotoGridCommand struct {
+	index int
+}
+
+func NewGotoGridCommand(index int) Command {
+	return &gotoGridCommand{index}
+}
+
+func (cmd *gotoGridCommand) Execute(s *State) (*core.Frame, error) {
+	s.gotoIndex(cmd.index) //nolint: errcheck
 	return s.GenerateFullFrame(core.CurrentAndPreferred), nil
 }
 
-func (s *State) HandleGotoCoord(evt *core.EventJSON) (*core.Frame, error) {
-	coords := make([]int, 0)
-	// coerce the value to an array
-	val := evt.Value.([]interface{})
-	for _, v := range val {
-		i := int(v.(float64))
-		coords = append(coords, i)
-	}
-	x := coords[0]
-	y := coords[1]
+type gotoCoordCommand struct {
+	coord *core.Coord
+}
+
+func NewGotoCoordCommand(coord *core.Coord) Command {
+	return &gotoCoordCommand{coord}
+}
+
+func (cmd *gotoCoordCommand) Execute(s *State) (*core.Frame, error) {
+	x := cmd.coord.X
+	y := cmd.coord.Y
 	s.gotoCoord(x, y)
 	return s.GenerateFullFrame(core.CurrentAndPreferred), nil
-
 }
 
-func (s *State) HandleComment(evt *core.EventJSON) (*core.Frame, error) {
-	val := evt.Value.(string)
-	s.current.AddField("C", val+"\n")
+type commentCommand struct {
+	text string
+}
+
+func NewCommentCommand(text string) Command {
+	return &commentCommand{text}
+}
+
+func (cmd *commentCommand) Execute(s *State) (*core.Frame, error) {
+	s.current.AddField("C", cmd.text+"\n")
 	return nil, nil
 }
 
-func (s *State) HandleDraw(evt *core.EventJSON) (*core.Frame, error) {
-	vals := evt.Value.([]interface{})
-	var x0 float64
-	var y0 float64
-	if vals[0] == nil {
-		x0 = -1.0
-	} else {
-		x0 = vals[0].(float64)
-	}
+type drawCommand struct {
+	x0    float64
+	y0    float64
+	x1    float64
+	y1    float64
+	color string
+}
 
-	if vals[1] == nil {
-		y0 = -1.0
-	} else {
-		y0 = vals[1].(float64)
-	}
+func NewDrawCommand(x0, y0, x1, y1 float64, color string) Command {
+	return &drawCommand{x0, y0, x1, y1, color}
+}
 
-	x1 := vals[2].(float64)
-	y1 := vals[3].(float64)
-	color := vals[4].(string)
-
-	value := fmt.Sprintf("%.4f:%.4f:%.4f:%.4f:%s", x0, y0, x1, y1, color)
+func (cmd *drawCommand) Execute(s *State) (*core.Frame, error) {
+	value := fmt.Sprintf(
+		"%.4f:%.4f:%.4f:%.4f:%s",
+		cmd.x0,
+		cmd.y0,
+		cmd.x1,
+		cmd.y1,
+		cmd.color)
 	s.current.AddField("PX", value)
 	return nil, nil
-
 }
 
-func (s *State) HandleErasePen() (*core.Frame, error) {
+type erasePenCommand struct{}
+
+func NewErasePenCommand() Command {
+	return &erasePenCommand{}
+}
+
+func (cmd *erasePenCommand) Execute(s *State) (*core.Frame, error) {
 	delete(s.current.Fields, "PX")
 	return nil, nil
 }
 
-func (s *State) HandleCut() (*core.Frame, error) {
+type cutCommand struct{}
+
+func NewCutCommand() Command {
+	return &cutCommand{}
+}
+
+func (cmd *cutCommand) Execute(s *State) (*core.Frame, error) {
 	diff := s.cut()
 	marks := s.generateMarks()
 	comments := s.generateComments()
@@ -364,12 +451,24 @@ func (s *State) HandleCut() (*core.Frame, error) {
 	}, nil
 }
 
-func (s *State) HandleCopy() (*core.Frame, error) {
+type copyCommand struct{}
+
+func NewCopyCommand() Command {
+	return &copyCommand{}
+}
+
+func (cmd *copyCommand) Execute(s *State) (*core.Frame, error) {
 	s.clipboard = s.current.Copy()
 	return nil, nil
 }
 
-func (s *State) HandleClipboard() (*core.Frame, error) {
+type clipboardCommand struct{}
+
+func NewClipboardCommand() Command {
+	return &clipboardCommand{}
+}
+
+func (cmd *clipboardCommand) Execute(s *State) (*core.Frame, error) {
 	if s.clipboard == nil {
 		return nil, nil
 	}
@@ -422,10 +521,16 @@ func (s *State) HandleClipboard() (*core.Frame, error) {
 	}, nil
 }
 
-func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
-	// convert the event value to a string and split into tokens
-	v := evt.Value.(string)
-	tokens := strings.Split(v, " ")
+type graftCommand struct {
+	text string
+}
+
+func NewGraftCommand(text string) Command {
+	return &graftCommand{text}
+}
+
+func (cmd *graftCommand) Execute(s *State) (*core.Frame, error) {
+	tokens := strings.Split(cmd.text, " ")
 
 	// currently accepting the first arg as a move number or not
 	var parentIndex int
@@ -481,7 +586,13 @@ func (s *State) HandleGraft(evt *core.EventJSON) (*core.Frame, error) {
 	return nil, nil
 }
 
-func (s *State) HandleScore() (*core.Frame, error) {
+type scoreCommand struct{}
+
+func NewScoreCommand() Command {
+	return &scoreCommand{}
+}
+
+func (cmd *scoreCommand) Execute(s *State) (*core.Frame, error) {
 	blackArea, whiteArea, blackDead, whiteDead, dame := s.board.Score(s.markedDead, s.markedDame)
 	frame := &core.Frame{
 		BlackCaps: s.current.BlackCaps + len(blackArea) + len(whiteDead),
@@ -494,31 +605,35 @@ func (s *State) HandleScore() (*core.Frame, error) {
 	return frame, nil
 }
 
-func (s *State) HandleMarkDead(evt *core.EventJSON) (*core.Frame, error) {
-	c, err := core.InterfaceToCoord(evt.Value)
-	if err != nil {
-		return nil, err
-	}
-	x := c.X
-	y := c.Y
+type markDeadCommand struct {
+	coord *core.Coord
+}
+
+func NewMarkDeadCommand(coord *core.Coord) Command {
+	return &markDeadCommand{coord}
+}
+
+func (cmd *markDeadCommand) Execute(s *State) (*core.Frame, error) {
+	x := cmd.coord.X
+	y := cmd.coord.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
-	if s.board.Get(c) == core.NoColor {
-		dame, _ := s.board.FindArea(c, core.NewCoordSet())
-		if s.markedDame.Has(c) {
+	if s.board.Get(cmd.coord) == core.NoColor {
+		dame, _ := s.board.FindArea(cmd.coord, core.NewCoordSet())
+		if s.markedDame.Has(cmd.coord) {
 			s.markedDame.RemoveAll(dame)
 		} else {
 			s.markedDame.AddAll(dame)
 		}
 	} else {
-		gp := s.board.FindGroup(c)
-		if s.markedDead.Has(c) {
+		gp := s.board.FindGroup(cmd.coord)
+		if s.markedDead.Has(cmd.coord) {
 			s.markedDead.RemoveAll(gp.Coords)
 		} else {
 			s.markedDead.AddAll(gp.Coords)
 		}
 	}
-	return s.HandleScore()
+	return (&scoreCommand{}).Execute(s)
 }

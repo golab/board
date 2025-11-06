@@ -330,8 +330,14 @@ func (room *Room) handleEvent(evt *core.EventJSON) *core.EventJSON {
 		}
 	}()
 
+	cmd, err := decodeToCommand(evt)
+	if err != nil {
+		bcast = core.ErrorEvent(err.Error())
+		return bcast
+	}
+
 	// AddEvent is a promoted method from the room's state
-	frame, err := room.AddEvent(evt)
+	frame, err := cmd.Execute(room.engine)
 	if err != nil {
 		bcast = core.ErrorEvent(err.Error())
 		return bcast

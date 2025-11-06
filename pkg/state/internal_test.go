@@ -225,31 +225,24 @@ func TestGenerateMarks(t *testing.T) {
 	s.right()
 
 	// add a triangle
-	evt := &core.EventJSON{Value: []interface{}{9.0, 9.0}}
-	_, err = s.HandleAddTriangle(evt)
+	coord := &core.Coord{X: 9, Y: 9}
+	_, err = NewAddTriangleCommand(coord).Execute(s)
 	assert.NoError(t, err, "err should be nil")
 
 	// add a square
-	evt = &core.EventJSON{Value: []interface{}{10.0, 10.0}}
-	_, err = s.HandleAddSquare(evt)
+	coord = &core.Coord{X: 10, Y: 10}
+	_, err = NewAddSquareCommand(coord).Execute(s)
 	assert.NoError(t, err, "err should be nil")
 
 	// add a letter
-	value := map[string]interface{}{
-		"coords": []interface{}{11.0, 11.0},
-		"letter": "A",
-	}
-	evt = &core.EventJSON{Value: value}
-	_, err = s.HandleAddLetter(evt)
+	coord = &core.Coord{X: 11, Y: 11}
+	letter := "A"
+	_, err = NewAddLetterCommand(coord, letter).Execute(s)
 	assert.NoError(t, err, "err should be nil")
 
-	// add a number
-	value = map[string]interface{}{
-		"coords": []interface{}{12.0, 12.0},
-		"number": 1.0,
-	}
-	evt = &core.EventJSON{Value: value}
-	_, err = s.HandleAddNumber(evt)
+	coord = &core.Coord{X: 12, Y: 12}
+	number := 1
+	_, err = NewAddNumberCommand(coord, number).Execute(s)
 	assert.NoError(t, err, "err should be nil")
 
 	marks := s.generateMarks()

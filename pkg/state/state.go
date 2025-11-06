@@ -97,6 +97,7 @@ func (s *State) AnyMove() {
 }
 
 // see addevent.go
+/*
 func (s *State) AddEvent(evt *core.EventJSON) (*core.Frame, error) {
 	switch evt.Event {
 	case "add_stone":
@@ -152,6 +153,7 @@ func (s *State) AddEvent(evt *core.EventJSON) (*core.Frame, error) {
 	}
 	return nil, nil
 }
+*/
 
 func (s *State) ToSGF(indexes bool) string {
 	result := "("
