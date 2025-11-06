@@ -37,3 +37,11 @@ func TestState2(t *testing.T) {
 
 	assert.Equal(t, len(sgfix), 132, "error with state to sgf (indexes)")
 }
+
+func TestParseTTPAss(t *testing.T) {
+	input := sgfsamples.PassWithTT
+	s, err := state.FromSGF(input)
+	assert.NoError(t, err, "error should be nil")
+	node := s.Nodes()[358]
+	assert.Equal(t, node.XY, nil, "coord should be nil for pass")
+}

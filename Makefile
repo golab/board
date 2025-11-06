@@ -42,15 +42,18 @@ fuzz: ## Fuzz code
 
 coverage: ## Test coverage
 	@echo "==> coverage"
-	go test ./... -coverprofile=cover.out -covermode=count > /dev/null
+	@go test ./... -coverprofile=pkg.tmp.out -covermode=count > /dev/null
+	@go test ./integration -coverprofile=integration.tmp.out -coverpkg=./pkg/hub,./pkg/room,./pkg/state -covermode=count > /dev/null
+	@echo "mode: count" > cover.out
+	@grep -h -v mode *.tmp.out >> cover.out
 	go tool cover -func=cover.out -o=cover.out
 	@tail -n1 cover.out | tr -s '\t'
-	go test ./... -coverprofile=pkg.tmp.out
-	go test ./integration -coverprofile=integration.tmp.out -coverpkg=./pkg/hub,./pkg/room,./pkg/state
-	echo "mode: set" > cover.out
-	grep -h -v mode *.tmp.out >> cover.out
+	@go test ./... -coverprofile=pkg.tmp.out
+	@go test ./integration -coverprofile=integration.tmp.out -coverpkg=./pkg/hub,./pkg/room,./pkg/state,./pkg/core
+	@echo "mode: set" > cover.out
+	@grep -h -v mode *.tmp.out >> cover.out
 	go tool cover -html=cover.out
-	rm *.out
+	@rm *.out
 
 test-race: ## Test for data races
 	@echo "==> test-race"
