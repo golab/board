@@ -330,7 +330,7 @@ func (room *Room) handleEvent(evt *core.EventJSON) *core.EventJSON {
 		}
 	}()
 
-	cmd, err := decodeToCommand(evt)
+	cmd, err := state.DecodeToCommand(evt)
 	if err != nil {
 		bcast = core.ErrorEvent(err.Error())
 		return bcast

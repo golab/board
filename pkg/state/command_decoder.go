@@ -8,16 +8,15 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package room
+package state
 
 import (
 	"fmt"
 
 	"github.com/jarednogo/board/pkg/core"
-	"github.com/jarednogo/board/pkg/state"
 )
 
-func decodeToCommand(evt *core.EventJSON) (state.Command, error) {
+func DecodeToCommand(evt *core.EventJSON) (Command, error) {
 	switch evt.Event {
 	case "add_stone":
 		val := evt.Value.(map[string]interface{})
@@ -26,28 +25,28 @@ func decodeToCommand(evt *core.EventJSON) (state.Command, error) {
 			return nil, err
 		}
 		col := core.Color(val["color"].(float64))
-		return state.NewAddStoneCommand(c, col), nil
+		return NewAddStoneCommand(c, col), nil
 	case "pass":
 		col := core.Color(evt.Value.(float64))
-		return state.NewPassCommand(col), nil
+		return NewPassCommand(col), nil
 	case "remove_stone":
 		c, err := core.InterfaceToCoord(evt.Value)
 		if err != nil {
 			return nil, err
 		}
-		return state.NewRemoveStoneCommand(c), nil
+		return NewRemoveStoneCommand(c), nil
 	case "triangle":
 		c, err := core.InterfaceToCoord(evt.Value)
 		if err != nil {
 			return nil, err
 		}
-		return state.NewAddTriangleCommand(c), nil
+		return NewAddTriangleCommand(c), nil
 	case "square":
 		c, err := core.InterfaceToCoord(evt.Value)
 		if err != nil {
 			return nil, err
 		}
-		return state.NewAddSquareCommand(c), nil
+		return NewAddSquareCommand(c), nil
 	case "letter":
 		val := evt.Value.(map[string]interface{})
 		c, err := core.InterfaceToCoord(val["coords"])
@@ -55,7 +54,7 @@ func decodeToCommand(evt *core.EventJSON) (state.Command, error) {
 			return nil, err
 		}
 		letter := val["letter"].(string)
-		return state.NewAddLetterCommand(c, letter), nil
+		return NewAddLetterCommand(c, letter), nil
 	case "number":
 		val := evt.Value.(map[string]interface{})
 		c, err := core.InterfaceToCoord(val["coords"])
@@ -63,39 +62,39 @@ func decodeToCommand(evt *core.EventJSON) (state.Command, error) {
 			return nil, err
 		}
 		number := int(val["number"].(float64))
-		return state.NewAddNumberCommand(c, number), nil
+		return NewAddNumberCommand(c, number), nil
 	case "remove_mark":
 		c, err := core.InterfaceToCoord(evt.Value)
 		if err != nil {
 			return nil, err
 		}
-		return state.NewRemoveMarkCommand(c), nil
+		return NewRemoveMarkCommand(c), nil
 	case "cut":
-		return state.NewCutCommand(), nil
+		return NewCutCommand(), nil
 	case "left":
-		return state.NewLeftCommand(), nil
+		return NewLeftCommand(), nil
 	case "right":
-		return state.NewRightCommand(), nil
+		return NewRightCommand(), nil
 	case "up":
-		return state.NewUpCommand(), nil
+		return NewUpCommand(), nil
 	case "down":
-		return state.NewDownCommand(), nil
+		return NewDownCommand(), nil
 	case "rewind":
-		return state.NewRewindCommand(), nil
+		return NewRewindCommand(), nil
 	case "fastforward":
-		return state.NewFastForwardCommand(), nil
+		return NewFastForwardCommand(), nil
 	case "goto_grid":
 		index := int(evt.Value.(float64))
-		return state.NewGotoGridCommand(index), nil
+		return NewGotoGridCommand(index), nil
 	case "goto_coord":
 		c, err := core.InterfaceToCoord(evt.Value)
 		if err != nil {
 			return nil, err
 		}
-		return state.NewGotoCoordCommand(c), nil
+		return NewGotoCoordCommand(c), nil
 	case "comment":
 		val := evt.Value.(string)
-		return state.NewCommentCommand(val), nil
+		return NewCommentCommand(val), nil
 	case "draw":
 		vals := evt.Value.([]interface{})
 		var x0 float64
@@ -115,25 +114,25 @@ func decodeToCommand(evt *core.EventJSON) (state.Command, error) {
 		x1 := vals[2].(float64)
 		y1 := vals[3].(float64)
 		color := vals[4].(string)
-		return state.NewDrawCommand(x0, y0, x1, y1, color), nil
+		return NewDrawCommand(x0, y0, x1, y1, color), nil
 	case "erase_pen":
-		return state.NewErasePenCommand(), nil
+		return NewErasePenCommand(), nil
 	case "copy":
-		return state.NewCopyCommand(), nil
+		return NewCopyCommand(), nil
 	case "clipboard":
-		return state.NewClipboardCommand(), nil
+		return NewClipboardCommand(), nil
 	case "graft":
 		// convert the event value to a string and split into tokens
 		v := evt.Value.(string)
-		return state.NewGraftCommand(v), nil
+		return NewGraftCommand(v), nil
 	case "score":
-		return state.NewScoreCommand(), nil
+		return NewScoreCommand(), nil
 	case "markdead":
 		c, err := core.InterfaceToCoord(evt.Value)
 		if err != nil {
 			return nil, err
 		}
-		return state.NewMarkDeadCommand(c), nil
+		return NewMarkDeadCommand(c), nil
 	}
 
 	return nil, fmt.Errorf("unhandled event type")
