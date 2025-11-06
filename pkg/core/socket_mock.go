@@ -32,40 +32,40 @@ func NewMockEventChannel() *MockEventChannel {
 	return &MockEventChannel{id: id}
 }
 
-func (mcr *MockEventChannel) SetRoomID(s string) {
-	mcr.roomID = s
+func (ec *MockEventChannel) SetRoomID(s string) {
+	ec.roomID = s
 }
 
-func (mcr *MockEventChannel) GetRoomID() string {
-	return mcr.roomID
+func (ec *MockEventChannel) GetRoomID() string {
+	return ec.roomID
 }
 
-func (mcr *MockEventChannel) OnConnect() {
+func (ec *MockEventChannel) OnConnect() {
 }
 
-func (mcr *MockEventChannel) SendEvent(evt *Event) error {
-	mcr.mu.Lock()
-	defer mcr.mu.Unlock()
-	mcr.SavedEvents = append(mcr.SavedEvents, evt)
+func (ec *MockEventChannel) SendEvent(evt *Event) error {
+	ec.mu.Lock()
+	defer ec.mu.Unlock()
+	ec.SavedEvents = append(ec.SavedEvents, evt)
 	return nil
 }
 
-func (mcr *MockEventChannel) ReceiveEvent() (*Event, error) {
-	if mcr.index >= len(mcr.QueuedEvents) {
+func (ec *MockEventChannel) ReceiveEvent() (*Event, error) {
+	if ec.index >= len(ec.QueuedEvents) {
 		return nil, io.EOF
 	}
-	i := mcr.index
-	mcr.index++
-	return mcr.QueuedEvents[i], nil
+	i := ec.index
+	ec.index++
+	return ec.QueuedEvents[i], nil
 }
 
-func (mcr *MockEventChannel) Close() error {
-	mcr.Closed = true
+func (ec *MockEventChannel) Close() error {
+	ec.Closed = true
 	return nil
 }
 
-func (mcr *MockEventChannel) ID() string {
-	return mcr.id
+func (ec *MockEventChannel) ID() string {
+	return ec.id
 }
 
 type BlockingMockEventChannel struct {
@@ -82,27 +82,27 @@ func NewBlockingMockEventChannel() *BlockingMockEventChannel {
 	}
 }
 
-func (mcr *BlockingMockEventChannel) Ready() <-chan bool {
-	return mcr.ready
+func (ec *BlockingMockEventChannel) Ready() <-chan bool {
+	return ec.ready
 }
 
-func (mcr *BlockingMockEventChannel) OnConnect() {
-	close(mcr.ready)
+func (ec *BlockingMockEventChannel) OnConnect() {
+	close(ec.ready)
 }
 
-func (mcr *BlockingMockEventChannel) Disconnect() {
-	mcr.conn <- true
+func (ec *BlockingMockEventChannel) Disconnect() {
+	ec.conn <- true
 }
 
-func (mcr *BlockingMockEventChannel) ReceiveEvent() (*Event, error) {
-	if mcr.index >= len(mcr.QueuedEvents) {
-		// blocks until there's a value from mcr.conn
-		<-mcr.conn
+func (ec *BlockingMockEventChannel) ReceiveEvent() (*Event, error) {
+	if ec.index >= len(ec.QueuedEvents) {
+		// blocks until there's a value from ec.conn
+		<-ec.conn
 	}
-	return mcr.MockEventChannel.ReceiveEvent()
+	return ec.MockEventChannel.ReceiveEvent()
 }
 
-func (mcr *BlockingMockEventChannel) SendEvent(evt *Event) error {
+func (ec *BlockingMockEventChannel) SendEvent(evt *Event) error {
 	// signals to external caller that the room conn is ready
-	return mcr.MockEventChannel.SendEvent(evt)
+	return ec.MockEventChannel.SendEvent(evt)
 }

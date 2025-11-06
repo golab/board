@@ -224,11 +224,11 @@ func (h *Hub) HandlerWrapper(ws *websocket.Conn) {
 	_, roomID, _ := ParseURL(url)
 
 	// wrap the socket
-	wrc := core.NewWebsocketEventChannel(ws)
-	h.Handler(wrc, roomID)
+	ec := core.NewWebsocketEventChannel(ws)
+	h.Handler(ec, roomID)
 }
 
-func (h *Hub) Handler(rc core.EventChannel, roomID string) {
+func (h *Hub) Handler(ec core.EventChannel, roomID string) {
 	// new connection
 
 	// get or create the room
@@ -237,13 +237,13 @@ func (h *Hub) Handler(rc core.EventChannel, roomID string) {
 	// send to the room for handling
 	log.Printf(
 		"[*] New connection: %s to %s",
-		rc.ID(),
+		ec.ID(),
 		r.ID(),
 	)
 	log.Printf(
 		"[-] Disconnection: %s from %s (%v)",
-		rc.ID(),
+		ec.ID(),
 		r.ID(),
-		r.Handle(rc),
+		r.Handle(ec),
 	)
 }

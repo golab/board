@@ -39,28 +39,28 @@ func NewWebsocketEventChannel(ws *websocket.Conn) EventChannel {
 	return &WebsocketEventChannel{ws, id}
 }
 
-func (wrc *WebsocketEventChannel) ID() string {
-	return wrc.id
+func (ec *WebsocketEventChannel) ID() string {
+	return ec.id
 }
 
-func (wrc *WebsocketEventChannel) SendEvent(evt *Event) error {
+func (ec *WebsocketEventChannel) SendEvent(evt *Event) error {
 	// marshal event back into data
 	data, err := json.Marshal(evt)
 	if err != nil {
 		return err
 	}
-	_, err = wrc.ws.Write(data)
+	_, err = ec.ws.Write(data)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (wrc *WebsocketEventChannel) OnConnect() {
+func (ec *WebsocketEventChannel) OnConnect() {
 }
 
-func (wrc *WebsocketEventChannel) ReceiveEvent() (*Event, error) {
-	data, err := wrc.readPacket()
+func (ec *WebsocketEventChannel) ReceiveEvent() (*Event, error) {
+	data, err := ec.readPacket()
 	if err != nil {
 		return nil, err
 	}
@@ -73,14 +73,14 @@ func (wrc *WebsocketEventChannel) ReceiveEvent() (*Event, error) {
 	return evt, nil
 }
 
-func (wrc *WebsocketEventChannel) Close() error {
-	return wrc.ws.Close()
+func (ec *WebsocketEventChannel) Close() error {
+	return ec.ws.Close()
 }
 
-func (wrc *WebsocketEventChannel) readPacket() ([]byte, error) {
+func (ec *WebsocketEventChannel) readPacket() ([]byte, error) {
 	// read in 4 bytes (length of rest of message)
 	lengthArray := make([]byte, 4)
-	_, err := wrc.ws.Read(lengthArray)
+	_, err := ec.ws.Read(lengthArray)
 	if err != nil {
 		return nil, err
 	}
@@ -90,13 +90,13 @@ func (wrc *WebsocketEventChannel) readPacket() ([]byte, error) {
 	var data []byte
 
 	if length > 1024 {
-		data, err = wrc.readBytes(int(length))
+		data, err = ec.readBytes(int(length))
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		data = make([]byte, length)
-		_, err := wrc.ws.Read(data)
+		_, err := ec.ws.Read(data)
 
 		if err != nil {
 			return nil, err
@@ -105,7 +105,7 @@ func (wrc *WebsocketEventChannel) readPacket() ([]byte, error) {
 	return data, nil
 }
 
-func (wrc *WebsocketEventChannel) readBytes(size int) ([]byte, error) {
+func (ec *WebsocketEventChannel) readBytes(size int) ([]byte, error) {
 	chunkSize := 64
 	message := []byte{}
 	for len(message) < size {
@@ -114,7 +114,7 @@ func (wrc *WebsocketEventChannel) readBytes(size int) ([]byte, error) {
 			l = chunkSize
 		}
 		temp := make([]byte, l)
-		n, err := wrc.ws.Read(temp)
+		n, err := ec.ws.Read(temp)
 		if err != nil {
 			return nil, err
 		}

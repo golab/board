@@ -161,8 +161,8 @@ func (r *Room) SetPassword(p string) {
 }
 
 func (r *Room) SendTo(id string, evt *core.Event) {
-	if rc, ok := r.conns[id]; ok {
-		rc.SendEvent(evt) //nolint:errcheck
+	if ec, ok := r.conns[id]; ok {
+		ec.SendEvent(evt) //nolint:errcheck
 	}
 }
 
@@ -226,12 +226,12 @@ func (r *Room) SendUserList() {
 	r.Broadcast(evt)
 }
 
-func (r *Room) RegisterConnection(rc core.EventChannel) string {
+func (r *Room) RegisterConnection(ec core.EventChannel) string {
 	// currently a no-op, but useful for testing
-	rc.OnConnect()
+	ec.OnConnect()
 
 	// the room connection generates its own id
-	id := rc.ID()
+	id := ec.ID()
 
 	r.mu.Lock()
 
@@ -239,7 +239,7 @@ func (r *Room) RegisterConnection(rc core.EventChannel) string {
 	r.lastUser = id
 
 	// store the new connection by id
-	r.conns[id] = rc
+	r.conns[id] = ec
 
 	// save current user
 	r.nicks[id] = ""
@@ -249,7 +249,7 @@ func (r *Room) RegisterConnection(rc core.EventChannel) string {
 	// send initial state
 	frame := r.GenerateFullFrame(core.Full)
 	evt := core.FrameEvent(frame)
-	rc.SendEvent(evt) //nolint:errcheck
+	ec.SendEvent(evt) //nolint:errcheck
 
 	return id
 }
@@ -260,9 +260,9 @@ func (r *Room) DeregisterConnection(id string) {
 	delete(r.conns, id)
 }
 
-func (r *Room) Handle(rc core.EventChannel) error {
+func (r *Room) Handle(ec core.EventChannel) error {
 	// assign id to the new connection
-	id := r.RegisterConnection(rc)
+	id := r.RegisterConnection(ec)
 
 	// defer removing the client
 	defer r.SendUserList()
@@ -281,7 +281,7 @@ func (r *Room) Handle(rc core.EventChannel) error {
 	// main loop
 	for {
 		// receive the event
-		evt, err := rc.ReceiveEvent()
+		evt, err := ec.ReceiveEvent()
 		if err != nil {
 			return err
 		}
