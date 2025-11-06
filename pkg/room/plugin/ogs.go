@@ -25,7 +25,7 @@ type Room interface {
 	HeadColor() core.Color
 	PushHead(int, int, core.Color)
 	GenerateFullFrame(core.TreeJSONType) *core.Frame
-	AddPatternNodes([]*core.PatternMove)
+	AddStones([]*core.Stone)
 	Broadcast(*core.Event)
 	UploadSGF(string) *core.Event
 }
@@ -294,7 +294,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			}
 			moves := payload["m"].(string)
 
-			movesArr := []*core.PatternMove{}
+			movesArr := []*core.Stone{}
 			currentColor := core.Black
 			if o.First == 1 {
 				currentColor = core.White
@@ -313,17 +313,16 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 						currentColor = core.White
 					case "..":
 						//Pass
-						movesArr = append(movesArr, &core.PatternMove{Coord: nil, Color: currentColor})
+						movesArr = append(movesArr, &core.Stone{Coord: nil, Color: currentColor})
 						currentColor = core.Opposite(currentColor)
 					default:
 						coord := core.LettersToCoord(coordStr)
-						movesArr = append(movesArr, &core.PatternMove{Coord: coord, Color: currentColor})
+						movesArr = append(movesArr, &core.Stone{Coord: coord, Color: currentColor})
 						currentColor = core.Opposite(currentColor)
 					}
 				}
 			}
-			//o.Room.State.AddPatternNodes(movesArr)
-			o.Room.AddPatternNodes(movesArr)
+			o.Room.AddStones(movesArr)
 
 			// Send full board update after adding pattern
 			//frame := o.Room.State.GenerateFullFrame(core.Full)

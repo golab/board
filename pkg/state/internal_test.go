@@ -138,18 +138,18 @@ func TestState4(t *testing.T) {
 	assert.Equal(t, s.Current().Index, 10, "current index")
 }
 
-func TestAddPatternNodes(t *testing.T) {
+func TestAddStones(t *testing.T) {
 	s, err := FromSGF(sgfsamples.Empty)
 	assert.NoError(t, err, "error should be nil")
 
 	// add three new moves
-	moves := []*core.PatternMove{
-		core.NewPatternMove(9, 9, core.Black),
-		core.NewPatternMove(10, 10, core.White),
-		core.NewPatternMove(11, 11, core.Black),
+	moves := []*core.Stone{
+		core.NewStone(9, 9, core.Black),
+		core.NewStone(10, 10, core.White),
+		core.NewStone(11, 11, core.Black),
 	}
 
-	s.AddPatternNodes(moves)
+	s.AddStones(moves)
 
 	assert.Equal(t, len(s.Current().Down), 1, "len(down)")
 
@@ -171,11 +171,11 @@ func TestGraft(t *testing.T) {
 	s, err := FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "error should be nil")
 
-	moves := []*core.PatternMove{
-		core.NewPatternMove(9, 9, core.Black),
-		core.NewPatternMove(10, 10, core.White),
-		core.NewPatternMove(11, 11, core.Black),
-		core.NewPatternMove(12, 12, core.Black),
+	moves := []*core.Stone{
+		core.NewStone(9, 9, core.Black),
+		core.NewStone(10, 10, core.White),
+		core.NewStone(11, 11, core.Black),
+		core.NewStone(12, 12, core.Black),
 	}
 
 	// dumb graft

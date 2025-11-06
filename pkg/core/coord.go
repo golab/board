@@ -192,17 +192,16 @@ func InterfaceToCoord(ifc interface{}) (*Coord, error) {
 	return &Coord{x, y}, nil
 }
 
-// PatternMove is a Coord plus a Color
-// StoneSet is essentially an extension of PatternMove
-// TODO: consider renaming PatternMove
-type PatternMove struct {
+// Stone is a Coord plus a Color
+// StoneSet is essentially an extension of Stone
+type Stone struct {
 	Coord *Coord // nil for passes
 	Color Color
 }
 
-func NewPatternMove(x, y int, c Color) *PatternMove {
+func NewStone(x, y int, c Color) *Stone {
 	coord := &Coord{x, y}
-	return &PatternMove{
+	return &Stone{
 		Coord: coord,
 		Color: c,
 	}

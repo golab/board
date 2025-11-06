@@ -557,7 +557,7 @@ func (cmd *graftCommand) Execute(s *State) (*core.Frame, error) {
 	}
 
 	// setup the moves array and initial color
-	moves := []*core.PatternMove{}
+	moves := []*core.Stone{}
 	col := s.nodes[parentIndex].Color
 	if col == core.NoColor {
 		col = core.White
@@ -576,7 +576,7 @@ func (cmd *graftCommand) Execute(s *State) (*core.Frame, error) {
 		col = core.Opposite(col)
 
 		// create a new move
-		move := &core.PatternMove{Coord: coord, Color: col}
+		move := &core.Stone{Coord: coord, Color: col}
 		moves = append(moves, move)
 	}
 

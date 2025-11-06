@@ -161,7 +161,7 @@ func (s *State) addNode(coord *core.Coord, col core.Color, fields map[string][]s
 	return diff
 }
 
-func (s *State) AddPatternNodes(moves []*core.PatternMove) {
+func (s *State) AddStones(moves []*core.Stone) {
 	node := s.root
 	locationSave := s.current.Index
 
@@ -202,7 +202,7 @@ func (s *State) AddPatternNodes(moves []*core.PatternMove) {
 }
 
 // SmartGraft doesn't duplicate existing moves
-func (s *State) smartGraft(parentIndex int, moves []*core.PatternMove) {
+func (s *State) smartGraft(parentIndex int, moves []*core.Stone) {
 	parent := s.nodes[parentIndex]
 	savedPrefs := make(map[int]int)
 	save := s.current.Index
@@ -276,7 +276,7 @@ func (s *State) smartGraft(parentIndex int, moves []*core.PatternMove) {
 }
 
 // Graft may duplicate existing moves
-func (s *State) graft(parentIndex int, moves []*core.PatternMove) {
+func (s *State) graft(parentIndex int, moves []*core.Stone) {
 	parent := s.nodes[parentIndex]
 	savedPref := parent.PreferredChild
 	save := s.current.Index
