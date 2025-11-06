@@ -29,14 +29,14 @@ func (h *Hub) Upload(w http.ResponseWriter, r *http.Request) {
 	}
 	newroom := h.GetOrCreateRoom(boardID)
 
-	var evt *core.EventJSON
+	var evt *core.Event
 	if url != "" {
-		evt = &core.EventJSON{
+		evt = &core.Event{
 			Event: "request_sgf",
 			Value: url,
 		}
 	} else if sgf != "" {
-		evt = &core.EventJSON{
+		evt = &core.Event{
 			Event: "upload_sgf",
 			Value: sgf,
 		}

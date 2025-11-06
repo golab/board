@@ -23,7 +23,7 @@ import (
 	"github.com/jarednogo/board/pkg/zip"
 )
 
-type EventHandler func(*core.EventJSON) *core.EventJSON
+type EventHandler func(*core.Event) *core.Event
 
 type Middleware func(EventHandler) EventHandler
 
@@ -83,13 +83,13 @@ func (r *Room) initHandlers() {
 
 // handlers
 
-func (room *Room) handleIsProtected(evt *core.EventJSON) *core.EventJSON {
+func (room *Room) handleIsProtected(evt *core.Event) *core.Event {
 	evt.Value = room.HasPassword()
 	room.SendTo(evt.UserID, evt)
 	return evt
 }
 
-func (room *Room) handleCheckPassword(evt *core.EventJSON) *core.EventJSON {
+func (room *Room) handleCheckPassword(evt *core.Event) *core.Event {
 	p := evt.Value.(string)
 
 	if !core.CorrectPassword(p, room.password) {
@@ -101,16 +101,16 @@ func (room *Room) handleCheckPassword(evt *core.EventJSON) *core.EventJSON {
 	return evt
 }
 
-func handleDebug(evt *core.EventJSON) *core.EventJSON {
+func handleDebug(evt *core.Event) *core.Event {
 	return evt
 }
 
-func handlePing(evt *core.EventJSON) *core.EventJSON {
+func handlePing(evt *core.Event) *core.Event {
 	return evt
 }
 
-func (room *Room) handleUploadSGF(evt *core.EventJSON) *core.EventJSON {
-	var bcast *core.EventJSON
+func (room *Room) handleUploadSGF(evt *core.Event) *core.Event {
+	var bcast *core.Event
 	defer func() {
 		if bcast != nil {
 			bcast.UserID = evt.UserID
@@ -163,8 +163,8 @@ func (room *Room) handleUploadSGF(evt *core.EventJSON) *core.EventJSON {
 	return bcast
 }
 
-func (room *Room) handleRequestSGF(evt *core.EventJSON) *core.EventJSON {
-	var bcast *core.EventJSON
+func (room *Room) handleRequestSGF(evt *core.Event) *core.Event {
+	var bcast *core.Event
 	defer func() {
 		if bcast != nil {
 			bcast.UserID = evt.UserID
@@ -240,7 +240,7 @@ func (room *Room) handleRequestSGF(evt *core.EventJSON) *core.EventJSON {
 	return bcast
 }
 
-func (room *Room) handleTrash(evt *core.EventJSON) *core.EventJSON {
+func (room *Room) handleTrash(evt *core.Event) *core.Event {
 
 	// reset room
 	oldBuffer := room.GetInputBuffer()
@@ -255,10 +255,10 @@ func (room *Room) handleTrash(evt *core.EventJSON) *core.EventJSON {
 	return bcast
 }
 
-func (room *Room) handleUpdateNickname(evt *core.EventJSON) *core.EventJSON {
+func (room *Room) handleUpdateNickname(evt *core.Event) *core.Event {
 	nickname := evt.Value.(string)
 	room.nicks[evt.UserID] = nickname
-	userEvt := &core.EventJSON{
+	userEvt := &core.Event{
 		Event:  "connected_users",
 		Value:  room.nicks,
 		UserID: evt.UserID,
@@ -272,7 +272,7 @@ type Settings struct {
 	Password string
 }
 
-func (room *Room) handleUpdateSettings(evt *core.EventJSON) *core.EventJSON {
+func (room *Room) handleUpdateSettings(evt *core.Event) *core.Event {
 	sMap := evt.Value.(map[string]interface{})
 	buffer := int64(sMap["buffer"].(float64))
 	size := int(sMap["size"].(float64))
@@ -305,8 +305,8 @@ func (room *Room) handleUpdateSettings(evt *core.EventJSON) *core.EventJSON {
 	return evt
 }
 
-func (room *Room) handleEvent(evt *core.EventJSON) *core.EventJSON {
-	var bcast *core.EventJSON
+func (room *Room) handleEvent(evt *core.Event) *core.Event {
+	var bcast *core.Event
 	defer func() {
 		if bcast != nil {
 			bcast.UserID = evt.UserID
@@ -319,7 +319,6 @@ func (room *Room) handleEvent(evt *core.EventJSON) *core.EventJSON {
 		return bcast
 	}
 
-	// AddEvent is a promoted method from the room's state
 	frame, err := cmd.Execute(room.engine)
 	if err != nil {
 		bcast = core.ErrorEvent(err.Error())
@@ -338,7 +337,7 @@ func (room *Room) handleEvent(evt *core.EventJSON) *core.EventJSON {
 // middleware
 
 func (room *Room) setTimeAfter(handler EventHandler) EventHandler {
-	return func(evt *core.EventJSON) *core.EventJSON {
+	return func(evt *core.Event) *core.Event {
 		evt = handler(evt)
 		// set last user information
 		room.mu.Lock()
@@ -351,7 +350,7 @@ func (room *Room) setTimeAfter(handler EventHandler) EventHandler {
 }
 
 func (room *Room) broadcastAfter(handler EventHandler) EventHandler {
-	return func(evt *core.EventJSON) *core.EventJSON {
+	return func(evt *core.Event) *core.Event {
 		evt = handler(evt)
 		room.Broadcast(evt)
 		return evt
@@ -359,7 +358,7 @@ func (room *Room) broadcastAfter(handler EventHandler) EventHandler {
 }
 
 func (room *Room) broadcastFullFrameAfter(handler EventHandler) EventHandler {
-	return func(evt *core.EventJSON) *core.EventJSON {
+	return func(evt *core.Event) *core.Event {
 		evt = handler(evt)
 		frame := room.GenerateFullFrame(core.Full)
 		bcast := core.FrameEvent(frame)
@@ -369,9 +368,9 @@ func (room *Room) broadcastFullFrameAfter(handler EventHandler) EventHandler {
 }
 
 func (room *Room) broadcastConnectedUsersAfter(handler EventHandler) EventHandler {
-	return func(evt *core.EventJSON) *core.EventJSON {
+	return func(evt *core.Event) *core.Event {
 		evt = handler(evt)
-		userEvt := &core.EventJSON{
+		userEvt := &core.Event{
 			Event:  "connected_users",
 			Value:  room.nicks,
 			UserID: "",
@@ -384,14 +383,14 @@ func (room *Room) broadcastConnectedUsersAfter(handler EventHandler) EventHandle
 }
 
 func (room *Room) closeOGS(handler EventHandler) EventHandler {
-	return func(evt *core.EventJSON) *core.EventJSON {
+	return func(evt *core.Event) *core.Event {
 		room.DeregisterPlugin("ogs")
 		return handler(evt)
 	}
 }
 
 func (room *Room) authorized(handler EventHandler) EventHandler {
-	return func(evt *core.EventJSON) *core.EventJSON {
+	return func(evt *core.Event) *core.Event {
 		id := evt.UserID
 		_, ok := room.auth[id]
 		if room.password == "" || ok {
@@ -404,7 +403,7 @@ func (room *Room) authorized(handler EventHandler) EventHandler {
 
 // this one is to keep the same user from submitting multiple events too quickly
 func (room *Room) slow(handler EventHandler) EventHandler {
-	return func(evt *core.EventJSON) *core.EventJSON {
+	return func(evt *core.Event) *core.Event {
 		id := evt.UserID
 		// check multiple events from the same user in a narrow window (50 ms)
 		now := time.Now()
@@ -424,7 +423,7 @@ func (room *Room) slow(handler EventHandler) EventHandler {
 
 // this one is to keep people from tripping over each other
 func (room *Room) outsideBuffer(handler EventHandler) EventHandler {
-	return func(evt *core.EventJSON) *core.EventJSON {
+	return func(evt *core.Event) *core.Event {
 		if room.lastUser != evt.UserID {
 			now := time.Now()
 			diff := now.Sub(*room.lastActive)
@@ -446,7 +445,7 @@ func chain(h EventHandler, middleware ...Middleware) EventHandler {
 
 // HandleAny is only to be used in special occasions because it recreates
 // all the handlers
-func (room *Room) HandleAny(evt *core.EventJSON) *core.EventJSON {
+func (room *Room) HandleAny(evt *core.Event) *core.Event {
 	// handle the event
 	if handler, ok := room.handlers[evt.Event]; ok {
 		return handler(evt)

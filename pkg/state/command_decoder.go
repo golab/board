@@ -16,7 +16,7 @@ import (
 	"github.com/jarednogo/board/pkg/core"
 )
 
-func DecodeToCommand(evt *core.EventJSON) (Command, error) {
+func DecodeToCommand(evt *core.Event) (Command, error) {
 	switch evt.Event {
 	case "add_stone":
 		val := evt.Value.(map[string]interface{})

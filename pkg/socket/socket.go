@@ -20,8 +20,8 @@ import (
 )
 
 type RoomConn interface {
-	SendEvent(evt *core.EventJSON) error
-	ReceiveEvent() (*core.EventJSON, error)
+	SendEvent(evt *core.Event) error
+	ReceiveEvent() (*core.Event, error)
 	OnConnect()
 	Close() error
 	ID() string
@@ -44,7 +44,7 @@ func (wrc *WebsocketRoomConn) ID() string {
 	return wrc.id
 }
 
-func (wrc *WebsocketRoomConn) SendEvent(evt *core.EventJSON) error {
+func (wrc *WebsocketRoomConn) SendEvent(evt *core.Event) error {
 	// marshal event back into data
 	data, err := json.Marshal(evt)
 	if err != nil {
@@ -60,14 +60,14 @@ func (wrc *WebsocketRoomConn) SendEvent(evt *core.EventJSON) error {
 func (wrc *WebsocketRoomConn) OnConnect() {
 }
 
-func (wrc *WebsocketRoomConn) ReceiveEvent() (*core.EventJSON, error) {
+func (wrc *WebsocketRoomConn) ReceiveEvent() (*core.Event, error) {
 	data, err := wrc.readPacket()
 	if err != nil {
 		return nil, err
 	}
 
 	// turn data into json
-	evt := &core.EventJSON{}
+	evt := &core.Event{}
 	if err := json.Unmarshal(data, evt); err != nil {
 		return nil, err
 	}

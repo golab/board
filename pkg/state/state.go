@@ -96,65 +96,6 @@ func (s *State) AnyMove() {
 	s.markedDame = core.NewCoordSet()
 }
 
-// see addevent.go
-/*
-func (s *State) AddEvent(evt *core.EventJSON) (*core.Frame, error) {
-	switch evt.Event {
-	case "add_stone":
-		return s.HandleAddStone(evt)
-	case "pass":
-		return s.HandlePass(evt)
-	case "remove_stone":
-		return s.HandleRemoveStone(evt)
-	case "triangle":
-		return s.HandleAddTriangle(evt)
-	case "square":
-		return s.HandleAddSquare(evt)
-	case "letter":
-		return s.HandleAddLetter(evt)
-	case "number":
-		return s.HandleAddNumber(evt)
-	case "remove_mark":
-		return s.HandleRemoveMark(evt)
-	case "cut":
-		return s.HandleCut()
-	case "left":
-		return s.HandleLeft()
-	case "right":
-		return s.HandleRight()
-	case "up":
-		return s.HandleUp()
-	case "down":
-		return s.HandleDown()
-	case "rewind":
-		return s.HandleRewind()
-	case "fastforward":
-		return s.HandleFastForward()
-	case "goto_grid":
-		return s.HandleGotoGrid(evt)
-	case "goto_coord":
-		return s.HandleGotoCoord(evt)
-	case "comment":
-		return s.HandleComment(evt)
-	case "draw":
-		return s.HandleDraw(evt)
-	case "erase_pen":
-		return s.HandleErasePen()
-	case "copy":
-		return s.HandleCopy()
-	case "clipboard":
-		return s.HandleClipboard()
-	case "graft":
-		return s.HandleGraft(evt)
-	case "score":
-		return s.HandleScore()
-	case "markdead":
-		return s.HandleMarkDead(evt)
-	}
-	return nil, nil
-}
-*/
-
 func (s *State) ToSGF(indexes bool) string {
 	result := "("
 	stack := []interface{}{s.root}

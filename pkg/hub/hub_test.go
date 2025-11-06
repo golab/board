@@ -62,7 +62,7 @@ func TestHub2(t *testing.T) {
 
 	mock := socket.NewMockRoomConn()
 	mock.QueuedEvents = append(mock.QueuedEvents,
-		&core.EventJSON{
+		&core.Event{
 			Event: "pass",
 			Value: 1.0,
 		},

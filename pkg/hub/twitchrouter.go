@@ -246,7 +246,7 @@ func (h *Hub) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 		r := h.GetOrCreateRoom(roomID)
 
 		// create the event
-		e := &core.EventJSON{
+		e := &core.Event{
 			Event: "graft",
 			Value: branch,
 		}

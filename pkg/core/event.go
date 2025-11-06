@@ -11,32 +11,32 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 // the core package provides basic functionality to all the major components of the code
 package core
 
-// EventJSON is the basic struct for sending and receiving messages over
+// Event is the basic struct for sending and receiving messages over
 // the websockets
-type EventJSON struct {
+type Event struct {
 	Event  string      `json:"event"`
 	Value  interface{} `json:"value"`
 	UserID string      `json:"userid"`
 }
 
-func EmptyEvent() *EventJSON {
-	return &EventJSON{}
+func EmptyEvent() *Event {
+	return &Event{}
 }
 
-// ErrorEvent is a special case of an EventJSON
-func ErrorEvent(msg string) *EventJSON {
-	return &EventJSON{"error", msg, ""}
+// ErrorEvent is a special case of an Event
+func ErrorEvent(msg string) *Event {
+	return &Event{"error", msg, ""}
 }
 
-// FrameEvent is a special case of an EventJSON
-func FrameEvent(frame *Frame) *EventJSON {
-	return &EventJSON{"frame", frame, ""}
+// FrameEvent is a special case of an Event
+func FrameEvent(frame *Frame) *Event {
+	return &Event{"frame", frame, ""}
 }
 
 // NopEvent signals to the server to do nothing
 // (in particular, don't send to clients)
-func NopEvent() *EventJSON {
-	return &EventJSON{"nop", nil, ""}
+func NopEvent() *Event {
+	return &Event{"nop", nil, ""}
 }
 
 // Diff contains two StoneSets (Add and Remove) and is a key component of a Frame

@@ -161,13 +161,13 @@ func (r *Room) SetPassword(p string) {
 	r.password = p
 }
 
-func (r *Room) SendTo(id string, evt *core.EventJSON) {
+func (r *Room) SendTo(id string, evt *core.Event) {
 	if rc, ok := r.conns[id]; ok {
 		rc.SendEvent(evt) //nolint:errcheck
 	}
 }
 
-func (r *Room) Broadcast(evt *core.EventJSON) {
+func (r *Room) Broadcast(evt *core.Event) {
 	if evt.Event == "nop" {
 		return
 	}
@@ -182,7 +182,7 @@ func (r *Room) Broadcast(evt *core.EventJSON) {
 
 func (r *Room) BroadcastHubMessage(m *core.Message) {
 	// make a new event to broadcast
-	evt := &core.EventJSON{
+	evt := &core.Event{
 		Event:  "global",
 		Value:  m.Text,
 		UserID: "",
@@ -203,7 +203,7 @@ func (r *Room) BroadcastHubMessage(m *core.Message) {
 	}
 }
 
-func (r *Room) UploadSGF(sgf string) *core.EventJSON {
+func (r *Room) UploadSGF(sgf string) *core.Event {
 	s, err := state.FromSGF(sgf)
 	if err != nil {
 		msg := fmt.Sprintf("Error parsing SGF: %s", err)
@@ -218,7 +218,7 @@ func (r *Room) UploadSGF(sgf string) *core.EventJSON {
 
 func (r *Room) SendUserList() {
 	// send list of currently connected users
-	evt := &core.EventJSON{
+	evt := &core.Event{
 		Event:  "connected_users",
 		Value:  r.nicks,
 		UserID: "",

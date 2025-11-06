@@ -19,9 +19,9 @@ import (
 )
 
 type MockRoomConn struct {
-	QueuedEvents []*core.EventJSON
+	QueuedEvents []*core.Event
 	index        int
-	SavedEvents  []*core.EventJSON
+	SavedEvents  []*core.Event
 	roomID       string
 	id           string
 	Closed       bool
@@ -44,14 +44,14 @@ func (mcr *MockRoomConn) GetRoomID() string {
 func (mcr *MockRoomConn) OnConnect() {
 }
 
-func (mcr *MockRoomConn) SendEvent(evt *core.EventJSON) error {
+func (mcr *MockRoomConn) SendEvent(evt *core.Event) error {
 	mcr.mu.Lock()
 	defer mcr.mu.Unlock()
 	mcr.SavedEvents = append(mcr.SavedEvents, evt)
 	return nil
 }
 
-func (mcr *MockRoomConn) ReceiveEvent() (*core.EventJSON, error) {
+func (mcr *MockRoomConn) ReceiveEvent() (*core.Event, error) {
 	if mcr.index >= len(mcr.QueuedEvents) {
 		return nil, io.EOF
 	}
@@ -95,7 +95,7 @@ func (mcr *BlockingMockRoomConn) Disconnect() {
 	mcr.conn <- true
 }
 
-func (mcr *BlockingMockRoomConn) ReceiveEvent() (*core.EventJSON, error) {
+func (mcr *BlockingMockRoomConn) ReceiveEvent() (*core.Event, error) {
 	if mcr.index >= len(mcr.QueuedEvents) {
 		// blocks until there's a value from mcr.conn
 		<-mcr.conn
@@ -103,7 +103,7 @@ func (mcr *BlockingMockRoomConn) ReceiveEvent() (*core.EventJSON, error) {
 	return mcr.MockRoomConn.ReceiveEvent()
 }
 
-func (mcr *BlockingMockRoomConn) SendEvent(evt *core.EventJSON) error {
+func (mcr *BlockingMockRoomConn) SendEvent(evt *core.Event) error {
 	// signals to external caller that the room conn is ready
 	return mcr.MockRoomConn.SendEvent(evt)
 }

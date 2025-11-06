@@ -26,8 +26,8 @@ type Room interface {
 	PushHead(int, int, core.Color)
 	GenerateFullFrame(core.TreeJSONType) *core.Frame
 	AddPatternNodes([]*core.PatternMove)
-	Broadcast(*core.EventJSON)
-	UploadSGF(string) *core.EventJSON
+	Broadcast(*core.Event)
+	UploadSGF(string) *core.Event
 }
 
 func GetUser(f fetch.Fetcher, id int) (string, error) {

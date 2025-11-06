@@ -47,9 +47,9 @@ func Parse(chat string) (*Chat, error) {
 
 // TwitchJSON is the base response type for twitch messages
 type TwitchJSON struct {
-	Subscription *Subscription    `json:"subscription"`
-	Event        *TwitchEventJSON `json:"event"`
-	Challenge    string           `json:"challenge"`
+	Subscription *Subscription `json:"subscription"`
+	Event        *TwitchEvent  `json:"event"`
+	Challenge    string        `json:"challenge"`
 }
 
 // Subscription only is used to get the id
@@ -57,8 +57,8 @@ type Subscription struct {
 	ID string `json:"id"`
 }
 
-// TwitchEventJSON is the twitch event type
-type TwitchEventJSON struct {
+// TwitchEvent is the twitch event type
+type TwitchEvent struct {
 	BroadcasterUserID string             `json:"broadcaster_user_id"`
 	ChatterUserID     string             `json:"chatter_user_id"`
 	Message           *TwitchMessageJSON `json:"message"`
