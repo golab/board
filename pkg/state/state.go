@@ -23,18 +23,16 @@ const Letters = "ABCDEFGHIJKLNMOPQRSTUVWXYZ"
 // as a rule, anything that would need to get sent to new connections
 // should be stored here
 type State struct {
-	root        *core.TreeNode
-	current     *core.TreeNode
-	head        *core.TreeNode
-	nodes       map[int]*core.TreeNode
-	nextIndex   int
-	inputBuffer int64
-	timeout     float64
-	size        int
-	board       *core.Board
-	clipboard   *core.TreeNode
-	markedDead  core.CoordSet
-	markedDame  core.CoordSet
+	root       *core.TreeNode
+	current    *core.TreeNode
+	head       *core.TreeNode
+	nodes      map[int]*core.TreeNode
+	nextIndex  int
+	size       int
+	board      *core.Board
+	clipboard  *core.TreeNode
+	markedDead core.CoordSet
+	markedDame core.CoordSet
 }
 
 func (s *State) HeadColor() core.Color {
@@ -49,22 +47,6 @@ func (s *State) GetNextIndex() int {
 	i := s.nextIndex
 	s.nextIndex++
 	return i
-}
-
-func (s *State) GetInputBuffer() int64 {
-	return s.inputBuffer
-}
-
-func (s *State) SetInputBuffer(i int64) {
-	s.inputBuffer = i
-}
-
-func (s *State) GetTimeout() float64 {
-	return s.timeout
-}
-
-func (s *State) SetTimeout(f float64) {
-	s.timeout = f
 }
 
 func (s *State) Size() int {
@@ -231,7 +213,15 @@ func NewState(size int, initRoot bool) *State {
 		index = 1
 	}
 	board := core.NewBoard(size)
-	// default input buffer of 250
-	// default timeout of 86400
-	return &State{root, root, root, nodes, index, 250, 86400, size, board, nil, core.NewCoordSet(), core.NewCoordSet()}
+	return &State{
+		root:       root,
+		current:    root,
+		head:       root,
+		nodes:      nodes,
+		nextIndex:  index,
+		size:       size,
+		board:      board,
+		clipboard:  nil,
+		markedDead: core.NewCoordSet(),
+		markedDame: core.NewCoordSet()}
 }

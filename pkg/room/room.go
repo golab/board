@@ -38,6 +38,8 @@ type Room struct {
 	fetcher      fetch.Fetcher
 	id           string
 	handlers     map[string]EventHandler
+	inputBuffer  int64
+	timeout      float64
 	mu           sync.Mutex
 }
 
@@ -49,6 +51,9 @@ func NewRoom(id string) *Room {
 	auth := make(map[string]bool)
 	nicks := make(map[string]string)
 	plugins := make(map[string]plugin.Plugin)
+	// default input buffer of 250
+	// default timeout of 86400
+
 	r := &Room{
 		conns:        conns,
 		engine:       s,
@@ -61,6 +66,8 @@ func NewRoom(id string) *Room {
 		nicks:        nicks,
 		fetcher:      fetch.NewDefaultFetcher(),
 		id:           id,
+		inputBuffer:  250,
+		timeout:      86400,
 	}
 	r.initHandlers()
 
@@ -83,12 +90,12 @@ func Load(load *loader.LoadJSON) (*Room, error) {
 	st.SetPrefs(load.Prefs)
 
 	st.SetNextIndex(load.NextIndex)
-	st.SetInputBuffer(load.Buffer)
 
 	loc := load.Location
 	st.SetLocation(loc)
 	r := NewRoom(id)
 	r.password = load.Password
+	r.inputBuffer = load.Buffer
 	r.setState(st)
 
 	return r, nil
@@ -108,6 +115,22 @@ func (r *Room) SaveState() *state.StateJSON {
 	return r.engine.Save()
 }
 
+func (r *Room) GetInputBuffer() int64 {
+	return r.inputBuffer
+}
+
+func (r *Room) SetInputBuffer(i int64) {
+	r.inputBuffer = i
+}
+
+func (r *Room) GetTimeout() float64 {
+	return r.timeout
+}
+
+func (r *Room) SetTimeout(f float64) {
+	r.timeout = f
+}
+
 func (r *Room) Save() *loader.LoadJSON {
 	stateJSON := r.engine.Save()
 
@@ -116,11 +139,11 @@ func (r *Room) Save() *loader.LoadJSON {
 	save.SGF = stateJSON.SGF
 	save.Location = stateJSON.Location
 	save.Prefs = stateJSON.Prefs
-	save.Buffer = stateJSON.Buffer
 	save.NextIndex = stateJSON.NextIndex
 
 	// add on last fields owned by the room instead of the state
 	save.Password = r.password
+	save.Buffer = r.inputBuffer
 	save.ID = r.id
 	return save
 }

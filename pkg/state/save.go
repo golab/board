@@ -20,7 +20,6 @@ type StateJSON struct {
 	SGF       string         `json:"sgf"`
 	Location  string         `json:"loc"`
 	Prefs     map[string]int `json:"prefs"`
-	Buffer    int64          `json:"buffer"`
 	NextIndex int            `json:"next_index"`
 }
 
@@ -33,7 +32,6 @@ func (s *State) Save() *StateJSON {
 		SGF:       encoded,
 		Location:  loc,
 		Prefs:     prefs,
-		Buffer:    s.inputBuffer,
 		NextIndex: s.nextIndex,
 	}
 	return stateStruct
