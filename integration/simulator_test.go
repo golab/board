@@ -11,10 +11,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package integration_test
 
 import (
+	"encoding/base64"
 	"testing"
 
 	"github.com/jarednogo/board/integration"
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/sgfsamples"
+	"github.com/jarednogo/board/pkg/core"
 )
 
 func TestSim(t *testing.T) {
@@ -30,10 +33,32 @@ func TestSim(t *testing.T) {
 	// connect all the clients
 	sim.ConnectAll()
 
-	/*
-		do stuff with the clients
-	*/
+	// clear out all events
+	sim.FlushAll()
+
+	// reduce input buffer to 0 for this test
+	// otherwise the buffer causes events to get dropped
+	// by the room handler
+	room, err := sim.Hub.GetRoom(roomID)
+	assert.NoError(t, err, "get room")
+	room.SetInputBuffer(0)
+
+	// simulate an event
+	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.PassWithTT))
+	evt := &core.Event{
+		Event:  "upload_sgf",
+		Value:  sgf,
+		UserID: "",
+	}
+	sim.Clients[0].SimulateEvent(evt)
+
+	// let the event pass through all connections
+	sim.FlushAll()
 
 	// disconnect all the clients
 	sim.DisconnectAll()
+
+	// observe effects
+	save := room.Save()
+	assert.Equal(t, len(save.SGF), 6132, "len(save.SGF)")
 }

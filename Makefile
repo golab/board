@@ -1,7 +1,7 @@
 # Base Makefile — default goal prints help (supports inline "##" and preceding "##" styles)
 .DEFAULT_GOAL := default
 
-.PHONY: default help build test fmt lint run setup clean fuzz coverage
+.PHONY: default help build test fmt lint run setup clean fuzz coverage-int coverage-unit coverage-integration-html coverage-integration-total coverage-unit-html coverage-unit-total
 
 VERSION := $(shell git describe --tags 2>/dev/null || echo dev)
 
@@ -16,7 +16,7 @@ help: ## Show this help.
 	         else if(desc) { d=desc; desc="" } \
 	         if(d) print t": "d"\n" }' $(MAKEFILE_LIST) \
 	  | sort -u \
-	  | awk -F': ' '{printf "  \033[1;36m%-12s\033[0m %s\n", $$1, $$2}'
+	  | awk -F': ' '{printf "  \033[1;36m%-15s\033[0m %s\n", $$1, $$2}'
 
 # -----------------------
 # Example targets (annotate with "##" either inline or on the previous line)
@@ -40,20 +40,37 @@ fuzz: ## Fuzz code
 	@echo "==> fuzz"
 	go test ./pkg/core -fuzz=FuzzParser -fuzztime=60s
 
-coverage: ## Test coverage
-	@echo "==> coverage"
-	@go test ./... -coverprofile=pkg.tmp.out -covermode=count > /dev/null
-	@go test ./integration -coverprofile=integration.tmp.out -coverpkg=./pkg/hub,./pkg/room,./pkg/state -covermode=count > /dev/null
-	@echo "mode: count" > cover.out
-	@grep -h -v mode *.tmp.out >> cover.out
-	go tool cover -func=cover.out -o=cover.out
+coverage-unit-total:
+	@echo "==> coverage-unit-total"
+	@go list ./... | grep -v integration | xargs go test -coverprofile=cover.out -covermode=count > /dev/null
+	@go tool cover -func=cover.out -o=cover.out
 	@tail -n1 cover.out | tr -s '\t'
-	@go test ./... -coverprofile=pkg.tmp.out
-	@go test ./integration -coverprofile=integration.tmp.out -coverpkg=./pkg/hub,./pkg/room,./pkg/state,./pkg/core
-	@echo "mode: set" > cover.out
-	@grep -h -v mode *.tmp.out >> cover.out
-	go tool cover -html=cover.out
-	@rm *.out
+	@rm cover.out
+
+coverage-unit-html:
+	@echo "==> coverage-unit-html"
+	@go list ./... | grep -v integration | xargs go test -coverprofile=cover.out
+	@go tool cover -html=cover.out
+	@rm cover.out
+
+coverage-unit: coverage-unit-total coverage-unit-html ## Coverage of unit tests
+	@echo "==> coverage-unit"
+
+coverage-integration-total:
+	@echo "==> coverage-integration-total"
+	@go test ./integration -coverprofile=cover.out -coverpkg=./pkg/hub,./pkg/room,./pkg/state,./pkg/core -covermode=count > /dev/null
+	@go tool cover -func=cover.out -o=cover.out
+	@tail -n1 cover.out | tr -s '\t'
+	@rm cover.out
+
+coverage-integration-html:
+	@echo "==> coverage-integration-html"
+	@go test ./integration -coverprofile=cover.out -coverpkg=./pkg/hub,./pkg/room,./pkg/state,./pkg/core
+	@go tool cover -html=cover.out
+	@rm cover.out
+
+coverage-int: coverage-integration-total coverage-integration-html ## Coverage of integration tests
+	@echo "==> coverage-integration"
 
 test-race: ## Test for data races
 	@echo "==> test-race"

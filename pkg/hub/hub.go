@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package hub
 
 import (
+	"errors"
 	"log"
 	"strings"
 	"sync"
@@ -74,6 +75,13 @@ func NewHubWithDB(db loader.Loader, cfg *config.Config) (*Hub, error) {
 	go s.MessageLoop()
 
 	return s, nil
+}
+
+func (h *Hub) GetRoom(id string) (*room.Room, error) {
+	if room, ok := h.rooms[id]; ok {
+		return room, nil
+	}
+	return nil, errors.New("room not found")
 }
 
 func (h *Hub) RoomCount() int {

@@ -25,18 +25,27 @@ func EmptyEvent() *Event {
 
 // ErrorEvent is a special case of an Event
 func ErrorEvent(msg string) *Event {
-	return &Event{"error", msg, ""}
+	return &Event{
+		Event:  "error",
+		Value:  msg,
+		UserID: ""}
 }
 
 // FrameEvent is a special case of an Event
 func FrameEvent(frame *Frame) *Event {
-	return &Event{"frame", frame, ""}
+	return &Event{
+		Event:  "frame",
+		Value:  frame,
+		UserID: ""}
 }
 
 // NopEvent signals to the server to do nothing
 // (in particular, don't send to clients)
 func NopEvent() *Event {
-	return &Event{"nop", nil, ""}
+	return &Event{
+		Event:  "nop",
+		Value:  nil,
+		UserID: ""}
 }
 
 // Diff contains two StoneSets (Add and Remove) and is a key component of a Frame

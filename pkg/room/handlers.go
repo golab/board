@@ -424,7 +424,12 @@ func (room *Room) slow(handler EventHandler) EventHandler {
 // this one is to keep people from tripping over each other
 func (room *Room) outsideBuffer(handler EventHandler) EventHandler {
 	return func(evt *core.Event) *core.Event {
-		if room.lastUser != evt.UserID {
+		var lastUser string
+		room.mu.Lock()
+		lastUser = room.lastUser
+		room.mu.Unlock()
+
+		if lastUser != evt.UserID {
 			now := time.Now()
 			diff := now.Sub(*room.lastActive)
 			if diff.Milliseconds() < room.GetInputBuffer() {

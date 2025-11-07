@@ -21,7 +21,7 @@ import (
 
 type Sim struct {
 	Hub     *hub.Hub
-	Clients []*core.BlockingMockEventChannel
+	Clients []*core.TwoWayMockEventChannel
 	wg      sync.WaitGroup
 }
 
@@ -40,7 +40,7 @@ func NewSim() (*Sim, error) {
 }
 
 func (s *Sim) AddClient(roomID string) {
-	client := core.NewBlockingMockEventChannel()
+	client := core.NewTwoWayMockEventChannel()
 	client.SetRoomID(roomID)
 	s.Clients = append(s.Clients, client)
 }
@@ -68,4 +68,10 @@ func (s *Sim) DisconnectAll() {
 
 	// waits until all the clients are disconnected
 	s.wg.Wait()
+}
+
+func (s *Sim) FlushAll() {
+	for _, client := range s.Clients {
+		client.Flush()
+	}
 }

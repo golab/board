@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package core
 
 import (
+	"fmt"
 	"io"
 	"sync"
 
@@ -68,6 +69,9 @@ func (ec *MockEventChannel) ID() string {
 	return ec.id
 }
 
+// BlockingMockEventChannel essentially does the same
+// thing as a MockEventChannel except when it's out of QueuedEvents
+// then it just blocks until Disconnect() is called.
 type BlockingMockEventChannel struct {
 	conn  chan bool
 	ready chan bool
@@ -91,18 +95,61 @@ func (ec *BlockingMockEventChannel) OnConnect() {
 }
 
 func (ec *BlockingMockEventChannel) Disconnect() {
-	ec.conn <- true
+	close(ec.conn)
 }
 
 func (ec *BlockingMockEventChannel) ReceiveEvent() (*Event, error) {
 	if ec.index >= len(ec.QueuedEvents) {
-		// blocks until there's a value from ec.conn
+		// blocks until there's a value from ec.conn (or ec.conn closes)
 		<-ec.conn
 	}
 	return ec.MockEventChannel.ReceiveEvent()
 }
 
-func (ec *BlockingMockEventChannel) SendEvent(evt *Event) error {
-	// signals to external caller that the room conn is ready
-	return ec.MockEventChannel.SendEvent(evt)
+type TwoWayMockEventChannel struct {
+	sentEvents     chan *Event
+	receivedEvents chan *Event
+	*BlockingMockEventChannel
+}
+
+func NewTwoWayMockEventChannel() *TwoWayMockEventChannel {
+	return &TwoWayMockEventChannel{
+		make(chan *Event, 50),
+		make(chan *Event),
+		NewBlockingMockEventChannel(),
+	}
+}
+
+func (ec *TwoWayMockEventChannel) SendEvent(evt *Event) error {
+	go func() {
+		ec.sentEvents <- evt
+	}()
+	return ec.BlockingMockEventChannel.SendEvent(evt)
+}
+
+func (ec *TwoWayMockEventChannel) Disconnect() {
+	close(ec.receivedEvents)
+	ec.BlockingMockEventChannel.Disconnect()
+}
+
+func (ec *TwoWayMockEventChannel) ReceiveEvent() (*Event, error) {
+	evt, ok := <-ec.receivedEvents
+	if !ok {
+		return nil, fmt.Errorf("channel closed")
+	}
+	return evt, nil
+}
+
+func (ec *TwoWayMockEventChannel) SimulateEvent(evt *Event) {
+	ec.receivedEvents <- evt
+}
+
+func (ec *TwoWayMockEventChannel) Flush() {
+	for {
+		select {
+		case <-ec.sentEvents:
+		default:
+			return
+		}
+	}
 }
