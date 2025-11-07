@@ -43,13 +43,13 @@ $ make run
 2. Build the docker container
 
 ```bash
-$ docker build --build-arg VERSION=$(git describe --tags) -t board .
+$ make build-docker
 ```
 
 3. Run the docker container, binding the container ports to your host ports
 
 ```bash
-$ docker run -p 8080:8080 board
+$ make run-docker
 ```
 
 4. Visit `http://localhost:8080` in your browser
