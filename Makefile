@@ -91,6 +91,12 @@ run: setup ## Build and run with air (live reloading)
 	rm -f build/* 2> /dev/null
 	./bin/air --build.cmd 'go build -ldflags "-X main.version=$(VERSION)" -o build/main cmd/*.go' --build.bin "./build/main"
 
+run-memory: setup ## Build and run with in-memory loader
+	@echo "==> run-memory"
+	mkdir -p build
+	rm -f build/* 2> /dev/null
+	./bin/air --build.cmd 'go build -ldflags "-X main.version=$(VERSION)" -o build/main cmd/*.go' --build.bin "./build/main" --build.args_bin "-f config/config-test.yaml"
+
 clean: ## Remove build artifacts
 	@echo "==> clean"
 
