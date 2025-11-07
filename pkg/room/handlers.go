@@ -259,7 +259,7 @@ func (room *Room) handleUpdateNickname(evt *core.Event) *core.Event {
 	nickname := evt.Value.(string)
 	room.nicks[evt.UserID] = nickname
 	userEvt := &core.Event{
-		Type:  "connected_users",
+		Type:   "connected_users",
 		Value:  room.nicks,
 		UserID: evt.UserID,
 	}
@@ -371,7 +371,7 @@ func (room *Room) broadcastConnectedUsersAfter(handler EventHandler) EventHandle
 	return func(evt *core.Event) *core.Event {
 		evt = handler(evt)
 		userEvt := &core.Event{
-			Type:  "connected_users",
+			Type:   "connected_users",
 			Value:  room.nicks,
 			UserID: "",
 		}

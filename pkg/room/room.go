@@ -205,7 +205,7 @@ func (r *Room) Broadcast(evt *core.Event) {
 func (r *Room) BroadcastHubMessage(m *core.Message) {
 	// make a new event to broadcast
 	evt := &core.Event{
-		Type:  "global",
+		Type:   "global",
 		Value:  m.Text,
 		UserID: "",
 	}
@@ -241,7 +241,7 @@ func (r *Room) UploadSGF(sgf string) *core.Event {
 func (r *Room) SendUserList() {
 	// send list of currently connected users
 	evt := &core.Event{
-		Type:  "connected_users",
+		Type:   "connected_users",
 		Value:  r.nicks,
 		UserID: "",
 	}
