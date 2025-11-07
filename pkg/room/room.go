@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/loader"
 	"github.com/jarednogo/board/pkg/room/plugin"
@@ -26,7 +27,7 @@ import (
 type engine = state.State
 
 type Room struct {
-	conns map[string]core.EventChannel
+	conns map[string]event.EventChannel
 	*engine
 	lastActive   *time.Time
 	lastUser     string
@@ -44,7 +45,7 @@ type Room struct {
 }
 
 func NewRoom(id string) *Room {
-	conns := make(map[string]core.EventChannel)
+	conns := make(map[string]event.EventChannel)
 	s := state.NewState(19, true)
 	now := time.Now()
 	msgs := make(map[string]*time.Time)
@@ -183,14 +184,14 @@ func (r *Room) SetPassword(p string) {
 	r.password = p
 }
 
-func (r *Room) SendTo(id string, evt *core.Event) {
+func (r *Room) SendTo(id string, evt event.Event) {
 	if ec, ok := r.conns[id]; ok {
 		ec.SendEvent(evt) //nolint:errcheck
 	}
 }
 
-func (r *Room) Broadcast(evt *core.Event) {
-	if evt.Type == "nop" {
+func (r *Room) Broadcast(evt event.Event) {
+	if evt.Type() == "nop" {
 		return
 	}
 
@@ -204,11 +205,7 @@ func (r *Room) Broadcast(evt *core.Event) {
 
 func (r *Room) BroadcastHubMessage(m *core.Message) {
 	// make a new event to broadcast
-	evt := &core.Event{
-		Type:   "global",
-		Value:  m.Text,
-		UserID: "",
-	}
+	evt := event.NewEvent("global", m.Text)
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -225,31 +222,27 @@ func (r *Room) BroadcastHubMessage(m *core.Message) {
 	}
 }
 
-func (r *Room) UploadSGF(sgf string) *core.Event {
+func (r *Room) UploadSGF(sgf string) event.Event {
 	s, err := state.FromSGF(sgf)
 	if err != nil {
 		msg := fmt.Sprintf("Error parsing SGF: %s", err)
-		return core.ErrorEvent(msg)
+		return event.ErrorEvent(msg)
 	}
 	r.engine = s
 
 	// replace evt with frame data
 	frame := r.GenerateFullFrame(core.Full)
-	return core.FrameEvent(frame)
+	return event.FrameEvent(frame)
 }
 
 func (r *Room) SendUserList() {
 	// send list of currently connected users
-	evt := &core.Event{
-		Type:   "connected_users",
-		Value:  r.nicks,
-		UserID: "",
-	}
+	evt := event.NewEvent("connected_users", r.nicks)
 
 	r.Broadcast(evt)
 }
 
-func (r *Room) RegisterConnection(ec core.EventChannel) string {
+func (r *Room) RegisterConnection(ec event.EventChannel) string {
 	// currently a no-op, but useful for testing
 	ec.OnConnect()
 
@@ -271,7 +264,7 @@ func (r *Room) RegisterConnection(ec core.EventChannel) string {
 
 	// send initial state
 	frame := r.GenerateFullFrame(core.Full)
-	evt := core.FrameEvent(frame)
+	evt := event.FrameEvent(frame)
 	ec.SendEvent(evt) //nolint:errcheck
 
 	return id
@@ -283,7 +276,7 @@ func (r *Room) DeregisterConnection(id string) {
 	delete(r.conns, id)
 }
 
-func (r *Room) Handle(ec core.EventChannel) error {
+func (r *Room) Handle(ec event.EventChannel) error {
 	// assign id to the new connection
 	id := r.RegisterConnection(ec)
 
@@ -310,7 +303,7 @@ func (r *Room) Handle(ec core.EventChannel) error {
 		}
 
 		// augment with user id
-		evt.UserID = id
+		evt.SetUser(id)
 
 		// handle the event
 		r.HandleAny(evt)

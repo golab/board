@@ -11,43 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 // the core package provides basic functionality to all the major components of the code
 package core
 
-// Event is the basic struct for sending and receiving messages over
-// the websockets
-type Event struct {
-	Type   string      `json:"event"`
-	Value  interface{} `json:"value"`
-	UserID string      `json:"userid"`
-}
-
-func EmptyEvent() *Event {
-	return &Event{}
-}
-
-// ErrorEvent is a special case of an Event
-func ErrorEvent(msg string) *Event {
-	return &Event{
-		Type:   "error",
-		Value:  msg,
-		UserID: ""}
-}
-
-// FrameEvent is a special case of an Event
-func FrameEvent(frame *Frame) *Event {
-	return &Event{
-		Type:   "frame",
-		Value:  frame,
-		UserID: ""}
-}
-
-// NopEvent signals to the server to do nothing
-// (in particular, don't send to clients)
-func NopEvent() *Event {
-	return &Event{
-		Type:   "nop",
-		Value:  nil,
-		UserID: ""}
-}
-
 // Diff contains two StoneSets (Add and Remove) and is a key component of a Frame
 type Diff struct {
 	Add    []*StoneSet `json:"add"`

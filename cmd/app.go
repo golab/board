@@ -21,13 +21,12 @@ import (
 
 var version = "dev"
 
-func Setup(cfg *config.Config) (http.Handler, error) {
+func Setup(cfg *config.Config) (*hub.Hub, http.Handler, error) {
 	// make a new hub
 	h, err := hub.NewHub(cfg)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	h.Load()
 
 	// http server setup
 
@@ -52,5 +51,5 @@ func Setup(cfg *config.Config) (http.Handler, error) {
 	// mount websocket
 	r.Mount("/socket", h.SocketRouter())
 
-	return r, nil
+	return h, r, nil
 }

@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package core
+package event
 
 import (
 	"fmt"
@@ -19,9 +19,9 @@ import (
 )
 
 type MockEventChannel struct {
-	QueuedEvents []*Event
+	QueuedEvents []Event
 	index        int
-	SavedEvents  []*Event
+	SavedEvents  []Event
 	roomID       string
 	id           string
 	Closed       bool
@@ -44,14 +44,14 @@ func (ec *MockEventChannel) GetRoomID() string {
 func (ec *MockEventChannel) OnConnect() {
 }
 
-func (ec *MockEventChannel) SendEvent(evt *Event) error {
+func (ec *MockEventChannel) SendEvent(evt Event) error {
 	ec.mu.Lock()
 	defer ec.mu.Unlock()
 	ec.SavedEvents = append(ec.SavedEvents, evt)
 	return nil
 }
 
-func (ec *MockEventChannel) ReceiveEvent() (*Event, error) {
+func (ec *MockEventChannel) ReceiveEvent() (Event, error) {
 	if ec.index >= len(ec.QueuedEvents) {
 		return nil, io.EOF
 	}
@@ -98,7 +98,7 @@ func (ec *BlockingMockEventChannel) Disconnect() {
 	close(ec.conn)
 }
 
-func (ec *BlockingMockEventChannel) ReceiveEvent() (*Event, error) {
+func (ec *BlockingMockEventChannel) ReceiveEvent() (Event, error) {
 	if ec.index >= len(ec.QueuedEvents) {
 		// blocks until there's a value from ec.conn (or ec.conn closes)
 		<-ec.conn
@@ -107,20 +107,20 @@ func (ec *BlockingMockEventChannel) ReceiveEvent() (*Event, error) {
 }
 
 type TwoWayMockEventChannel struct {
-	sentEvents     chan *Event
-	receivedEvents chan *Event
+	sentEvents     chan Event
+	receivedEvents chan Event
 	*BlockingMockEventChannel
 }
 
 func NewTwoWayMockEventChannel() *TwoWayMockEventChannel {
 	return &TwoWayMockEventChannel{
-		make(chan *Event, 50),
-		make(chan *Event),
+		make(chan Event, 50),
+		make(chan Event),
 		NewBlockingMockEventChannel(),
 	}
 }
 
-func (ec *TwoWayMockEventChannel) SendEvent(evt *Event) error {
+func (ec *TwoWayMockEventChannel) SendEvent(evt Event) error {
 	go func() {
 		ec.sentEvents <- evt
 	}()
@@ -132,7 +132,7 @@ func (ec *TwoWayMockEventChannel) Disconnect() {
 	ec.BlockingMockEventChannel.Disconnect()
 }
 
-func (ec *TwoWayMockEventChannel) ReceiveEvent() (*Event, error) {
+func (ec *TwoWayMockEventChannel) ReceiveEvent() (Event, error) {
 	evt, ok := <-ec.receivedEvents
 	if !ok {
 		return nil, fmt.Errorf("channel closed")
@@ -140,7 +140,7 @@ func (ec *TwoWayMockEventChannel) ReceiveEvent() (*Event, error) {
 	return evt, nil
 }
 
-func (ec *TwoWayMockEventChannel) SimulateEvent(evt *Event) {
+func (ec *TwoWayMockEventChannel) SimulateEvent(evt Event) {
 	ec.receivedEvents <- evt
 }
 

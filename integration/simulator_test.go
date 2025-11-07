@@ -17,7 +17,7 @@ import (
 	"github.com/jarednogo/board/integration"
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/internal/sgfsamples"
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/event"
 )
 
 func TestSim(t *testing.T) {
@@ -45,11 +45,7 @@ func TestSim(t *testing.T) {
 
 	// simulate an event
 	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.PassWithTT))
-	evt := &core.Event{
-		Type:   "upload_sgf",
-		Value:  sgf,
-		UserID: "",
-	}
+	evt := event.NewEvent("upload_sgf", sgf)
 	sim.Clients[0].SimulateEvent(evt)
 
 	// let the event pass through all connections

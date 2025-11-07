@@ -16,6 +16,7 @@ import (
 
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/room"
 	"github.com/jarednogo/board/pkg/room/plugin"
@@ -23,8 +24,8 @@ import (
 
 func TestBroadcast(t *testing.T) {
 	r := room.NewRoom("")
-	mock1 := core.NewMockEventChannel()
-	mock2 := core.NewMockEventChannel()
+	mock1 := event.NewMockEventChannel()
+	mock2 := event.NewMockEventChannel()
 
 	r.RegisterConnection(mock1)
 	r.RegisterConnection(mock2)
@@ -32,7 +33,7 @@ func TestBroadcast(t *testing.T) {
 	assert.Equal(t, len(mock1.SavedEvents), 1, "expected mock1 to receive first frame event")
 	assert.Equal(t, len(mock2.SavedEvents), 1, "expected mock2 to receive first frame event")
 
-	evt := core.EmptyEvent()
+	evt := event.EmptyEvent()
 	r.Broadcast(evt)
 
 	assert.Equal(t, len(mock1.SavedEvents), 2, "expected mock1 to recieve a test event")
@@ -41,8 +42,8 @@ func TestBroadcast(t *testing.T) {
 
 func TestBroadcastMessage(t *testing.T) {
 	r := room.NewRoom("")
-	mock1 := core.NewMockEventChannel()
-	mock2 := core.NewMockEventChannel()
+	mock1 := event.NewMockEventChannel()
+	mock2 := event.NewMockEventChannel()
 
 	r.RegisterConnection(mock1)
 	r.RegisterConnection(mock2)
@@ -70,7 +71,7 @@ func TestPlugin(t *testing.T) {
 
 func TestSendUserList(t *testing.T) {
 	r := room.NewRoom("")
-	mock := core.NewMockEventChannel()
+	mock := event.NewMockEventChannel()
 	r.RegisterConnection(mock)
 	r.SendUserList()
 	// first event is the frame immediately on connecting
@@ -78,14 +79,14 @@ func TestSendUserList(t *testing.T) {
 		t.Fatalf("failed to send user list")
 	}
 
-	assert.Equal(t, mock.SavedEvents[1].Type, "connected_users", "failed to send correct event")
+	assert.Equal(t, mock.SavedEvents[1].Type(), "connected_users", "failed to send correct event")
 }
 
 func TestSendTo(t *testing.T) {
 	r := room.NewRoom("")
-	mock := core.NewMockEventChannel()
+	mock := event.NewMockEventChannel()
 	id := r.RegisterConnection(mock)
-	evt := core.EmptyEvent()
+	evt := event.EmptyEvent()
 	r.SendTo(id, evt)
 
 	assert.Equal(t, len(mock.SavedEvents), 2, "expected client to receive a test event")
@@ -126,9 +127,9 @@ func TestSaveLoad(t *testing.T) {
 
 func TestClose(t *testing.T) {
 	r := room.NewRoom("")
-	mock1 := core.NewMockEventChannel()
-	mock2 := core.NewMockEventChannel()
-	mock3 := core.NewMockEventChannel()
+	mock1 := event.NewMockEventChannel()
+	mock2 := event.NewMockEventChannel()
+	mock3 := event.NewMockEventChannel()
 	r.RegisterConnection(mock1)
 	r.RegisterConnection(mock2)
 	r.RegisterConnection(mock3)
@@ -142,7 +143,7 @@ func TestClose(t *testing.T) {
 func TestHandle(t *testing.T) {
 	r := room.NewRoom("")
 	// mock initializes with zero events so automatically sends an error
-	mock := core.NewMockEventChannel()
+	mock := event.NewMockEventChannel()
 	err := r.Handle(mock)
 	assert.ErrorIs(t, err, io.EOF, "r.Handle")
 }

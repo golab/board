@@ -41,13 +41,15 @@ func main() {
 	log.Println("running config:", cfg)
 
 	// setup routes
-	r, err := Setup(cfg)
+	h, r, err := Setup(cfg)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
 	// start everything
+	h.Load()
+	defer h.Save()
 	host := cfg.Server.Host
 	port := cfg.Server.Port
 	url := fmt.Sprintf("%s:%d", host, port)

@@ -14,14 +14,14 @@ import (
 	"sync"
 
 	"github.com/jarednogo/board/pkg/config"
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/hub"
 	"github.com/jarednogo/board/pkg/loader"
 )
 
 type Sim struct {
 	Hub     *hub.Hub
-	Clients []*core.TwoWayMockEventChannel
+	Clients []*event.TwoWayMockEventChannel
 	wg      sync.WaitGroup
 }
 
@@ -40,7 +40,7 @@ func NewSim() (*Sim, error) {
 }
 
 func (s *Sim) AddClient(roomID string) {
-	client := core.NewTwoWayMockEventChannel()
+	client := event.NewTwoWayMockEventChannel()
 	client.SetRoomID(roomID)
 	s.Clients = append(s.Clients, client)
 }

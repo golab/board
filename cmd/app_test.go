@@ -24,7 +24,7 @@ import (
 )
 
 func TestPing(t *testing.T) {
-	r, err := main.Setup(config.Test())
+	_, r, err := main.Setup(config.Test())
 	assert.NoError(t, err, "main")
 
 	ts := httptest.NewServer(r)
@@ -51,7 +51,7 @@ func TestPing(t *testing.T) {
 }
 
 func TestTwitch(t *testing.T) {
-	r, err := main.Setup(config.Test())
+	_, r, err := main.Setup(config.Test())
 	assert.NoError(t, err, "main")
 
 	ts := httptest.NewServer(r)

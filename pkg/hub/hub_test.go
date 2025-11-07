@@ -16,7 +16,7 @@ import (
 
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/pkg/config"
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/hub"
 	"github.com/jarednogo/board/pkg/loader"
 )
@@ -47,7 +47,7 @@ func TestHub1(t *testing.T) {
 	assert.NoError(t, err, "new hub")
 	h.Load()
 
-	mock := core.NewMockEventChannel()
+	mock := event.NewMockEventChannel()
 	roomID := "someboard"
 	h.Handler(mock, roomID)
 
@@ -58,13 +58,9 @@ func TestHub2(t *testing.T) {
 	h, err := hub.NewHubWithDB(loader.NewMemoryLoader(), config.Default())
 	assert.NoError(t, err, "new hub")
 
-	mock := core.NewMockEventChannel()
-	mock.QueuedEvents = append(mock.QueuedEvents,
-		&core.Event{
-			Type:  "pass",
-			Value: 1.0,
-		},
-	)
+	mock := event.NewMockEventChannel()
+	evt := event.NewEvent("pass", 1.0)
+	mock.QueuedEvents = append(mock.QueuedEvents, evt)
 	roomID := "someboard"
 	h.Handler(mock, roomID)
 
@@ -86,7 +82,7 @@ func TestHub3(t *testing.T) {
 	assert.NoError(t, err, "new hub")
 
 	roomID := "someboard"
-	mock1 := core.NewMockEventChannel()
+	mock1 := event.NewMockEventChannel()
 	h.Handler(mock1, roomID)
 
 	assert.Equal(t, h.RoomCount(), 1, "hub room count")

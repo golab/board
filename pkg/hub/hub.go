@@ -19,6 +19,7 @@ import (
 
 	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/loader"
 	"github.com/jarednogo/board/pkg/room"
 	"golang.org/x/net/websocket"
@@ -232,11 +233,11 @@ func (h *Hub) HandlerWrapper(ws *websocket.Conn) {
 	_, roomID, _ := ParseURL(url)
 
 	// wrap the socket
-	ec := core.NewWebsocketEventChannel(ws)
+	ec := event.NewWebsocketEventChannel(ws)
 	h.Handler(ec, roomID)
 }
 
-func (h *Hub) Handler(ec core.EventChannel, roomID string) {
+func (h *Hub) Handler(ec event.EventChannel, roomID string) {
 	// new connection
 
 	// get or create the room

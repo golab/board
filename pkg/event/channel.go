@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package core
+package event
 
 import (
 	"encoding/binary"
@@ -19,8 +19,8 @@ import (
 )
 
 type EventChannel interface {
-	SendEvent(evt *Event) error
-	ReceiveEvent() (*Event, error)
+	SendEvent(evt Event) error
+	ReceiveEvent() (Event, error)
 	OnConnect()
 	Close() error
 	ID() string
@@ -43,7 +43,7 @@ func (ec *WebsocketEventChannel) ID() string {
 	return ec.id
 }
 
-func (ec *WebsocketEventChannel) SendEvent(evt *Event) error {
+func (ec *WebsocketEventChannel) SendEvent(evt Event) error {
 	// marshal event back into data
 	data, err := json.Marshal(evt)
 	if err != nil {
@@ -59,15 +59,15 @@ func (ec *WebsocketEventChannel) SendEvent(evt *Event) error {
 func (ec *WebsocketEventChannel) OnConnect() {
 }
 
-func (ec *WebsocketEventChannel) ReceiveEvent() (*Event, error) {
+func (ec *WebsocketEventChannel) ReceiveEvent() (Event, error) {
 	data, err := ec.readPacket()
 	if err != nil {
 		return nil, err
 	}
 
 	// turn data into json
-	evt := &Event{}
-	if err := json.Unmarshal(data, evt); err != nil {
+	var evt Event
+	if evt, err = EventFromJSON(data); err != nil {
 		return nil, err
 	}
 	return evt, nil

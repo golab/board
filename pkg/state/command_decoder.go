@@ -14,12 +14,13 @@ import (
 	"fmt"
 
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/event"
 )
 
-func DecodeToCommand(evt *core.Event) (Command, error) {
-	switch evt.Type {
+func DecodeToCommand(evt event.Event) (Command, error) {
+	switch evt.Type() {
 	case "add_stone":
-		val := evt.Value.(map[string]interface{})
+		val := evt.Value().(map[string]interface{})
 		c, err := core.InterfaceToCoord(val["coords"])
 		if err != nil {
 			return nil, err
@@ -27,28 +28,28 @@ func DecodeToCommand(evt *core.Event) (Command, error) {
 		col := core.Color(val["color"].(float64))
 		return NewAddStoneCommand(c, col), nil
 	case "pass":
-		col := core.Color(evt.Value.(float64))
+		col := core.Color(evt.Value().(float64))
 		return NewPassCommand(col), nil
 	case "remove_stone":
-		c, err := core.InterfaceToCoord(evt.Value)
+		c, err := core.InterfaceToCoord(evt.Value())
 		if err != nil {
 			return nil, err
 		}
 		return NewRemoveStoneCommand(c), nil
 	case "triangle":
-		c, err := core.InterfaceToCoord(evt.Value)
+		c, err := core.InterfaceToCoord(evt.Value())
 		if err != nil {
 			return nil, err
 		}
 		return NewAddTriangleCommand(c), nil
 	case "square":
-		c, err := core.InterfaceToCoord(evt.Value)
+		c, err := core.InterfaceToCoord(evt.Value())
 		if err != nil {
 			return nil, err
 		}
 		return NewAddSquareCommand(c), nil
 	case "letter":
-		val := evt.Value.(map[string]interface{})
+		val := evt.Value().(map[string]interface{})
 		c, err := core.InterfaceToCoord(val["coords"])
 		if err != nil {
 			return nil, err
@@ -56,7 +57,7 @@ func DecodeToCommand(evt *core.Event) (Command, error) {
 		letter := val["letter"].(string)
 		return NewAddLetterCommand(c, letter), nil
 	case "number":
-		val := evt.Value.(map[string]interface{})
+		val := evt.Value().(map[string]interface{})
 		c, err := core.InterfaceToCoord(val["coords"])
 		if err != nil {
 			return nil, err
@@ -64,7 +65,7 @@ func DecodeToCommand(evt *core.Event) (Command, error) {
 		number := int(val["number"].(float64))
 		return NewAddNumberCommand(c, number), nil
 	case "remove_mark":
-		c, err := core.InterfaceToCoord(evt.Value)
+		c, err := core.InterfaceToCoord(evt.Value())
 		if err != nil {
 			return nil, err
 		}
@@ -84,19 +85,19 @@ func DecodeToCommand(evt *core.Event) (Command, error) {
 	case "fastforward":
 		return NewFastForwardCommand(), nil
 	case "goto_grid":
-		index := int(evt.Value.(float64))
+		index := int(evt.Value().(float64))
 		return NewGotoGridCommand(index), nil
 	case "goto_coord":
-		c, err := core.InterfaceToCoord(evt.Value)
+		c, err := core.InterfaceToCoord(evt.Value())
 		if err != nil {
 			return nil, err
 		}
 		return NewGotoCoordCommand(c), nil
 	case "comment":
-		val := evt.Value.(string)
+		val := evt.Value().(string)
 		return NewCommentCommand(val), nil
 	case "draw":
-		vals := evt.Value.([]interface{})
+		vals := evt.Value().([]interface{})
 		var x0 float64
 		var y0 float64
 		if vals[0] == nil {
@@ -123,12 +124,12 @@ func DecodeToCommand(evt *core.Event) (Command, error) {
 		return NewClipboardCommand(), nil
 	case "graft":
 		// convert the event value to a string and split into tokens
-		v := evt.Value.(string)
+		v := evt.Value().(string)
 		return NewGraftCommand(v), nil
 	case "score":
 		return NewScoreCommand(), nil
 	case "markdead":
-		c, err := core.InterfaceToCoord(evt.Value)
+		c, err := core.InterfaceToCoord(evt.Value())
 		if err != nil {
 			return nil, err
 		}

@@ -17,6 +17,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/event"
 )
 
 func (h *Hub) Upload(w http.ResponseWriter, r *http.Request) {
@@ -29,17 +30,11 @@ func (h *Hub) Upload(w http.ResponseWriter, r *http.Request) {
 	}
 	newroom := h.GetOrCreateRoom(boardID)
 
-	var evt *core.Event
+	var evt event.Event
 	if url != "" {
-		evt = &core.Event{
-			Type:  "request_sgf",
-			Value: url,
-		}
+		evt = event.NewEvent("request_sgf", url)
 	} else if sgf != "" {
-		evt = &core.Event{
-			Type:  "upload_sgf",
-			Value: sgf,
-		}
+		evt = event.NewEvent("upload_sgf", sgf)
 	} else {
 		return
 	}

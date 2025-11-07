@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"golang.org/x/net/websocket"
 )
@@ -26,8 +27,8 @@ type Room interface {
 	PushHead(int, int, core.Color)
 	GenerateFullFrame(core.TreeJSONType) *core.Frame
 	AddStones([]*core.Stone)
-	Broadcast(*core.Event)
-	UploadSGF(string) *core.Event
+	Broadcast(event.Event)
+	UploadSGF(string) event.Event
 }
 
 func GetUser(f fetch.Fetcher, id int) (string, error) {
@@ -265,7 +266,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 
 			//frame := o.Room.State.GenerateFullFrame(core.Full)
 			frame := o.Room.GenerateFullFrame(core.Full)
-			evt := core.FrameEvent(frame)
+			evt := event.FrameEvent(frame)
 			o.Room.Broadcast(evt)
 
 		} else if topic == fmt.Sprintf("game/%d/gamedata", gameID) {
@@ -327,7 +328,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			// Send full board update after adding pattern
 			//frame := o.Room.State.GenerateFullFrame(core.Full)
 			frame := o.Room.GenerateFullFrame(core.Full)
-			evt := core.FrameEvent(frame)
+			evt := event.FrameEvent(frame)
 			o.Room.Broadcast(evt)
 		}
 	}
