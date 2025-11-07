@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	// blank import is utilized to register the driver with the
 	// database/sql package without directly using any of its
@@ -59,13 +60,17 @@ func PrefsFromString(s string) (Prefs, error) {
 	return Prefs(p), nil
 }
 
-type SqliteLoader struct{}
+type SqliteLoader struct {
+	mu sync.Mutex
+}
 
 func NewSqliteLoader() *SqliteLoader {
 	return &SqliteLoader{}
 }
 
 func (ldr *SqliteLoader) Setup() error {
+	ldr.mu.Lock()
+	defer ldr.mu.Unlock()
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return err
@@ -141,6 +146,9 @@ func (ldr *SqliteLoader) TwitchGetRoom(broadcaster string) string {
 }
 
 func (ldr *SqliteLoader) twitchSelectRoom(broadcaster string) ([]string, error) {
+	ldr.mu.Lock()
+	defer ldr.mu.Unlock()
+
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return []string{}, err
@@ -169,6 +177,9 @@ func (ldr *SqliteLoader) twitchSelectRoom(broadcaster string) ([]string, error) 
 }
 
 func (ldr *SqliteLoader) twitchInsertRoom(broadcaster, roomid string) error {
+	ldr.mu.Lock()
+	defer ldr.mu.Unlock()
+
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return err
@@ -182,6 +193,9 @@ func (ldr *SqliteLoader) twitchInsertRoom(broadcaster, roomid string) error {
 }
 
 func (ldr *SqliteLoader) twitchUpdateRoom(broadcaster, roomid string) error {
+	ldr.mu.Lock()
+	defer ldr.mu.Unlock()
+
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return err
@@ -220,16 +234,22 @@ func (ldr *SqliteLoader) SaveRoom(id string, data *LoadJSON) error {
 }
 
 func (ldr *SqliteLoader) DeleteRoom(id string) error {
+	ldr.mu.Lock()
+	defer ldr.mu.Unlock()
+
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return err
 	}
 	defer db.Close() //nolint: errcheck
-	_, err = db.Exec(`DELETE FROM messages WHERE id = ?`, id)
+	_, err = db.Exec(`DELETE FROM rooms WHERE id = ?`, id)
 	return err
 }
 
 func (ldr *SqliteLoader) updateRoom(id string, data *LoadJSON) error {
+	ldr.mu.Lock()
+	defer ldr.mu.Unlock()
+
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return err
@@ -248,6 +268,9 @@ func (ldr *SqliteLoader) updateRoom(id string, data *LoadJSON) error {
 }
 
 func (ldr *SqliteLoader) insertRoom(id string, data *LoadJSON) error {
+	ldr.mu.Lock()
+	defer ldr.mu.Unlock()
+
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return err
@@ -268,6 +291,9 @@ func (ldr *SqliteLoader) insertRoom(id string, data *LoadJSON) error {
 }
 
 func (ldr *SqliteLoader) LoadAllRooms() ([]*LoadJSON, error) {
+	ldr.mu.Lock()
+	defer ldr.mu.Unlock()
+
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return nil, err
@@ -312,6 +338,9 @@ func (ldr *SqliteLoader) LoadAllRooms() ([]*LoadJSON, error) {
 }
 
 func (ldr *SqliteLoader) selectRoom(id string) ([]*LoadJSON, error) {
+	ldr.mu.Lock()
+	defer ldr.mu.Unlock()
+
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return nil, err
@@ -357,6 +386,9 @@ func (ldr *SqliteLoader) selectRoom(id string) ([]*LoadJSON, error) {
 }
 
 func (ldr *SqliteLoader) LoadAllMessages() ([]*MessageJSON, error) {
+	ldr.mu.Lock()
+	defer ldr.mu.Unlock()
+
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return nil, err
@@ -390,6 +422,9 @@ func (ldr *SqliteLoader) LoadAllMessages() ([]*MessageJSON, error) {
 }
 
 func (ldr *SqliteLoader) DeleteAllMessages() error {
+	ldr.mu.Lock()
+	defer ldr.mu.Unlock()
+
 	db, err := sql.Open("sqlite", "file:"+Path())
 	if err != nil {
 		return err
