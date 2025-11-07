@@ -61,7 +61,7 @@ func TestHub2(t *testing.T) {
 	mock := core.NewMockEventChannel()
 	mock.QueuedEvents = append(mock.QueuedEvents,
 		&core.Event{
-			Event: "pass",
+			Type: "pass",
 			Value: 1.0,
 		},
 	)

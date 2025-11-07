@@ -46,7 +46,7 @@ func TestSim(t *testing.T) {
 	// simulate an event
 	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.PassWithTT))
 	evt := &core.Event{
-		Event:  "upload_sgf",
+		Type:  "upload_sgf",
 		Value:  sgf,
 		UserID: "",
 	}

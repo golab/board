@@ -14,7 +14,7 @@ package core
 // Event is the basic struct for sending and receiving messages over
 // the websockets
 type Event struct {
-	Event  string      `json:"event"`
+	Type  string      `json:"event"`
 	Value  interface{} `json:"value"`
 	UserID string      `json:"userid"`
 }
@@ -26,7 +26,7 @@ func EmptyEvent() *Event {
 // ErrorEvent is a special case of an Event
 func ErrorEvent(msg string) *Event {
 	return &Event{
-		Event:  "error",
+		Type:  "error",
 		Value:  msg,
 		UserID: ""}
 }
@@ -34,7 +34,7 @@ func ErrorEvent(msg string) *Event {
 // FrameEvent is a special case of an Event
 func FrameEvent(frame *Frame) *Event {
 	return &Event{
-		Event:  "frame",
+		Type:  "frame",
 		Value:  frame,
 		UserID: ""}
 }
@@ -43,7 +43,7 @@ func FrameEvent(frame *Frame) *Event {
 // (in particular, don't send to clients)
 func NopEvent() *Event {
 	return &Event{
-		Event:  "nop",
+		Type:  "nop",
 		Value:  nil,
 		UserID: ""}
 }

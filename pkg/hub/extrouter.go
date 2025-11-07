@@ -32,12 +32,12 @@ func (h *Hub) Upload(w http.ResponseWriter, r *http.Request) {
 	var evt *core.Event
 	if url != "" {
 		evt = &core.Event{
-			Event: "request_sgf",
+			Type: "request_sgf",
 			Value: url,
 		}
 	} else if sgf != "" {
 		evt = &core.Event{
-			Event: "upload_sgf",
+			Type: "upload_sgf",
 			Value: sgf,
 		}
 	} else {

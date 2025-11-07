@@ -17,7 +17,7 @@ import (
 )
 
 func DecodeToCommand(evt *core.Event) (Command, error) {
-	switch evt.Event {
+	switch evt.Type {
 	case "add_stone":
 		val := evt.Value.(map[string]interface{})
 		c, err := core.InterfaceToCoord(val["coords"])

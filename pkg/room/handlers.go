@@ -259,7 +259,7 @@ func (room *Room) handleUpdateNickname(evt *core.Event) *core.Event {
 	nickname := evt.Value.(string)
 	room.nicks[evt.UserID] = nickname
 	userEvt := &core.Event{
-		Event:  "connected_users",
+		Type:  "connected_users",
 		Value:  room.nicks,
 		UserID: evt.UserID,
 	}
@@ -371,7 +371,7 @@ func (room *Room) broadcastConnectedUsersAfter(handler EventHandler) EventHandle
 	return func(evt *core.Event) *core.Event {
 		evt = handler(evt)
 		userEvt := &core.Event{
-			Event:  "connected_users",
+			Type:  "connected_users",
 			Value:  room.nicks,
 			UserID: "",
 		}
@@ -452,7 +452,7 @@ func chain(h EventHandler, middleware ...Middleware) EventHandler {
 // all the handlers
 func (room *Room) HandleAny(evt *core.Event) *core.Event {
 	// handle the event
-	if handler, ok := room.handlers[evt.Event]; ok {
+	if handler, ok := room.handlers[evt.Type]; ok {
 		return handler(evt)
 	} else {
 		return room.handlers["_"](evt)

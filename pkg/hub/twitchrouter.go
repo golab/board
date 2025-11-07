@@ -247,7 +247,7 @@ func (h *Hub) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 
 		// create the event
 		e := &core.Event{
-			Event: "graft",
+			Type: "graft",
 			Value: branch,
 		}
 

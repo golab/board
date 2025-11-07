@@ -78,7 +78,7 @@ func TestSendUserList(t *testing.T) {
 		t.Fatalf("failed to send user list")
 	}
 
-	assert.Equal(t, mock.SavedEvents[1].Event, "connected_users", "failed to send correct event")
+	assert.Equal(t, mock.SavedEvents[1].Type, "connected_users", "failed to send correct event")
 }
 
 func TestSendTo(t *testing.T) {
