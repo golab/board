@@ -80,7 +80,7 @@ func (s *State) AnyMove() {
 
 func (s *State) ToSGF(indexes bool) string {
 	result := "("
-	stack := []interface{}{s.root}
+	stack := []any{s.root}
 	for len(stack) > 0 {
 		i := len(stack) - 1
 		cur := stack[i]
@@ -145,7 +145,7 @@ func FromSGF(data string) (*State, error) {
 	}
 
 	state := NewState(int(size), false)
-	stack := []interface{}{root}
+	stack := []any{root}
 	for len(stack) > 0 {
 		i := len(stack) - 1
 		cur := stack[i]

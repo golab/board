@@ -348,7 +348,7 @@ func (t *DefaultTwitchClient) Subscribe(user, token string) (string, error) {
 
 	//log.Println("subscribe response:", string(data))
 
-	var s map[string]interface{}
+	var s map[string]any
 	err = json.Unmarshal(data, &s)
 	if err != nil {
 		return "", err
@@ -362,12 +362,12 @@ func (t *DefaultTwitchClient) Subscribe(user, token string) (string, error) {
 		return "", fmt.Errorf("invalid data returned")
 	}
 
-	entries := s["data"].([]interface{})
+	entries := s["data"].([]any)
 	if len(entries) == 0 {
 		return "", fmt.Errorf("no subscriptions returned")
 	}
 
-	sub := entries[0].(map[string]interface{})
+	sub := entries[0].(map[string]any)
 	if _, ok := sub["id"]; !ok {
 		return "", fmt.Errorf("no subscription id returned")
 	}
@@ -437,7 +437,7 @@ type SubscriptionResponse struct {
 	Data         []*SubscriptionData `json:"data"`
 	MaxTotalCost int                 `json:"max_total_cost"`
 	TotalCost    int                 `json:"total_cost"`
-	Pagination   interface{}         `json:"pagination"`
+	Pagination   any                 `json:"pagination"`
 }
 
 // SubscriptionData models data from twitch

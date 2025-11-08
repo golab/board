@@ -314,7 +314,7 @@ func (r *Room) Handle(ec event.EventChannel) error {
 	}
 }
 
-func (r *Room) RegisterPlugin(p plugin.Plugin, args map[string]interface{}) {
+func (r *Room) RegisterPlugin(p plugin.Plugin, args map[string]any) {
 	key := args["key"].(string)
 	p.Start(args)
 	r.plugins[key] = p

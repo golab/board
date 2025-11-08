@@ -16,7 +16,7 @@ func NewMockPlugin() *MockPlugin {
 	return &MockPlugin{}
 }
 
-func (mp *MockPlugin) Start(map[string]interface{}) {
+func (mp *MockPlugin) Start(map[string]any) {
 }
 
 func (mp *MockPlugin) End() {

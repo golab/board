@@ -58,7 +58,7 @@ func TestBroadcastMessage(t *testing.T) {
 func TestPlugin(t *testing.T) {
 	r := room.NewRoom("")
 	mp := plugin.NewMockPlugin()
-	args := make(map[string]interface{})
+	args := make(map[string]any)
 	args["key"] = "mock"
 	r.RegisterPlugin(mp, args)
 	ok := r.HasPlugin("mock")

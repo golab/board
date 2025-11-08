@@ -11,6 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package plugin
 
 type Plugin interface {
-	Start(map[string]interface{})
+	Start(map[string]any)
 	End()
 }

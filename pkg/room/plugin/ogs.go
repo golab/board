@@ -99,8 +99,8 @@ func NewOGSConnector(room Room, f fetch.Fetcher) (*OGSConnector, error) {
 	}, nil
 }
 
-func (o *OGSConnector) Send(topic string, payload map[string]interface{}) error {
-	arr := []interface{}{topic, payload}
+func (o *OGSConnector) Send(topic string, payload map[string]any) error {
+	arr := []any{topic, payload}
 	data, err := json.Marshal(arr)
 	if err != nil {
 		return err
@@ -110,7 +110,7 @@ func (o *OGSConnector) Send(topic string, payload map[string]interface{}) error 
 }
 
 func (o *OGSConnector) Connect(gameID int, ogsType string) error {
-	payload := make(map[string]interface{})
+	payload := make(map[string]any)
 	payload["player_id"] = o.Creds.User.ID
 	payload["chat"] = false
 	if ogsType == "game" {
@@ -122,7 +122,7 @@ func (o *OGSConnector) Connect(gameID int, ogsType string) error {
 }
 
 func (o *OGSConnector) ChatConnect() error {
-	payload := make(map[string]interface{})
+	payload := make(map[string]any)
 	payload["player_id"] = o.Creds.User.ID
 	payload["username"] = o.Creds.User.Username
 	payload["auth"] = o.Creds.JWT
@@ -182,7 +182,7 @@ func (o *OGSConnector) ReadSocketToChan(socketchan chan byte) error {
 	return nil
 }
 
-func (o *OGSConnector) Start(args map[string]interface{}) {
+func (o *OGSConnector) Start(args map[string]any) {
 	id := args["id"].(int)
 	ogsType := args["ogsType"].(string)
 
@@ -197,7 +197,7 @@ func (o *OGSConnector) Ping() {
 	for !o.Exit {
 		//30 seconds seemed just a little too long was causing connection issues
 		time.Sleep(25 * time.Second)
-		payload := make(map[string]interface{})
+		payload := make(map[string]any)
 		payload["client"] = time.Now().UnixMilli()
 		if err := o.Send("net/ping", payload); err != nil {
 			log.Println(err)
@@ -240,7 +240,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			break
 		}
 
-		arr := make([]interface{}, 2)
+		arr := make([]any, 2)
 		err = json.Unmarshal(data, &arr)
 		if err != nil {
 			log.Println(err)
@@ -249,8 +249,8 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 		topic := arr[0].(string)
 
 		if topic == fmt.Sprintf("game/%d/move", gameID) {
-			payload := arr[1].(map[string]interface{})
-			move := payload["move"].([]interface{})
+			payload := arr[1].(map[string]any)
+			move := payload["move"].([]any)
 
 			x := int(move[0].(float64))
 			y := int(move[1].(float64))
@@ -270,7 +270,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			o.Room.Broadcast(evt)
 
 		} else if topic == fmt.Sprintf("game/%d/gamedata", gameID) {
-			payload := arr[1].(map[string]interface{})
+			payload := arr[1].(map[string]any)
 			if _, ok := payload["winner"]; ok {
 				// the game is over
 				break
@@ -280,7 +280,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			o.Room.Broadcast(evt)
 		} else if topic == fmt.Sprintf("review/%d/full_state", gameID) {
 			/*
-				nodes := arr[1].([]interface{})
+				nodes := arr[1].([]any)
 				for _, node := range nodes {
 					log.Println(node)
 				}
@@ -289,7 +289,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			// eventually we can pull height, game_name, player names, etc
 		} else if topic == fmt.Sprintf("review/%d/r", gameID) {
 			log.Printf("review/%d/r", gameID)
-			payload := arr[1].(map[string]interface{})
+			payload := arr[1].(map[string]any)
 			if _, ok := payload["m"]; !ok {
 				continue
 			}
@@ -336,11 +336,11 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 }
 
 //Unused for now Might want to add it back in
-// func (o *OGSConnector) ReviewGamedataToSGF(gamedata []interface{}) string {
+// func (o *OGSConnector) ReviewGamedataToSGF(gamedata []any) string {
 // 	log.Println(gamedata)
 // 	log.Println(gamedata[0])
 
-// 	metaGameData := gamedata[0].(map[string]interface{})["gamedata"].(map[string]interface{})
+// 	metaGameData := gamedata[0].(map[string]any)["gamedata"].(map[string]any)
 // 	sgf := o.GameInfoToSGF(metaGameData,"review")
 // 	sgf += o.initStateToSGF(metaGameData)
 
@@ -350,12 +350,12 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 // 	return sgf
 // }
 
-func (o *OGSConnector) GamedataToSGF(gamedata map[string]interface{}) string {
+func (o *OGSConnector) GamedataToSGF(gamedata map[string]any) string {
 	sgf := o.GameInfoToSGF(gamedata, "game")
 	sgf += o.initStateToSGF(gamedata)
 
-	for index, m := range gamedata["moves"].([]interface{}) {
-		arr := m.([]interface{})
+	for index, m := range gamedata["moves"].([]any) {
+		arr := m.([]any)
 		c := &core.Coord{X: int(arr[0].(float64)), Y: int(arr[1].(float64))}
 
 		col := "B"
@@ -371,7 +371,7 @@ func (o *OGSConnector) GamedataToSGF(gamedata map[string]interface{}) string {
 	return sgf
 }
 
-func (o *OGSConnector) GameInfoToSGF(gamedata map[string]interface{}, ogsType string) string {
+func (o *OGSConnector) GameInfoToSGF(gamedata map[string]any, ogsType string) string {
 	sgf := ""
 
 	size := int(gamedata["width"].(float64))
@@ -394,9 +394,9 @@ func (o *OGSConnector) GameInfoToSGF(gamedata map[string]interface{}, ogsType st
 			"(;GM[1]FF[4]CA[UTF-8]SZ[%d]PB[%s]PW[%s]RU[%s]KM[%f]GN[%s]",
 			size, black, white, rules, komi, name)
 	} else {
-		players := gamedata["players"].(map[string]interface{})
-		blackPlayer := players["black"].(map[string]interface{})
-		whitePlayer := players["white"].(map[string]interface{})
+		players := gamedata["players"].(map[string]any)
+		blackPlayer := players["black"].(map[string]any)
+		whitePlayer := players["white"].(map[string]any)
 		black := blackPlayer["name"].(string)
 		white := whitePlayer["name"].(string)
 		sgf = fmt.Sprintf(
@@ -406,7 +406,7 @@ func (o *OGSConnector) GameInfoToSGF(gamedata map[string]interface{}, ogsType st
 	return sgf
 }
 
-func (o *OGSConnector) initStateToSGF(gamedata map[string]interface{}) string {
+func (o *OGSConnector) initStateToSGF(gamedata map[string]any) string {
 	sgf := ""
 
 	ip := gamedata["initial_player"].(string)
@@ -416,7 +416,7 @@ func (o *OGSConnector) initStateToSGF(gamedata map[string]interface{}) string {
 	} else {
 		o.First = 1
 	}
-	initState := gamedata["initial_state"].(map[string]interface{})
+	initState := gamedata["initial_state"].(map[string]any)
 
 	bstate := initState["black"].(string)
 	wstate := initState["white"].(string)

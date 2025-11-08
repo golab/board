@@ -20,7 +20,7 @@ import (
 func DecodeToCommand(evt event.Event) (Command, error) {
 	switch evt.Type() {
 	case "add_stone":
-		val := evt.Value().(map[string]interface{})
+		val := evt.Value().(map[string]any)
 		c, err := core.InterfaceToCoord(val["coords"])
 		if err != nil {
 			return nil, err
@@ -49,7 +49,7 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 		}
 		return NewAddSquareCommand(c), nil
 	case "letter":
-		val := evt.Value().(map[string]interface{})
+		val := evt.Value().(map[string]any)
 		c, err := core.InterfaceToCoord(val["coords"])
 		if err != nil {
 			return nil, err
@@ -57,7 +57,7 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 		letter := val["letter"].(string)
 		return NewAddLetterCommand(c, letter), nil
 	case "number":
-		val := evt.Value().(map[string]interface{})
+		val := evt.Value().(map[string]any)
 		c, err := core.InterfaceToCoord(val["coords"])
 		if err != nil {
 			return nil, err
@@ -97,7 +97,7 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 		val := evt.Value().(string)
 		return NewCommentCommand(val), nil
 	case "draw":
-		vals := evt.Value().([]interface{})
+		vals := evt.Value().([]any)
 		var x0 float64
 		var y0 float64
 		if vals[0] == nil {

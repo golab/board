@@ -173,11 +173,11 @@ func LettersToCoord(s string) *Coord {
 
 // InterfaceToCoord essentially coerces the interface into a [2]int
 // then turns that into a Coord
-func InterfaceToCoord(ifc interface{}) (*Coord, error) {
+func InterfaceToCoord(ifc any) (*Coord, error) {
 	coords := make([]int, 0)
 
 	// coerce the value to an array
-	val, ok := ifc.([]interface{})
+	val, ok := ifc.([]any)
 
 	if !ok {
 		return nil, fmt.Errorf("error coercing to coord")

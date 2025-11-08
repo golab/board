@@ -142,7 +142,7 @@ func (room *Room) handleUploadSGF(evt event.Event) event.Event {
 			bcast = room.UploadSGF(string(decoded))
 		}
 
-	} else if arr, ok := evt.Value().([]interface{}); ok {
+	} else if arr, ok := evt.Value().([]any); ok {
 		// it might be an array of strings
 		sgfs := []string{}
 		for _, ifc := range arr {
@@ -215,7 +215,7 @@ func (room *Room) handleRequestSGF(evt event.Event) event.Event {
 				return bcast
 			}
 
-			args := map[string]interface{}{
+			args := map[string]any{
 				"key":     "ogs",
 				"id":      id,
 				"ogsType": ogsType,
@@ -270,7 +270,7 @@ type Settings struct {
 }
 
 func (room *Room) handleUpdateSettings(evt event.Event) event.Event {
-	sMap := evt.Value().(map[string]interface{})
+	sMap := evt.Value().(map[string]any)
 	buffer := int64(sMap["buffer"].(float64))
 	size := int(sMap["size"].(float64))
 	nickname := sMap["nickname"].(string)

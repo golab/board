@@ -74,7 +74,7 @@ func TestDiff1(t *testing.T) {
 
 func TestInterface1(t *testing.T) {
 	data := []byte("[3, 17]")
-	var ifc interface{}
+	var ifc any
 	err := json.Unmarshal(data, &ifc)
 	if err != nil {
 		t.Error(err)
