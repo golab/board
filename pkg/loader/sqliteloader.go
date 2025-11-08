@@ -53,7 +53,7 @@ func NewSqliteLoader(path string) *SqliteLoader {
 	return &SqliteLoader{path: path}
 }
 
-func (ldr *SqliteLoader) MkDirs() error {
+func (ldr *SqliteLoader) mkDirs() error {
 	dir := filepath.Dir(ldr.path)
 
 	err := os.MkdirAll(dir, os.ModePerm)
@@ -64,7 +64,7 @@ func (ldr *SqliteLoader) MkDirs() error {
 }
 
 func (ldr *SqliteLoader) Setup() error {
-	if err := ldr.MkDirs(); err != nil {
+	if err := ldr.mkDirs(); err != nil {
 		return err
 	}
 	ldr.mu.Lock()
@@ -430,5 +430,17 @@ func (ldr *SqliteLoader) DeleteAllMessages() error {
 	defer db.Close() //nolint: errcheck
 
 	_, err = db.Exec(`DELETE FROM messages`)
+	return err
+}
+
+func (ldr *SqliteLoader) InsertTestMessage() error {
+	ldr.mu.Lock()
+	defer ldr.mu.Unlock()
+	db, err := sql.Open("sqlite", "file:"+ldr.path)
+	if err != nil {
+		return err
+	}
+	defer db.Close() //nolint: errcheck
+	_, err = db.Exec(`INSERT INTO messages (text, ttl) VALUES ("foo", 60)`)
 	return err
 }

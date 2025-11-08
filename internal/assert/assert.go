@@ -21,6 +21,13 @@ func Equal[V comparable](t *testing.T, got, expected V, msg string) {
 	}
 }
 
+func NotEqual[V comparable](t *testing.T, got, expectednot V, msg string) {
+	t.Helper()
+	if got == expectednot {
+		t.Errorf("%s: (expected something else, got %v)", msg, got)
+	}
+}
+
 func True(t *testing.T, got bool, msg string) {
 	Equal(t, got, true, msg)
 }
@@ -43,4 +50,9 @@ func NoError(t *testing.T, err error, msg string) {
 
 func ErrorIs(t *testing.T, got, expected error, msg string) {
 	Equal(t, got, expected, msg)
+}
+
+func NotNil[V comparable](t *testing.T, got V, msg string) {
+	var vnil V
+	NotEqual(t, got, vnil, msg)
 }
