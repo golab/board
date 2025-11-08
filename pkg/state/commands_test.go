@@ -166,12 +166,12 @@ func TestCommandCopy(t *testing.T) {
 	assert.NoError(t, err, "s.CommandCopy")
 }
 
-func TestCommandClipboard(t *testing.T) {
+func TestCommandPaste(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err, "state.FromSGF")
 
-	_, err = state.NewClipboardCommand().Execute(s)
-	assert.NoError(t, err, "s.CommandClipboard")
+	_, err = state.NewPasteCommand().Execute(s)
+	assert.NoError(t, err, "s.CommandPaste")
 }
 
 func TestCommandGraft(t *testing.T) {

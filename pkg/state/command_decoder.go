@@ -121,7 +121,7 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 	case "copy":
 		return NewCopyCommand(), nil
 	case "clipboard":
-		return NewClipboardCommand(), nil
+		return NewPasteCommand(), nil
 	case "graft":
 		// convert the event value to a string and split into tokens
 		v := evt.Value().(string)

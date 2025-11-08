@@ -374,3 +374,40 @@ func (s *State) cut() *core.Diff {
 
 	return diff
 }
+
+func (s *State) paste() {
+	// keep a copy of the clipboard unaltered
+	branch := s.clipboard.Copy()
+
+	// first give the copy indexes
+	// only possible with state context because of GetNextIndex
+	// consider other ways of reindexing, or maybe this should be its
+	// own function
+	core.Fmap(func(n *core.TreeNode) {
+		i := s.GetNextIndex()
+		n.Index = i
+		s.nodes[i] = n
+	}, branch)
+
+	// set parent and child relationships
+	branch.SetParent(s.current)
+	s.current.Down = append(s.current.Down, branch)
+
+	// save the parent pref
+	savedPref := s.current.PreferredChild
+
+	// recompute depth
+	branch.RecomputeDepth()
+
+	// recompute diffs
+	core.Fmap(func(n *core.TreeNode) {
+		if n.IsMove() {
+			n.SetDiff(s.computeDiffMove(n.Index))
+		} else {
+			n.SetDiff(s.computeDiffSetup(n.Index))
+		}
+	}, branch)
+
+	// restore savedpref
+	s.current.PreferredChild = savedPref
+}
