@@ -15,6 +15,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sync"
 
 	// blank import is utilized to register the driver with the
@@ -51,7 +53,20 @@ func NewSqliteLoader(path string) *SqliteLoader {
 	return &SqliteLoader{path: path}
 }
 
+func (ldr *SqliteLoader) MkDirs() error {
+	dir := filepath.Dir(ldr.path)
+
+	err := os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (ldr *SqliteLoader) Setup() error {
+	if err := ldr.MkDirs(); err != nil {
+		return err
+	}
 	ldr.mu.Lock()
 	defer ldr.mu.Unlock()
 	db, err := sql.Open("sqlite", "file:"+ldr.path)
