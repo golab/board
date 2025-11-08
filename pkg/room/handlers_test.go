@@ -18,6 +18,7 @@ import (
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/event"
+	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/room"
 )
 
@@ -46,13 +47,33 @@ func TestHandleCheckPassword(t *testing.T) {
 	assert.Equal(t, evt.Value().(string), "somepassword", "checkpassword")
 }
 
-func TestHandleUploadSGF(t *testing.T) {
+func TestHandleUploadSGF1(t *testing.T) {
 	r := room.NewRoom("")
 	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.SimpleEightMoves))
 
 	evt := event.NewEvent("upload_sgf", sgf)
 	r.HandleAny(evt)
 	assert.Equal(t, len(r.ToSGF(false)), 113, "upload_sgf")
+}
+
+func TestHandleUploadSGF2(t *testing.T) {
+	r := room.NewRoom("")
+	sgf := base64.StdEncoding.EncodeToString(sgfsamples.SimpleZip)
+
+	evt := event.NewEvent("upload_sgf", sgf)
+	r.HandleAny(evt)
+	assert.Equal(t, len(r.ToSGF(false)), 105, "upload_sgf")
+}
+
+func TestHandleUploadSGF3(t *testing.T) {
+	r := room.NewRoom("")
+	sgf1 := base64.StdEncoding.EncodeToString([]byte(sgfsamples.SimpleFourMoves))
+	sgf2 := base64.StdEncoding.EncodeToString([]byte(sgfsamples.SimpleEightMoves))
+	sgfs := []any{sgf1, sgf2}
+
+	evt := event.NewEvent("upload_sgf", sgfs)
+	r.HandleAny(evt)
+	assert.Equal(t, len(r.ToSGF(false)), 213, "upload_sgf")
 }
 
 func TestHandleTrash(t *testing.T) {
@@ -102,4 +123,33 @@ func TestHandleUpdateSettings(t *testing.T) {
 	n, ok := nicks["user_123"]
 	assert.True(t, ok, "update_settings")
 	assert.Equal(t, n, "mynick", "update_settings")
+}
+
+func TestHandleRequestSGF1(t *testing.T) {
+	r := room.NewRoom("")
+	r.SetFetcher(fetch.NewMockFetcher(sgfsamples.Empty))
+
+	evt := event.NewEvent("request_sgf", "http://www.gokifu.com/somefile.sgf")
+	r.HandleAny(evt)
+	assert.Equal(t, len(r.ToSGF(false)), 65, "request_sgf")
+}
+
+func TestHandleRequestSGF2(t *testing.T) {
+	r := room.NewRoom("")
+	r.SetFetcher(fetch.NewMockFetcher(sgfsamples.Empty))
+
+	evt := event.NewEvent("request_sgf", "https://online-go.com/game/1")
+	r.HandleAny(evt)
+	assert.Equal(t, len(r.ToSGF(false)), 65, "request_sgf")
+}
+
+func TestHandleAddStone(t *testing.T) {
+	r := room.NewRoom("")
+
+	val := make(map[string]any)
+	val["coords"] = []any{9.0, 9.0}
+	val["color"] = 1.0
+	evt := event.NewEvent("add_stone", val)
+	r.HandleAny(evt)
+	assert.Equal(t, len(r.ToSGF(false)), 71, "add_stone")
 }

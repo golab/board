@@ -112,7 +112,7 @@ func TestHandlers(t *testing.T) {
 
 func TestFetcher(t *testing.T) {
 	r := room.NewRoom("")
-	r.SetFetcher(fetch.NewMockFetcher())
+	r.SetFetcher(fetch.NewMockFetcher(""))
 }
 
 func TestSaveLoad(t *testing.T) {

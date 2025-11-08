@@ -10,10 +10,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 package fetch
 
-type MockFetcher struct{}
+type MockFetcher struct {
+	sgf string
+}
 
-func NewMockFetcher() *MockFetcher {
-	return &MockFetcher{}
+func NewMockFetcher(sgf string) *MockFetcher {
+	return &MockFetcher{sgf: sgf}
 }
 
 func (mf *MockFetcher) OGSCheckEnded(s string) (bool, error) {
@@ -21,13 +23,13 @@ func (mf *MockFetcher) OGSCheckEnded(s string) (bool, error) {
 }
 
 func (mf *MockFetcher) FetchOGS(s string) (string, error) {
-	return "", nil
+	return mf.sgf, nil
 }
 
 func (mf *MockFetcher) Fetch(s string) (string, error) {
-	return "", nil
+	return mf.sgf, nil
 }
 
 func (mf *MockFetcher) ApprovedFetch(s string) (string, error) {
-	return "", nil
+	return mf.sgf, nil
 }
