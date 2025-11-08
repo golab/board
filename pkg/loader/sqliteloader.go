@@ -15,8 +15,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sync"
 
 	// blank import is utilized to register the driver with the
@@ -24,22 +22,6 @@ import (
 	// exported functions or types in the importing file
 	_ "modernc.org/sqlite"
 )
-
-func Path() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		home = "."
-	}
-
-	newpath := filepath.Join(home, ".config", "tripleko")
-	err = os.MkdirAll(newpath, os.ModePerm)
-	if err != nil {
-		home = "."
-	}
-
-	dbPath := filepath.Join(home, ".config", "tripleko", "board.db")
-	return dbPath
-}
 
 type Prefs map[string]int
 
@@ -61,17 +43,18 @@ func PrefsFromString(s string) (Prefs, error) {
 }
 
 type SqliteLoader struct {
-	mu sync.Mutex
+	path string
+	mu   sync.Mutex
 }
 
-func NewSqliteLoader() *SqliteLoader {
-	return &SqliteLoader{}
+func NewSqliteLoader(path string) *SqliteLoader {
+	return &SqliteLoader{path: path}
 }
 
 func (ldr *SqliteLoader) Setup() error {
 	ldr.mu.Lock()
 	defer ldr.mu.Unlock()
-	db, err := sql.Open("sqlite", "file:"+Path())
+	db, err := sql.Open("sqlite", "file:"+ldr.path)
 	if err != nil {
 		return err
 	}
@@ -149,7 +132,7 @@ func (ldr *SqliteLoader) twitchSelectRoom(broadcaster string) ([]string, error) 
 	ldr.mu.Lock()
 	defer ldr.mu.Unlock()
 
-	db, err := sql.Open("sqlite", "file:"+Path())
+	db, err := sql.Open("sqlite", "file:"+ldr.path)
 	if err != nil {
 		return []string{}, err
 	}
@@ -180,7 +163,7 @@ func (ldr *SqliteLoader) twitchInsertRoom(broadcaster, roomid string) error {
 	ldr.mu.Lock()
 	defer ldr.mu.Unlock()
 
-	db, err := sql.Open("sqlite", "file:"+Path())
+	db, err := sql.Open("sqlite", "file:"+ldr.path)
 	if err != nil {
 		return err
 	}
@@ -196,7 +179,7 @@ func (ldr *SqliteLoader) twitchUpdateRoom(broadcaster, roomid string) error {
 	ldr.mu.Lock()
 	defer ldr.mu.Unlock()
 
-	db, err := sql.Open("sqlite", "file:"+Path())
+	db, err := sql.Open("sqlite", "file:"+ldr.path)
 	if err != nil {
 		return err
 	}
@@ -237,7 +220,7 @@ func (ldr *SqliteLoader) DeleteRoom(id string) error {
 	ldr.mu.Lock()
 	defer ldr.mu.Unlock()
 
-	db, err := sql.Open("sqlite", "file:"+Path())
+	db, err := sql.Open("sqlite", "file:"+ldr.path)
 	if err != nil {
 		return err
 	}
@@ -250,7 +233,7 @@ func (ldr *SqliteLoader) updateRoom(id string, data *LoadJSON) error {
 	ldr.mu.Lock()
 	defer ldr.mu.Unlock()
 
-	db, err := sql.Open("sqlite", "file:"+Path())
+	db, err := sql.Open("sqlite", "file:"+ldr.path)
 	if err != nil {
 		return err
 	}
@@ -271,7 +254,7 @@ func (ldr *SqliteLoader) insertRoom(id string, data *LoadJSON) error {
 	ldr.mu.Lock()
 	defer ldr.mu.Unlock()
 
-	db, err := sql.Open("sqlite", "file:"+Path())
+	db, err := sql.Open("sqlite", "file:"+ldr.path)
 	if err != nil {
 		return err
 	}
@@ -294,7 +277,7 @@ func (ldr *SqliteLoader) LoadAllRooms() ([]*LoadJSON, error) {
 	ldr.mu.Lock()
 	defer ldr.mu.Unlock()
 
-	db, err := sql.Open("sqlite", "file:"+Path())
+	db, err := sql.Open("sqlite", "file:"+ldr.path)
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +324,7 @@ func (ldr *SqliteLoader) selectRoom(id string) ([]*LoadJSON, error) {
 	ldr.mu.Lock()
 	defer ldr.mu.Unlock()
 
-	db, err := sql.Open("sqlite", "file:"+Path())
+	db, err := sql.Open("sqlite", "file:"+ldr.path)
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +372,7 @@ func (ldr *SqliteLoader) LoadAllMessages() ([]*MessageJSON, error) {
 	ldr.mu.Lock()
 	defer ldr.mu.Unlock()
 
-	db, err := sql.Open("sqlite", "file:"+Path())
+	db, err := sql.Open("sqlite", "file:"+ldr.path)
 	if err != nil {
 		return nil, err
 	}
@@ -425,7 +408,7 @@ func (ldr *SqliteLoader) DeleteAllMessages() error {
 	ldr.mu.Lock()
 	defer ldr.mu.Unlock()
 
-	db, err := sql.Open("sqlite", "file:"+Path())
+	db, err := sql.Open("sqlite", "file:"+ldr.path)
 	if err != nil {
 		return err
 	}

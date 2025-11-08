@@ -38,6 +38,6 @@ type Loader interface {
 	DeleteAllMessages() error
 }
 
-func NewDefaultLoader() Loader {
-	return NewSqliteLoader()
+func NewDefaultLoader(path string) Loader {
+	return NewSqliteLoader(path)
 }

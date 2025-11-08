@@ -12,14 +12,15 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	Testing bool         `yaml:"testing"`
-	Server  serverConfig `yaml:"server"`
-	Twitch  twitchConfig `yaml:"twitch"`
+	Server serverConfig `yaml:"server"`
+	Twitch twitchConfig `yaml:"twitch"`
+	DB     dbConfig     `yaml:"db"`
 }
 
 type serverConfig struct {
@@ -34,18 +35,37 @@ type twitchConfig struct {
 	BotID    string `yaml:"bot_id"`
 }
 
+type dbConfigType string
+
+const (
+	DBConfigTypeSqlite dbConfigType = "sqlite"
+	DBConfigTypeMemory dbConfigType = "memory"
+)
+
+type dbConfig struct {
+	Type dbConfigType `json:"type"`
+	Path string       `json:"path"`
+}
+
 func New(fname string) (*Config, error) {
 	data, err := os.ReadFile(fname)
 	if err != nil {
 		return nil, err
 	}
 
-	var cfg Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
+	// start with base default values
+	cfg := Default()
+
+	// the unmarshal step will overwrite values in the default
+	if err := yaml.Unmarshal(data, cfg); err != nil {
 		return nil, err
 	}
 
-	return &cfg, nil
+	if cfg.DB.Type == DBConfigTypeMemory {
+		cfg.DB.Path = ""
+	}
+
+	return cfg, nil
 }
 
 func Default() *Config {
@@ -54,14 +74,38 @@ func Default() *Config {
 		Port: 8080,
 		URL:  "http://localhost:8080",
 	}
+	db := dbConfig{
+		Type: DBConfigTypeSqlite,
+		Path: defaultSqlitePath(),
+	}
 	cfg := &Config{
 		Server: s,
+		DB:     db,
 	}
 	return cfg
 }
 
 func Test() *Config {
 	c := Default()
-	c.Testing = true
+	db := dbConfig{
+		Type: DBConfigTypeMemory,
+	}
+	c.DB = db
 	return c
+}
+
+func defaultSqlitePath() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		home = "."
+	}
+
+	newpath := filepath.Join(home, ".config", "tripleko")
+	err = os.MkdirAll(newpath, os.ModePerm)
+	if err != nil {
+		home = "."
+	}
+
+	dbPath := filepath.Join(home, ".config", "tripleko", "board.db")
+	return dbPath
 }

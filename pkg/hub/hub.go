@@ -52,10 +52,10 @@ type Hub struct {
 func NewHub(cfg *config.Config) (*Hub, error) {
 	// get database setup
 	var db loader.Loader
-	if cfg.Testing {
+	if cfg.DB.Type == config.DBConfigTypeMemory {
 		db = loader.NewMemoryLoader()
 	} else {
-		db = loader.NewDefaultLoader()
+		db = loader.NewDefaultLoader(cfg.DB.Path)
 	}
 	return NewHubWithDB(db, cfg)
 }
