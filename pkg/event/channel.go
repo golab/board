@@ -13,9 +13,9 @@ package event
 import (
 	"encoding/binary"
 	"encoding/json"
+	"io"
 
 	"github.com/google/uuid"
-	"golang.org/x/net/websocket"
 )
 
 type EventChannel interface {
@@ -26,24 +26,24 @@ type EventChannel interface {
 	ID() string
 }
 
-// WebsocketEventChannel is a thin wrapper around *websocket.Conn
-type WebsocketEventChannel struct {
-	ws *websocket.Conn
+// DefaultEventChannel is a thin wrapper around a ReadWriteCloser
+type DefaultEventChannel struct {
+	ws io.ReadWriteCloser
 	id string
 }
 
-func NewWebsocketEventChannel(ws *websocket.Conn) EventChannel {
+func NewDefaultEventChannel(ws io.ReadWriteCloser) EventChannel {
 	// assign the new connection a new id
 	id := uuid.New().String()
 
-	return &WebsocketEventChannel{ws, id}
+	return &DefaultEventChannel{ws, id}
 }
 
-func (ec *WebsocketEventChannel) ID() string {
+func (ec *DefaultEventChannel) ID() string {
 	return ec.id
 }
 
-func (ec *WebsocketEventChannel) SendEvent(evt Event) error {
+func (ec *DefaultEventChannel) SendEvent(evt Event) error {
 	// marshal event back into data
 	data, err := json.Marshal(evt)
 	if err != nil {
@@ -56,10 +56,10 @@ func (ec *WebsocketEventChannel) SendEvent(evt Event) error {
 	return nil
 }
 
-func (ec *WebsocketEventChannel) OnConnect() {
+func (ec *DefaultEventChannel) OnConnect() {
 }
 
-func (ec *WebsocketEventChannel) ReceiveEvent() (Event, error) {
+func (ec *DefaultEventChannel) ReceiveEvent() (Event, error) {
 	data, err := ec.readPacket()
 	if err != nil {
 		return nil, err
@@ -73,11 +73,11 @@ func (ec *WebsocketEventChannel) ReceiveEvent() (Event, error) {
 	return evt, nil
 }
 
-func (ec *WebsocketEventChannel) Close() error {
+func (ec *DefaultEventChannel) Close() error {
 	return ec.ws.Close()
 }
 
-func (ec *WebsocketEventChannel) readPacket() ([]byte, error) {
+func (ec *DefaultEventChannel) readPacket() ([]byte, error) {
 	// read in 4 bytes (length of rest of message)
 	lengthArray := make([]byte, 4)
 	_, err := ec.ws.Read(lengthArray)
@@ -105,7 +105,7 @@ func (ec *WebsocketEventChannel) readPacket() ([]byte, error) {
 	return data, nil
 }
 
-func (ec *WebsocketEventChannel) readBytes(size int) ([]byte, error) {
+func (ec *DefaultEventChannel) readBytes(size int) ([]byte, error) {
 	chunkSize := 64
 	message := []byte{}
 	for len(message) < size {

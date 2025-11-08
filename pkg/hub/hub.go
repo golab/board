@@ -233,7 +233,7 @@ func (h *Hub) HandlerWrapper(ws *websocket.Conn) {
 	_, roomID, _ := ParseURL(url)
 
 	// wrap the socket
-	ec := event.NewWebsocketEventChannel(ws)
+	ec := event.NewDefaultEventChannel(ws)
 	h.Handler(ec, roomID)
 }
 
