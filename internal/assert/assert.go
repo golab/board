@@ -25,6 +25,10 @@ func True(t *testing.T, got bool, msg string) {
 	Equal(t, got, true, msg)
 }
 
+func False(t *testing.T, got bool, msg string) {
+	Equal(t, got, false, msg)
+}
+
 func Zero[V comparable](t *testing.T, got V, msg string) {
 	var expected V
 	Equal(t, got, expected, msg)

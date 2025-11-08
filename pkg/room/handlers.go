@@ -242,7 +242,6 @@ func (room *Room) handleRequestSGF(evt event.Event) event.Event {
 }
 
 func (room *Room) handleTrash(evt event.Event) event.Event {
-
 	// reset room
 	oldBuffer := room.GetInputBuffer()
 	room.engine = state.NewState(room.Size(), true)
@@ -260,7 +259,6 @@ func (room *Room) handleUpdateNickname(evt event.Event) event.Event {
 	nickname := evt.Value().(string)
 	room.nicks[evt.User()] = nickname
 	userEvt := event.NewEvent("connected_users", room.nicks)
-	// TODO: is this necessary
 	userEvt.SetUser(evt.User())
 	return userEvt
 }

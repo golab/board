@@ -132,6 +132,10 @@ func (r *Room) SetTimeout(f float64) {
 	r.timeout = f
 }
 
+func (r *Room) Nicks() map[string]string {
+	return r.nicks
+}
+
 func (r *Room) Save() *loader.LoadJSON {
 	stateJSON := r.engine.Save()
 
