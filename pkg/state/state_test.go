@@ -30,8 +30,8 @@ func TestState2(t *testing.T) {
 	s, err := state.FromSGF(input)
 	assert.NoError(t, err, "error should be nil")
 
-	sgf := s.ToSGF(false)
-	sgfix := s.ToSGF(true)
+	sgf := s.ToSGF()
+	sgfix := s.ToSGFIX()
 
 	assert.Equal(t, len(sgf), len(input), "error with state to sgf")
 

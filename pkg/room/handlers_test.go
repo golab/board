@@ -53,7 +53,7 @@ func TestHandleUploadSGF1(t *testing.T) {
 
 	evt := event.NewEvent("upload_sgf", sgf)
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF(false)), 113, "upload_sgf")
+	assert.Equal(t, len(r.ToSGF()), 113, "upload_sgf")
 }
 
 func TestHandleUploadSGF2(t *testing.T) {
@@ -62,7 +62,7 @@ func TestHandleUploadSGF2(t *testing.T) {
 
 	evt := event.NewEvent("upload_sgf", sgf)
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF(false)), 105, "upload_sgf")
+	assert.Equal(t, len(r.ToSGF()), 105, "upload_sgf")
 }
 
 func TestHandleUploadSGF3(t *testing.T) {
@@ -73,7 +73,7 @@ func TestHandleUploadSGF3(t *testing.T) {
 
 	evt := event.NewEvent("upload_sgf", sgfs)
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF(false)), 213, "upload_sgf")
+	assert.Equal(t, len(r.ToSGF()), 213, "upload_sgf")
 }
 
 func TestHandleTrash(t *testing.T) {
@@ -82,10 +82,10 @@ func TestHandleTrash(t *testing.T) {
 
 	evt := event.NewEvent("upload_sgf", sgf)
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF(false)), 113, "trash")
+	assert.Equal(t, len(r.ToSGF()), 113, "trash")
 	evt = event.NewEvent("trash", nil)
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF(false)), 65, "trash")
+	assert.Equal(t, len(r.ToSGF()), 65, "trash")
 }
 
 func TestHandleUpdateNickname(t *testing.T) {
@@ -131,7 +131,7 @@ func TestHandleRequestSGF1(t *testing.T) {
 
 	evt := event.NewEvent("request_sgf", "http://www.gokifu.com/somefile.sgf")
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF(false)), 65, "request_sgf")
+	assert.Equal(t, len(r.ToSGF()), 65, "request_sgf")
 }
 
 func TestHandleRequestSGF2(t *testing.T) {
@@ -140,7 +140,7 @@ func TestHandleRequestSGF2(t *testing.T) {
 
 	evt := event.NewEvent("request_sgf", "https://online-go.com/game/1")
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF(false)), 65, "request_sgf")
+	assert.Equal(t, len(r.ToSGF()), 65, "request_sgf")
 }
 
 func TestHandleAddStone(t *testing.T) {
@@ -151,5 +151,5 @@ func TestHandleAddStone(t *testing.T) {
 	val["color"] = 1.0
 	evt := event.NewEvent("add_stone", val)
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF(false)), 71, "add_stone")
+	assert.Equal(t, len(r.ToSGF()), 71, "add_stone")
 }

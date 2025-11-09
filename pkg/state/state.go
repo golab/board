@@ -78,7 +78,15 @@ func (s *State) AnyMove() {
 	s.markedDame = core.NewCoordSet()
 }
 
-func (s *State) ToSGF(indexes bool) string {
+func (s *State) ToSGF() string {
+	return s.toSGF(false)
+}
+
+func (s *State) ToSGFIX() string {
+	return s.toSGF(true)
+}
+
+func (s *State) toSGF(indexes bool) string {
 	result := "("
 	stack := []any{s.root}
 	for len(stack) > 0 {
