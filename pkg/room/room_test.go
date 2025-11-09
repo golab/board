@@ -15,9 +15,9 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
+	"github.com/jarednogo/board/pkg/message"
 	"github.com/jarednogo/board/pkg/room"
 	"github.com/jarednogo/board/pkg/room/plugin"
 )
@@ -48,7 +48,7 @@ func TestBroadcastMessage(t *testing.T) {
 	r.RegisterConnection(mock1)
 	r.RegisterConnection(mock2)
 
-	message := core.NewMessage("foobar", 30)
+	message := message.NewMessage("foobar", 30)
 	r.BroadcastHubMessage(message)
 
 	assert.Equal(t, len(mock1.SavedEvents), 2, "expected mock1 to recieve a test message")

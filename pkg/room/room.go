@@ -20,6 +20,7 @@ import (
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/loader"
+	"github.com/jarednogo/board/pkg/message"
 	"github.com/jarednogo/board/pkg/room/plugin"
 	"github.com/jarednogo/board/pkg/state"
 )
@@ -207,7 +208,7 @@ func (r *Room) Broadcast(evt event.Event) {
 	}
 }
 
-func (r *Room) BroadcastHubMessage(m *core.Message) {
+func (r *Room) BroadcastHubMessage(m *message.Message) {
 	// make a new event to broadcast
 	evt := event.NewEvent("global", m.Text)
 
