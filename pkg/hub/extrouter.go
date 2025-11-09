@@ -11,9 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package hub
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 
@@ -22,35 +20,9 @@ import (
 	"github.com/jarednogo/board/pkg/event"
 )
 
-type body struct {
-	URL     string `json:"url"`
-	SGF     string `json:"sgf"`
-	BoardID string `json:"board_id"`
-}
-
 func (h *Hub) Upload(w http.ResponseWriter, r *http.Request) {
-	var url string
-	var sgf string
-	var boardID string
-
-	ct := r.Header.Get("Content-Type")
-	if strings.HasPrefix(ct, "application/json") {
-		b := &body{}
-		defer r.Body.Close() //nolint:errcheck
-		bodyBytes, _ := io.ReadAll(r.Body)
-
-		if err := json.Unmarshal(bodyBytes, b); err != nil {
-			http.Error(w, "bad request", http.StatusBadRequest)
-			return
-		}
-		url = b.URL
-		sgf = b.SGF
-		boardID = b.BoardID
-	} else {
-		url = r.FormValue("url")
-		sgf = r.FormValue("sgf")
-		boardID = r.FormValue("board_id")
-	}
+	url := r.FormValue("url")
+	boardID := r.FormValue("board_id")
 	boardID = core.Sanitize(boardID)
 	if len(strings.TrimSpace(boardID)) == 0 {
 		boardID = core.UUID4()
@@ -60,8 +32,6 @@ func (h *Hub) Upload(w http.ResponseWriter, r *http.Request) {
 	var evt event.Event
 	if url != "" {
 		evt = event.NewEvent("request_sgf", url)
-	} else if sgf != "" {
-		evt = event.NewEvent("upload_sgf", sgf)
 	} else {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -76,7 +46,7 @@ func (h *Hub) ExtRouter() http.Handler {
 	r := chi.NewRouter()
 
 	// stateful endpoints
-	r.Post("/upload", h.Upload)
+	r.Get("/upload", h.Upload)
 
 	return r
 }

@@ -11,10 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package hub_test
 
 import (
-	"bytes"
-	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -22,7 +19,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/hub"
 )
@@ -55,50 +51,4 @@ func TestApiRouter(t *testing.T) {
 	if pong.Message != "version" {
 		t.Fatalf("expected version, got %s", body)
 	}
-}
-
-func TestExtRouter1(t *testing.T) {
-	h, err := hub.NewHub(config.Test())
-	assert.NoError(t, err, "extrouter")
-	_ = h
-	r := chi.NewRouter()
-	r.Mount("/ext", h.ExtRouter())
-
-	ts := httptest.NewServer(r)
-	defer ts.Close()
-
-	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.SimpleEightMoves))
-	postBody := []byte(fmt.Sprintf(`{"sgf": "%s", "board_id": "someboard"}`, sgf))
-	_, err = http.Post(ts.URL+"/ext/upload", "application/json", bytes.NewBuffer(postBody))
-	if err != nil {
-		assert.NoError(t, err, "extrouter")
-		return
-	}
-
-	room, err := h.GetRoom("someboard")
-	assert.NoError(t, err, "extrouter")
-	assert.Equal(t, len(room.ToSGF()), 113, "extrouter")
-}
-
-func TestExtRouter2(t *testing.T) {
-	h, err := hub.NewHub(config.Test())
-	assert.NoError(t, err, "extrouter")
-	_ = h
-	r := chi.NewRouter()
-	r.Mount("/ext", h.ExtRouter())
-
-	ts := httptest.NewServer(r)
-	defer ts.Close()
-
-	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.SimpleEightMoves))
-	postBody := []byte(fmt.Sprintf("sgf=%s&board_id=someboard", sgf))
-	_, err = http.Post(ts.URL+"/ext/upload", "application/x-www-form-urlencoded", bytes.NewBuffer(postBody))
-	if err != nil {
-		assert.NoError(t, err, "extrouter")
-		return
-	}
-
-	room, err := h.GetRoom("someboard")
-	assert.NoError(t, err, "extrouter")
-	assert.Equal(t, len(room.ToSGF()), 113, "extrouter")
 }
