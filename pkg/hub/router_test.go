@@ -14,18 +14,20 @@ import (
 	"encoding/json"
 	"io"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/config"
+	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/hub"
 )
 
 func TestApiRouter(t *testing.T) {
-	h, err := hub.NewHub(config.Test())
+	_, err := hub.NewHub(config.Test())
 	assert.NoError(t, err, "apirouter")
-	_ = h
 	r := chi.NewRouter()
 	r.Mount("/api", hub.ApiRouter("version"))
 
@@ -44,4 +46,26 @@ func TestApiRouter(t *testing.T) {
 	assert.NoError(t, err, "unmarshal")
 
 	assert.Equal(t, msg.Message, "version", "version")
+}
+
+func TestExtRouter(t *testing.T) {
+	h, err := hub.NewHub(config.Test())
+	assert.NoError(t, err, "extrouter")
+
+	room := h.GetOrCreateRoom("someboard")
+	room.SetFetcher(fetch.NewMockFetcher(sgfsamples.SimpleEightMoves))
+
+	r := chi.NewRouter()
+	r.Mount("/ext", h.ExtRouter())
+
+	v := url.Values{}
+	v.Set("url", "https://online-go.com/game/1")
+	v.Set("board_id", "someboard")
+	path := "/ext/upload?" + v.Encode()
+
+	req := httptest.NewRequest("GET", path, nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	assert.Equal(t, len(room.ToSGF()), 113, "extrouter")
 }
