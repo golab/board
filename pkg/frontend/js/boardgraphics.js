@@ -657,7 +657,18 @@ class BoardGraphics {
 
             // gradient fill
             stone = this.draw_gradient_circle(x, y, radius, "white_grad", svg_id, stroke);
-            
+            // texture
+            /*
+            let svg = this.svgs.get(svg_id);
+            stone = document.createElementNS(this.svgns, "image");
+            stone.setAttributeNS(null, "href", "/static/white.svg");
+            stone.setAttributeNS(null, "width", radius*2);
+            stone.setAttributeNS(null, "height", radius*2);
+            stone.setAttributeNS(null, "x", this.side*x+radius);
+            stone.setAttributeNS(null, "y", this.side*y+radius);
+            svg.appendChild(stone);
+            */
+       
         } else if (color == 1) {
             // regular fill
             //this.draw_circle(x, y, radius, hexcolor, svg_id);
