@@ -13,7 +13,6 @@ package hub_test
 import (
 	"encoding/json"
 	"io"
-	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -30,25 +29,19 @@ func TestApiRouter(t *testing.T) {
 	r := chi.NewRouter()
 	r.Mount("/api", hub.ApiRouter("version"))
 
-	ts := httptest.NewServer(r)
-	defer ts.Close()
+	req := httptest.NewRequest("GET", "/api/version", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
 
-	resp, err := http.Get(ts.URL + "/api/version")
-	if err != nil {
-		assert.NoError(t, err, "version")
-		return
-	}
-	defer resp.Body.Close() //nolint:errcheck
+	body, err := io.ReadAll(rec.Body)
+	assert.NoError(t, err, "version")
 
-	body, _ := io.ReadAll(resp.Body)
-	pong := struct {
+	msg := struct {
 		Message string `json:"message"`
 	}{}
 
-	err = json.Unmarshal(body, &pong)
+	err = json.Unmarshal(body, &msg)
 	assert.NoError(t, err, "unmarshal")
 
-	if pong.Message != "version" {
-		t.Fatalf("expected version, got %s", body)
-	}
+	assert.Equal(t, msg.Message, "version", "version")
 }

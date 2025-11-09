@@ -20,6 +20,7 @@ import (
 	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/event"
+	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/loader"
 	"github.com/jarednogo/board/pkg/room"
 	"golang.org/x/net/websocket"
@@ -120,6 +121,10 @@ func (h *Hub) Load() {
 			continue
 		}
 
+		if h.cfg.Mode == config.ModeTest {
+			r.SetFetcher(fetch.NewEmptyFetcher())
+		}
+
 		id := r.ID()
 		log.Printf("Loading %s", id)
 		h.mu.Lock()
@@ -218,6 +223,9 @@ func (h *Hub) GetOrCreateRoom(roomID string) *room.Room {
 	if _, ok := h.rooms[roomID]; !ok {
 		log.Println("New room:", roomID)
 		r := room.NewRoom(roomID)
+		if h.cfg.Mode == config.ModeTest {
+			r.SetFetcher(fetch.NewEmptyFetcher())
+		}
 		h.rooms[roomID] = r
 		go h.Heartbeat(roomID)
 	}

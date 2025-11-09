@@ -14,7 +14,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -27,49 +26,38 @@ func TestPing(t *testing.T) {
 	_, r, err := main.Setup(config.Test())
 	assert.NoError(t, err, "main")
 
-	ts := httptest.NewServer(r)
-	defer ts.Close()
+	req := httptest.NewRequest("GET", "/api/ping", nil)
 
-	resp, err := http.Get(ts.URL + "/api/ping")
-	if err != nil {
-		assert.NoError(t, err, "ping")
-		return
-	}
-	defer resp.Body.Close() //nolint:errcheck
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
 
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(rec.Body)
+	assert.NoError(t, err, "ping")
+
 	pong := struct {
 		Message string `json:"message"`
 	}{}
 
 	err = json.Unmarshal(body, &pong)
 	assert.NoError(t, err, "unmarshal")
-
-	if pong.Message != "pong" {
-		t.Fatalf("expected pong, got %s", body)
-	}
+	assert.Equal(t, pong.Message, "pong", "ping")
 }
 
 func TestTwitch(t *testing.T) {
-	_, r, err := main.Setup(config.Test())
+	h, r, err := main.Setup(config.Test())
 	assert.NoError(t, err, "main")
 
-	ts := httptest.NewServer(r)
-	defer ts.Close()
+	rec := httptest.NewRecorder()
 
 	body := []byte(`{"event": {"message": {"text": "!setboard Board"}}}`)
-
-	_, err = http.Post(ts.URL+"/apps/twitch/callback", "application/json", bytes.NewBuffer(body))
-	if err != nil {
-		assert.NoError(t, err, "setboard")
-		return
-	}
+	req := httptest.NewRequest("POST", "/apps/twitch/callback", bytes.NewBuffer(body))
+	r.ServeHTTP(rec, req)
 
 	body = []byte(`{"event": {"message": {"text": "!branch k10 k11"}}}`)
+	req = httptest.NewRequest("POST", "/apps/twitch/callback", bytes.NewBuffer(body))
+	r.ServeHTTP(rec, req)
 
-	_, err = http.Post(ts.URL+"/apps/twitch/callback", "application/json", bytes.NewBuffer(body))
-	if err != nil {
-		assert.NoError(t, err, "branch")
-		return
-	}
+	room, err := h.GetRoom("Board")
+	assert.NoError(t, err, "twitch")
+	assert.Equal(t, len(room.ToSGF()), 77, "twitch")
 }

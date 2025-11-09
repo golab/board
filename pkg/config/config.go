@@ -17,7 +17,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type mode string
+
+const (
+	ModeProd mode = "prod"
+	ModeTest mode = "test"
+)
+
 type Config struct {
+	Mode   mode         `yaml:"mode"`
 	Server serverConfig `yaml:"server"`
 	Twitch twitchConfig `yaml:"twitch"`
 	DB     dbConfig     `yaml:"db"`
@@ -79,6 +87,7 @@ func Default() *Config {
 		Path: defaultSqlitePath(),
 	}
 	cfg := &Config{
+		Mode:   ModeProd,
 		Server: s,
 		DB:     db,
 	}
@@ -87,6 +96,7 @@ func Default() *Config {
 
 func Test() *Config {
 	c := Default()
+	c.Mode = ModeTest
 	db := dbConfig{
 		Type: DBConfigTypeMemory,
 	}
