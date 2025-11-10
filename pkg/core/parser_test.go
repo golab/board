@@ -126,22 +126,6 @@ func TestEmpty(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
-}
-
-func FuzzParser(f *testing.F) {
-	testcases := []string{"(;)", "(;GM[1];B[aa];W[bb];B[];W[ss])", "(;GM[1];C[comment \"with\" quotes])"}
-	for _, tc := range testcases {
-		// add to seed corpus
-		f.Add(tc)
-	}
-
-	f.Fuzz(func(t *testing.T, orig string) {
-		p := core.NewParser(orig)
-		// looking for crashes or panics
-		_, _ = p.Parse()
-
-	})
 }
 
 func TestChineseNames(t *testing.T) {
@@ -158,4 +142,29 @@ func TestChineseNames(t *testing.T) {
 
 	assert.Equal(t, pw[0], "王思雅", "chinese names")
 	assert.Equal(t, pb[0], "李晨宇", "chinese names")
+}
+
+func TestMixedCaseField(t *testing.T) {
+	p := core.NewParser(sgfsamples.MixedCaseField)
+	root, err := p.Parse()
+	assert.NoError(t, err, "mixed case field")
+	c, ok := root.Fields["COPYRIGHT"]
+	assert.True(t, ok, "mixed case field")
+	assert.Equal(t, len(c), 1, "mixed case field")
+	assert.Equal(t, c[0], "SomeCopyright", "mixed case field")
+}
+
+func FuzzParser(f *testing.F) {
+	testcases := []string{"(;)", "(;GM[1];B[aa];W[bb];B[];W[ss])", "(;GM[1];C[comment \"with\" quotes])", sgfsamples.Empty, sgfsamples.SimpleTwoBranches, sgfsamples.SimpleWithComment, sgfsamples.SimpleFourMoves, sgfsamples.SimpleEightMoves, sgfsamples.Scoring1, sgfsamples.PassWithTT, sgfsamples.ChineseNames}
+	for _, tc := range testcases {
+		// add to seed corpus
+		f.Add(tc)
+	}
+
+	f.Fuzz(func(t *testing.T, orig string) {
+		p := core.NewParser(orig)
+		// looking for crashes or panics
+		_, _ = p.Parse()
+
+	})
 }
