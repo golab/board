@@ -14,6 +14,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
 )
 
@@ -140,4 +142,20 @@ func FuzzParser(f *testing.F) {
 		_, _ = p.Parse()
 
 	})
+}
+
+func TestChineseNames(t *testing.T) {
+	p := core.NewParser(sgfsamples.ChineseNames)
+	root, err := p.Parse()
+	assert.NoError(t, err, "chinese names")
+	pb, ok := root.Fields["PB"]
+	assert.True(t, ok, "chinese names")
+	pw, ok := root.Fields["PW"]
+	assert.True(t, ok, "chinese names")
+
+	assert.Equal(t, len(pb), 1, "chinese names")
+	assert.Equal(t, len(pw), 1, "chinese names")
+
+	assert.Equal(t, pw[0], "王思雅", "chinese names")
+	assert.Equal(t, pb[0], "李晨宇", "chinese names")
 }
