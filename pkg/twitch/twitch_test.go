@@ -21,5 +21,5 @@ func TestVerify(t *testing.T) {
 	secret := "9piitrv7ch5yyr56b0cbct5t9bli92"
 	message := "hello world"
 	sig := "sha256=3ae321e96e012c6cc89b73326f329f0a3d1d7935abc3d819387830ce5f1b3074"
-	assert.True(t, twitch.Verify(secret, message, sig), "verify")
+	assert.True(t, twitch.Verify(secret, message, sig))
 }

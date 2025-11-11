@@ -26,23 +26,23 @@ func TestSqliteLoader(t *testing.T) {
 	// test setup
 	ldr := loader.NewSqliteLoader(path)
 	err := ldr.Setup()
-	assert.NoError(t, err, "sqliteloader")
+	assert.NoError(t, err)
 
 	// test adding a twitch room
 	err = ldr.TwitchSetRoom("user", "board")
-	assert.NoError(t, err, "sqliteloader")
+	assert.NoError(t, err)
 
 	// test loading the same room
 	b := ldr.TwitchGetRoom("user")
-	assert.Equal(t, b, "board", "sqliteloader")
+	assert.Equal(t, b, "board")
 
 	// test updating the same room
 	err = ldr.TwitchSetRoom("user", "otherboard")
-	assert.NoError(t, err, "sqliteloader")
+	assert.NoError(t, err)
 
 	// test loading the same room
 	b = ldr.TwitchGetRoom("user")
-	assert.Equal(t, b, "otherboard", "sqliteloader")
+	assert.Equal(t, b, "otherboard")
 
 	// make a struct to save a room
 	l := &loader.LoadJSON{
@@ -56,58 +56,58 @@ func TestSqliteLoader(t *testing.T) {
 
 	// test saving a room
 	err = ldr.SaveRoom(l.ID, l)
-	assert.NoError(t, err, "sqliteloader")
+	assert.NoError(t, err)
 
 	// test loading the same room
 	m, err := ldr.LoadRoom(l.ID)
-	assert.NoError(t, err, "sqliteloader")
-	assert.Equal(t, m.SGF, l.SGF, "sqliteloader")
-	assert.Equal(t, m.Location, l.Location, "sqliteloader")
-	assert.Equal(t, m.Buffer, l.Buffer, "sqliteloader")
-	assert.Equal(t, m.NextIndex, l.NextIndex, "sqliteloader")
-	assert.Equal(t, m.Password, l.Password, "sqliteloader")
-	assert.Equal(t, m.ID, l.ID, "sqliteloader")
+	assert.NoError(t, err)
+	assert.Equal(t, m.SGF, l.SGF)
+	assert.Equal(t, m.Location, l.Location)
+	assert.Equal(t, m.Buffer, l.Buffer)
+	assert.Equal(t, m.NextIndex, l.NextIndex)
+	assert.Equal(t, m.Password, l.Password)
+	assert.Equal(t, m.ID, l.ID)
 
 	// test saving a new room
 	m.ID = "test2"
 	err = ldr.SaveRoom(m.ID, m)
-	assert.NoError(t, err, "sqliteloader")
+	assert.NoError(t, err)
 
 	// test loading all the rooms
 	rooms, err := ldr.LoadAllRooms()
-	assert.NoError(t, err, "sqliteloader")
-	assert.Equal(t, len(rooms), 2, "sqliteloader")
+	assert.NoError(t, err)
+	assert.Equal(t, len(rooms), 2)
 
 	// test updating a room
 	err = ldr.SaveRoom(m.ID, m)
-	assert.NoError(t, err, "sqliteloader")
+	assert.NoError(t, err)
 
 	// test deleting a room
 	err = ldr.DeleteRoom(m.ID)
-	assert.NoError(t, err, "sqliteloader")
+	assert.NoError(t, err)
 	_, err = ldr.LoadRoom(m.ID)
-	assert.NotNil(t, err, "sqliteloader")
+	assert.NotNil(t, err)
 
 	// test loading messages
 	msgs, err := ldr.LoadAllMessages()
-	assert.NoError(t, err, "sqliteloader")
-	assert.Equal(t, len(msgs), 0, "sqliteloader")
+	assert.NoError(t, err)
+	assert.Equal(t, len(msgs), 0)
 
 	// InsertTestMessage is only for testing
 	err = ldr.InsertTestMessage()
-	assert.NoError(t, err, "sqliteloader")
+	assert.NoError(t, err)
 
 	// test loading all messages
 	msgs, err = ldr.LoadAllMessages()
-	assert.NoError(t, err, "sqliteloader")
-	assert.Equal(t, len(msgs), 1, "sqliteloader")
+	assert.NoError(t, err)
+	assert.Equal(t, len(msgs), 1)
 
 	// test deleting all messages
 	err = ldr.DeleteAllMessages()
-	assert.NoError(t, err, "sqliteloader")
+	assert.NoError(t, err)
 
 	// test loading messages again
 	msgs, err = ldr.LoadAllMessages()
-	assert.NoError(t, err, "sqliteloader")
-	assert.Equal(t, len(msgs), 0, "sqliteloader")
+	assert.NoError(t, err)
+	assert.Equal(t, len(msgs), 0)
 }

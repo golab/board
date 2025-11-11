@@ -37,14 +37,14 @@ func TestParseURL(t *testing.T) {
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("parseURL%d", i), func(t *testing.T) {
 			a, b, c := hub.ParseURL(tc.input)
-			assert.Equal(t, [3]string{a, b, c}, tc.output, "TestParseURL")
+			assert.Equal(t, [3]string{a, b, c}, tc.output)
 		})
 	}
 }
 
 func TestHub1(t *testing.T) {
 	h, err := hub.NewHubWithDB(loader.NewMemoryLoader(), config.Default())
-	assert.NoError(t, err, "new hub")
+	assert.NoError(t, err)
 	h.Load()
 
 	mock := event.NewMockEventChannel()
@@ -56,7 +56,7 @@ func TestHub1(t *testing.T) {
 
 func TestHub2(t *testing.T) {
 	h, err := hub.NewHubWithDB(loader.NewMemoryLoader(), config.Default())
-	assert.NoError(t, err, "new hub")
+	assert.NoError(t, err)
 
 	mock := event.NewMockEventChannel()
 	evt := event.NewEvent("pass", 1.0)
@@ -68,7 +68,7 @@ func TestHub2(t *testing.T) {
 	// initial frame
 	// connected users
 	// pass event
-	assert.Equal(t, len(mock.SavedEvents), 3, "mock.receivedEvents")
+	assert.Equal(t, len(mock.SavedEvents), 3)
 }
 
 func TestHub3(t *testing.T) {
@@ -79,32 +79,32 @@ func TestHub3(t *testing.T) {
 	// message that doesn't expire immediately
 	ml.AddMessage("save this message", 30)
 	h, err := hub.NewHubWithDB(ml, config.Default())
-	assert.NoError(t, err, "new hub")
+	assert.NoError(t, err)
 
 	roomID := "someboard"
 	mock1 := event.NewMockEventChannel()
 	h.Handler(mock1, roomID)
 
-	assert.Equal(t, h.RoomCount(), 1, "hub room count")
+	assert.Equal(t, h.RoomCount(), 1)
 
 	h.Save()
 
 	h.Load()
 
-	assert.Equal(t, h.RoomCount(), 1, "hub room count")
+	assert.Equal(t, h.RoomCount(), 1)
 
-	assert.Equal(t, h.MessageCount(), 0, "hub message count")
-	assert.Equal(t, ml.MessageCount(), 3, "db message count")
+	assert.Equal(t, h.MessageCount(), 0)
+	assert.Equal(t, ml.MessageCount(), 3)
 	// reads messages from the db (deletes from the db)
 	h.ReadMessages()
 
-	assert.Equal(t, h.MessageCount(), 3, "hub message count")
-	assert.Equal(t, ml.MessageCount(), 0, "db message count")
+	assert.Equal(t, h.MessageCount(), 3)
+	assert.Equal(t, ml.MessageCount(), 0)
 
 	h.SendMessages()
 
 	// one message lives long enough to be saved
-	assert.Equal(t, h.MessageCount(), 1, "hub message count")
+	assert.Equal(t, h.MessageCount(), 1)
 }
 
 /*
@@ -118,28 +118,28 @@ func TestHub4(t *testing.T) {
 	// message that doesn't expire immediately
 	ml.AddMessage("save this message", 30)
 	h, err := hub.NewHubWithDB(ml, config.Default())
-	assert.NoError(t, err, "new hub")
+	assert.NoError(t, err)
 
 	roomID := "someboard"
 	mock1 := core.NewMockEventChannel()
 	h.Handler(mock1, roomID)
 
-	assert.Equal(t, h.RoomCount(), 1, "hub room count")
+	assert.Equal(t, h.RoomCount(), 1)
 
 	h.Save()
 
 	h.Load()
 
-	assert.Equal(t, h.RoomCount(), 1, "hub room count")
+	assert.Equal(t, h.RoomCount(), 1)
 
-	assert.Equal(t, h.MessageCount(), 0, "hub message count")
-	assert.Equal(t, ml.MessageCount(), 3, "db message count")
+	assert.Equal(t, h.MessageCount(), 0)
+	assert.Equal(t, ml.MessageCount(), 3)
 
 	// reads messages from the db (deletes from the db)
 	h.ReadMessages()
 
-	assert.Equal(t, h.MessageCount(), 3, "hub message count")
-	assert.Equal(t, ml.MessageCount(), 0, "db message count")
+	assert.Equal(t, h.MessageCount(), 3)
+	assert.Equal(t, ml.MessageCount(), 0)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -164,7 +164,7 @@ func TestHub4(t *testing.T) {
 	// initial frame
 	// connected users
 	// one of the hub messages (the one with 30s ttl)
-	assert.Equal(t, len(mock2.SavedEvents), 3, "mock.receivedEvents")
+	assert.Equal(t, len(mock2.SavedEvents), 3)
 	receivedEventTypes := make(map[string]bool)
 	for _, evt := range mock2.SavedEvents {
 		receivedEventTypes[evt.Event] = true
@@ -174,11 +174,11 @@ func TestHub4(t *testing.T) {
 	_, ok = receivedEventTypes["connected_users"]
 	_, ok = receivedEventTypes["global"]
 
-	assert.True(t, ok, "mock savedEvents")
-	assert.True(t, ok, "mock savedEvents")
-	assert.True(t, ok, "mock savedEvents")
+	assert.True(t, ok)
+	assert.True(t, ok)
+	assert.True(t, ok)
 
 	// one message lives long enough to be saved
-	assert.Equal(t, h.MessageCount(), 1, "hub message count")
+	assert.Equal(t, h.MessageCount(), 1)
 }
 */

@@ -23,7 +23,7 @@ import (
 func TestSim(t *testing.T) {
 	// make a new simulator and add some clients
 	sim, err := integration.NewSim()
-	assert.NoError(t, err, "test sim")
+	assert.NoError(t, err)
 
 	roomID := "someboard"
 	for i := 0; i < 10; i++ {
@@ -40,7 +40,7 @@ func TestSim(t *testing.T) {
 	// otherwise the buffer causes events to get dropped
 	// by the room handler
 	room, err := sim.Hub.GetRoom(roomID)
-	assert.NoError(t, err, "get room")
+	assert.NoError(t, err)
 	room.SetInputBuffer(0)
 
 	// simulate an event
@@ -56,5 +56,5 @@ func TestSim(t *testing.T) {
 
 	// observe effects
 	save := room.Save()
-	assert.Equal(t, len(save.SGF), 6132, "len(save.SGF)")
+	assert.Equal(t, len(save.SGF), 6132)
 }

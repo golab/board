@@ -26,12 +26,12 @@ func TestHandleIsProtected(t *testing.T) {
 	r := room.NewRoom("")
 	evt := event.NewEvent("isprotected", nil)
 	evt = r.HandleAny(evt)
-	assert.False(t, evt.Value().(bool), "isprotected")
+	assert.False(t, evt.Value().(bool))
 
 	r.SetPassword("abcdef")
 	evt = event.NewEvent("isprotected", nil)
 	evt = r.HandleAny(evt)
-	assert.True(t, evt.Value().(bool), "isprotected")
+	assert.True(t, evt.Value().(bool))
 }
 
 func TestHandleCheckPassword(t *testing.T) {
@@ -40,11 +40,11 @@ func TestHandleCheckPassword(t *testing.T) {
 
 	evt := event.NewEvent("checkpassword", "abcdef")
 	evt = r.HandleAny(evt)
-	assert.Equal(t, evt.Value().(string), "", "checkpassword")
+	assert.Equal(t, evt.Value().(string), "")
 
 	evt = event.NewEvent("checkpassword", "somepassword")
 	evt = r.HandleAny(evt)
-	assert.Equal(t, evt.Value().(string), "somepassword", "checkpassword")
+	assert.Equal(t, evt.Value().(string), "somepassword")
 }
 
 func TestHandleUploadSGF1(t *testing.T) {
@@ -53,7 +53,7 @@ func TestHandleUploadSGF1(t *testing.T) {
 
 	evt := event.NewEvent("upload_sgf", sgf)
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF()), 113, "upload_sgf")
+	assert.Equal(t, len(r.ToSGF()), 113)
 }
 
 func TestHandleUploadSGF2(t *testing.T) {
@@ -62,7 +62,7 @@ func TestHandleUploadSGF2(t *testing.T) {
 
 	evt := event.NewEvent("upload_sgf", sgf)
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF()), 105, "upload_sgf")
+	assert.Equal(t, len(r.ToSGF()), 105)
 }
 
 func TestHandleUploadSGF3(t *testing.T) {
@@ -73,7 +73,7 @@ func TestHandleUploadSGF3(t *testing.T) {
 
 	evt := event.NewEvent("upload_sgf", sgfs)
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF()), 213, "upload_sgf")
+	assert.Equal(t, len(r.ToSGF()), 213)
 }
 
 func TestHandleTrash(t *testing.T) {
@@ -82,10 +82,10 @@ func TestHandleTrash(t *testing.T) {
 
 	evt := event.NewEvent("upload_sgf", sgf)
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF()), 113, "trash")
+	assert.Equal(t, len(r.ToSGF()), 113)
 	evt = event.NewEvent("trash", nil)
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF()), 65, "trash")
+	assert.Equal(t, len(r.ToSGF()), 65)
 }
 
 func TestHandleUpdateNickname(t *testing.T) {
@@ -95,8 +95,8 @@ func TestHandleUpdateNickname(t *testing.T) {
 	r.HandleAny(evt)
 	nicks := r.Nicks()
 	n, ok := nicks["user_123"]
-	assert.True(t, ok, "update_nickname")
-	assert.Equal(t, n, "mynick", "update_nickname")
+	assert.True(t, ok)
+	assert.Equal(t, n, "mynick")
 }
 
 func TestHandleUpdateSettings(t *testing.T) {
@@ -114,15 +114,14 @@ func TestHandleUpdateSettings(t *testing.T) {
 	assert.True(
 		t,
 		core.CorrectPassword("somepassword", r.GetPassword()),
-		"update_settings",
 	)
-	assert.Equal(t, r.GetInputBuffer(), 500, "update_settings")
-	assert.Equal(t, r.Size(), 13, "update_settings")
+	assert.Equal(t, r.GetInputBuffer(), 500)
+	assert.Equal(t, r.Size(), 13)
 
 	nicks := r.Nicks()
 	n, ok := nicks["user_123"]
-	assert.True(t, ok, "update_settings")
-	assert.Equal(t, n, "mynick", "update_settings")
+	assert.True(t, ok)
+	assert.Equal(t, n, "mynick")
 }
 
 func TestHandleRequestSGF1(t *testing.T) {
@@ -131,7 +130,7 @@ func TestHandleRequestSGF1(t *testing.T) {
 
 	evt := event.NewEvent("request_sgf", "http://www.gokifu.com/somefile.sgf")
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF()), 65, "request_sgf")
+	assert.Equal(t, len(r.ToSGF()), 65)
 }
 
 func TestHandleRequestSGF2(t *testing.T) {
@@ -140,7 +139,7 @@ func TestHandleRequestSGF2(t *testing.T) {
 
 	evt := event.NewEvent("request_sgf", "https://online-go.com/game/1")
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF()), 65, "request_sgf")
+	assert.Equal(t, len(r.ToSGF()), 65)
 }
 
 func TestHandleAddStone(t *testing.T) {
@@ -151,5 +150,5 @@ func TestHandleAddStone(t *testing.T) {
 	val["color"] = 1.0
 	evt := event.NewEvent("add_stone", val)
 	r.HandleAny(evt)
-	assert.Equal(t, len(r.ToSGF()), 71, "add_stone")
+	assert.Equal(t, len(r.ToSGF()), 71)
 }

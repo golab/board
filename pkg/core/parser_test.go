@@ -131,27 +131,27 @@ func TestEmpty(t *testing.T) {
 func TestChineseNames(t *testing.T) {
 	p := core.NewParser(sgfsamples.ChineseNames)
 	root, err := p.Parse()
-	assert.NoError(t, err, "chinese names")
+	assert.NoError(t, err)
 	pb, ok := root.Fields["PB"]
-	assert.True(t, ok, "chinese names")
+	assert.True(t, ok)
 	pw, ok := root.Fields["PW"]
-	assert.True(t, ok, "chinese names")
+	assert.True(t, ok)
 
-	assert.Equal(t, len(pb), 1, "chinese names")
-	assert.Equal(t, len(pw), 1, "chinese names")
+	assert.Equal(t, len(pb), 1)
+	assert.Equal(t, len(pw), 1)
 
-	assert.Equal(t, pw[0], "王思雅", "chinese names")
-	assert.Equal(t, pb[0], "李晨宇", "chinese names")
+	assert.Equal(t, pw[0], "王思雅")
+	assert.Equal(t, pb[0], "李晨宇")
 }
 
 func TestMixedCaseField(t *testing.T) {
 	p := core.NewParser(sgfsamples.MixedCaseField)
 	root, err := p.Parse()
-	assert.NoError(t, err, "mixed case field")
+	assert.NoError(t, err)
 	c, ok := root.Fields["COPYRIGHT"]
-	assert.True(t, ok, "mixed case field")
-	assert.Equal(t, len(c), 1, "mixed case field")
-	assert.Equal(t, c[0], "SomeCopyright", "mixed case field")
+	assert.True(t, ok)
+	assert.Equal(t, len(c), 1)
+	assert.Equal(t, c[0], "SomeCopyright")
 }
 
 func FuzzParser(f *testing.F) {

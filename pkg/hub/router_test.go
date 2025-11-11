@@ -27,7 +27,7 @@ import (
 
 func TestApiRouter(t *testing.T) {
 	_, err := hub.NewHub(config.Test())
-	assert.NoError(t, err, "apirouter")
+	assert.NoError(t, err)
 	r := chi.NewRouter()
 	r.Mount("/api", hub.ApiRouter("version"))
 
@@ -36,21 +36,21 @@ func TestApiRouter(t *testing.T) {
 	r.ServeHTTP(rec, req)
 
 	body, err := io.ReadAll(rec.Body)
-	assert.NoError(t, err, "version")
+	assert.NoError(t, err)
 
 	msg := struct {
 		Message string `json:"message"`
 	}{}
 
 	err = json.Unmarshal(body, &msg)
-	assert.NoError(t, err, "unmarshal")
+	assert.NoError(t, err)
 
-	assert.Equal(t, msg.Message, "version", "version")
+	assert.Equal(t, msg.Message, "version")
 }
 
 func TestExtRouter(t *testing.T) {
 	h, err := hub.NewHub(config.Test())
-	assert.NoError(t, err, "extrouter")
+	assert.NoError(t, err)
 
 	room := h.GetOrCreateRoom("someboard")
 	room.SetFetcher(fetch.NewMockFetcher(sgfsamples.SimpleEightMoves))
@@ -67,5 +67,5 @@ func TestExtRouter(t *testing.T) {
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
-	assert.Equal(t, len(room.ToSGF()), 113, "extrouter")
+	assert.Equal(t, len(room.ToSGF()), 113)
 }

@@ -19,9 +19,8 @@ import (
 )
 
 func TestScore1(t *testing.T) {
-	testname := "scoring1"
 	s, err := FromSGF(sgfsamples.Scoring1)
-	assert.NoError(t, err, testname)
+	assert.NoError(t, err)
 
 	s.fastForward()
 
@@ -50,22 +49,21 @@ func TestScore1(t *testing.T) {
 
 	current := s.Current()
 
-	assert.Equal(t, len(blackArea), 56, testname)
-	assert.Equal(t, len(whiteArea), 40, testname)
+	assert.Equal(t, len(blackArea), 56)
+	assert.Equal(t, len(whiteArea), 40)
 
-	assert.Equal(t, len(blackDead), 9, testname)
-	assert.Equal(t, len(whiteDead), 9, testname)
+	assert.Equal(t, len(blackDead), 9)
+	assert.Equal(t, len(whiteDead), 9)
 
-	assert.Equal(t, current.BlackCaps, 27, testname)
-	assert.Equal(t, current.WhiteCaps, 25, testname)
+	assert.Equal(t, current.BlackCaps, 27)
+	assert.Equal(t, current.WhiteCaps, 25)
 
-	assert.Equal(t, len(dame), 7, testname)
+	assert.Equal(t, len(dame), 7)
 }
 
 func TestScore2(t *testing.T) {
-	testname := "scoring2"
 	s, err := FromSGF(sgfsamples.Scoring2)
-	assert.NoError(t, err, testname)
+	assert.NoError(t, err)
 
 	s.fastForward()
 
@@ -86,66 +84,66 @@ func TestScore2(t *testing.T) {
 
 	current := s.Current()
 
-	assert.Equal(t, len(blackArea), 72, testname)
-	assert.Equal(t, len(whiteArea), 62, testname)
+	assert.Equal(t, len(blackArea), 72)
+	assert.Equal(t, len(whiteArea), 62)
 
-	assert.Equal(t, len(blackDead), 2, testname)
-	assert.Equal(t, len(whiteDead), 2, testname)
+	assert.Equal(t, len(blackDead), 2)
+	assert.Equal(t, len(whiteDead), 2)
 
-	assert.Equal(t, current.BlackCaps, 2, testname)
-	assert.Equal(t, current.WhiteCaps, 11, testname)
+	assert.Equal(t, current.BlackCaps, 2)
+	assert.Equal(t, current.WhiteCaps, 11)
 
-	assert.Equal(t, len(dame), 8, testname)
+	assert.Equal(t, len(dame), 8)
 }
 
 func TestState3(t *testing.T) {
 	s, err := FromSGF(sgfsamples.SimpleTwoBranches)
-	assert.NoError(t, err, "error should be nil")
+	assert.NoError(t, err)
 
 	// index 5 is the start of the second branch from the root
 	s.gotoIndex(5) //nolint:errcheck
 
 	prefs := s.prefs()
-	assert.Equal(t, prefs["0"], 1, "prefs[0]")
+	assert.Equal(t, prefs["0"], 1)
 
 	err = s.setPreferred(4)
-	assert.NoError(t, err, "error should not be nil")
+	assert.NoError(t, err)
 
 	prefs = s.prefs()
-	assert.Equal(t, prefs["0"], 0, "prefs[0]")
+	assert.Equal(t, prefs["0"], 0)
 
 	s.resetPrefs()
 	prefs = s.prefs()
 	for _, value := range prefs {
-		assert.Equal(t, value, 0, "all prefs should be 0")
+		assert.Equal(t, value, 0)
 	}
 
 	s.gotoIndex(6) //nolint:errcheck
-	assert.Equal(t, s.locate(), "1,0", "s.Locate")
+	assert.Equal(t, s.locate(), "1,0")
 
 }
 
 func TestState4(t *testing.T) {
 	s, err := FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "error should be nil")
+	assert.NoError(t, err)
 
-	assert.Equal(t, s.Head().Index, 8, "head index")
+	assert.Equal(t, s.Head().Index, 8)
 
 	// push a node to the head
 	s.PushHead(0, 0, core.Black)
-	assert.Equal(t, s.Current().Index, 0, "current index")
+	assert.Equal(t, s.Current().Index, 0)
 
 	// go to the most recently pushed node
 	s.gotoIndex(9) //nolint:errcheck
 
 	// since we're at the head, we will "track" along
 	s.PushHead(0, 1, core.White)
-	assert.Equal(t, s.Current().Index, 10, "current index")
+	assert.Equal(t, s.Current().Index, 10)
 }
 
 func TestAddStones(t *testing.T) {
 	s, err := FromSGF(sgfsamples.Empty)
-	assert.NoError(t, err, "error should be nil")
+	assert.NoError(t, err)
 
 	// add three new moves
 	moves := []*core.Stone{
@@ -156,25 +154,25 @@ func TestAddStones(t *testing.T) {
 
 	s.AddStones(moves)
 
-	assert.Equal(t, len(s.Current().Down), 1, "len(down)")
+	assert.Equal(t, len(s.Current().Down), 1)
 
 	s.fastForward()
-	assert.Equal(t, s.Current().Index, 3, "current index")
+	assert.Equal(t, s.Current().Index, 3)
 }
 
 func TestCut(t *testing.T) {
 	s, err := FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "error should be nil")
+	assert.NoError(t, err)
 
 	s.gotoIndex(5) //nolint:errcheck
 	s.cut()
-	assert.Equal(t, s.Current().Index, 4, "current index")
-	assert.Equal(t, len(s.Current().Down), 0, "failed cut")
+	assert.Equal(t, s.Current().Index, 4)
+	assert.Equal(t, len(s.Current().Down), 0)
 }
 
 func TestGraft(t *testing.T) {
 	s, err := FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "error should be nil")
+	assert.NoError(t, err)
 
 	moves := []*core.Stone{
 		core.NewStone(9, 9, core.Black),
@@ -188,84 +186,84 @@ func TestGraft(t *testing.T) {
 	s.gotoIndex(4) //nolint:errcheck
 	s.down()
 	s.fastForward()
-	assert.Equal(t, s.Current().Index, 11, "current index")
+	assert.Equal(t, s.Current().Index, 11)
 
 	// smart graft
 	s.smartGraft(4, moves)
 	s.fastForward()
-	assert.Equal(t, s.Current().Index, 12, "current index")
+	assert.Equal(t, s.Current().Index, 12)
 
 	// double-checking Up works
 	s.gotoIndex(4) //nolint:errcheck
 	s.up()
 	s.fastForward()
-	assert.Equal(t, s.Current().Index, 8, "current index")
+	assert.Equal(t, s.Current().Index, 8)
 
 	// check for gotocoord
 	s.gotoCoord(3, 3)
-	assert.Equal(t, s.Current().Index, 2, "current index")
+	assert.Equal(t, s.Current().Index, 2)
 }
 
 func TestStateJSON(t *testing.T) {
 	s, err := FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "error should be nil")
+	assert.NoError(t, err)
 
 	s.gotoIndex(4) //nolint:errcheck
 
 	j := s.Save()
-	assert.Equal(t, j.NextIndex, 9, "next index")
-	assert.Equal(t, j.Location, "0,0,0,0", "location")
+	assert.Equal(t, j.NextIndex, 9)
+	assert.Equal(t, j.Location, "0,0,0,0")
 
 	tr := s.saveTree(core.FullFrame)
-	assert.Equal(t, tr.Depth, 8, "depth")
-	assert.Equal(t, tr.Current, 4, "current")
-	assert.Equal(t, tr.Up, 0, "up")
-	assert.Equal(t, tr.Root, 0, "root")
+	assert.Equal(t, tr.Depth, 8)
+	assert.Equal(t, tr.Current, 4)
+	assert.Equal(t, tr.Up, 0)
+	assert.Equal(t, tr.Root, 0)
 }
 
 func TestGenerateMarks(t *testing.T) {
 	s, err := FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "error should be nil")
+	assert.NoError(t, err)
 
 	s.right()
 
 	// add a triangle
 	coord := &core.Coord{X: 9, Y: 9}
 	_, err = NewAddTriangleCommand(coord).Execute(s)
-	assert.NoError(t, err, "err should be nil")
+	assert.NoError(t, err)
 
 	// add a square
 	coord = &core.Coord{X: 10, Y: 10}
 	_, err = NewAddSquareCommand(coord).Execute(s)
-	assert.NoError(t, err, "err should be nil")
+	assert.NoError(t, err)
 
 	// add a letter
 	coord = &core.Coord{X: 11, Y: 11}
 	letter := "A"
 	_, err = NewAddLetterCommand(coord, letter).Execute(s)
-	assert.NoError(t, err, "err should be nil")
+	assert.NoError(t, err)
 
 	coord = &core.Coord{X: 12, Y: 12}
 	number := 1
 	_, err = NewAddNumberCommand(coord, number).Execute(s)
-	assert.NoError(t, err, "err should be nil")
+	assert.NoError(t, err)
 
 	marks := s.generateMarks()
 
-	assert.True(t, marks.Current.Equal(&core.Coord{X: 15, Y: 3}), "current")
+	assert.True(t, marks.Current.Equal(&core.Coord{X: 15, Y: 3}))
 
-	assert.Equal(t, len(marks.Triangles), 1, "len(triangles)")
-	assert.True(t, marks.Triangles[0].Equal(&core.Coord{X: 9, Y: 9}), "triangles")
+	assert.Equal(t, len(marks.Triangles), 1)
+	assert.True(t, marks.Triangles[0].Equal(&core.Coord{X: 9, Y: 9}))
 
-	assert.Equal(t, len(marks.Squares), 1, "len(squares)")
-	assert.True(t, marks.Squares[0].Equal(&core.Coord{X: 10, Y: 10}), "squares")
+	assert.Equal(t, len(marks.Squares), 1)
+	assert.True(t, marks.Squares[0].Equal(&core.Coord{X: 10, Y: 10}))
 
-	assert.Equal(t, len(marks.Labels), 2, "len(labels)")
+	assert.Equal(t, len(marks.Labels), 2)
 
-	assert.True(t, marks.Labels[0].Coord.Equal(&core.Coord{X: 11, Y: 11}), "letter coord")
-	assert.True(t, marks.Labels[1].Coord.Equal(&core.Coord{X: 12, Y: 12}), "number coord")
+	assert.True(t, marks.Labels[0].Coord.Equal(&core.Coord{X: 11, Y: 11}))
+	assert.True(t, marks.Labels[1].Coord.Equal(&core.Coord{X: 12, Y: 12}))
 
-	assert.Equal(t, marks.Labels[0].Text, "A", "letter")
-	assert.Equal(t, marks.Labels[1].Text, "1", "number")
+	assert.Equal(t, marks.Labels[0].Text, "A")
+	assert.Equal(t, marks.Labels[1].Text, "1")
 
 }

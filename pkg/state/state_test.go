@@ -21,27 +21,27 @@ import (
 func TestState(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleFourMoves)
 
-	assert.NoError(t, err, "error should be nil")
-	assert.Equal(t, s.Size(), 19, "error with state")
+	assert.NoError(t, err)
+	assert.Equal(t, s.Size(), 19)
 }
 
 func TestState2(t *testing.T) {
 	input := sgfsamples.SimpleFourMoves
 	s, err := state.FromSGF(input)
-	assert.NoError(t, err, "error should be nil")
+	assert.NoError(t, err)
 
 	sgf := s.ToSGF()
 	sgfix := s.ToSGFIX()
 
-	assert.Equal(t, len(sgf), len(input), "error with state to sgf")
+	assert.Equal(t, len(sgf), len(input))
 
-	assert.Equal(t, len(sgfix), 132, "error with state to sgf (indexes)")
+	assert.Equal(t, len(sgfix), 132)
 }
 
 func TestParseTTPAss(t *testing.T) {
 	input := sgfsamples.PassWithTT
 	s, err := state.FromSGF(input)
-	assert.NoError(t, err, "error should be nil")
+	assert.NoError(t, err)
 	node := s.Nodes()[358]
-	assert.Equal(t, node.XY, nil, "coord should be nil for pass")
+	assert.Equal(t, node.XY, nil)
 }

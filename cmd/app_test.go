@@ -24,7 +24,7 @@ import (
 
 func TestPing(t *testing.T) {
 	_, r, err := main.Setup(config.Test())
-	assert.NoError(t, err, "main")
+	assert.NoError(t, err)
 
 	req := httptest.NewRequest("GET", "/api/ping", nil)
 
@@ -32,20 +32,20 @@ func TestPing(t *testing.T) {
 	r.ServeHTTP(rec, req)
 
 	body, err := io.ReadAll(rec.Body)
-	assert.NoError(t, err, "ping")
+	assert.NoError(t, err)
 
 	pong := struct {
 		Message string `json:"message"`
 	}{}
 
 	err = json.Unmarshal(body, &pong)
-	assert.NoError(t, err, "unmarshal")
-	assert.Equal(t, pong.Message, "pong", "ping")
+	assert.NoError(t, err)
+	assert.Equal(t, pong.Message, "pong")
 }
 
 func TestTwitch(t *testing.T) {
 	h, r, err := main.Setup(config.Test())
-	assert.NoError(t, err, "main")
+	assert.NoError(t, err)
 
 	rec := httptest.NewRecorder()
 
@@ -58,6 +58,6 @@ func TestTwitch(t *testing.T) {
 	r.ServeHTTP(rec, req)
 
 	room, err := h.GetRoom("Board")
-	assert.NoError(t, err, "twitch")
-	assert.Equal(t, len(room.ToSGF()), 77, "twitch")
+	assert.NoError(t, err)
+	assert.Equal(t, len(room.ToSGF()), 77)
 }

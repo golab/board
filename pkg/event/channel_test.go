@@ -58,11 +58,11 @@ func TestEventChannel(t *testing.T) {
 	c := NewMockReadWriteCloser(queued)
 	ch := event.NewDefaultEventChannel(c)
 	evt, err := ch.ReceiveEvent()
-	assert.NoError(t, err, "eventchannel")
-	assert.Equal(t, evt.Type(), "test", "eventchannel")
-	assert.Equal(t, evt.Value().(string), "somevalue", "eventchannel")
-	assert.Equal(t, evt.User(), "user_123", "eventchannel")
+	assert.NoError(t, err)
+	assert.Equal(t, evt.Type(), "test")
+	assert.Equal(t, evt.Value().(string), "somevalue")
+	assert.Equal(t, evt.User(), "user_123")
 
 	err = ch.SendEvent(evt)
-	assert.NoError(t, err, "eventchannel")
+	assert.NoError(t, err)
 }
