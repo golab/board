@@ -106,7 +106,6 @@ func IsOGS(urlStr string) bool {
 }
 
 func (f *DefaultFetcher) ApprovedFetch(urlStr string) (string, error) {
-	fmt.Println(urlStr)
 	u, err := url.Parse(urlStr)
 	if err != nil {
 		return "", err

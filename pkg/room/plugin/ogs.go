@@ -31,11 +31,13 @@ type Room interface {
 	UploadSGF(string) event.Event
 }
 
+/*
 func GetUser(f fetch.Fetcher, id int) (string, error) {
 	data, err := f.Fetch(fmt.Sprintf("http://online-go.com/api/v1/players/%d/", id))
 	if err != nil {
 		return "", err
 	}
+	log.Println(string(data))
 	user := &User{}
 	err = json.Unmarshal([]byte(data), user)
 	if err != nil {
@@ -43,6 +45,7 @@ func GetUser(f fetch.Fetcher, id int) (string, error) {
 	}
 	return user.Username, nil
 }
+*/
 
 type User struct {
 	ID       int    `json:"id"`
@@ -335,23 +338,8 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 	return nil
 }
 
-//Unused for now Might want to add it back in
-// func (o *OGSConnector) ReviewGamedataToSGF(gamedata []any) string {
-// 	log.Println(gamedata)
-// 	log.Println(gamedata[0])
-
-// 	metaGameData := gamedata[0].(map[string]any)["gamedata"].(map[string]any)
-// 	sgf := o.GameInfoToSGF(metaGameData,"review")
-// 	sgf += o.initStateToSGF(metaGameData)
-
-// 	log.Println(sgf)
-// 	// Still needs to put all the stones into the SGF
-
-// 	return sgf
-// }
-
 func (o *OGSConnector) GamedataToSGF(gamedata map[string]any) string {
-	sgf := o.GameInfoToSGF(gamedata, "game")
+	sgf := o.GameInfoToSGF(gamedata)
 	sgf += o.initStateToSGF(gamedata)
 
 	for index, m := range gamedata["moves"].([]any) {
@@ -371,7 +359,15 @@ func (o *OGSConnector) GamedataToSGF(gamedata map[string]any) string {
 	return sgf
 }
 
-func (o *OGSConnector) GameInfoToSGF(gamedata map[string]any, ogsType string) string {
+func makeRank(r float64) string {
+	if r < 30 {
+		return fmt.Sprintf("%dk", int(30-r))
+	} else {
+		return fmt.Sprintf("%dd", int(r-30+1))
+	}
+}
+
+func (o *OGSConnector) GameInfoToSGF(gamedata map[string]any) string {
 	sgf := ""
 
 	size := int(gamedata["width"].(float64))
@@ -379,30 +375,16 @@ func (o *OGSConnector) GameInfoToSGF(gamedata map[string]any, ogsType string) st
 	name := gamedata["game_name"].(string)
 	rules := gamedata["rules"].(string)
 
-	if ogsType == "game" {
-		blackID := int(gamedata["black_player_id"].(float64))
-		whiteID := int(gamedata["white_player_id"].(float64))
-		black, err := GetUser(o.fetcher, blackID)
-		if err != nil {
-			black = "Black"
-		}
-		white, err := GetUser(o.fetcher, whiteID)
-		if err != nil {
-			white = "White"
-		}
-		sgf = fmt.Sprintf(
-			"(;GM[1]FF[4]CA[UTF-8]SZ[%d]PB[%s]PW[%s]RU[%s]KM[%f]GN[%s]",
-			size, black, white, rules, komi, name)
-	} else {
-		players := gamedata["players"].(map[string]any)
-		blackPlayer := players["black"].(map[string]any)
-		whitePlayer := players["white"].(map[string]any)
-		black := blackPlayer["name"].(string)
-		white := whitePlayer["name"].(string)
-		sgf = fmt.Sprintf(
-			"(;GM[1]FF[4]CA[UTF-8]SZ[%d]PB[%s]PW[%s]RU[%s]KM[%f]GN[%s]",
-			size, black, white, rules, komi, name)
-	}
+	players := gamedata["players"].(map[string]any)
+	blackPlayer := players["black"].(map[string]any)
+	whitePlayer := players["white"].(map[string]any)
+	black := blackPlayer["username"].(string)
+	white := whitePlayer["username"].(string)
+	blackRank := makeRank(blackPlayer["rank"].(float64))
+	whiteRank := makeRank(whitePlayer["rank"].(float64))
+	sgf = fmt.Sprintf(
+		"(;GM[1]FF[4]CA[UTF-8]SZ[%d]PB[%s]PW[%s]BR[%s]WR[%s]RU[%s]KM[%f]GN[%s]",
+		size, black, white, blackRank, whiteRank, rules, komi, name)
 	return sgf
 }
 
