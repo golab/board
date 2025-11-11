@@ -18,13 +18,10 @@ import (
 	"github.com/jarednogo/board/pkg/core"
 )
 
-func TestScore(t *testing.T) {
-
+func TestScore1(t *testing.T) {
+	testname := "scoring1"
 	s, err := FromSGF(sgfsamples.Scoring1)
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	assert.NoError(t, err, testname)
 
 	s.fastForward()
 
@@ -53,44 +50,52 @@ func TestScore(t *testing.T) {
 
 	current := s.Current()
 
-	if len(blackArea) != 56 {
-		t.Errorf("expected len(blackArea) == 56 (got %d)", len(blackArea))
+	assert.Equal(t, len(blackArea), 56, testname)
+	assert.Equal(t, len(whiteArea), 40, testname)
+
+	assert.Equal(t, len(blackDead), 9, testname)
+	assert.Equal(t, len(whiteDead), 9, testname)
+
+	assert.Equal(t, current.BlackCaps, 27, testname)
+	assert.Equal(t, current.WhiteCaps, 25, testname)
+
+	assert.Equal(t, len(dame), 7, testname)
+}
+
+func TestScore2(t *testing.T) {
+	testname := "scoring2"
+	s, err := FromSGF(sgfsamples.Scoring2)
+	assert.NoError(t, err, testname)
+
+	s.fastForward()
+
+	dead := [][2]int{
+		{3, 14},
+		{15, 12},
 	}
 
-	if len(whiteArea) != 40 {
-		t.Errorf("expected len(whiteArea) == 40 (got %d)", len(whiteArea))
+	markedDead := core.NewCoordSet()
+	for _, d := range dead {
+		coord := &core.Coord{X: d[0], Y: d[1]}
+		gp := s.Board().FindGroup(coord)
+		markedDead.AddAll(gp.Coords)
 	}
 
-	if len(blackDead) != 9 {
-		t.Errorf("expected len(blackDead) == 9 (got %d)", len(blackDead))
-	}
+	blackArea, whiteArea, blackDead, whiteDead, dame := s.Board().Score(
+		markedDead, core.NewCoordSet())
 
-	if len(whiteDead) != 9 {
-		t.Errorf("expected len(whiteDead) == 9 (got %d)", len(whiteDead))
-	}
+	current := s.Current()
 
-	if current.BlackCaps != 27 {
-		t.Errorf("expected BlackCaps == 27 (got %d)", current.BlackCaps)
-	}
+	assert.Equal(t, len(blackArea), 72, testname)
+	assert.Equal(t, len(whiteArea), 62, testname)
 
-	if current.WhiteCaps != 25 {
-		t.Errorf("expected WhiteCaps == 25 (got %d)", current.WhiteCaps)
-	}
+	assert.Equal(t, len(blackDead), 2, testname)
+	assert.Equal(t, len(whiteDead), 2, testname)
 
-	if len(dame) != 7 {
-		t.Errorf("expected len(dame) == 7 (got %d)", len(dame))
-	}
+	assert.Equal(t, current.BlackCaps, 2, testname)
+	assert.Equal(t, current.WhiteCaps, 11, testname)
 
-	blackScore := len(blackArea) + len(whiteDead) + current.BlackCaps
-	whiteScore := len(whiteArea) + len(blackDead) + current.WhiteCaps
-
-	if blackScore != 92 {
-		t.Errorf("expected blackScore == 92 (got %d)", blackScore)
-	}
-
-	if whiteScore != 74 {
-		t.Errorf("expected whiteScore == 74 (got %d)", whiteScore)
-	}
+	assert.Equal(t, len(dame), 8, testname)
 }
 
 func TestState3(t *testing.T) {
