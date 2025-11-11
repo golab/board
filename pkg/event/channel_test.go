@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package event_test
 
 import (
+	"fmt"
 	"io"
 	"testing"
 
@@ -61,6 +62,36 @@ func TestEventChannel(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, evt.Type(), "test")
 	assert.Equal(t, evt.Value().(string), "somevalue")
+	assert.Equal(t, evt.User(), "user_123")
+
+	err = ch.SendEvent(evt)
+	assert.NoError(t, err)
+}
+
+func TestEventChannelBig(t *testing.T) {
+	msg := ""
+	for i := 0; i < 1024; i++ {
+		msg += "A"
+	}
+	e := fmt.Sprintf(`{"event": "test", "value": "%s", "userid": "user_123"}`, msg)
+	queued := [][]byte{}
+	queued = append(queued, []byte{52, 4, 0, 0})
+	for i := 0; i < int(len(e)/64)+1; i++ {
+		start := 64 * i
+		end := min(64*(i+1), len(e))
+		chunk := e[start:end]
+		queued = append(queued, []byte(chunk))
+	}
+
+	t.Logf("%d", len(e))
+
+	c := NewMockReadWriteCloser(queued)
+	ch := event.NewDefaultEventChannel(c)
+	evt, err := ch.ReceiveEvent()
+	assert.NoError(t, err)
+	_ = evt
+	assert.Equal(t, evt.Type(), "test")
+	assert.Equal(t, evt.Value().(string), msg)
 	assert.Equal(t, evt.User(), "user_123")
 
 	err = ch.SendEvent(evt)

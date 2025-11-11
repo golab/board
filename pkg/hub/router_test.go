@@ -69,3 +69,11 @@ func TestExtRouter(t *testing.T) {
 
 	assert.Equal(t, len(room.ToSGF()), 113)
 }
+
+func TestSocketRouter(t *testing.T) {
+	h, err := hub.NewHub(config.Test())
+	assert.NoError(t, err)
+
+	r := chi.NewRouter()
+	r.Mount("/socket", h.SocketRouter())
+}
