@@ -360,8 +360,9 @@ func (o *OGSConnector) GamedataToSGF(gamedata map[string]any) string {
 }
 
 func makeRank(r float64) string {
+	log.Println(r)
 	if r < 30 {
-		return fmt.Sprintf("%dk", int(30-r))
+		return fmt.Sprintf("%dk", int(30-r+1))
 	} else {
 		return fmt.Sprintf("%dd", int(r-30+1))
 	}
