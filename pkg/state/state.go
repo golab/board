@@ -12,6 +12,7 @@ package state
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -100,7 +101,14 @@ func (s *State) toSGF(indexes bool) string {
 		node := cur.(*core.TreeNode)
 		result += ";"
 		// throw in other fields
-		for key, multifield := range node.Fields {
+		fields := []string{}
+		for f := range node.Fields {
+			fields = append(fields, f)
+		}
+		sort.Strings(fields)
+
+		for _, key := range fields {
+			multifield := node.Fields[key]
 			if key == "IX" {
 				continue
 			}

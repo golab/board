@@ -12,6 +12,7 @@ package core
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -75,7 +76,15 @@ func (n *SGFNode) ToSGF(root bool) string {
 		result += "("
 	}
 	result += ";"
-	for field, values := range n.Fields {
+	fields := []string{}
+	for f := range n.Fields {
+		fields = append(fields, f)
+	}
+
+	sort.Strings(fields)
+
+	for _, field := range fields {
+		values := n.Fields[field]
 		result += field
 		for _, value := range values {
 			result += "["
