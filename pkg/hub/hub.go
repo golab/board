@@ -177,7 +177,7 @@ func (h *Hub) ReadMessages() {
 	defer h.db.DeleteAllMessages() //nolint:errcheck
 
 	for _, msg := range messages {
-		m := message.NewMessage(msg.Text, msg.TTL)
+		m := message.New(msg.Text, msg.TTL)
 		h.messages = append(h.messages, m)
 	}
 }

@@ -9,43 +9,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 // the core package provides basic functionality to all the major components of the code
-package message
+package message_test
 
 import (
-	"sync"
-	"time"
+	"testing"
+
+	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/pkg/message"
 )
 
-type Message struct {
-	Text      string
-	ExpiresAt *time.Time
-	notified  map[string]bool
-	mu        sync.Mutex
-}
+func TestMessage(t *testing.T) {
+	m := message.New("some message", 30)
 
-func New(text string, ttl int) *Message {
-	// calculate the expiration time using TTL
-	now := time.Now()
-	expiresAt := now.Add(time.Duration(ttl) * time.Second)
-
-	return &Message{
-		Text:      text,
-		ExpiresAt: &expiresAt,
-		notified:  make(map[string]bool),
-		mu:        sync.Mutex{},
-	}
-}
-
-func (m *Message) MarkNotified(id string) {
-	m.mu.Lock()
-	m.notified[id] = true
-	m.mu.Unlock()
-}
-
-func (m *Message) IsNotified(id string) bool {
-	var n bool
-	m.mu.Lock()
-	_, n = m.notified[id]
-	m.mu.Unlock()
-	return n
+	m.MarkNotified("user123")
+	assert.True(t, m.IsNotified("user123"))
 }

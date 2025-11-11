@@ -170,6 +170,19 @@ func TestCommandPaste(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err)
 
+	_, err = state.NewRightCommand().Execute(s)
+	assert.NoError(t, err)
+	_, err = state.NewRightCommand().Execute(s)
+	assert.NoError(t, err)
+	_, err = state.NewRightCommand().Execute(s)
+	assert.NoError(t, err)
+	_, err = state.NewRightCommand().Execute(s)
+	assert.NoError(t, err)
+	_, err = state.NewCopyCommand().Execute(s)
+	assert.NoError(t, err)
+	_, err = state.NewLeftCommand().Execute(s)
+	assert.NoError(t, err)
+
 	_, err = state.NewPasteCommand().Execute(s)
 	assert.NoError(t, err)
 }

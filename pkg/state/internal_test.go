@@ -243,9 +243,14 @@ func TestGenerateMarks(t *testing.T) {
 	_, err = NewAddLetterCommand(coord, letter).Execute(s)
 	assert.NoError(t, err)
 
+	// add a number
 	coord = &core.Coord{X: 12, Y: 12}
 	number := 1
 	_, err = NewAddNumberCommand(coord, number).Execute(s)
+	assert.NoError(t, err)
+
+	// add pen stroke
+	_, err = NewDrawCommand(10.0, 10.0, 20.0, 20.0, "#AAAAAA").Execute(s)
 	assert.NoError(t, err)
 
 	marks := s.generateMarks()
@@ -266,4 +271,6 @@ func TestGenerateMarks(t *testing.T) {
 	assert.Equal(t, marks.Labels[0].Text, "A")
 	assert.Equal(t, marks.Labels[1].Text, "1")
 
+	assert.Equal(t, len(marks.Pens), 1)
+	assert.Equal(t, marks.Pens[0].Color, "#AAAAAA")
 }

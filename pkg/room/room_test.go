@@ -48,7 +48,7 @@ func TestBroadcastMessage(t *testing.T) {
 	r.RegisterConnection(mock1)
 	r.RegisterConnection(mock2)
 
-	message := message.NewMessage("foobar", 30)
+	message := message.New("foobar", 30)
 	r.BroadcastHubMessage(message)
 
 	assert.Equal(t, len(mock1.SavedEvents), 2)
