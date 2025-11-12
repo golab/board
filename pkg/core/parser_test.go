@@ -128,6 +128,26 @@ func TestEmpty(t *testing.T) {
 	}
 }
 
+var oddTests = []struct {
+	input string
+	err   bool
+}{
+	{"()", false},
+	{"(;)", false},
+	{"(;;;)", false},
+	{"garbage(GM[1])", false},
+}
+
+func TestOdd(t *testing.T) {
+	for _, tt := range oddTests {
+		t.Run(tt.input, func(t *testing.T) {
+			p := core.NewParser(tt.input)
+			_, err := p.Parse()
+			assert.Equal(t, err != nil, tt.err)
+		})
+	}
+}
+
 func TestChineseNames(t *testing.T) {
 	p := core.NewParser(sgfsamples.ChineseNames)
 	root, err := p.Parse()
