@@ -13,7 +13,6 @@ package plugin
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/jarednogo/board/pkg/core"
@@ -37,7 +36,6 @@ func GetUser(f fetch.Fetcher, id int) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Println(string(data))
 	user := &User{}
 	err = json.Unmarshal([]byte(data), user)
 	if err != nil {
@@ -66,7 +64,6 @@ func GetCreds(f fetch.Fetcher) (*Creds, error) {
 	resp := &Creds{}
 	err = json.Unmarshal([]byte(data), resp)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 	return resp, nil
@@ -203,7 +200,6 @@ func (o *OGSConnector) Ping() {
 		payload := make(map[string]any)
 		payload["client"] = time.Now().UnixMilli()
 		if err := o.Send("net/ping", payload); err != nil {
-			log.Println(err)
 			o.End()
 			return
 		}
@@ -232,21 +228,20 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 
 		// break on error
 		if err != nil {
-			log.Println(err)
 			break
 		}
 
 		// if err == nil and data == nil
 		// then break
 		if data == nil {
-			log.Println("socket closed")
+			//log.Println("socket closed")
 			break
 		}
 
 		arr := make([]any, 2)
 		err = json.Unmarshal(data, &arr)
 		if err != nil {
-			log.Println(err)
+			//log.Println(err)
 			continue
 		}
 		topic := arr[0].(string)
@@ -291,7 +286,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 
 			// eventually we can pull height, game_name, player names, etc
 		} else if topic == fmt.Sprintf("review/%d/r", gameID) {
-			log.Printf("review/%d/r", gameID)
+			//log.Printf("review/%d/r", gameID)
 			payload := arr[1].(map[string]any)
 			if _, ok := payload["m"]; !ok {
 				continue
@@ -360,7 +355,6 @@ func (o *OGSConnector) GamedataToSGF(gamedata map[string]any) string {
 }
 
 func makeRank(r float64) string {
-	log.Println(r)
 	if r < 30 {
 		return fmt.Sprintf("%dk", int(30-r+1))
 	} else {
