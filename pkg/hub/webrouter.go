@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
-	"log"
 	"net/http"
 	"strings"
 
@@ -53,7 +52,7 @@ func (h *Hub) Debug(w http.ResponseWriter, r *http.Request) {
 	data := h.HandleOp("debug", boardID)
 	_, err := w.Write([]byte(data))
 	if err != nil {
-		log.Println(err)
+		h.logger.Error("/debug", "err", err)
 	}
 }
 
@@ -62,7 +61,7 @@ func (h *Hub) Sgfix(w http.ResponseWriter, r *http.Request) {
 	data := h.HandleOp("sgfix", boardID)
 	_, err := w.Write([]byte(data))
 	if err != nil {
-		log.Println(err)
+		h.logger.Error("/sgfix", "err", err)
 	}
 }
 
@@ -71,7 +70,7 @@ func (h *Hub) Sgf(w http.ResponseWriter, r *http.Request) {
 	data := h.HandleOp("sgf", boardID)
 	_, err := w.Write([]byte(data))
 	if err != nil {
-		log.Println(err)
+		h.logger.Error("/sgf", "err", err)
 	}
 }
 
@@ -92,10 +91,7 @@ func renderSinglePage(w http.ResponseWriter, page string) {
 	if templ == nil {
 		return
 	}
-	err := templ.Execute(w, nil)
-	if err != nil {
-		log.Println(err)
-	}
+	templ.Execute(w, nil) //nolint:errcheck
 }
 
 func includeCommon(w http.ResponseWriter, page string) {
@@ -105,10 +101,7 @@ func includeCommon(w http.ResponseWriter, page string) {
 	if templ == nil {
 		return
 	}
-	err := templ.Execute(w, nil)
-	if err != nil {
-		log.Println(err)
-	}
+	templ.Execute(w, nil) //nolint:errcheck
 }
 
 func about(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +122,7 @@ func board(w http.ResponseWriter, r *http.Request) {
 		page400(w, r)
 		return
 	}
-	renderSinglePage(w, "board.html")
+	renderSinglePage(w, "board.html") //nolint:errcheck
 }
 
 func newBoard(w http.ResponseWriter, r *http.Request) {
@@ -143,13 +136,15 @@ func newBoard(w http.ResponseWriter, r *http.Request) {
 }
 
 func page400(w http.ResponseWriter, r *http.Request) {
-	log.Printf("400 - %s\n", r.URL)
 	includeCommon(w, "400.html")
 }
 
 func page404(w http.ResponseWriter, r *http.Request) {
-	log.Printf("404 - %s\n", r.URL)
 	includeCommon(w, "404.html")
+}
+
+func page500(w http.ResponseWriter, r *http.Request) { //nolint:unused
+	includeCommon(w, "500.html")
 }
 
 //static

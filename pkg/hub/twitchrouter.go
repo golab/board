@@ -14,7 +14,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -116,7 +115,7 @@ func (h *Hub) twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusForbidden)
 				return
 			}
-			log.Println("unsubscribing:", id, user)
+			h.logger.Info("unsubscribing", "id", id, "user", user)
 		} else {
 			// subscribe, get subscription id
 			id, err := tc.Subscribe(user, token)
@@ -125,7 +124,7 @@ func (h *Hub) twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			log.Println("id of new subscription:", id, "for user:", user)
+			h.logger.Info("new subscription", "id", id, "user", user)
 		}
 	}
 
@@ -133,7 +132,7 @@ func (h *Hub) twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
 	//w.Write([]byte(`{"message": "success"}`))
 	_, err = w.Write([]byte("success"))
 	if err != nil {
-		log.Println(err)
+		h.logger.Error("twitchCallbackGet:write", "err", err)
 	}
 }
 
@@ -145,7 +144,7 @@ func (h *Hub) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 	var req twitch.TwitchJSON
 	err := json.Unmarshal(body, &req)
 	if err != nil {
-		log.Println(err)
+		h.logger.Error("twitchCallbackPost:unmarshal", "err", err)
 		return
 	}
 
@@ -153,7 +152,7 @@ func (h *Hub) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 	if req.Challenge != "" {
 		_, err = w.Write([]byte(req.Challenge))
 		if err != nil {
-			log.Println(err)
+			h.logger.Error("twitchCallbackPost:write", "err", err)
 		}
 		return
 	}
@@ -169,26 +168,26 @@ func (h *Hub) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 	// do verification
 	v := twitch.Verify(h.cfg.Twitch.Secret, message, signature)
 	if !v {
-		log.Println("unverified message")
+		h.logger.Info("unverified message")
 		return
 	}
 
 	// try to pull the subscription
 	subsc := req.Subscription
 	if subsc != nil {
-		log.Println(subsc)
+		h.logger.Info("subscription parsed", "subscription", subsc)
 	}
 
 	// try to pull out the event
 	evt := req.Event
 	if evt == nil {
-		log.Println("no event parsed")
+		h.logger.Info("no event parsed")
 		return
 	}
 
 	// try to pull out the message
 	if evt.Message == nil {
-		log.Println("no message parsed")
+		h.logger.Info("no message parsed")
 		return
 	}
 
@@ -200,17 +199,17 @@ func (h *Hub) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 	text := evt.Message.Text
 	chat, err := twitch.Parse(text)
 	if err != nil {
-		//log.Println(err)
+		h.logger.Error("twitchCallBackPost:parse", "err", err)
 		return
 	}
 
 	// only care about the relevant commands
 	if chat.Command != "branch" && chat.Command != "setboard" {
-		log.Println("invalid command:", chat.Command)
+		h.logger.Info("invalid command", "command", chat.Command)
 		return
 	}
 
-	log.Printf("received: chat.Command=%s, chat.Body=%s\n", chat.Command, chat.Body)
+	h.logger.Info("received", "command", chat.Command, "body", chat.Body)
 
 	// make sure only the broadcaster can set the room
 	switch chat.Command {
@@ -222,28 +221,28 @@ func (h *Hub) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 			}
 			roomID := core.Sanitize(tokens[0])
 			if len(roomID) == 0 {
-				log.Println("empty roomID")
+				h.logger.Info("empty roomID")
 				return
 			}
 
-			log.Println("setting roomid", broadcaster, roomID)
+			h.logger.Info("setting roomid", "broadcaster", broadcaster, "room_id", roomID)
 			err := h.db.TwitchSetRoom(broadcaster, roomID)
 			if err != nil {
-				log.Println(err)
+				h.logger.Error("error in setboard", "err", err)
 			}
 		} else {
-			log.Println("unauthorized user tried to setboard")
+			h.logger.Info("unauthorized user tried to setboard")
 		}
 	case "branch":
-		log.Println("grafting:", chat.Body)
+		h.logger.Info("grafting", "body", chat.Body)
 		branch := strings.ToLower(chat.Body)
 
 		roomID := h.db.TwitchGetRoom(broadcaster)
 		if roomID == "" {
-			log.Println("room not set for", broadcaster)
+			h.logger.Info("room not set", "broadcaster", broadcaster)
 			return
 		}
-		log.Println("room found for", broadcaster, roomID)
+		h.logger.Info("room found", "broadcaster", broadcaster, "room_id", roomID)
 		r := h.GetOrCreateRoom(roomID)
 
 		// create the event
