@@ -14,45 +14,45 @@ import (
 	"testing"
 )
 
-func Equal[V comparable](t *testing.T, got, expected V, msg string) {
+func Equal[V comparable](t *testing.T, got, expected V) {
 	t.Helper()
 	if got != expected {
-		t.Errorf("%s: (expected %v, got %v)", msg, expected, got)
+		t.Errorf("expected %v, got %v", expected, got)
 	}
 }
 
-func NotEqual[V comparable](t *testing.T, got, expectednot V, msg string) {
+func NotEqual[V comparable](t *testing.T, got, expectednot V) {
 	t.Helper()
 	if got == expectednot {
-		t.Errorf("%s: (expected something else, got %v)", msg, got)
+		t.Errorf("expected something else, got %v", got)
 	}
 }
 
-func True(t *testing.T, got bool, msg string) {
-	Equal(t, got, true, msg)
+func True(t *testing.T, got bool) {
+	Equal(t, got, true)
 }
 
-func False(t *testing.T, got bool, msg string) {
-	Equal(t, got, false, msg)
+func False(t *testing.T, got bool) {
+	Equal(t, got, false)
 }
 
-func Zero[V comparable](t *testing.T, got V, msg string) {
+func Zero[V comparable](t *testing.T, got V) {
 	var expected V
-	Equal(t, got, expected, msg)
+	Equal(t, got, expected)
 }
 
-func NoError(t *testing.T, err error, msg string) {
+func NoError(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
-		t.Errorf("%s: (expected nil error, got %v)", msg, err)
+		t.Errorf("expected nil error, got %v", err)
 	}
 }
 
-func ErrorIs(t *testing.T, got, expected error, msg string) {
-	Equal(t, got, expected, msg)
+func ErrorIs(t *testing.T, got, expected error) {
+	Equal(t, got, expected)
 }
 
-func NotNil[V comparable](t *testing.T, got V, msg string) {
+func NotNil[V comparable](t *testing.T, got V) {
 	var vnil V
-	NotEqual(t, got, vnil, msg)
+	NotEqual(t, got, vnil)
 }

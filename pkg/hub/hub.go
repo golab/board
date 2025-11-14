@@ -18,9 +18,10 @@ import (
 	"time"
 
 	"github.com/jarednogo/board/pkg/config"
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/event"
+	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/loader"
+	"github.com/jarednogo/board/pkg/message"
 	"github.com/jarednogo/board/pkg/room"
 	"golang.org/x/net/websocket"
 )
@@ -43,7 +44,7 @@ func ParseURL(url string) (string, string, string) {
 
 type Hub struct {
 	rooms    map[string]*room.Room
-	messages []*core.Message
+	messages []*message.Message
 	db       loader.Loader
 	mu       sync.Mutex
 	cfg      *config.Config
@@ -67,7 +68,7 @@ func NewHubWithDB(db loader.Loader, cfg *config.Config) (*Hub, error) {
 	}
 	s := &Hub{
 		rooms:    make(map[string]*room.Room),
-		messages: []*core.Message{},
+		messages: []*message.Message{},
 		db:       db,
 		cfg:      cfg,
 	}
@@ -118,6 +119,10 @@ func (h *Hub) Load() {
 		if err != nil {
 			log.Println(err)
 			continue
+		}
+
+		if h.cfg.Mode == config.ModeTest {
+			r.SetFetcher(fetch.NewEmptyFetcher())
 		}
 
 		id := r.ID()
@@ -172,14 +177,14 @@ func (h *Hub) ReadMessages() {
 	defer h.db.DeleteAllMessages() //nolint:errcheck
 
 	for _, msg := range messages {
-		m := core.NewMessage(msg.Text, msg.TTL)
+		m := message.New(msg.Text, msg.TTL)
 		h.messages = append(h.messages, m)
 	}
 }
 
 func (h *Hub) SendMessages() {
 	// go through each server message
-	keep := []*core.Message{}
+	keep := []*message.Message{}
 	for _, m := range h.messages {
 		// check time
 		now := time.Now()
@@ -218,6 +223,9 @@ func (h *Hub) GetOrCreateRoom(roomID string) *room.Room {
 	if _, ok := h.rooms[roomID]; !ok {
 		log.Println("New room:", roomID)
 		r := room.NewRoom(roomID)
+		if h.cfg.Mode == config.ModeTest {
+			r.SetFetcher(fetch.NewEmptyFetcher())
+		}
 		h.rooms[roomID] = r
 		go h.Heartbeat(roomID)
 	}

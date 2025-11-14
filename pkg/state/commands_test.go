@@ -21,183 +21,196 @@ import (
 
 func TestCommandAddStone(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	coord := &core.Coord{X: 9, Y: 9}
 	color := core.Black
 	_, err = state.NewAddStoneCommand(coord, color).Execute(s)
-	assert.NoError(t, err, "s.CommandAddStone")
+	assert.NoError(t, err)
 
 }
 
 func TestCommandPass(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	_, err = state.NewPassCommand(core.Black).Execute(s)
-	assert.NoError(t, err, "s.CommandPass")
+	assert.NoError(t, err)
 }
 
 func TestCommandRemoveStone(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	coord := &core.Coord{X: 9, Y: 9}
 	_, err = state.NewRemoveStoneCommand(coord).Execute(s)
-	assert.NoError(t, err, "s.CommandRemoveStone")
+	assert.NoError(t, err)
 }
 
 func TestCommandRemoveMark(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	coord := &core.Coord{X: 9, Y: 9}
 	_, err = state.NewRemoveMarkCommand(coord).Execute(s)
-	assert.NoError(t, err, "s.CommandRemoveMark")
+	assert.NoError(t, err)
 }
 
 func TestCommandLeft(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	_, err = state.NewLeftCommand().Execute(s)
-	assert.NoError(t, err, "s.CommandLeft")
+	assert.NoError(t, err)
 }
 
 func TestCommandRight(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	_, err = state.NewRightCommand().Execute(s)
-	assert.NoError(t, err, "s.CommandRight")
+	assert.NoError(t, err)
 }
 
 func TestCommandUp(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	_, err = state.NewUpCommand().Execute(s)
-	assert.NoError(t, err, "s.CommandUp")
+	assert.NoError(t, err)
 }
 
 func TestCommandDown(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	_, err = state.NewDownCommand().Execute(s)
-	assert.NoError(t, err, "s.CommandDown")
+	assert.NoError(t, err)
 }
 
 func TestCommandRewind(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	_, err = state.NewRewindCommand().Execute(s)
-	assert.NoError(t, err, "s.CommandRewind")
+	assert.NoError(t, err)
 }
 
 func TestCommandFastForward(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	_, err = state.NewFastForwardCommand().Execute(s)
-	assert.NoError(t, err, "s.CommandFastForward")
+	assert.NoError(t, err)
 }
 
 func TestCommandGotoGrid(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	index := 1
 
 	_, err = state.NewGotoGridCommand(index).Execute(s)
-	assert.NoError(t, err, "s.CommandGotoGrid")
+	assert.NoError(t, err)
 }
 
 func TestCommandGotoCoord(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	coord := &core.Coord{X: 9, Y: 9}
 
 	_, err = state.NewGotoCoordCommand(coord).Execute(s)
-	assert.NoError(t, err, "s.CommandGotoCoord")
+	assert.NoError(t, err)
 }
 
 func TestCommandComment(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	comment := "some comment"
 
 	_, err = state.NewCommentCommand(comment).Execute(s)
-	assert.NoError(t, err, "s.CommandComment")
+	assert.NoError(t, err)
 }
 
 func TestCommandDraw(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	_, err = state.NewDrawCommand(0.0, 0.0, 5.0, 5.0, "#000000").Execute(s)
-	assert.NoError(t, err, "s.CommandDraw")
+	assert.NoError(t, err)
 }
 
 func TestCommandErasePen(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	_, err = state.NewErasePenCommand().Execute(s)
-	assert.NoError(t, err, "s.CommandErasePen")
+	assert.NoError(t, err)
 }
 
 func TestCommandCut(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	_, err = state.NewCutCommand().Execute(s)
-	assert.NoError(t, err, "s.CommandCut")
+	assert.NoError(t, err)
 }
 
 func TestCommandCopy(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	_, err = state.NewCopyCommand().Execute(s)
-	assert.NoError(t, err, "s.CommandCopy")
+	assert.NoError(t, err)
 }
 
 func TestCommandPaste(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
+
+	_, err = state.NewRightCommand().Execute(s)
+	assert.NoError(t, err)
+	_, err = state.NewRightCommand().Execute(s)
+	assert.NoError(t, err)
+	_, err = state.NewRightCommand().Execute(s)
+	assert.NoError(t, err)
+	_, err = state.NewRightCommand().Execute(s)
+	assert.NoError(t, err)
+	_, err = state.NewCopyCommand().Execute(s)
+	assert.NoError(t, err)
+	_, err = state.NewLeftCommand().Execute(s)
+	assert.NoError(t, err)
 
 	_, err = state.NewPasteCommand().Execute(s)
-	assert.NoError(t, err, "s.CommandPaste")
+	assert.NoError(t, err)
 }
 
 func TestCommandGraft(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	text := "a1 b2 c3 d4"
 
 	_, err = state.NewGraftCommand(text).Execute(s)
-	assert.NoError(t, err, "s.CommandGraft")
+	assert.NoError(t, err)
 }
 
 func TestCommandScore(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	_, err = state.NewScoreCommand().Execute(s)
-	assert.NoError(t, err, "s.CommandScore")
+	assert.NoError(t, err)
 }
 
 func TestCommandMarkDead(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
-	assert.NoError(t, err, "state.FromSGF")
+	assert.NoError(t, err)
 
 	coord := &core.Coord{X: 9, Y: 9}
 
 	_, err = state.NewMarkDeadCommand(coord).Execute(s)
-	assert.NoError(t, err, "s.CommandMarkDead")
+	assert.NoError(t, err)
 }

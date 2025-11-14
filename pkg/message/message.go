@@ -9,7 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 // the core package provides basic functionality to all the major components of the code
-package core
+package message
 
 import (
 	"sync"
@@ -23,7 +23,7 @@ type Message struct {
 	mu        sync.Mutex
 }
 
-func NewMessage(text string, ttl int) *Message {
+func New(text string, ttl int) *Message {
 	// calculate the expiration time using TTL
 	now := time.Now()
 	expiresAt := now.Add(time.Duration(ttl) * time.Second)

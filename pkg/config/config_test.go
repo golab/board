@@ -8,40 +8,58 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package state_test
+package config_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/sgfsamples"
-	"github.com/jarednogo/board/pkg/state"
+	"github.com/jarednogo/board/pkg/config"
 )
 
-func TestState(t *testing.T) {
-	s, err := state.FromSGF(sgfsamples.SimpleFourMoves)
+func TestDefaultConfig(t *testing.T) {
+	cfg := config.Default()
 
-	assert.NoError(t, err)
-	assert.Equal(t, s.Size(), 19)
+	assert.Equal(t, cfg.Mode, config.ModeProd)
 }
 
-func TestState2(t *testing.T) {
-	input := sgfsamples.SimpleFourMoves
-	s, err := state.FromSGF(input)
-	assert.NoError(t, err)
+func TestTestConfig(t *testing.T) {
+	cfg := config.Test()
 
-	sgf := s.ToSGF()
-	sgfix := s.ToSGFIX()
-
-	assert.Equal(t, len(sgf), len(input))
-
-	assert.Equal(t, len(sgfix), 132)
+	assert.Equal(t, cfg.Mode, config.ModeTest)
 }
 
-func TestParseTTPAss(t *testing.T) {
-	input := sgfsamples.PassWithTT
-	s, err := state.FromSGF(input)
+func TestNewConfig(t *testing.T) {
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "config.yaml")
+	data := `
+mode: prod
+server:
+  host: localhost
+  port: 10001
+  url: http://localhost:10001
+db:
+  type: sqlite
+  path: /root/config/board.db
+twitch:
+  client_id: abc
+  secret: 123
+  bot_id: xyz
+`
+	err := os.WriteFile(path, []byte(data), 0o644)
 	assert.NoError(t, err)
-	node := s.Nodes()[358]
-	assert.Equal(t, node.XY, nil)
+
+	cfg, err := config.New(path)
+	assert.NoError(t, err)
+	assert.Equal(t, cfg.Mode, config.ModeProd)
+	assert.Equal(t, cfg.Server.Host, "localhost")
+	assert.Equal(t, cfg.Server.Port, 10001)
+	assert.Equal(t, cfg.Server.URL, "http://localhost:10001")
+	assert.Equal(t, cfg.DB.Type, config.DBConfigTypeSqlite)
+	assert.Equal(t, cfg.DB.Path, "/root/config/board.db")
+	assert.Equal(t, cfg.Twitch.ClientID, "abc")
+	assert.Equal(t, cfg.Twitch.Secret, "123")
+	assert.Equal(t, cfg.Twitch.BotID, "xyz")
 }

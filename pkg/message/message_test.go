@@ -8,45 +8,19 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package hub
+// the core package provides basic functionality to all the major components of the code
+package message_test
 
 import (
-	"fmt"
-	"net/http"
-	"strings"
+	"testing"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/jarednogo/board/pkg/core"
-	"github.com/jarednogo/board/pkg/event"
+	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/pkg/message"
 )
 
-func (h *Hub) Upload(w http.ResponseWriter, r *http.Request) {
-	url := r.FormValue("url")
-	boardID := r.FormValue("board_id")
-	boardID = core.Sanitize(boardID)
-	if len(strings.TrimSpace(boardID)) == 0 {
-		boardID = core.UUID4()
-	}
-	newroom := h.GetOrCreateRoom(boardID)
+func TestMessage(t *testing.T) {
+	m := message.New("some message", 30)
 
-	var evt event.Event
-	if url != "" {
-		evt = event.NewEvent("request_sgf", url)
-	} else {
-		http.Error(w, "bad request", http.StatusBadRequest)
-		return
-	}
-	newroom.HandleAny(evt)
-
-	redirect := fmt.Sprintf("/b/%s", boardID)
-	http.Redirect(w, r, redirect, http.StatusFound)
-}
-
-func (h *Hub) ExtRouter() http.Handler {
-	r := chi.NewRouter()
-
-	// stateful endpoints
-	r.Get("/upload", h.Upload)
-
-	return r
+	m.MarkNotified("user123")
+	assert.True(t, m.IsNotified("user123"))
 }

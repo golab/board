@@ -24,7 +24,7 @@ type StateJSON struct {
 }
 
 func (s *State) Save() *StateJSON {
-	sgf := s.ToSGF(true)
+	sgf := s.ToSGFIX()
 	encoded := base64.StdEncoding.EncodeToString([]byte(sgf))
 	loc := s.locate()
 	prefs := s.prefs()

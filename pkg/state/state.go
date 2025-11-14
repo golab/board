@@ -12,6 +12,7 @@ package state
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -78,7 +79,15 @@ func (s *State) AnyMove() {
 	s.markedDame = core.NewCoordSet()
 }
 
-func (s *State) ToSGF(indexes bool) string {
+func (s *State) ToSGF() string {
+	return s.toSGF(false)
+}
+
+func (s *State) ToSGFIX() string {
+	return s.toSGF(true)
+}
+
+func (s *State) toSGF(indexes bool) string {
 	result := "("
 	stack := []any{s.root}
 	for len(stack) > 0 {
@@ -92,7 +101,14 @@ func (s *State) ToSGF(indexes bool) string {
 		node := cur.(*core.TreeNode)
 		result += ";"
 		// throw in other fields
-		for key, multifield := range node.Fields {
+		fields := []string{}
+		for f := range node.Fields {
+			fields = append(fields, f)
+		}
+		sort.Strings(fields)
+
+		for _, key := range fields {
+			multifield := node.Fields[key]
 			if key == "IX" {
 				continue
 			}

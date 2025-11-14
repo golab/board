@@ -33,3 +33,25 @@ func (mf *MockFetcher) Fetch(s string) (string, error) {
 func (mf *MockFetcher) ApprovedFetch(s string) (string, error) {
 	return mf.sgf, nil
 }
+
+type EmptyFetcher struct{}
+
+func NewEmptyFetcher() *EmptyFetcher {
+	return &EmptyFetcher{}
+}
+
+func (f *EmptyFetcher) OGSCheckEnded(s string) (bool, error) {
+	return true, nil
+}
+
+func (f *EmptyFetcher) FetchOGS(s string) (string, error) {
+	return "", nil
+}
+
+func (f *EmptyFetcher) Fetch(s string) (string, error) {
+	return "", nil
+}
+
+func (f *EmptyFetcher) ApprovedFetch(s string) (string, error) {
+	return "", nil
+}

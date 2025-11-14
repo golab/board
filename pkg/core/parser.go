@@ -12,6 +12,7 @@ package core
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -75,7 +76,15 @@ func (n *SGFNode) ToSGF(root bool) string {
 		result += "("
 	}
 	result += ";"
-	for field, values := range n.Fields {
+	fields := []string{}
+	for f := range n.Fields {
+		fields = append(fields, f)
+	}
+
+	sort.Strings(fields)
+
+	for _, field := range fields {
+		values := n.Fields[field]
 		result += field
 		for _, value := range values {
 			result += "["
@@ -112,6 +121,7 @@ func NewParser(text string) *Parser {
 
 func (p *Parser) Parse() (*SGFNode, error) {
 	p.SkipWhitespace()
+	p.SkipIfNot('(')
 	c := p.read()
 	if c == '(' {
 		root, err := p.ParseBranch()
@@ -126,6 +136,19 @@ func (p *Parser) Parse() (*SGFNode, error) {
 func (p *Parser) SkipWhitespace() {
 	for {
 		if IsWhitespace(p.peek(0)) {
+			p.read()
+		} else {
+			break
+		}
+	}
+}
+
+func (p *Parser) SkipIfNot(r rune) {
+	for {
+		c := p.peek(0)
+		if c == rune(0) {
+			return
+		} else if c != r {
 			p.read()
 		} else {
 			break

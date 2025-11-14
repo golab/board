@@ -8,56 +8,72 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package main_test
+package hub_test
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
-	main "github.com/jarednogo/board/cmd"
+	"github.com/go-chi/chi/v5"
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/config"
+	"github.com/jarednogo/board/pkg/fetch"
+	"github.com/jarednogo/board/pkg/hub"
 )
 
-func TestPing(t *testing.T) {
-	_, r, err := main.Setup(config.Test())
+func TestApiRouter(t *testing.T) {
+	_, err := hub.NewHub(config.Test())
 	assert.NoError(t, err)
+	r := chi.NewRouter()
+	r.Mount("/api", hub.ApiRouter("version"))
 
-	req := httptest.NewRequest("GET", "/api/ping", nil)
-
+	req := httptest.NewRequest("GET", "/api/version", nil)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
 	body, err := io.ReadAll(rec.Body)
 	assert.NoError(t, err)
 
-	pong := struct {
+	msg := struct {
 		Message string `json:"message"`
 	}{}
 
-	err = json.Unmarshal(body, &pong)
+	err = json.Unmarshal(body, &msg)
 	assert.NoError(t, err)
-	assert.Equal(t, pong.Message, "pong")
+
+	assert.Equal(t, msg.Message, "version")
 }
 
-func TestTwitch(t *testing.T) {
-	h, r, err := main.Setup(config.Test())
+func TestExtRouter(t *testing.T) {
+	h, err := hub.NewHub(config.Test())
 	assert.NoError(t, err)
 
+	room := h.GetOrCreateRoom("someboard")
+	room.SetFetcher(fetch.NewMockFetcher(sgfsamples.SimpleEightMoves))
+
+	r := chi.NewRouter()
+	r.Mount("/ext", h.ExtRouter())
+
+	v := url.Values{}
+	v.Set("url", "https://online-go.com/game/1")
+	v.Set("board_id", "someboard")
+	path := "/ext/upload?" + v.Encode()
+
+	req := httptest.NewRequest("GET", path, nil)
 	rec := httptest.NewRecorder()
-
-	body := []byte(`{"event": {"message": {"text": "!setboard Board"}}}`)
-	req := httptest.NewRequest("POST", "/apps/twitch/callback", bytes.NewBuffer(body))
 	r.ServeHTTP(rec, req)
 
-	body = []byte(`{"event": {"message": {"text": "!branch k10 k11"}}}`)
-	req = httptest.NewRequest("POST", "/apps/twitch/callback", bytes.NewBuffer(body))
-	r.ServeHTTP(rec, req)
+	assert.Equal(t, len(room.ToSGF()), 113)
+}
 
-	room, err := h.GetRoom("Board")
+func TestSocketRouter(t *testing.T) {
+	h, err := hub.NewHub(config.Test())
 	assert.NoError(t, err)
-	assert.Equal(t, len(room.ToSGF()), 77)
+
+	r := chi.NewRouter()
+	r.Mount("/socket", h.SocketRouter())
 }

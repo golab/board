@@ -35,10 +35,10 @@ func (h *Hub) HandleOp(op, roomID string) string {
 	switch op {
 	case "sgf":
 		// if the room doesn't exist, send empty string
-		data = r.ToSGF(false)
+		data = r.ToSGF()
 	case "sgfix":
 		// basically do the same thing but include indexes
-		data = r.ToSGF(true)
+		data = r.ToSGFIX()
 	case "debug":
 		// send debug info
 		stateJSON := r.SaveState()

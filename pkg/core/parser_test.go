@@ -14,6 +14,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
 )
 
@@ -124,11 +126,56 @@ func TestEmpty(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+}
 
+var oddTests = []struct {
+	input string
+	err   bool
+}{
+	{"()", false},
+	{"(;)", false},
+	{"(;;;)", false},
+	{"garbage(;GM[1])", false},
+}
+
+func TestOdd(t *testing.T) {
+	for _, tt := range oddTests {
+		t.Run(tt.input, func(t *testing.T) {
+			p := core.NewParser(tt.input)
+			_, err := p.Parse()
+			assert.Equal(t, err != nil, tt.err)
+		})
+	}
+}
+
+func TestChineseNames(t *testing.T) {
+	p := core.NewParser(sgfsamples.ChineseNames)
+	root, err := p.Parse()
+	assert.NoError(t, err)
+	pb, ok := root.Fields["PB"]
+	assert.True(t, ok)
+	pw, ok := root.Fields["PW"]
+	assert.True(t, ok)
+
+	assert.Equal(t, len(pb), 1)
+	assert.Equal(t, len(pw), 1)
+
+	assert.Equal(t, pw[0], "王思雅")
+	assert.Equal(t, pb[0], "李晨宇")
+}
+
+func TestMixedCaseField(t *testing.T) {
+	p := core.NewParser(sgfsamples.MixedCaseField)
+	root, err := p.Parse()
+	assert.NoError(t, err)
+	c, ok := root.Fields["COPYRIGHT"]
+	assert.True(t, ok)
+	assert.Equal(t, len(c), 1)
+	assert.Equal(t, c[0], "SomeCopyright")
 }
 
 func FuzzParser(f *testing.F) {
-	testcases := []string{"(;)", "(;GM[1];B[aa];W[bb];B[];W[ss])", "(;GM[1];C[comment \"with\" quotes])"}
+	testcases := []string{"(;)", "(;GM[1];B[aa];W[bb];B[];W[ss])", "(;GM[1];C[comment \"with\" quotes])", sgfsamples.Empty, sgfsamples.SimpleTwoBranches, sgfsamples.SimpleWithComment, sgfsamples.SimpleFourMoves, sgfsamples.SimpleEightMoves, sgfsamples.Scoring1, sgfsamples.PassWithTT, sgfsamples.ChineseNames}
 	for _, tc := range testcases {
 		// add to seed corpus
 		f.Add(tc)

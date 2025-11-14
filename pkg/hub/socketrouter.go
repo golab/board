@@ -14,20 +14,43 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jarednogo/board/pkg/config"
 	"golang.org/x/net/websocket"
 )
+
+type socketServer interface {
+	ServeHTTP(http.ResponseWriter, *http.Request)
+}
+
+type MockSocketServer struct {
+}
+
+func (ms *MockSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+}
+
+func NewMockSocketServer() *MockSocketServer {
+	return &MockSocketServer{}
+}
+
+func DefaultSocketServer(handler websocket.Handler) socketServer {
+	cfg := websocket.Config{}
+	ws := websocket.Server{
+		Config:    cfg,
+		Handshake: nil,
+		Handler:   handler,
+	}
+	return ws
+}
 
 func (h *Hub) SocketRouter() http.Handler {
 	r := chi.NewRouter()
 
-	// websocket server setup
-	cfg := websocket.Config{}
-
 	// create new websocket server
-	ws := websocket.Server{
-		Config:    cfg,
-		Handshake: nil,
-		Handler:   h.HandlerWrapper,
+	var ws socketServer
+	if h.cfg.Mode == config.ModeTest {
+		ws = NewMockSocketServer()
+	} else {
+		ws = DefaultSocketServer(h.HandlerWrapper)
 	}
 
 	r.Get("/b/{boardID}", func(w http.ResponseWriter, r *http.Request) {
