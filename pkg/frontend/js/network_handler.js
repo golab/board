@@ -77,16 +77,14 @@ class NetworkHandler {
         if (!this.state.modals.modals_up.has("info-modal")) {
             this.state.modals.show_info_modal("Reconnecting...");
         }
-        this.backoff *= 2;
-        if (this.backoff > 120000) {
-            this.backoff = 500;
+        if (document.hasFocus()) {
+            this.backoff *= 2;
+            if (this.backoff > 120000) {
+                this.backoff = 500;
+            }
+            console.log("reconnecting in", this.backoff, "ms");
+            setTimeout(() => this.connect(), this.backoff);
         }
-        console.log("reconnecting in", this.backoff, "ms");
-        setTimeout(() => this.connect(), this.backoff);
-    }
-
-    ready_state() {
-        return WebSocket.OPEN;
     }
 
     // evidently necessary because unfocused tabs don't hide modals
@@ -95,8 +93,10 @@ class NetworkHandler {
         this.state.keys_down = new Map();
 
         // hide info modal
-        if (this.ready_state() == WebSocket.OPEN) {
+        if (this.socket.readyState == WebSocket.OPEN) {
             this.state.modals.hide_modal("info-modal");
+        } else if (this.socket.readyState == WebSocket.CLOSED) {
+            this.reconnect();
         }
     }
 
@@ -342,7 +342,7 @@ class NetworkHandler {
 
     prepare(payload) {
         // before anything check for integrity of socket
-        if (this.ready_state() != WebSocket.OPEN) {
+        if (this.socket.readyState != WebSocket.OPEN) {
             return;
         }
 
