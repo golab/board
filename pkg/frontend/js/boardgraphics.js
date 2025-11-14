@@ -46,6 +46,35 @@ function make_black_gradient(svgns) {
     return make_linear_gradient(svgns, "#444444", "#000000", "black_grad");
 }
 
+function make_shadow_gradient(svgns) {
+    let color1 = "#000000";
+    let color2 = "#000000";
+    let cx = "50%";
+    let cy = "50%";
+    let r = "50%";
+    let id = "shadow_grad";
+
+    let grad = document.createElementNS(svgns, "radialGradient");
+    grad.id = id;
+    grad.setAttributeNS(null, "cx", cx);
+    grad.setAttributeNS(null, "cy", cy);
+    grad.setAttributeNS(null, "r", r);
+
+    let stop1 = document.createElementNS(svgns, "stop");
+    stop1.setAttributeNS(null, "offset", "0%");
+    stop1.setAttributeNS(null, "stop-color", color1);
+    stop1.setAttributeNS(null, "stop-opacity", "1");
+
+    let stop2 = document.createElementNS(svgns, "stop");
+    stop2.setAttributeNS(null, "offset", "100%");
+    stop2.setAttributeNS(null, "stop-color", color2);
+    stop2.setAttributeNS(null, "stop-opacity", "0");
+
+    grad.appendChild(stop1);
+    grad.appendChild(stop2);
+    return grad;
+}
+
 class BoardGraphics {
     constructor(state) {
         this.state = state;
@@ -678,10 +707,11 @@ class BoardGraphics {
         let radius = this.side/2 * 0.98;
         let real_x = x*this.side + this.pad;
         let real_y = y*this.side + this.pad;
-        let offset = 3*this.minstroke;
+        let offset = 6*this.minstroke;
         let id = "shadows";
+        return this.draw_raw_gradient_circle(real_x+offset, real_y+offset, radius, "shadow_grad", id, 0);
 
-        return this.draw_raw_circle(real_x+offset, real_y+offset, radius, "#00000055", id, true, 0);
+        //return this.draw_raw_circle(real_x+offset, real_y+offset, radius, "#00000055", id, true, 0);
     }
 
     clear_cast_shadow(x, y) {
@@ -691,7 +721,6 @@ class BoardGraphics {
             return;
         }
         shadow.remove();
-
     }
 
     draw_ghost_stone(x, y, color) {
@@ -1039,6 +1068,7 @@ class BoardGraphics {
         this.add_def("stones", make_white_gradient(this.svgns));
 
         this.clear_svg("shadows");
+        this.add_def("shadows", make_shadow_gradient(this.svgns));
     }
 
     clear_board() {
