@@ -12,7 +12,6 @@ package hub
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -21,17 +20,11 @@ import (
 func ApiRouter(version string) http.Handler {
 	r := chi.NewRouter()
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		_, err := w.Write([]byte(`{"message": "pong"}`))
-		if err != nil {
-			log.Println(err)
-		}
+		w.Write([]byte(`{"message": "pong"}`)) //nolint:errcheck
 	})
 	r.Get("/version", func(w http.ResponseWriter, r *http.Request) {
 		msg := fmt.Sprintf(`{"message": "%s"}`, version)
-		_, err := w.Write([]byte(msg))
-		if err != nil {
-			log.Println(err)
-		}
+		w.Write([]byte(msg)) //nolint:errcheck
 	})
 	return r
 }
