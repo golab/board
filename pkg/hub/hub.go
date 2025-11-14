@@ -146,7 +146,7 @@ func (h *Hub) Heartbeat(roomID string) {
 	for {
 		now := time.Now()
 		diff := now.Sub(*r.LastActive())
-		h.logger.Info("inactive", "room_id", roomID, "duration", diff)
+		h.logger.Info("inactive", "room_id", roomID, "duration", diff.Seconds())
 		if diff.Seconds() > r.GetTimeout() {
 			break
 		}

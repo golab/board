@@ -13,16 +13,17 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/jarednogo/board/pkg/config"
+	"github.com/jarednogo/board/pkg/logx"
 )
 
 func main() {
+	logger := logx.NewDefaultLogger()
 	// read in config
 	cfgFile := flag.String("f", "", "Path to config file")
 	flag.Parse()
@@ -31,19 +32,19 @@ func main() {
 	if *cfgFile == "" {
 		cfg = config.Default()
 	} else if loadedCfg, err := config.New(*cfgFile); err != nil {
-		log.Println("failed to load config:", *cfgFile, err)
+		logger.Error("failed loading config", "file", *cfgFile, "err", err)
 		cfg = config.Default()
 	} else {
-		log.Println("successfully loaded config:", *cfgFile)
+		logger.Info("loaded config", "file", *cfgFile)
 		cfg = loadedCfg
 	}
 
-	log.Println("running config:", cfg)
+	logger.Info("running config", "config", fmt.Sprintf("%v", cfg))
 
 	// setup routes
 	h, r, err := Setup(cfg)
 	if err != nil {
-		log.Println(err)
+		logger.Error("error in setup", "err", err)
 		return
 	}
 
@@ -62,14 +63,14 @@ func main() {
 
 	// run server
 	go func() {
-		log.Println("Listening on", url)
-		log.Fatal(http.ListenAndServe(url, r))
+		logger.Info("listening on", "url", url)
+		err = http.ListenAndServe(url, r)
+		logger.Error("error listening", "err", err)
 	}()
 
 	// catch cancel signal
 	sig := <-cancelChan
 
-	log.Printf("Caught signal %v", sig)
-	log.Println("Shutting down gracefully")
-
+	logger.Info("caught signal", "signal", fmt.Sprintf("%v", sig))
+	logger.Info("shutting down gracefully")
 }
