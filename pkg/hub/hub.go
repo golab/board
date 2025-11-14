@@ -12,7 +12,6 @@ package hub
 
 import (
 	"errors"
-	"log"
 	"strings"
 	"sync"
 	"time"
@@ -21,6 +20,7 @@ import (
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/loader"
+	"github.com/jarednogo/board/pkg/logx"
 	"github.com/jarednogo/board/pkg/message"
 	"github.com/jarednogo/board/pkg/room"
 	"golang.org/x/net/websocket"
@@ -48,6 +48,7 @@ type Hub struct {
 	db       loader.Loader
 	mu       sync.Mutex
 	cfg      *config.Config
+	logger   logx.Logger
 }
 
 func NewHub(cfg *config.Config) (*Hub, error) {
@@ -71,6 +72,7 @@ func NewHubWithDB(db loader.Loader, cfg *config.Config) (*Hub, error) {
 		messages: []*message.Message{},
 		db:       db,
 		cfg:      cfg,
+		logger:   logx.NewDefaultLogger(),
 	}
 
 	// start message loop
@@ -96,13 +98,13 @@ func (h *Hub) MessageCount() int {
 
 func (h *Hub) Save() {
 	for id, r := range h.rooms {
-		log.Printf("Saving %s", id)
+		h.logger.Info("saving", "room_id", id)
 
 		save := r.Save()
 
 		err := h.db.SaveRoom(id, save)
 		if err != nil {
-			log.Println(err)
+			h.logger.Error("failed to save room", "err", err, "room_id", id)
 		}
 	}
 }
@@ -110,14 +112,14 @@ func (h *Hub) Save() {
 func (h *Hub) Load() {
 	rooms, err := h.db.LoadAllRooms()
 	if err != nil {
-		log.Println(err)
+		h.logger.Error("failed to load", "err", err)
 		return
 	}
 
 	for _, load := range rooms {
 		r, err := room.Load(load)
 		if err != nil {
-			log.Println(err)
+			h.logger.Error("failed to load room", "err", err)
 			continue
 		}
 
@@ -126,7 +128,7 @@ func (h *Hub) Load() {
 		}
 
 		id := r.ID()
-		log.Printf("Loading %s", id)
+		h.logger.Info("loading", "room_id", id)
 		h.mu.Lock()
 		h.rooms[id] = r
 		h.mu.Unlock()
@@ -144,18 +146,18 @@ func (h *Hub) Heartbeat(roomID string) {
 	for {
 		now := time.Now()
 		diff := now.Sub(*r.LastActive())
-		log.Println(roomID, "Inactive for", diff)
+		h.logger.Info("inactive", "room_id", roomID, "duration", diff)
 		if diff.Seconds() > r.GetTimeout() {
 			break
 		}
 		time.Sleep(3600 * time.Second)
 	}
-	log.Println("Cleaning up board due to inactivity:", roomID)
+	h.logger.Info("clearing board", "room_id", roomID)
 
 	// close the room down
 	err := r.Close()
 	if err != nil {
-		log.Println("errors while closing:", err)
+		h.logger.Error("failed to close room", "err", err)
 	}
 
 	// delete the room from the server map
@@ -164,14 +166,14 @@ func (h *Hub) Heartbeat(roomID string) {
 	// delete it from the database
 	err = h.db.DeleteRoom(roomID)
 	if err != nil {
-		log.Println(err)
+		h.logger.Error("failed to delete room", "err", err)
 	}
 }
 
 func (h *Hub) ReadMessages() {
 	messages, err := h.db.LoadAllMessages()
 	if err != nil {
-		log.Println(err)
+		h.logger.Error("failed to load messages", "err", err)
 		return
 	}
 	defer h.db.DeleteAllMessages() //nolint:errcheck
@@ -221,7 +223,7 @@ func (h *Hub) GetOrCreateRoom(roomID string) *room.Room {
 	defer h.mu.Unlock()
 	// if the room they want doesn't exist, create it
 	if _, ok := h.rooms[roomID]; !ok {
-		log.Println("New room:", roomID)
+		h.logger.Info("new room", "room_id", roomID)
 		r := room.NewRoom(roomID)
 		if h.cfg.Mode == config.ModeTest {
 			r.SetFetcher(fetch.NewEmptyFetcher())
@@ -252,15 +254,15 @@ func (h *Hub) Handler(ec event.EventChannel, roomID string) {
 	r := h.GetOrCreateRoom(roomID)
 
 	// send to the room for handling
-	log.Printf(
-		"[*] New connection: %s to %s",
-		ec.ID(),
-		r.ID(),
+	h.logger.Info(
+		"new connection",
+		"event_channel", ec.ID(),
+		"room_id", r.ID(),
 	)
-	log.Printf(
-		"[-] Disconnection: %s from %s (%v)",
-		ec.ID(),
-		r.ID(),
-		r.Handle(ec),
+	h.logger.Info(
+		"disconnection",
+		"event_channel", ec.ID(),
+		"room_id", r.ID(),
+		"reason", r.Handle(ec),
 	)
 }
