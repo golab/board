@@ -352,7 +352,10 @@ class State {
     }
 
     dark_mode_toggle() {
-        let color = "#1A1A1A";
+        let dark = "#1A1A1A";
+        let light = "#F5F5F5";
+        let bg_color = dark;
+        let fg_color = light;
         let old_class = "btn-light";
         let new_class = "btn-dark";
         let new_setting = true;
@@ -361,7 +364,8 @@ class State {
         let old_black_stone = "bi-circle-fill";
         let new_black_stone = "bi-circle";
         if (this.dark_mode) {
-            color = "#F5F5F5";
+            bg_color = light;
+            fg_color = dark;
             old_class = "btn-dark";
             new_class = "btn-light";
             new_setting = false;
@@ -373,7 +377,7 @@ class State {
         this.dark_mode = new_setting;
 
         // change the background
-        document.body.style.background = color;
+        document.body.style.background = bg_color;
 
         // change the buttons
         let buttons = document.querySelectorAll("button");
@@ -393,6 +397,11 @@ class State {
         black_stone_icon.setAttribute("class", new_black_stone);
         white_stone_icon.setAttribute("class", old_black_stone);
 
+        // change modals
+        for (let modal of document.getElementsByClassName("modal-content")) {
+            modal.style.background = bg_color;
+            modal.style.color = fg_color;
+        }
     }
 
     comments_toggle() {
