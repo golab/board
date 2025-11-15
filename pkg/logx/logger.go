@@ -12,7 +12,17 @@ package logx
 
 import (
 	"log/slog"
+	"net/http"
 	"os"
+)
+
+type LogLevel int
+
+const (
+	LogLevelDebug LogLevel = iota
+	LogLevelInfo
+	LogLevelWarn
+	LogLevelError
 )
 
 type Logger interface {
@@ -20,14 +30,32 @@ type Logger interface {
 	Info(string, ...any)
 	Warn(string, ...any)
 	Error(string, ...any)
+	AsMiddleware(http.Handler) http.Handler
 }
 
 type DefaultLogger struct {
 	s *slog.Logger
 }
 
-func NewDefaultLogger() *DefaultLogger {
-	handler := slog.NewJSONHandler(os.Stderr, nil)
+func NewDefaultLogger(lvl LogLevel) *DefaultLogger {
+	level := new(slog.LevelVar)
+	switch lvl {
+	case LogLevelDebug:
+		level.Set(slog.LevelDebug)
+	case LogLevelInfo:
+		level.Set(slog.LevelInfo)
+	case LogLevelWarn:
+		level.Set(slog.LevelWarn)
+	case LogLevelError:
+		level.Set(slog.LevelError)
+	}
+
+	handler := slog.NewJSONHandler(
+		os.Stderr,
+		&slog.HandlerOptions{
+			Level: level,
+		},
+	)
 	return &DefaultLogger{
 		slog.New(handler),
 	}
@@ -47,4 +75,11 @@ func (l *DefaultLogger) Warn(msg string, args ...any) {
 
 func (l *DefaultLogger) Error(msg string, args ...any) {
 	l.s.Error(msg, args...)
+}
+
+func (l *DefaultLogger) AsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		l.Debug("http", "method", r.Method, "path", r.URL.Path)
+		next.ServeHTTP(w, r)
+	})
 }

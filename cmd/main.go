@@ -23,7 +23,10 @@ import (
 )
 
 func main() {
-	logger := logx.NewDefaultLogger()
+	// set up root logger
+	level := logx.LogLevelInfo
+	logger := logx.NewDefaultLogger(level)
+
 	// read in config
 	cfgFile := flag.String("f", "", "Path to config file")
 	flag.Parse()
@@ -42,11 +45,14 @@ func main() {
 	logger.Info("running config", "config", fmt.Sprintf("%v", cfg))
 
 	// setup routes
-	h, r, err := Setup(cfg)
+	h, r, err := Setup(cfg, logger.AsMiddleware)
 	if err != nil {
 		logger.Error("error in setup", "err", err)
 		return
 	}
+
+	// init loggers
+	h.SetLogger(logger)
 
 	// start everything
 	h.Load()

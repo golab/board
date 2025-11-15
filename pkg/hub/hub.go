@@ -72,13 +72,17 @@ func NewHubWithDB(db loader.Loader, cfg *config.Config) (*Hub, error) {
 		messages: []*message.Message{},
 		db:       db,
 		cfg:      cfg,
-		logger:   logx.NewDefaultLogger(),
+		logger:   logx.NewDefaultLogger(logx.LogLevelInfo),
 	}
 
 	// start message loop
 	go s.MessageLoop()
 
 	return s, nil
+}
+
+func (h *Hub) SetLogger(logger logx.Logger) {
+	h.logger = logger
 }
 
 func (h *Hub) GetRoom(id string) (*room.Room, error) {

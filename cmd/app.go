@@ -21,7 +21,9 @@ import (
 
 var version = "dev"
 
-func Setup(cfg *config.Config) (*hub.Hub, http.Handler, error) {
+type midware func(http.Handler) http.Handler
+
+func Setup(cfg *config.Config, ms ...midware) (*hub.Hub, http.Handler, error) {
 	// make a new hub
 	h, err := hub.NewHub(cfg)
 	if err != nil {
@@ -33,7 +35,9 @@ func Setup(cfg *config.Config) (*hub.Hub, http.Handler, error) {
 	// initialize router and middlewares
 	r := chi.NewRouter()
 	r.Use(middleware.StripSlashes)
-	r.Use(middleware.Logger)
+	for _, m := range ms {
+		r.Use(m)
+	}
 
 	// web router
 	r.Mount("/", h.WebRouter())
