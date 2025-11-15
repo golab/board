@@ -120,6 +120,17 @@ func (s *State) PushHead(x, y int, col core.Color) {
 	s.head.SetDiff(diff)
 }
 
+func (s *State) AddNode(coord *core.Coord, col core.Color) *core.Diff {
+	index := s.GetNextIndex()
+	fields := make(map[string][]string)
+	if col == core.Black {
+		fields["B"] = []string{coord.ToLetters()}
+	} else {
+		fields["W"] = []string{coord.ToLetters()}
+	}
+	return s.addNode(coord, col, fields, index, false)
+}
+
 func (s *State) addNode(coord *core.Coord, col core.Color, fields map[string][]string, index int, force bool) *core.Diff {
 	s.AnyMove()
 	if fields == nil {
