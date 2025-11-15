@@ -66,6 +66,18 @@ func (s *State) Root() *core.TreeNode {
 	return s.root
 }
 
+func (s *State) EditPlayerBlack(value string) {
+	s.root.OverwriteField("PB", value)
+}
+
+func (s *State) EditPlayerWhite(value string) {
+	s.root.OverwriteField("PW", value)
+}
+
+func (s *State) EditKomi(value string) {
+	s.root.OverwriteField("KM", value)
+}
+
 func (s *State) Head() *core.TreeNode {
 	return s.head
 }

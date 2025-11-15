@@ -16,7 +16,18 @@ function make_settings() {
     let size = parseInt(document.getElementById(id + "-size-select").value);
     let password = document.getElementById(id + "-password-bar").value;
     let nickname = document.getElementById(id + "-nickname-bar").value;
-    return {"buffer": buffer, "size": size, "password": password, "nickname": nickname};
+
+    let black = document.getElementById(id + "-blackplayer-bar").value;
+    let white = document.getElementById(id + "-whiteplayer-bar").value;
+    let komi = document.getElementById(id + "-komi-bar").value;
+    return {
+        "buffer": buffer,
+        "size": size,
+        "password": password,
+        "nickname": nickname,
+        "black": black,
+        "white": white,
+        "komi": komi};
 }
 
 function get_nickname() {
@@ -197,6 +208,42 @@ export function create_modals(_state) {
         nickname_div.appendChild(nickname_bar);
 
         body.appendChild(nickname_div);
+        body.appendChild(document.createElement("br"));
+
+        // black player
+        let black_player_div = document.createElement("div");
+        let black_player_label = document.createElement("div");
+        black_player_label.innerHTML = "Black";
+        let black_player_bar = document.createElement("input");
+        black_player_bar.setAttribute("class", "form-control");
+        black_player_bar.id = id + "-blackplayer-bar";
+        black_player_div.appendChild(black_player_label);
+        black_player_div.appendChild(black_player_bar);
+        body.appendChild(black_player_div)
+        body.appendChild(document.createElement("br"));
+
+        // white player
+        let white_player_div = document.createElement("div");
+        let white_player_label = document.createElement("div");
+        white_player_label.innerHTML = "White";
+        let white_player_bar = document.createElement("input");
+        white_player_bar.setAttribute("class", "form-control");
+        white_player_bar.id = id + "-whiteplayer-bar";
+        white_player_div.appendChild(white_player_label);
+        white_player_div.appendChild(white_player_bar);
+        body.appendChild(white_player_div)
+        body.appendChild(document.createElement("br"));
+
+        // komi
+        let komi_div = document.createElement("div");
+        let komi_label = document.createElement("div");
+        komi_label.innerHTML = "Komi";
+        let komi_bar = document.createElement("input");
+        komi_bar.setAttribute("class", "form-control");
+        komi_bar.id = id + "-komi-bar";
+        komi_div.appendChild(komi_label);
+        komi_div.appendChild(komi_bar);
+        body.appendChild(komi_div)
         body.appendChild(document.createElement("br"));
 
         // board size

@@ -19,7 +19,7 @@ import { create_layout } from './layout.js';
 import { create_buttons } from './buttons.js';
 import { create_modals } from './modals.js';
 
-import { letterstocoord, coordtoid, opposite, Coord, prefer_dark_mode } from './common.js';
+import { htmlencode, letterstocoord, coordtoid, opposite, Coord, prefer_dark_mode } from './common.js';
 
 export {
     State
@@ -259,7 +259,7 @@ class State {
             gameinfo["Black"] = "Black";
         }
 
-        document.getElementById("black-name").innerHTML = gameinfo["Black"];
+        document.getElementById("black-name").innerHTML = htmlencode(gameinfo["Black"]);
 
         if (fields.has("PW")) {
             let rank = "";
@@ -270,7 +270,7 @@ class State {
         } else {
             gameinfo["White"] = "White";
         }
-        document.getElementById("white-name").innerHTML = gameinfo["White"];
+        document.getElementById("white-name").innerHTML = htmlencode(gameinfo["White"]);
 
         if (fields.has("RE")) {
             gameinfo["Result"] = fields.get("RE");

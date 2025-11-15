@@ -194,6 +194,10 @@ func (n *TreeNode) MaxDepth() int {
 	return depth
 }
 
+func (n *TreeNode) OverwriteField(key, value string) {
+	n.Fields[key] = []string{value}
+}
+
 func (n *TreeNode) AddField(key, value string) {
 	if _, ok := n.Fields[key]; !ok {
 		n.Fields[key] = []string{}

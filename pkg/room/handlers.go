@@ -275,6 +275,20 @@ func (room *Room) handleUpdateSettings(evt event.Event) event.Event {
 	size := int(sMap["size"].(float64))
 	nickname := sMap["nickname"].(string)
 
+	black := sMap["black"].(string)
+	white := sMap["white"].(string)
+	komi := sMap["komi"].(string)
+
+	if black != "" {
+		room.EditPlayerBlack(black)
+	}
+	if white != "" {
+		room.EditPlayerWhite(white)
+	}
+	if komi != "" {
+		room.EditKomi(komi)
+	}
+
 	room.nicks[evt.User()] = nickname
 
 	password := sMap["password"].(string)

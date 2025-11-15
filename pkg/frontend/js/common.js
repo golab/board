@@ -22,6 +22,7 @@ export {
     get_viewport,
     prefer_dark_mode,
     get_dims,
+    htmlencode,
 }
 
 class Coord {
@@ -156,4 +157,8 @@ function prefer_dark_mode() {
 });
 */
 
-
+function htmlencode(str) {
+    let div = document.createElement("div");
+    div.textContent = str || "";
+    return div.innerHTML;
+}
