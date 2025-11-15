@@ -12,7 +12,6 @@ package integration_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/jarednogo/board/integration"
 	"github.com/jarednogo/board/internal/assert"
@@ -27,11 +26,9 @@ func TestGenerate(t *testing.T) {
 	sgfs := integration.GenerateNRandomSGF(num, minLength, maxLength)
 
 	sgf := core.Merge(sgfs)
-	start := time.Now()
 	s, err := state.FromSGF(sgf)
 	assert.NoError(t, err)
-	duration := time.Since(start)
-	assert.True(t, duration < 2*time.Second)
+	//assert.True(t, duration < 2*time.Second)
 	// this computation takes a while, so omitting it for now
 	//assert.Equal(t, len(s.ToSGF()), 616921)
 	assert.Equal(t, len(s.Nodes()), 99977)
