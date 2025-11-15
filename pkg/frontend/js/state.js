@@ -402,6 +402,15 @@ class State {
             modal.style.background = bg_color;
             modal.style.color = fg_color;
         }
+
+        // change modal close labels
+        for (let close of document.getElementsByClassName("btn-close")) {
+            if (this.dark_mode) {
+                close.classList.add("btn-close-white");
+            } else {
+                close.classList.remove("btn-close-white");
+            }
+        }
     }
 
     comments_toggle() {
