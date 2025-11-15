@@ -31,16 +31,36 @@ type Config struct {
 	DB     dbConfig     `yaml:"db"`
 }
 
+func (c *Config) Redact() {
+	c.Server.redact()
+	c.Twitch.redact()
+	c.DB.redact()
+}
+
 type serverConfig struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
 	URL  string `yaml:"url"`
 }
 
+func (c *serverConfig) redact() {}
+
 type twitchConfig struct {
 	ClientID string `yaml:"client_id"`
 	Secret   string `yaml:"secret"`
 	BotID    string `yaml:"bot_id"`
+}
+
+func (c *twitchConfig) redact() {
+	if c.ClientID != "" {
+		c.ClientID = "***"
+	}
+	if c.Secret != "" {
+		c.Secret = "***"
+	}
+	if c.BotID != "" {
+		c.BotID = "***"
+	}
 }
 
 type dbConfigType string
@@ -54,6 +74,8 @@ type dbConfig struct {
 	Type dbConfigType `json:"type"`
 	Path string       `json:"path"`
 }
+
+func (c *dbConfig) redact() {}
 
 func New(fname string) (*Config, error) {
 	data, err := os.ReadFile(fname)

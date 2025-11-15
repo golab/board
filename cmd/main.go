@@ -42,7 +42,9 @@ func main() {
 		cfg = loadedCfg
 	}
 
-	logger.Info("running config", "config", fmt.Sprintf("%v", cfg))
+	safe := *cfg
+	safe.Redact()
+	logger.Info("running config", "config", fmt.Sprintf("%v", safe))
 
 	// setup routes
 	h, r, err := Setup(cfg, logger.AsMiddleware)
