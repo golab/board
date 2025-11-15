@@ -749,8 +749,29 @@ class BoardGraphics {
         stone.setAttributeNS(null, "href", "/static/white.svg");
         stone.setAttributeNS(null, "width", radius*2);
         stone.setAttributeNS(null, "height", radius*2);
-        stone.setAttributeNS(null, "x", this.side*x+radius);
-        stone.setAttributeNS(null, "y", this.side*y+radius);
+
+        const px = this.side * x + radius;
+        const py = this.side * y + radius;
+        
+        // compute rotation center
+        const cx = px + radius;
+        const cy = py + radius;
+        
+        // random angle, e.g. between 0 and 360
+        const angle = Math.random() * 360;
+        
+        stone.setAttributeNS(null, "x", px);
+        stone.setAttributeNS(null, "y", py);
+
+        // apply rotation around center
+        stone.setAttributeNS(
+            null,
+            "transform",
+            `rotate(${angle} ${cx} ${cy})`
+        );
+
+        //stone.setAttributeNS(null, "x", this.side*x+radius);
+        //stone.setAttributeNS(null, "y", this.side*y+radius);
         svg.appendChild(stone);
         this.draw_highlights(x, y);
         return stone;
