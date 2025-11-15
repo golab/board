@@ -106,6 +106,9 @@ func TestHandleUpdateSettings(t *testing.T) {
 	value["size"] = 13.0
 	value["nickname"] = "mynick"
 	value["password"] = "somepassword"
+	value["black"] = "black123"
+	value["white"] = "white456"
+	value["komi"] = "10.5"
 
 	evt := event.NewEvent("update_settings", value)
 	evt.SetUser("user_123")
