@@ -8,23 +8,43 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package hub
+package logx
 
 import (
-	"fmt"
-	"net/http"
-
-	"github.com/go-chi/chi/v5"
+	"log/slog"
+	"os"
 )
 
-func ApiRouter(version string) http.Handler {
-	r := chi.NewRouter()
-	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{"message": "pong"}`)) //nolint:errcheck
-	})
-	r.Get("/version", func(w http.ResponseWriter, r *http.Request) {
-		msg := fmt.Sprintf(`{"message": "%s"}`, version)
-		w.Write([]byte(msg)) //nolint:errcheck
-	})
-	return r
+type Logger interface {
+	Debug(string, ...any)
+	Info(string, ...any)
+	Warn(string, ...any)
+	Error(string, ...any)
+}
+
+type DefaultLogger struct {
+	s *slog.Logger
+}
+
+func NewDefaultLogger() *DefaultLogger {
+	handler := slog.NewJSONHandler(os.Stderr, nil)
+	return &DefaultLogger{
+		slog.New(handler),
+	}
+}
+
+func (l *DefaultLogger) Debug(msg string, args ...any) {
+	l.s.Debug(msg, args...)
+}
+
+func (l *DefaultLogger) Info(msg string, args ...any) {
+	l.s.Info(msg, args...)
+}
+
+func (l *DefaultLogger) Warn(msg string, args ...any) {
+	l.s.Warn(msg, args...)
+}
+
+func (l *DefaultLogger) Error(msg string, args ...any) {
+	l.s.Error(msg, args...)
 }
