@@ -17,10 +17,11 @@ import (
 	"github.com/jarednogo/board/integration"
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/internal/sgfsamples"
+	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/event"
 )
 
-func TestSim(t *testing.T) {
+func TestSim1(t *testing.T) {
 	// make a new simulator and add some clients
 	sim, err := integration.NewSim()
 	assert.NoError(t, err)
@@ -41,7 +42,7 @@ func TestSim(t *testing.T) {
 	// by the room handler
 	room, err := sim.Hub.GetRoom(roomID)
 	assert.NoError(t, err)
-	room.SetInputBuffer(0)
+	room.DisableBuffers()
 
 	// simulate an event
 	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.PassWithTT))
@@ -57,4 +58,63 @@ func TestSim(t *testing.T) {
 	// observe effects
 	save := room.Save()
 	assert.Equal(t, len(save.SGF), 6132)
+}
+
+func TestSim2(t *testing.T) {
+	// make a new simulator and add some clients
+	sim, err := integration.NewSim()
+	assert.NoError(t, err)
+
+	roomID := "someboard"
+	for i := 0; i < 10; i++ {
+		sim.AddClient(roomID)
+	}
+
+	// connect all the clients
+	sim.ConnectAll()
+
+	// clear out all events
+	sim.FlushAll()
+
+	// reduce input buffer to 0 for this test
+	// otherwise the buffer causes events to get dropped
+	// by the room handler
+	room, err := sim.Hub.GetRoom(roomID)
+	assert.NoError(t, err)
+	room.DisableBuffers()
+
+	p := core.NewParser(sgfsamples.Scoring2)
+	root, err := p.Parse()
+	assert.NoError(t, err)
+	cur := root.Down[0]
+	for len(cur.Down) != 0 {
+		// simulate an event
+		value := make(map[string]any)
+		color := 1.0
+		key := "B"
+		if _, ok := cur.Fields["W"]; ok {
+			key = "W"
+			color = 2.0
+		}
+		value["color"] = color
+
+		coord := core.LettersToCoord(cur.Fields[key][0])
+
+		value["coords"] = []any{float64(coord.X), float64(coord.Y)}
+		evt := event.NewEvent("add_stone", value)
+		sim.Clients[0].SimulateEvent(evt)
+
+		// let the event pass through all connections
+		sim.FlushAll()
+
+		cur = cur.Down[0]
+	}
+
+	// disconnect all the clients
+	sim.DisconnectAll()
+
+	// observe effects
+	save := room.Save()
+	assert.Equal(t, len(save.SGF), 4024)
+
 }

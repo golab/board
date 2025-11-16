@@ -41,6 +41,7 @@ type Room struct {
 	id           string
 	handlers     map[string]EventHandler
 	inputBuffer  int64
+	userBuffer   int64
 	timeout      float64
 	mu           sync.Mutex
 }
@@ -69,6 +70,7 @@ func NewRoom(id string) *Room {
 		fetcher:      fetch.NewDefaultFetcher(),
 		id:           id,
 		inputBuffer:  250,
+		userBuffer:   100,
 		timeout:      86400,
 	}
 	r.initHandlers()
@@ -123,6 +125,16 @@ func (r *Room) GetInputBuffer() int64 {
 
 func (r *Room) SetInputBuffer(i int64) {
 	r.inputBuffer = i
+}
+
+func (r *Room) SetUserBuffer(i int64) {
+	r.userBuffer = i
+}
+
+// used for testing
+func (r *Room) DisableBuffers() {
+	r.SetInputBuffer(0)
+	r.SetUserBuffer(0)
 }
 
 func (r *Room) GetTimeout() float64 {

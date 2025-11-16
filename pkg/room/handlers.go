@@ -419,7 +419,7 @@ func (room *Room) slow(handler EventHandler) EventHandler {
 		} else {
 			diff := now.Sub(*last)
 			room.lastMessages[id] = &now
-			if diff.Milliseconds() < 50 {
+			if diff.Milliseconds() < room.userBuffer {
 				// don't do the next handler if too fast
 				return evt
 			}
