@@ -155,3 +155,24 @@ func TestHandleAddStone(t *testing.T) {
 	r.HandleAny(evt)
 	assert.Equal(t, len(r.ToSGF()), 71)
 }
+
+func TestSlow(t *testing.T) {
+	r := room.NewRoom("")
+
+	val := make(map[string]any)
+	val["coords"] = []any{9.0, 9.0}
+	val["color"] = 1.0
+	evt := event.NewEvent("add_stone", val)
+	r.HandleAny(evt)
+	assert.Equal(t, len(r.ToSGF()), 71)
+
+	// adding a stone with the buffers in place shouldn't do anything
+	val["coords"] = []any{10.0, 10.0}
+	r.HandleAny(evt)
+	assert.Equal(t, len(r.ToSGF()), 71)
+
+	// disable the buffers then add a stone, and there should be a change
+	r.DisableBuffers()
+	r.HandleAny(evt)
+	assert.Equal(t, len(r.ToSGF()), 77)
+}
