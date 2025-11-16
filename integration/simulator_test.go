@@ -116,5 +116,32 @@ func TestSim2(t *testing.T) {
 	// observe effects
 	save := room.Save()
 	assert.Equal(t, len(save.SGF), 4024)
+}
 
+func TestSim3(t *testing.T) {
+	// make a new simulator and add some clients
+	sim, err := integration.NewSim()
+	assert.NoError(t, err)
+
+	// make sure there's no rooms
+	assert.Equal(t, sim.Hub.RoomCount(), 0)
+
+	roomID := "someboard"
+	sim.AddClient(roomID)
+
+	// connect all the clients
+	sim.ConnectAll()
+
+	_, err = sim.Hub.GetRoom(roomID)
+	assert.NoError(t, err)
+
+	// disconnect all the clients
+	sim.DisconnectAll()
+
+	// save then load
+	sim.Hub.Save()
+	sim.Hub.Load()
+
+	// make sure we have 1 room loaded
+	assert.Equal(t, sim.Hub.RoomCount(), 1)
 }

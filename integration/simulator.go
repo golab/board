@@ -16,7 +16,6 @@ import (
 	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/hub"
-	"github.com/jarednogo/board/pkg/loader"
 )
 
 type Sim struct {
@@ -26,8 +25,7 @@ type Sim struct {
 }
 
 func NewSim() (*Sim, error) {
-	ml := loader.NewMemoryLoader()
-	h, err := hub.NewHubWithDB(ml, config.Default())
+	h, err := hub.NewHub(config.Test())
 	if err != nil {
 		return nil, err
 	}
