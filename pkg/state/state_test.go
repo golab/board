@@ -52,3 +52,10 @@ func TestNewState(t *testing.T) {
 	assert.Equal(t, s1.GetNextIndex(), 1)
 	assert.Equal(t, s2.GetNextIndex(), 0)
 }
+
+func TestHandicap(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.Handicap1)
+	assert.NoError(t, err)
+	root := s.Root()
+	assert.Equal(t, len(root.Fields["AB"]), 4)
+}
