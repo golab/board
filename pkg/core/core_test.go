@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/pkg/core"
 )
 
@@ -166,4 +167,9 @@ func TestSanitize(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestUUID(t *testing.T) {
+	s := core.UUID4()
+	assert.Equal(t, len(s), 32)
 }

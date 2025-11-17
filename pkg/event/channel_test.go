@@ -83,8 +83,6 @@ func TestEventChannelBig(t *testing.T) {
 		queued = append(queued, []byte(chunk))
 	}
 
-	t.Logf("%d", len(e))
-
 	c := NewMockReadWriteCloser(queued)
 	ch := event.NewDefaultEventChannel(c)
 	evt, err := ch.ReceiveEvent()

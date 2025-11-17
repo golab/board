@@ -62,4 +62,10 @@ twitch:
 	assert.Equal(t, cfg.Twitch.ClientID, "abc")
 	assert.Equal(t, cfg.Twitch.Secret, "123")
 	assert.Equal(t, cfg.Twitch.BotID, "xyz")
+
+	cfg.Redact()
+
+	assert.Equal(t, cfg.Twitch.ClientID, "***")
+	assert.Equal(t, cfg.Twitch.Secret, "***")
+	assert.Equal(t, cfg.Twitch.BotID, "***")
 }
