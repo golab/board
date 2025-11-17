@@ -13,6 +13,7 @@ package core_test
 import (
 	"testing"
 
+	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/pkg/core"
 )
 
@@ -23,4 +24,9 @@ func TestHash1(t *testing.T) {
 	if !core.CorrectPassword(password, hash) {
 		t.Errorf("error checking password")
 	}
+}
+
+func TestHash2(t *testing.T) {
+	h := core.Hash("test")
+	assert.Equal(t, len(h), 60)
 }

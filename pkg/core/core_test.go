@@ -173,3 +173,9 @@ func TestUUID(t *testing.T) {
 	s := core.UUID4()
 	assert.Equal(t, len(s), 32)
 }
+
+func TestColor(t *testing.T) {
+	assert.Equal(t, core.Black.String(), "B")
+	assert.Equal(t, core.White.String(), "W")
+	assert.Equal(t, core.NoColor.String(), "+")
+}
