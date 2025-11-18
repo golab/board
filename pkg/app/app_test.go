@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package main_test
+package app_test
 
 import (
 	"bytes"
@@ -17,13 +17,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	main "github.com/jarednogo/board/cmd"
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/pkg/app"
 	"github.com/jarednogo/board/pkg/config"
 )
 
 func TestPing(t *testing.T) {
-	_, r, err := main.Setup(config.Test())
+	_, r, err := app.Setup(config.Test())
 	assert.NoError(t, err)
 
 	req := httptest.NewRequest("GET", "/api/ping", nil)
@@ -44,7 +44,7 @@ func TestPing(t *testing.T) {
 }
 
 func TestTwitch(t *testing.T) {
-	h, r, err := main.Setup(config.Test())
+	h, r, err := app.Setup(config.Test())
 	assert.NoError(t, err)
 
 	rec := httptest.NewRecorder()

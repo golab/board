@@ -12,6 +12,7 @@ package integration_test
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"testing"
 
 	"github.com/jarednogo/board/integration"
@@ -144,4 +145,130 @@ func TestSim3(t *testing.T) {
 
 	// make sure we have 1 room loaded
 	assert.Equal(t, sim.Hub.RoomCount(), 1)
+}
+
+// a mirror of the test in pkg/app, but just wanted to make sure it works
+func TestPing(t *testing.T) {
+	sim, err := integration.NewSim()
+	assert.NoError(t, err)
+
+	body, err := sim.SendGet("/api/ping")
+	assert.NoError(t, err)
+
+	pong := struct {
+		Message string `json:"message"`
+	}{}
+
+	err = json.Unmarshal(body, &pong)
+	assert.NoError(t, err)
+	assert.Equal(t, pong.Message, "pong")
+}
+
+func TestVersion(t *testing.T) {
+	sim, err := integration.NewSim()
+	assert.NoError(t, err)
+
+	body, err := sim.SendGet("/api/version")
+	assert.NoError(t, err)
+
+	resp := struct {
+		Message string `json:"message"`
+	}{}
+
+	err = json.Unmarshal(body, &resp)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.Message, "test")
+}
+
+func TestUpload(t *testing.T) {
+	sim, err := integration.NewSim()
+	assert.NoError(t, err)
+	body, err := sim.SendGet("/ext/upload")
+	assert.NoError(t, err)
+	// because there's no fetcher attached to the hub's rooms
+	// trying to upload doesn't do anything
+	assert.Equal(t, string(body), "bad request\n")
+	// still, a room will be allocated because of the request
+	assert.Equal(t, sim.Hub.RoomCount(), 1)
+}
+
+func TestWebRouter(t *testing.T) {
+	sim, err := integration.NewSim()
+	assert.NoError(t, err)
+
+	for _, route := range []string{"/", "/about", "/integrations"} {
+		body, err := sim.SendGet(route)
+		assert.NoError(t, err)
+		assert.True(t, len(body) > 1000)
+	}
+}
+
+func TestWebRouterStateful(t *testing.T) {
+	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.Scoring1))
+	evt := event.NewEvent("upload_sgf", sgf)
+
+	sim, err := integration.SimWithEvent("room123", evt)
+	assert.NoError(t, err)
+
+	body, err := sim.SendGet("/b/room123/sgf")
+	assert.NoError(t, err)
+	assert.Equal(t, len(body), 2091)
+
+	body, err = sim.SendGet("/b/room123/sgfix")
+	assert.NoError(t, err)
+	assert.Equal(t, len(body), 4298)
+
+	body, err = sim.SendGet("/b/room123/debug")
+	assert.NoError(t, err)
+	assert.Equal(t, len(body), 8316)
+}
+
+func TestScoring1(t *testing.T) {
+	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.Scoring1))
+	evts := []event.Event{
+		event.NewEvent("upload_sgf", sgf),
+		event.NewEvent("fastforward", nil),
+		event.NewEvent("markdead", []any{4.0, 3.0}),
+		event.NewEvent("markdead", []any{5.0, 2.0}),
+		event.NewEvent("markdead", []any{6.0, 3.0}),
+		event.NewEvent("markdead", []any{13.0, 0.0}),
+		event.NewEvent("markdead", []any{14.0, 1.0}),
+		event.NewEvent("markdead", []any{16.0, 0.0}),
+		event.NewEvent("markdead", []any{11.0, 5.0}),
+		event.NewEvent("markdead", []any{18.0, 5.0}),
+		event.NewEvent("markdead", []any{1.0, 15.0}),
+		event.NewEvent("markdead", []any{3.0, 13.0}),
+		event.NewEvent("score", nil),
+	}
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	saved := sim.Clients[0].SavedEvents
+	final, ok := (saved[len(saved)-1].Value()).(*core.Frame)
+	assert.True(t, ok)
+	assert.Equal(t, final.BlackCaps, 92)
+	assert.Equal(t, final.WhiteCaps, 74)
+	assert.Equal(t, len(final.BlackArea), 56)
+	assert.Equal(t, len(final.BlackArea), 56)
+	assert.Equal(t, len(final.Dame), 7)
+}
+
+func TestScoring3(t *testing.T) {
+	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.Scoring3))
+	evts := []event.Event{
+		event.NewEvent("upload_sgf", sgf),
+		event.NewEvent("fastforward", nil),
+		event.NewEvent("markdead", []any{3.0, 13.0}),
+		event.NewEvent("markdead", []any{5.0, 16.0}),
+		event.NewEvent("score", nil),
+	}
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	saved := sim.Clients[0].SavedEvents
+	final, ok := (saved[len(saved)-1].Value()).(*core.Frame)
+	assert.True(t, ok)
+	assert.Equal(t, final.BlackCaps, 29)
+	assert.Equal(t, final.WhiteCaps, 90)
+	assert.Equal(t, len(final.BlackArea), 27)
+	assert.Equal(t, len(final.BlackArea), 27)
+	assert.Equal(t, len(final.Dame), 11)
 }

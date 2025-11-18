@@ -11,8 +11,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package integration
 
 import (
+	"bytes"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"sync"
 
+	"github.com/jarednogo/board/pkg/app"
 	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/hub"
@@ -22,19 +27,37 @@ type Sim struct {
 	Hub     *hub.Hub
 	Clients []*event.TwoWayMockEventChannel
 	wg      sync.WaitGroup
+	router  http.Handler
 }
 
 func NewSim() (*Sim, error) {
-	h, err := hub.NewHub(config.Test())
+	h, r, err := app.Setup(config.Test())
 	if err != nil {
 		return nil, err
 	}
 
 	sim := &Sim{
-		Hub: h,
+		Hub:    h,
+		router: r,
 	}
 
 	return sim, nil
+}
+
+func (s *Sim) SendGet(route string) ([]byte, error) {
+	req := httptest.NewRequest("GET", route, nil)
+	rec := httptest.NewRecorder()
+	s.router.ServeHTTP(rec, req)
+
+	return io.ReadAll(rec.Body)
+}
+
+func (s *Sim) SendPost(route string, body []byte) ([]byte, error) {
+	req := httptest.NewRequest("POST", route, bytes.NewBuffer(body))
+	rec := httptest.NewRecorder()
+	s.router.ServeHTTP(rec, req)
+
+	return io.ReadAll(rec.Body)
 }
 
 func (s *Sim) AddClient(roomID string) {
@@ -72,4 +95,52 @@ func (s *Sim) FlushAll() {
 	for _, client := range s.Clients {
 		client.Flush()
 	}
+}
+
+func SimWithEvent(roomID string, evt event.Event) (*Sim, error) {
+	// make a new simulator and add some clients
+	sim, err := NewSim()
+	if err != nil {
+		return nil, err
+	}
+
+	sim.AddClient(roomID)
+
+	// connect all the clients
+	sim.ConnectAll()
+
+	sim.Clients[0].SimulateEvent(evt)
+
+	// let the event pass through all connections
+	sim.FlushAll()
+
+	// disconnect all the clients
+	sim.DisconnectAll()
+
+	return sim, nil
+}
+
+func SimWithEvents(roomID string, evts []event.Event) (*Sim, error) {
+	// make a new simulator and add some clients
+	sim, err := NewSim()
+	if err != nil {
+		return nil, err
+	}
+
+	sim.AddClient(roomID)
+
+	// connect all the clients
+	sim.ConnectAll()
+
+	for _, evt := range evts {
+		sim.Clients[0].SimulateEvent(evt)
+
+		// let the event pass through all connections
+		sim.FlushAll()
+	}
+
+	// disconnect all the clients
+	sim.DisconnectAll()
+
+	return sim, nil
 }

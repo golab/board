@@ -25,10 +25,11 @@ const (
 )
 
 type Config struct {
-	Mode   mode         `yaml:"mode"`
-	Server serverConfig `yaml:"server"`
-	Twitch twitchConfig `yaml:"twitch"`
-	DB     dbConfig     `yaml:"db"`
+	Mode    mode         `yaml:"mode"`
+	Server  serverConfig `yaml:"server"`
+	Twitch  twitchConfig `yaml:"twitch"`
+	DB      dbConfig     `yaml:"db"`
+	Version string       `yaml:"version"`
 }
 
 func (c *Config) Redact() {
@@ -127,6 +128,7 @@ func Test() *Config {
 		Type: DBConfigTypeMemory,
 	}
 	c.DB = db
+	c.Version = "test"
 	return c
 }
 

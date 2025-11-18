@@ -18,9 +18,12 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/jarednogo/board/pkg/app"
 	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/logx"
 )
+
+var version = "dev"
 
 func main() {
 	// set up root logger
@@ -42,12 +45,14 @@ func main() {
 		cfg = loadedCfg
 	}
 
+	cfg.Version = version
+
 	safe := *cfg
 	safe.Redact()
 	logger.Info("running config", "config", fmt.Sprintf("%v", safe))
 
 	// setup routes
-	h, r, err := Setup(cfg, logger.AsMiddleware)
+	h, r, err := app.Setup(cfg, logger.AsMiddleware)
 	if err != nil {
 		logger.Error("error in setup", "err", err)
 		return
