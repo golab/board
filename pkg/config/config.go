@@ -37,6 +37,10 @@ func (c *Config) Redact() {
 	c.DB.redact()
 }
 
+func (c *Config) TwitchEnabled() bool {
+	return c.Twitch.ClientID != "" && c.Twitch.Secret != "" && c.Twitch.BotID != ""
+}
+
 type serverConfig struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`

@@ -116,6 +116,10 @@ func integrations(w http.ResponseWriter, r *http.Request) {
 	includeCommon(w, "integrations.html")
 }
 
+func integrationsDisabled(w http.ResponseWriter, r *http.Request) {
+	includeCommon(w, "integrations_disabled.html")
+}
+
 func board(w http.ResponseWriter, r *http.Request) {
 	boardID := chi.URLParam(r, "boardID")
 	if boardID != core.Sanitize(boardID) {
@@ -178,7 +182,11 @@ func (h *Hub) WebRouter() http.Handler {
 	// pure web endpoints
 	r.Get("/", index)
 	r.Get("/about", about)
-	r.Get("/integrations", integrations)
+	if h.cfg.TwitchEnabled() {
+		r.Get("/integrations", integrations)
+	} else {
+		r.Get("/integrations", integrationsDisabled)
+	}
 	r.Get("/favicon.ico", favicon)
 	r.Post("/new", newBoard)
 
