@@ -109,6 +109,12 @@ func SimWithEvents(roomID string, evts []event.Event) (*Sim, error) {
 	// connect all the clients
 	sim.ConnectAll()
 
+	room, err := sim.Hub.GetRoom(roomID)
+	if err != nil {
+		return nil, err
+	}
+	room.DisableBuffers()
+
 	for _, evt := range evts {
 		sim.Clients[0].SimulateEvent(evt)
 

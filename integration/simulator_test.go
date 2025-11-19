@@ -411,3 +411,109 @@ func TestGotoCoord(t *testing.T) {
 	node := room.Current()
 	assert.Equal(t, node.Index, 78)
 }
+
+func TestCut(t *testing.T) {
+	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.Resignation1))
+	evts := []event.Event{
+		event.NewEvent("upload_sgf", sgf),
+		event.NewEvent("right", nil),
+		event.NewEvent("right", nil),
+		event.NewEvent("cut", nil),
+	}
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	node := room.Current()
+	assert.Equal(t, len(node.Down), 0)
+	assert.True(t, node.XY.Equal(&core.Coord{X: 15.0, Y: 3.0}))
+}
+
+func TestCutClipboard(t *testing.T) {
+	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.Resignation1))
+	evts := []event.Event{
+		event.NewEvent("upload_sgf", sgf),
+		event.NewEvent("goto_grid", 99.0),
+		event.NewEvent("cut", nil),
+		event.NewEvent("add_stone", map[string]any{
+			"color":  1.0,
+			"coords": []any{16.0, 14.0},
+		}),
+		event.NewEvent("add_stone", map[string]any{
+			"color":  2.0,
+			"coords": []any{17.0, 14.0},
+		}),
+		event.NewEvent("clipboard", nil),
+		event.NewEvent("fastforward", nil),
+	}
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	assert.Equal(t, room.Board().Get(&core.Coord{X: 16.0, Y: 14.0}), core.Black)
+	assert.Equal(t, room.Board().Get(&core.Coord{X: 17.0, Y: 14.0}), core.White)
+}
+
+func TestDraw(t *testing.T) {
+	evts := []event.Event{
+		event.NewEvent("draw", []any{0.0, 0.0, 25.0, 25.0, "#FEFEFE"}),
+	}
+
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	node := room.Current()
+	d, ok := node.Fields["PX"]
+	assert.True(t, ok)
+	assert.Equal(t, len(d), 1)
+	assert.Equal(t, d[0], "0.0000:0.0000:25.0000:25.0000:#FEFEFE")
+}
+
+func TestErasePen(t *testing.T) {
+	evts := []event.Event{
+		event.NewEvent("draw", []any{0.0, 0.0, 25.0, 25.0, "#FEFEFE"}),
+		event.NewEvent("erase_pen", nil),
+	}
+
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	node := room.Current()
+	_, ok := node.Fields["PX"]
+	assert.False(t, ok)
+}
+
+func TestComment(t *testing.T) {
+	evts := []event.Event{
+		event.NewEvent("comment", "some comment"),
+	}
+
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	node := room.Current()
+	c, ok := node.Fields["C"]
+	assert.True(t, ok)
+	assert.Equal(t, len(c), 1)
+	assert.Equal(t, c[0], "some comment\n")
+}
+
+func TestGraft(t *testing.T) {
+	evts := []event.Event{
+		event.NewEvent("graft", "K10 K11 K12 K13"),
+		event.NewEvent("fastforward", nil),
+	}
+
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	board := room.Board()
+	assert.Equal(t, board.Get(&core.Coord{X: 9.0, Y: 9.0}), core.Black)
+	assert.Equal(t, board.Get(&core.Coord{X: 9.0, Y: 8.0}), core.White)
+	assert.Equal(t, board.Get(&core.Coord{X: 9.0, Y: 7.0}), core.Black)
+	assert.Equal(t, board.Get(&core.Coord{X: 9.0, Y: 6.0}), core.White)
+}
