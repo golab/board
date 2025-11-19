@@ -119,5 +119,8 @@ func SimWithEvents(roomID string, evts []event.Event) (*Sim, error) {
 	// disconnect all the clients
 	sim.DisconnectAll()
 
+	// let the hub close by waiting for all the room handlers to finish
+	sim.Hub.Close()
+
 	return sim, nil
 }

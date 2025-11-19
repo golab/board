@@ -49,6 +49,7 @@ type Hub struct {
 	mu       sync.Mutex
 	cfg      *config.Config
 	logger   logx.Logger
+	wg       sync.WaitGroup
 }
 
 func NewHub(cfg *config.Config) (*Hub, error) {
@@ -256,6 +257,8 @@ func (h *Hub) Handler(ec event.EventChannel, roomID string) {
 
 	// get or create the room
 	r := h.GetOrCreateRoom(roomID)
+	h.wg.Add(1)
+	defer h.wg.Done()
 
 	// send to the room for handling
 	h.logger.Info(
@@ -269,4 +272,9 @@ func (h *Hub) Handler(ec event.EventChannel, roomID string) {
 		"room_id", r.ID(),
 		"reason", r.Handle(ec),
 	)
+}
+
+// this is purely for testing (see simulator.go)
+func (h *Hub) Close() {
+	h.wg.Wait()
 }
