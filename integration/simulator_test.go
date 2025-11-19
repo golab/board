@@ -517,3 +517,158 @@ func TestGraft(t *testing.T) {
 	assert.Equal(t, board.Get(&core.Coord{X: 9.0, Y: 7.0}), core.Black)
 	assert.Equal(t, board.Get(&core.Coord{X: 9.0, Y: 6.0}), core.White)
 }
+
+func TestTrash(t *testing.T) {
+	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.Resignation1))
+	evts := []event.Event{
+		event.NewEvent("upload_sgf", sgf),
+		event.NewEvent("trash", nil),
+	}
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	node := room.Current()
+	assert.Equal(t, len(node.Down), 0)
+	assert.Equal(t, node.XY, nil)
+}
+
+func TestUpdateSettings(t *testing.T) {
+	evts := []event.Event{
+		event.NewEvent("update_settings", map[string]any{
+			"buffer":   500.0,
+			"size":     13.0,
+			"nickname": "user123",
+			"black":    "player b",
+			"white":    "player w",
+			"komi":     "8.5",
+			"password": "",
+		}),
+	}
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	assert.Equal(t, room.GetInputBuffer(), 500)
+	assert.Equal(t, room.Size(), 13)
+}
+
+func TestUploadSGFArray(t *testing.T) {
+	sgf1 := base64.StdEncoding.EncodeToString([]byte(sgfsamples.Resignation1))
+	sgf2 := base64.StdEncoding.EncodeToString([]byte(sgfsamples.Scoring1))
+	evts := []event.Event{
+		event.NewEvent("upload_sgf", []any{
+			sgf1,
+			sgf2,
+		}),
+	}
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	save := room.Save()
+	assert.Equal(t, len(save.SGF), 10072)
+}
+
+func TestUploadSGFZip(t *testing.T) {
+	z := base64.StdEncoding.EncodeToString(sgfsamples.SimpleZip)
+	evts := []event.Event{
+		event.NewEvent("upload_sgf", z),
+	}
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	save := room.Save()
+	assert.Equal(t, len(save.SGF), 188)
+}
+
+func TestIsProtected(t *testing.T) {
+	evts := []event.Event{
+		event.NewEvent("isprotected", nil),
+	}
+
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+
+	es := sim.Clients[0].SavedEvents
+	assert.Equal(t, len(es), 3)
+	last := es[2]
+	assert.Equal(t, last.Type(), "isprotected")
+	assert.False(t, last.Value().(bool))
+}
+
+func TestCheckPassword1(t *testing.T) {
+	evts := []event.Event{
+		event.NewEvent("update_settings", map[string]any{
+			"buffer":   500.0,
+			"size":     13.0,
+			"nickname": "user123",
+			"black":    "player b",
+			"white":    "player w",
+			"komi":     "8.5",
+			"password": "deadbeef",
+		}),
+
+		event.NewEvent("isprotected", nil),
+	}
+
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+
+	es := sim.Clients[0].SavedEvents
+	assert.Equal(t, len(es), 6)
+	last := es[5]
+	assert.Equal(t, last.Type(), "isprotected")
+	assert.True(t, last.Value().(bool))
+}
+
+func TestCheckPassword2(t *testing.T) {
+	evts := []event.Event{
+		event.NewEvent("update_settings", map[string]any{
+			"buffer":   500.0,
+			"size":     13.0,
+			"nickname": "user123",
+			"black":    "player b",
+			"white":    "player w",
+			"komi":     "8.5",
+			"password": "deadbeef",
+		}),
+
+		event.NewEvent("checkpassword", "deadb33f"),
+	}
+
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+
+	es := sim.Clients[0].SavedEvents
+	assert.Equal(t, len(es), 6)
+	last := es[5]
+	assert.Equal(t, last.Type(), "checkpassword")
+	assert.Equal(t, last.Value().(string), "")
+}
+
+func TestCheckPassword3(t *testing.T) {
+	evts := []event.Event{
+		event.NewEvent("update_settings", map[string]any{
+			"buffer":   500.0,
+			"size":     13.0,
+			"nickname": "user123",
+			"black":    "player b",
+			"white":    "player w",
+			"komi":     "8.5",
+			"password": "deadbeef",
+		}),
+
+		event.NewEvent("checkpassword", "deadbeef"),
+	}
+
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+
+	es := sim.Clients[0].SavedEvents
+	assert.Equal(t, len(es), 6)
+	last := es[5]
+	assert.Equal(t, last.Type(), "checkpassword")
+	assert.Equal(t, last.Value().(string), "deadbeef")
+}
