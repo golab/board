@@ -207,7 +207,7 @@ func TestWebRouterStateful(t *testing.T) {
 	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.Scoring1))
 	evt := event.NewEvent("upload_sgf", sgf)
 
-	sim, err := integration.SimWithEvent("room123", evt)
+	sim, err := integration.SimWithEvents("room123", []event.Event{evt})
 	assert.NoError(t, err)
 
 	body, err := sim.SendGet("/b/room123/sgf")
@@ -271,4 +271,143 @@ func TestScoring3(t *testing.T) {
 	assert.Equal(t, len(final.BlackArea), 27)
 	assert.Equal(t, len(final.BlackArea), 27)
 	assert.Equal(t, len(final.Dame), 11)
+}
+
+func TestAddStone(t *testing.T) {
+	evts := []event.Event{
+		event.NewEvent("add_stone", map[string]any{
+			"color":  1.0,
+			"coords": []any{2.0, 2.0},
+		}),
+	}
+
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	assert.True(t, room.Current().XY.Equal(&core.Coord{X: 2, Y: 2}))
+}
+
+func TestPass(t *testing.T) {
+	evts := []event.Event{
+		event.NewEvent("pass", 1.0),
+	}
+
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	assert.Equal(t, room.Current().XY, nil)
+}
+
+func TestRemoveStone(t *testing.T) {
+	evts := []event.Event{
+		event.NewEvent("add_stone", map[string]any{
+			"color":  1.0,
+			"coords": []any{2.0, 2.0},
+		}),
+		event.NewEvent("remove_stone", []any{2.0, 2.0}),
+	}
+
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	assert.Equal(t, room.Current().XY, nil)
+}
+
+func TestMarks(t *testing.T) {
+	evts := []event.Event{
+		event.NewEvent("triangle", []any{2.0, 2.0}),
+		event.NewEvent("square", []any{3.0, 3.0}),
+		event.NewEvent("letter", map[string]any{
+			"coords": []any{4.0, 4.0},
+			"letter": "A",
+		}),
+		event.NewEvent("number", map[string]any{
+			"coords": []any{5.0, 5.0},
+			"number": 1.0,
+		}),
+	}
+
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	node := room.Current()
+	assert.Equal(t, node.Fields["TR"][0], "cc")
+	assert.Equal(t, node.Fields["SQ"][0], "dd")
+	assert.Equal(t, node.Fields["LB"][0], "ee:A")
+	assert.Equal(t, node.Fields["LB"][1], "ff:1")
+}
+
+func TestRemoveMark(t *testing.T) {
+	evts := []event.Event{
+		event.NewEvent("triangle", []any{2.0, 2.0}),
+		event.NewEvent("remove_mark", []any{2.0, 2.0}),
+	}
+
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	node := room.Current()
+	assert.Equal(t, len(node.Fields["TR"]), 0)
+}
+
+func TestNav(t *testing.T) {
+	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.Resignation1))
+	evts := []event.Event{
+		event.NewEvent("upload_sgf", sgf),
+		event.NewEvent("fastforward", nil),
+		event.NewEvent("rewind", nil),
+		event.NewEvent("right", nil),
+		event.NewEvent("right", nil),
+		event.NewEvent("right", nil),
+		event.NewEvent("right", nil),
+		event.NewEvent("right", nil),
+		event.NewEvent("left", nil),
+		event.NewEvent("add_stone", map[string]any{
+			"color":  1.0,
+			"coords": []any{2.0, 2.0},
+		}),
+		event.NewEvent("left", nil),
+		event.NewEvent("up", nil),
+		event.NewEvent("down", nil),
+		event.NewEvent("right", nil),
+	}
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	node := room.Current()
+	assert.True(t, node.XY.Equal(&core.Coord{X: 2.0, Y: 2.0}))
+}
+
+func TestGotoGrid(t *testing.T) {
+	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.Resignation1))
+	evts := []event.Event{
+		event.NewEvent("upload_sgf", sgf),
+		event.NewEvent("goto_grid", 170.0),
+	}
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	node := room.Current()
+	assert.True(t, node.XY.Equal(&core.Coord{X: 1.0, Y: 1.0}))
+}
+
+func TestGotoCoord(t *testing.T) {
+	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.Resignation1))
+	evts := []event.Event{
+		event.NewEvent("upload_sgf", sgf),
+		event.NewEvent("goto_coord", []any{9.0, 9.0}),
+	}
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	node := room.Current()
+	assert.Equal(t, node.Index, 78)
 }

@@ -97,29 +97,6 @@ func (s *Sim) FlushAll() {
 	}
 }
 
-func SimWithEvent(roomID string, evt event.Event) (*Sim, error) {
-	// make a new simulator and add some clients
-	sim, err := NewSim()
-	if err != nil {
-		return nil, err
-	}
-
-	sim.AddClient(roomID)
-
-	// connect all the clients
-	sim.ConnectAll()
-
-	sim.Clients[0].SimulateEvent(evt)
-
-	// let the event pass through all connections
-	sim.FlushAll()
-
-	// disconnect all the clients
-	sim.DisconnectAll()
-
-	return sim, nil
-}
-
 func SimWithEvents(roomID string, evts []event.Event) (*Sim, error) {
 	// make a new simulator and add some clients
 	sim, err := NewSim()
