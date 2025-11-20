@@ -82,20 +82,12 @@ export function create_buttons(_state) {
     button_row1.appendChild(number_button);
 
     // row 2
-
-    // pen
-    let pen_button = new_icon_button("bi-pen", () => state.set_pen());
-    add_tooltip(pen_button, "Draw with a pen (9)");
-    button_row2.appendChild(pen_button);
-
+    //
     // color picker
     let color_picker = document.createElement("input");
     color_picker.setAttribute("type", "color");
     color_picker.setAttribute("id", "color-picker");
-
     color_picker.setAttribute("value", state.pen_color);
-
-    button_row2.appendChild(color_picker);
     color_picker.style.display = "none";
 
     // palette button
@@ -103,7 +95,13 @@ export function create_buttons(_state) {
     add_tooltip(palette, "Select pen color");
     palette.style.background = state.pen_color;
     button_row2.appendChild(palette);
+    button_row2.appendChild(color_picker);
     color_picker.onchange = function() {state.pen_color = this.value; palette.style.background=this.value;};
+
+    // pen
+    let pen_button = new_icon_button("bi-pen", () => state.set_pen());
+    add_tooltip(pen_button, "Draw with a pen (9)");
+    button_row2.appendChild(pen_button);
 
     // eraser
     let eraser_button = new_icon_button("bi-eraser-fill", () => state.network_handler.prepare_erase_pen());
