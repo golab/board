@@ -52,15 +52,15 @@ func main() {
 	logger.Info("running config", "config", fmt.Sprintf("%v", safe))
 
 	// setup routes
-	h, r, err := app.Setup(cfg, logger)
+	a, err := app.New(cfg, logger)
 	if err != nil {
 		logger.Error("error in setup", "err", err)
 		return
 	}
 
 	// start everything
-	h.Load()
-	defer h.Save()
+	a.Hub.Load()
+	defer a.Hub.Save()
 	host := cfg.Server.Host
 	port := cfg.Server.Port
 	url := fmt.Sprintf("%s:%d", host, port)
@@ -74,7 +74,7 @@ func main() {
 	// run server
 	go func() {
 		logger.Info("listening on", "url", url)
-		err = http.ListenAndServe(url, r)
+		err = http.ListenAndServe(url, a.Router)
 		logger.Error("error listening", "err", err)
 	}()
 

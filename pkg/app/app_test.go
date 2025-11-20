@@ -19,16 +19,18 @@ import (
 
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/pkg/app"
+	"github.com/jarednogo/board/pkg/config"
+	"github.com/jarednogo/board/pkg/logx"
 )
 
 func TestPing(t *testing.T) {
-	_, r, err := app.TestingSetup()
+	a, err := app.New(config.Test(), logx.NewRecorder(logx.LogLevelInfo))
 	assert.NoError(t, err)
 
 	req := httptest.NewRequest("GET", "/api/ping", nil)
 
 	rec := httptest.NewRecorder()
-	r.ServeHTTP(rec, req)
+	a.Router.ServeHTTP(rec, req)
 
 	body, err := io.ReadAll(rec.Body)
 	assert.NoError(t, err)
@@ -43,20 +45,20 @@ func TestPing(t *testing.T) {
 }
 
 func TestTwitch(t *testing.T) {
-	h, r, err := app.TestingSetup()
+	a, err := app.New(config.Test(), logx.NewRecorder(logx.LogLevelInfo))
 	assert.NoError(t, err)
 
 	rec := httptest.NewRecorder()
 
 	body := []byte(`{"event": {"message": {"text": "!setboard Board"}}}`)
 	req := httptest.NewRequest("POST", "/apps/twitch/callback", bytes.NewBuffer(body))
-	r.ServeHTTP(rec, req)
+	a.Router.ServeHTTP(rec, req)
 
 	body = []byte(`{"event": {"message": {"text": "!branch k10 k11"}}}`)
 	req = httptest.NewRequest("POST", "/apps/twitch/callback", bytes.NewBuffer(body))
-	r.ServeHTTP(rec, req)
+	a.Router.ServeHTTP(rec, req)
 
-	room, err := h.GetRoom("Board")
+	room, err := a.Hub.GetRoom("Board")
 	assert.NoError(t, err)
 	assert.Equal(t, len(room.ToSGF()), 77)
 }

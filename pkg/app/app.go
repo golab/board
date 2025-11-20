@@ -20,17 +20,17 @@ import (
 	"github.com/jarednogo/board/pkg/logx"
 )
 
-func TestingSetup() (*hub.Hub, http.Handler, error) {
-	cfg := config.Test()
-	logger := logx.NewRecorder(logx.LogLevelInfo)
-	return Setup(cfg, logger)
+type App struct {
+	Hub    *hub.Hub
+	Router http.Handler
+	Logger logx.Logger
 }
 
-func Setup(cfg *config.Config, logger logx.Logger) (*hub.Hub, http.Handler, error) {
+func New(cfg *config.Config, logger logx.Logger) (*App, error) {
 	// make a new hub
 	h, err := hub.NewHub(cfg)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// init loggers
@@ -59,5 +59,5 @@ func Setup(cfg *config.Config, logger logx.Logger) (*hub.Hub, http.Handler, erro
 	// mount websocket
 	r.Mount("/socket", h.SocketRouter())
 
-	return h, r, nil
+	return &App{h, r, logger}, nil
 }

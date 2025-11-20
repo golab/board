@@ -672,3 +672,28 @@ func TestCheckPassword3(t *testing.T) {
 	assert.Equal(t, last.Type(), "checkpassword")
 	assert.Equal(t, last.Value().(string), "deadbeef")
 }
+
+func TestLogs(t *testing.T) {
+	evts := []event.Event{}
+
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+
+	// testing to make sure the log messages ended up in the recorder
+	lines := sim.Logger.Lines()
+	msgs := make(map[string]bool)
+	for _, line := range lines {
+		var m map[string]any
+		err = json.Unmarshal([]byte(line), &m)
+		assert.NoError(t, err)
+		msgs[m["msg"].(string)] = true
+	}
+	_, ok := msgs["new room"]
+	assert.True(t, ok)
+
+	_, ok = msgs["new connection"]
+	assert.True(t, ok)
+
+	_, ok = msgs["disconnection"]
+	assert.True(t, ok)
+}

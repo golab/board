@@ -18,8 +18,10 @@ import (
 	"sync"
 
 	"github.com/jarednogo/board/pkg/app"
+	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/hub"
+	"github.com/jarednogo/board/pkg/logx"
 )
 
 type Sim struct {
@@ -27,17 +29,20 @@ type Sim struct {
 	Clients []*event.TwoWayMockEventChannel
 	wg      sync.WaitGroup
 	router  http.Handler
+	Logger  *logx.Recorder
 }
 
 func NewSim() (*Sim, error) {
-	h, r, err := app.TestingSetup()
+	l := logx.NewRecorder(logx.LogLevelInfo)
+	a, err := app.New(config.Test(), l)
 	if err != nil {
 		return nil, err
 	}
 
 	sim := &Sim{
-		Hub:    h,
-		router: r,
+		Hub:    a.Hub,
+		router: a.Router,
+		Logger: l,
 	}
 
 	return sim, nil
