@@ -1,4 +1,4 @@
-FROM golang:1.23.8-alpine
+FROM golang:1.24.0-alpine
 
 ADD pkg /root/pkg
 ADD cmd /root/cmd
