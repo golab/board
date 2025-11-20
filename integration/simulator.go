@@ -18,7 +18,6 @@ import (
 	"sync"
 
 	"github.com/jarednogo/board/pkg/app"
-	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/hub"
 )
@@ -31,7 +30,7 @@ type Sim struct {
 }
 
 func NewSim() (*Sim, error) {
-	h, r, err := app.Setup(config.Test())
+	h, r, err := app.TestingSetup()
 	if err != nil {
 		return nil, err
 	}

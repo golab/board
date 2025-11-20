@@ -52,14 +52,11 @@ func main() {
 	logger.Info("running config", "config", fmt.Sprintf("%v", safe))
 
 	// setup routes
-	h, r, err := app.Setup(cfg, logger.AsMiddleware)
+	h, r, err := app.Setup(cfg, logger)
 	if err != nil {
 		logger.Error("error in setup", "err", err)
 		return
 	}
-
-	// init loggers
-	h.SetLogger(logger)
 
 	// start everything
 	h.Load()

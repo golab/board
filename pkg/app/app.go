@@ -17,25 +17,31 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/hub"
+	"github.com/jarednogo/board/pkg/logx"
 )
 
-type midware func(http.Handler) http.Handler
+func TestingSetup() (*hub.Hub, http.Handler, error) {
+	cfg := config.Test()
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	return Setup(cfg, logger)
+}
 
-func Setup(cfg *config.Config, ms ...midware) (*hub.Hub, http.Handler, error) {
+func Setup(cfg *config.Config, logger logx.Logger) (*hub.Hub, http.Handler, error) {
 	// make a new hub
 	h, err := hub.NewHub(cfg)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	// init loggers
+	h.SetLogger(logger)
+
 	// http server setup
 
 	// initialize router and middlewares
 	r := chi.NewRouter()
 	r.Use(middleware.StripSlashes)
-	for _, m := range ms {
-		r.Use(m)
-	}
+	r.Use(logger.AsMiddleware)
 
 	// web router
 	r.Mount("/", h.WebRouter())

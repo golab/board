@@ -19,11 +19,10 @@ import (
 
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/pkg/app"
-	"github.com/jarednogo/board/pkg/config"
 )
 
 func TestPing(t *testing.T) {
-	_, r, err := app.Setup(config.Test())
+	_, r, err := app.TestingSetup()
 	assert.NoError(t, err)
 
 	req := httptest.NewRequest("GET", "/api/ping", nil)
@@ -44,7 +43,7 @@ func TestPing(t *testing.T) {
 }
 
 func TestTwitch(t *testing.T) {
-	h, r, err := app.Setup(config.Test())
+	h, r, err := app.TestingSetup()
 	assert.NoError(t, err)
 
 	rec := httptest.NewRecorder()

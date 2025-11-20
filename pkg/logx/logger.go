@@ -11,9 +11,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package logx
 
 import (
+	"bytes"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type LogLevel int
@@ -37,7 +40,7 @@ type DefaultLogger struct {
 	s *slog.Logger
 }
 
-func NewDefaultLogger(lvl LogLevel) *DefaultLogger {
+func NewDefaultLoggerWithWriter(lvl LogLevel, w io.Writer) *DefaultLogger {
 	level := new(slog.LevelVar)
 	switch lvl {
 	case LogLevelDebug:
@@ -51,7 +54,7 @@ func NewDefaultLogger(lvl LogLevel) *DefaultLogger {
 	}
 
 	handler := slog.NewJSONHandler(
-		os.Stderr,
+		w,
 		&slog.HandlerOptions{
 			Level: level,
 		},
@@ -59,6 +62,10 @@ func NewDefaultLogger(lvl LogLevel) *DefaultLogger {
 	return &DefaultLogger{
 		slog.New(handler),
 	}
+}
+
+func NewDefaultLogger(lvl LogLevel) *DefaultLogger {
+	return NewDefaultLoggerWithWriter(lvl, os.Stderr)
 }
 
 func (l *DefaultLogger) Debug(msg string, args ...any) {
@@ -82,4 +89,20 @@ func (l *DefaultLogger) AsMiddleware(next http.Handler) http.Handler {
 		l.Debug("http", "method", r.Method, "path", r.URL.Path)
 		next.ServeHTTP(w, r)
 	})
+}
+
+type Recorder struct {
+	*bytes.Buffer
+	*DefaultLogger
+}
+
+func NewRecorder(lvl LogLevel) *Recorder {
+	var buffer bytes.Buffer
+	l := NewDefaultLoggerWithWriter(lvl, &buffer)
+	return &Recorder{&buffer, l}
+}
+
+func (r *Recorder) Lines() []string {
+	s := strings.TrimSpace(r.String())
+	return strings.Split(s, "\n")
 }
