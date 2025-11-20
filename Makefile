@@ -102,7 +102,7 @@ clean: ## Remove build artifacts
 
 build-docker: ## Build docker container
 	@echo "==> build-docker"
-	docker build --build-arg VERSION=$(git describe --tags) -t board .
+	docker build --build-arg VERSION=$(VERSION) -t board .
 
 run-docker: build-docker ## Run docker container
 	@echo "==> run-docker"
