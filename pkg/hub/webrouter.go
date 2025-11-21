@@ -27,8 +27,8 @@ import (
 
 func (h *Hub) HandleOp(op, roomID string) string {
 	data := ""
-	r, ok := h.rooms[roomID]
-	if !ok {
+	r, err := h.GetRoom(roomID)
+	if err != nil {
 		return ""
 	}
 	switch op {

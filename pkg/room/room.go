@@ -25,11 +25,9 @@ import (
 	"github.com/jarednogo/board/pkg/state"
 )
 
-type engine = state.State
-
 type Room struct {
-	conns map[string]event.EventChannel
-	*engine
+	conns        map[string]event.EventChannel
+	state        *state.State
 	lastActive   *time.Time
 	lastUser     string
 	lastMessages map[string]*time.Time
@@ -59,7 +57,7 @@ func NewRoom(id string) *Room {
 
 	r := &Room{
 		conns:        conns,
-		engine:       s,
+		state:        s,
 		lastActive:   &now,
 		lastUser:     "",
 		lastMessages: msgs,
@@ -98,9 +96,9 @@ func Load(load *loader.LoadJSON) (*Room, error) {
 	loc := load.Location
 	st.SetLocation(loc)
 	r := NewRoom(id)
-	r.password = load.Password
-	r.inputBuffer = load.Buffer
-	r.setState(st)
+	r.SetPassword(load.Password)
+	r.SetInputBuffer(load.Buffer)
+	r.SetState(st)
 
 	return r, nil
 }
@@ -109,12 +107,6 @@ func (r *Room) ID() string {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return r.id
-}
-
-func (r *Room) SetEngine(e *engine) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.engine = e
 }
 
 func (r *Room) GetLastMessages(user string) (time.Time, bool) {
@@ -161,7 +153,7 @@ func (r *Room) SetLastUser(user string) {
 func (r *Room) SaveState() *state.StateJSON {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	return r.engine.Save()
+	return r.state.Save()
 }
 
 func (r *Room) GetInputBuffer() int64 {
@@ -182,6 +174,12 @@ func (r *Room) SetUserBuffer(i int64) {
 	r.userBuffer = i
 }
 
+func (r *Room) GetUserBuffer() int64 {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.userBuffer
+}
+
 func (r *Room) SetAuth(user string, val bool) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -195,10 +193,12 @@ func (r *Room) GetAuth(user string) bool {
 	return ok
 }
 
-// used for testing
-func (r *Room) DisableBuffers() {
-	r.SetInputBuffer(0)
-	r.SetUserBuffer(0)
+func (r *Room) SetAuthAll() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for connID := range r.conns {
+		r.auth[connID] = true
+	}
 }
 
 func (r *Room) GetTimeout() float64 {
@@ -211,6 +211,12 @@ func (r *Room) SetTimeout(f float64) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.timeout = f
+}
+
+func (r *Room) Nicks() map[string]string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.nicks
 }
 
 func (r *Room) GetNick(user string) (string, bool) {
@@ -230,7 +236,7 @@ func (r *Room) Save() *loader.LoadJSON {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	stateJSON := r.engine.Save()
+	stateJSON := r.state.Save()
 
 	// embed stateJSON into save
 	save := &loader.LoadJSON{}
@@ -247,6 +253,8 @@ func (r *Room) Save() *loader.LoadJSON {
 }
 
 func (r *Room) Close() error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	// close all the client connections
 	errs := []error{}
 	for _, conn := range r.conns {
@@ -261,16 +269,22 @@ func (r *Room) Close() error {
 	return fmt.Errorf("%v", errs)
 }
 
-func (r *Room) setState(s *state.State) {
+func (r *Room) SetState(s *state.State) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.engine = s
+	r.state = s
 }
 
 func (r *Room) SetFetcher(f fetch.Fetcher) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.fetcher = f
+}
+
+func (r *Room) GetFetcher() fetch.Fetcher {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.fetcher
 }
 
 func (r *Room) HasPassword() bool {
@@ -300,12 +314,13 @@ func (r *Room) SendTo(id string, evt event.Event) {
 }
 
 func (r *Room) Broadcast(evt event.Event) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	if evt.Type() == "nop" {
 		return
 	}
 
-	r.mu.Lock()
-	defer r.mu.Unlock()
 	// rebroadcast message
 	for _, conn := range r.conns {
 		conn.SendEvent(evt) //nolint:errcheck
@@ -332,18 +347,22 @@ func (r *Room) BroadcastHubMessage(m *message.Message) {
 }
 
 func (r *Room) UploadSGF(sgf string) event.Event {
-	r.mu.Lock()
-	defer r.mu.Unlock()
 	s, err := state.FromSGF(sgf)
 	if err != nil {
 		msg := fmt.Sprintf("Error parsing SGF: %s", err)
 		return event.ErrorEvent(msg)
 	}
-	r.engine = s
+	r.SetState(s)
 
 	// replace evt with frame data
 	frame := r.GenerateFullFrame(core.Full)
 	return event.FrameEvent(frame)
+}
+
+// used for testing
+func (r *Room) DisableBuffers() {
+	r.SetInputBuffer(0)
+	r.SetUserBuffer(0)
 }
 
 func (r *Room) SendUserList() {
@@ -421,6 +440,16 @@ func (r *Room) Handle(ec event.EventChannel) error {
 	}
 }
 
+func (room *Room) GetHandler(t string) EventHandler {
+	room.mu.Lock()
+	defer room.mu.Unlock()
+	h, ok := room.handlers[t]
+	if ok {
+		return h
+	}
+	return room.handlers["_"]
+}
+
 func (r *Room) RegisterPlugin(p plugin.Plugin, args map[string]any) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -452,4 +481,84 @@ func (r *Room) HasPlugin(key string) bool {
 	defer r.mu.Unlock()
 	_, ok := r.plugins[key]
 	return ok
+}
+
+func (r *Room) Execute(cmd state.Command) (*core.Frame, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return cmd.Execute(r.state)
+}
+
+// wrappers around the state
+func (r *Room) Size() int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.state.Size()
+}
+
+func (r *Room) GenerateFullFrame(t core.TreeJSONType) *core.Frame {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.state.GenerateFullFrame(t)
+}
+
+func (r *Room) EditPlayerBlack(s string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.state.EditPlayerBlack(s)
+}
+
+func (r *Room) EditPlayerWhite(s string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.state.EditPlayerWhite(s)
+}
+
+func (r *Room) EditKomi(s string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.state.EditKomi(s)
+}
+
+func (r *Room) AddStones(moves []*core.Stone) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.state.AddStones(moves)
+}
+
+func (r *Room) HeadColor() core.Color {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.state.HeadColor()
+}
+
+func (r *Room) PushHead(x, y int, col core.Color) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.state.PushHead(x, y, col)
+}
+
+func (r *Room) ToSGF() string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.state.ToSGF()
+}
+
+func (r *Room) ToSGFIX() string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.state.ToSGFIX()
+}
+
+func (r *Room) Current() *core.TreeNode {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	c := *r.state.Current()
+	return &c
+}
+
+func (r *Room) Board() *core.Board {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.state.Board().Copy()
 }

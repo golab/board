@@ -86,11 +86,25 @@ func (h *Hub) SetLogger(logger logx.Logger) {
 	h.logger = logger
 }
 
+func (h *Hub) DeleteRoom(id string) {
+	h.mu.Lock()
+	delete(h.rooms, id)
+	h.mu.Unlock()
+}
+
 func (h *Hub) GetRoom(id string) (*room.Room, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	if room, ok := h.rooms[id]; ok {
 		return room, nil
 	}
 	return nil, errors.New("room not found")
+}
+
+func (h *Hub) SetRoom(id string, r *room.Room) {
+	h.mu.Lock()
+	h.rooms[id] = r
+	h.mu.Unlock()
 }
 
 func (h *Hub) RoomCount() int {
@@ -134,18 +148,15 @@ func (h *Hub) Load() {
 
 		id := r.ID()
 		h.logger.Info("loading", "room_id", id)
-		h.mu.Lock()
-		h.rooms[id] = r
-		h.mu.Unlock()
+		h.SetRoom(id, r)
 		go h.Heartbeat(id)
 	}
 }
 
 func (h *Hub) Heartbeat(roomID string) {
-	h.mu.Lock()
-	r, ok := h.rooms[roomID]
-	h.mu.Unlock()
-	if !ok {
+	r, err := h.GetRoom(roomID)
+	if err != nil {
+		h.logger.Info("room not found during heartbeat", "room_id", roomID)
 		return
 	}
 	for {
@@ -160,13 +171,13 @@ func (h *Hub) Heartbeat(roomID string) {
 	h.logger.Info("clearing board", "room_id", roomID)
 
 	// close the room down
-	err := r.Close()
+	err = r.Close()
 	if err != nil {
 		h.logger.Error("failed to close room", "err", err)
 	}
 
 	// delete the room from the server map
-	delete(h.rooms, roomID)
+	h.DeleteRoom(roomID)
 
 	// delete it from the database
 	err = h.db.DeleteRoom(roomID)
@@ -183,6 +194,8 @@ func (h *Hub) ReadMessages() {
 	}
 	defer h.db.DeleteAllMessages() //nolint:errcheck
 
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	for _, msg := range messages {
 		m := message.New(msg.Text, msg.TTL)
 		h.messages = append(h.messages, m)
@@ -190,6 +203,8 @@ func (h *Hub) ReadMessages() {
 }
 
 func (h *Hub) SendMessages() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	// go through each server message
 	keep := []*message.Message{}
 	for _, m := range h.messages {

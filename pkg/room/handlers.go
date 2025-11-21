@@ -93,7 +93,9 @@ func (room *Room) handleIsProtected(evt event.Event) event.Event {
 func (room *Room) handleCheckPassword(evt event.Event) event.Event {
 	p := evt.Value().(string)
 
-	if !core.CorrectPassword(p, room.password) {
+	password := room.GetPassword()
+
+	if !core.CorrectPassword(p, password) {
 		evt.SetValue("")
 	} else {
 		room.SetAuth(evt.User(), true)
@@ -188,7 +190,7 @@ func (room *Room) handleRequestSGF(evt event.Event) event.Event {
 
 		switch ogsType {
 		case "game":
-			ended, err := room.fetcher.OGSCheckEnded(url)
+			ended, err := room.GetFetcher().OGSCheckEnded(url)
 			if err != nil {
 				bcast = event.ErrorEvent(err.Error())
 				return bcast
@@ -209,7 +211,7 @@ func (room *Room) handleRequestSGF(evt event.Event) event.Event {
 			}
 			id := int(id64)
 
-			o, err := plugin.NewOGSConnector(room, room.fetcher)
+			o, err := plugin.NewOGSConnector(room, room.GetFetcher())
 			if err != nil {
 				bcast = event.ErrorEvent("ogs connector error")
 				return bcast
@@ -229,7 +231,7 @@ func (room *Room) handleRequestSGF(evt event.Event) event.Event {
 		}
 	}
 
-	data, err := room.fetcher.ApprovedFetch(evt.Value().(string))
+	data, err := room.GetFetcher().ApprovedFetch(evt.Value().(string))
 	if err != nil {
 		bcast = event.ErrorEvent(err.Error())
 	} else if data == "Permission denied" {
@@ -244,7 +246,7 @@ func (room *Room) handleRequestSGF(evt event.Event) event.Event {
 func (room *Room) handleTrash(evt event.Event) event.Event {
 	// reset room
 	oldBuffer := room.GetInputBuffer()
-	room.SetEngine(state.NewState(room.Size(), true))
+	room.SetState(state.NewState(room.Size(), true))
 
 	// reuse old inputbuffer
 	room.SetInputBuffer(oldBuffer)
@@ -258,7 +260,7 @@ func (room *Room) handleTrash(evt event.Event) event.Event {
 func (room *Room) handleUpdateNickname(evt event.Event) event.Event {
 	nickname := evt.Value().(string)
 	room.SetNick(evt.User(), nickname)
-	userEvt := event.NewEvent("connected_users", room.nicks)
+	userEvt := event.NewEvent("connected_users", room.Nicks())
 	userEvt.SetUser(evt.User())
 	return userEvt
 }
@@ -289,7 +291,7 @@ func (room *Room) handleUpdateSettings(evt event.Event) event.Event {
 		room.EditKomi(komi)
 	}
 
-	room.nicks[evt.User()] = nickname
+	room.SetNick(evt.User(), nickname)
 
 	password := sMap["password"].(string)
 	hashed := ""
@@ -301,16 +303,14 @@ func (room *Room) handleUpdateSettings(evt event.Event) event.Event {
 	room.SetInputBuffer(settings.Buffer)
 	if settings.Size != room.Size() {
 		// essentially trashing
-		room.SetEngine(state.NewState(settings.Size, true))
+		room.SetState(state.NewState(settings.Size, true))
 		room.SetInputBuffer(buffer)
 	}
 
 	// can be changed
 	// anyone already in the room is added
 	// person who set password automatically gets added
-	for connID := range room.conns {
-		room.SetAuth(connID, true)
-	}
+	room.SetAuthAll()
 	room.SetPassword(hashed)
 
 	return evt
@@ -330,7 +330,7 @@ func (room *Room) handleEvent(evt event.Event) event.Event {
 		return bcast
 	}
 
-	frame, err := cmd.Execute(room.engine)
+	frame, err := room.Execute(cmd)
 	if err != nil {
 		bcast = event.ErrorEvent(err.Error())
 		return bcast
@@ -379,7 +379,7 @@ func (room *Room) broadcastFullFrameAfter(handler EventHandler) EventHandler {
 func (room *Room) broadcastConnectedUsersAfter(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
 		evt = handler(evt)
-		userEvt := event.NewEvent("connected_users", room.nicks)
+		userEvt := event.NewEvent("connected_users", room.Nicks())
 
 		// broadcast connected_users
 		room.Broadcast(userEvt)
@@ -413,11 +413,11 @@ func (room *Room) slow(handler EventHandler) EventHandler {
 		// check multiple events from the same user in a narrow window (50 ms)
 		now := time.Now()
 		if last, ok := room.GetLastMessages(id); !ok {
-			room.lastMessages[id] = &now
+			room.SetLastMessages(id, &now)
 		} else {
 			diff := now.Sub(last)
 			room.SetLastMessages(id, &now)
-			if diff.Milliseconds() < room.userBuffer {
+			if diff.Milliseconds() < room.GetUserBuffer() {
 				// don't do the next handler if too fast
 				return evt
 			}
@@ -454,9 +454,5 @@ func chain(h EventHandler, middleware ...Middleware) EventHandler {
 // all the handlers
 func (room *Room) HandleAny(evt event.Event) event.Event {
 	// handle the event
-	if handler, ok := room.handlers[evt.Type()]; ok {
-		return handler(evt)
-	} else {
-		return room.handlers["_"](evt)
-	}
+	return room.GetHandler(evt.Type())(evt)
 }
