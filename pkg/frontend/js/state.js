@@ -9,8 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 
-import { merge } from './sgf.js';
-import { Board, from_sgf } from './board.js';
+import { Board } from './board.js';
 import { BoardGraphics } from './boardgraphics.js';
 import { TreeGraphics } from './treegraphics.js';
 
@@ -387,10 +386,6 @@ class State {
             button.setAttribute("class", new_cls);
         }
 
-        // change the dark mode button
-        //let dark_mode_icon = document.getElementsByClassName(old_icon)[0];
-        //dark_mode_icon.setAttribute("class", new_icon);
-
         // change the black and white stone icons
         let black_stone_icon = document.getElementsByClassName(old_black_stone)[0];
         let white_stone_icon = document.getElementsByClassName(new_black_stone)[0];
@@ -613,10 +608,9 @@ class State {
                         })
                     );
                 }
-    
-                // want to maintain same behavior if user uploads file named the same
+                // want to maintain same behavior for the next pass
                 inp.value = "";
-
+    
                 // turn list of promises into 1 promise
                 Promise.all(promises)
                     .then((values) => {
@@ -689,7 +683,6 @@ class State {
 
     download() {
         // stolen from stack overflow
-        //let text = this.board.to_sgf();
         var element = document.createElement('a');
         let href = window.location.href;
         element.setAttribute("href", href + "/sgf");
@@ -779,14 +772,6 @@ class State {
         if (frame.dame != null) {
             //console.log(frame.dame);
         }
-
-        ///////////////////
-
-        //if (frame.explorer != null) {
-            //this.tree_graphics._update(frame.explorer);
-            //this.set_move_number(frame.explorer.current.x);
-            //this.update_color(frame.explorer.current_color);
-        //}
 
         if (frame.tree != null) {
             // save it
@@ -891,7 +876,7 @@ class State {
             let col = a["color"];
             let coords = a["coords"];
             for (let coord of coords) {
-                this._place_stone(coord.x, coord.y, col);
+                this.place_stone(coord.x, coord.y, col);
             }
         }
     }
@@ -913,7 +898,7 @@ class State {
             let col = a["color"];
             let coords = a["coords"];
             for (let coord of coords) {
-                this._place_stone(coord.x, coord.y, col);
+                this.place_stone(coord.x, coord.y, col);
                 this.board.set(coord, col);
             }
         }
@@ -926,7 +911,7 @@ class State {
         }
     }
 
-    _place_stone(x, y, color) {
+    place_stone(x, y, color) {
         // if out of bounds, just return
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
@@ -979,7 +964,6 @@ class State {
             this.letters[letter_index] = 1;
             this.board_graphics._draw_manual_letter(coord.x, coord.y, lb.text);
         }
-
     }
 
     remove_mark(x, y) {

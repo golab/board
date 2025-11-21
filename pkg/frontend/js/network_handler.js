@@ -222,7 +222,6 @@ class NetworkHandler {
             case "error":
                 value = payload["value"];
                 this.state.modals.show_error_modal(value);
-                console.log(this.state.board.tree.to_sgf());
                 break;
             case "isprotected":
                 if (payload["value"]) {

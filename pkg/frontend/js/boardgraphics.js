@@ -901,51 +901,6 @@ class BoardGraphics {
         this.draw_triangle(x, y, hexcolor, svg_id);
     }
 
-
-    draw_mark(x, y, mark) {
-        let hexcolor = "#000000";
-        if (this.state.board.points[x][y] == 1) {
-            hexcolor = "#FFFFFF";
-        }
-        let svg_id = "marks";
-        let id = x.toString() + "-" + y.toString();
-
-        if (this.marks.has(id)) {
-            this.remove_mark(x, y);
-            return;
-        }
-
-        if (mark == "triangle") {
-            this.triangles.set(id, 1);
-            this.marks.set(id, "triangle");
-            this.draw_triangle(x, y, hexcolor, svg_id);
-        } else if (mark == "square") {
-            this.squares.set(id, 1);
-            this.marks.set(id, "square");
-            this.draw_square(x, y, hexcolor, svg_id);
-        } else if (mark == "letter") {
-            let letter_index = this.get_letter();
-            if (letter_index == null) {
-                return;
-            }
-            let letter = letters[letter_index%26];
-            this.use_letter(letter_index);
-            this.marks.set(id, "letter:" + letter_index.toString());
-            this.draw_backdrop(x,y);
-            let l = this.draw_letter(x, y, letter, hexcolor, svg_id);
-            l.id = "mark-" + id;
-        } else if (mark == "number") {
-            let number = this.get_number();
-            this.use_number(number);
-            this.marks.set(id, "number:" + number.toString());
-            this.draw_backdrop(x, y);
-            let n = this.draw_number(x, y, number, hexcolor, svg_id);
-            n.id = "mark-" + id;
-        } else if (mark == "eraser") {
-            this.erase_stone(x, y);
-        }
-    }
-
     _draw_manual_letter(x, y, letter) {
         let coord = new Coord(x, y);
         let color = opposite(this.state.board.get(coord));
@@ -1102,5 +1057,4 @@ class BoardGraphics {
         this.clear_svg("ghost-marks");
 
     }
-
 }
