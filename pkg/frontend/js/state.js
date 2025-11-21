@@ -574,6 +574,10 @@ class State {
             } else if (inp.files.length == 1) {
                 // if 1 file, it's easy
                 let f = inp.files[0];
+
+                // want to maintain same behavior if user uploads file named the same
+                inp.value = "";
+
                 let reader = new FileReader();
                 //reader.readAsText(f);
                 reader.readAsArrayBuffer(f);
@@ -610,6 +614,9 @@ class State {
                     );
                 }
     
+                // want to maintain same behavior if user uploads file named the same
+                inp.value = "";
+
                 // turn list of promises into 1 promise
                 Promise.all(promises)
                     .then((values) => {
