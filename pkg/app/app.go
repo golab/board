@@ -28,13 +28,10 @@ type App struct {
 
 func New(cfg *config.Config, logger logx.Logger) (*App, error) {
 	// make a new hub
-	h, err := hub.NewHub(cfg)
+	h, err := hub.NewHub(cfg, logger)
 	if err != nil {
 		return nil, err
 	}
-
-	// init loggers
-	h.SetLogger(logger)
 
 	// http server setup
 

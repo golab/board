@@ -52,7 +52,7 @@ type Hub struct {
 	wg       sync.WaitGroup
 }
 
-func NewHub(cfg *config.Config) (*Hub, error) {
+func NewHub(cfg *config.Config, logger logx.Logger) (*Hub, error) {
 	// get database setup
 	var db loader.Loader
 	if cfg.DB.Type == config.DBConfigTypeMemory {
@@ -60,10 +60,10 @@ func NewHub(cfg *config.Config) (*Hub, error) {
 	} else {
 		db = loader.NewDefaultLoader(cfg.DB.Path)
 	}
-	return NewHubWithDB(db, cfg)
+	return NewHubWithDB(db, cfg, logger)
 }
 
-func NewHubWithDB(db loader.Loader, cfg *config.Config) (*Hub, error) {
+func NewHubWithDB(db loader.Loader, cfg *config.Config, logger logx.Logger) (*Hub, error) {
 	err := db.Setup()
 	if err != nil {
 		return nil, err
@@ -73,17 +73,13 @@ func NewHubWithDB(db loader.Loader, cfg *config.Config) (*Hub, error) {
 		messages: []*message.Message{},
 		db:       db,
 		cfg:      cfg,
-		logger:   logx.NewDefaultLogger(logx.LogLevelInfo),
+		logger:   logger,
 	}
 
 	// start message loop
 	go s.MessageLoop()
 
 	return s, nil
-}
-
-func (h *Hub) SetLogger(logger logx.Logger) {
-	h.logger = logger
 }
 
 func (h *Hub) DeleteRoom(id string) {

@@ -37,7 +37,6 @@ func TestLoggerDebugLines(t *testing.T) {
 	logger.Debug("bazbot")
 
 	lines := logger.Lines()
-	t.Logf("%v", lines)
 	assert.Equal(t, len(lines), 2)
 }
 
