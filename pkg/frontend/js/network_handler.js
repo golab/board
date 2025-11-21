@@ -80,7 +80,8 @@ class NetworkHandler {
         console.log("connected!");
 
         // hide the info modal
-        this.state.modals.hide_modal("info-modal");
+        //this.state.modals.hide_modal("info-modal");
+        this.state.modals.hide_broken_connection_icon();
 
         // check to see if the room is protected by a password
         this.prepare_isprotected();
@@ -97,9 +98,12 @@ class NetworkHandler {
 
     reconnect(event) {
         this.state.reset();
+        this.state.modals.show_broken_connection_icon();
+        /*
         if (!this.state.modals.modals_up.has("info-modal")) {
             this.state.modals.show_info_modal("Reconnecting...");
         }
+        */
         if (document.hasFocus() && this.socket.readyState == WebSocket.CLOSED) {
             console.log("reconnecting in", this.backoff, "ms");
             setTimeout(() => this.connect(), this.backoff);
@@ -120,7 +124,8 @@ class NetworkHandler {
 
         // hide info modal
         if (this.socket.readyState == WebSocket.OPEN) {
-            this.state.modals.hide_modal("info-modal");
+            this.state.modals.hide_broken_connection_icon();
+            //this.state.modals.hide_modal("info-modal");
         } else if (this.socket.readyState == WebSocket.CLOSED) {
             this.reconnect();
         }

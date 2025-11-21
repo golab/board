@@ -55,6 +55,32 @@ export function create_modals(_state) {
     add_users_modal();
     enable_tooltips();
     add_toast();
+    add_broken_connection_icon();
+
+    function add_broken_connection_icon() {
+        let icon = document.createElement("div");
+        let obj = document.createElement("i");
+        obj.setAttribute("class", "bi-wifi-off");
+        icon.appendChild(obj);
+        icon.id = "broken-connection-icon";
+        icon.style.position = "fixed";
+        icon.style.bottom = "12px";
+        icon.style.right = "12px";
+        icon.style.color = "red";
+        icon.style.fontSize = "30px";
+        icon.hidden = true;
+        document.body.appendChild(icon);
+    }
+
+    function show_broken_connection_icon() {
+        let icon = document.getElementById("broken-connection-icon");
+        icon.hidden = false;
+    }
+
+    function hide_broken_connection_icon() {
+        let icon = document.getElementById("broken-connection-icon");
+        icon.hidden = true;
+    }
 
     function add_toast() {
         let toast_div = document.createElement("div");
@@ -1012,6 +1038,8 @@ export function create_modals(_state) {
         hide_modal,
         show_toast,
         get_nickname,
+        show_broken_connection_icon,
+        hide_broken_connection_icon,
     };
 
 }
