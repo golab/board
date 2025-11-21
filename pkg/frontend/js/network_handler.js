@@ -225,14 +225,19 @@ class NetworkHandler {
                 break;
             case "isprotected":
                 if (payload["value"]) {
-                    let handler = () => {
-                        let v = this.state.modals.get_prompt_bar();
-                        this.prepare_checkpassword(v);
+                    if (this.state.password != "") {
+                        // if we already have a password saved, send it
+                        this.prepare_checkpassword(this.state.password);
+                    } else {
+                        let handler = () => {
+                            let v = this.state.modals.get_prompt_bar();
+                            this.prepare_checkpassword(v);
+                        }
+                        this.state.modals.show_prompt_modal(
+                            "Enter password:",
+                            handler
+                        );
                     }
-                    this.state.modals.show_prompt_modal(
-                        "Enter password:",
-                        handler
-                    );
                 }
                 break;
             case "checkpassword":
