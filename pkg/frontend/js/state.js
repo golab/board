@@ -414,7 +414,6 @@ class State {
 
         for (let bar of document.querySelectorAll(".form-control, .form-select, #upload-textarea")) {
             if (this.dark_mode) {
-                console.log("foo");
                 bar.style.backgroundColor = "#444444";
                 bar.style.color = "#FFFFFF";
             } else {

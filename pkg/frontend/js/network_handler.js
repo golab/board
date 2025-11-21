@@ -26,6 +26,29 @@ function pack_int(n) {
     return byte_array;
 }
 
+function wait_for_open(ws) {
+  if (ws.readyState === WebSocket.OPEN) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const onOpen = () => {
+      ws.removeEventListener("open", onOpen);
+      ws.removeEventListener("error", onError);
+      resolve();
+    };
+
+    const onError = (evt) => {
+      ws.removeEventListener("open", onOpen);
+      ws.removeEventListener("error", onError);
+      reject(evt);
+    };
+
+    ws.addEventListener("open", onOpen);
+    ws.addEventListener("error", onError);
+  });
+}
+
 // it's really both a network handler and event handler
 class NetworkHandler {
     constructor(url) {
@@ -35,7 +58,7 @@ class NetworkHandler {
         this.add_listeners();
 
         // in a var for now so we can do exponential backoff in the future
-        this.backoff = 500;
+        this.backoff = 0;
 
         // necessary because of cloudfront's auto-timeout max of 60sec
         setInterval(() => this.keep_warm(), 30000)
@@ -69,7 +92,7 @@ class NetworkHandler {
         }
 
         // reset backoff
-        this.backoff = 500;
+        this.backoff = 0;
     }
 
     reconnect(event) {
@@ -77,13 +100,16 @@ class NetworkHandler {
         if (!this.state.modals.modals_up.has("info-modal")) {
             this.state.modals.show_info_modal("Reconnecting...");
         }
-        if (document.hasFocus()) {
-            this.backoff *= 2;
-            if (this.backoff > 120000) {
-                this.backoff = 500;
-            }
+        if (document.hasFocus() && this.socket.readyState == WebSocket.CLOSED) {
             console.log("reconnecting in", this.backoff, "ms");
             setTimeout(() => this.connect(), this.backoff);
+            this.backoff *= 2;
+            if (this.backoff == 0) {
+                this.backoff = 500;
+            } else if (this.backoff > 120000) {
+                this.backoff = 0;
+            }
+
         }
     }
 
@@ -260,8 +286,10 @@ class NetworkHandler {
         this.prepare(payload);
     }
 
-    prepare_upload(data) {
+    async prepare_upload(data) {
         let payload = {"event":"upload_sgf", "value": data};
+
+        await wait_for_open(this.socket);
         this.prepare(payload);
     }
 
