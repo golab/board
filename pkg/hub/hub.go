@@ -150,7 +150,7 @@ func (h *Hub) Heartbeat(roomID string) {
 	}
 	for {
 		now := time.Now()
-		diff := now.Sub(*r.LastActive())
+		diff := now.Sub(r.GetLastActive())
 		if diff.Seconds() > r.GetTimeout() {
 			break
 		}

@@ -93,8 +93,7 @@ func TestHandleUpdateNickname(t *testing.T) {
 	evt := event.NewEvent("update_nickname", "mynick")
 	evt.SetUser("user_123")
 	r.HandleAny(evt)
-	nicks := r.Nicks()
-	n, ok := nicks["user_123"]
+	n, ok := r.GetNick("user_123")
 	assert.True(t, ok)
 	assert.Equal(t, n, "mynick")
 }
@@ -121,8 +120,7 @@ func TestHandleUpdateSettings(t *testing.T) {
 	assert.Equal(t, r.GetInputBuffer(), 500)
 	assert.Equal(t, r.Size(), 13)
 
-	nicks := r.Nicks()
-	n, ok := nicks["user_123"]
+	n, ok := r.GetNick("user_123")
 	assert.True(t, ok)
 	assert.Equal(t, n, "mynick")
 }

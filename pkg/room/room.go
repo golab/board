@@ -106,29 +106,93 @@ func Load(load *loader.LoadJSON) (*Room, error) {
 }
 
 func (r *Room) ID() string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	return r.id
 }
 
-func (r *Room) LastActive() *time.Time {
+func (r *Room) SetEngine(e *engine) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	return r.lastActive
+	r.engine = e
+}
+
+func (r *Room) GetLastMessages(user string) (time.Time, bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	var tnil time.Time
+	t, ok := r.lastMessages[user]
+	if !ok {
+		return tnil, ok
+	}
+	return *t, ok
+}
+
+func (r *Room) SetLastMessages(user string, t *time.Time) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.lastMessages[user] = t
+}
+
+func (r *Room) GetLastActive() time.Time {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return *r.lastActive
+}
+
+func (r *Room) SetLastActive(t *time.Time) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.lastActive = t
+}
+
+func (r *Room) GetLastUser() string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.lastUser
+}
+
+func (r *Room) SetLastUser(user string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.lastUser = user
 }
 
 func (r *Room) SaveState() *state.StateJSON {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	return r.engine.Save()
 }
 
 func (r *Room) GetInputBuffer() int64 {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	return r.inputBuffer
 }
 
 func (r *Room) SetInputBuffer(i int64) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.inputBuffer = i
 }
 
 func (r *Room) SetUserBuffer(i int64) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.userBuffer = i
+}
+
+func (r *Room) SetAuth(user string, val bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.auth[user] = val
+}
+
+func (r *Room) GetAuth(user string) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	_, ok := r.auth[user]
+	return ok
 }
 
 // used for testing
@@ -138,18 +202,34 @@ func (r *Room) DisableBuffers() {
 }
 
 func (r *Room) GetTimeout() float64 {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	return r.timeout
 }
 
 func (r *Room) SetTimeout(f float64) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.timeout = f
 }
 
-func (r *Room) Nicks() map[string]string {
-	return r.nicks
+func (r *Room) GetNick(user string) (string, bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	n, ok := r.nicks[user]
+	return n, ok
+}
+
+func (r *Room) SetNick(id, nick string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.nicks[id] = nick
 }
 
 func (r *Room) Save() *loader.LoadJSON {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	stateJSON := r.engine.Save()
 
 	// embed stateJSON into save
@@ -182,26 +262,38 @@ func (r *Room) Close() error {
 }
 
 func (r *Room) setState(s *state.State) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.engine = s
 }
 
 func (r *Room) SetFetcher(f fetch.Fetcher) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.fetcher = f
 }
 
 func (r *Room) HasPassword() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	return r.password != ""
 }
 
 func (r *Room) GetPassword() string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	return r.password
 }
 
 func (r *Room) SetPassword(p string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.password = p
 }
 
 func (r *Room) SendTo(id string, evt event.Event) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if ec, ok := r.conns[id]; ok {
 		ec.SendEvent(evt) //nolint:errcheck
 	}
@@ -240,6 +332,8 @@ func (r *Room) BroadcastHubMessage(m *message.Message) {
 }
 
 func (r *Room) UploadSGF(sgf string) event.Event {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	s, err := state.FromSGF(sgf)
 	if err != nil {
 		msg := fmt.Sprintf("Error parsing SGF: %s", err)
@@ -328,12 +422,16 @@ func (r *Room) Handle(ec event.EventChannel) error {
 }
 
 func (r *Room) RegisterPlugin(p plugin.Plugin, args map[string]any) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	key := args["key"].(string)
 	p.Start(args)
 	r.plugins[key] = p
 }
 
 func (r *Room) DeregisterPlugin(key string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if p, ok := r.plugins[key]; ok {
 		p.End()
 		delete(r.plugins, key)
@@ -341,6 +439,8 @@ func (r *Room) DeregisterPlugin(key string) {
 }
 
 func (r *Room) GetPlugin(key string) plugin.Plugin {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if p, ok := r.plugins[key]; ok {
 		return p
 	}
@@ -348,6 +448,8 @@ func (r *Room) GetPlugin(key string) plugin.Plugin {
 }
 
 func (r *Room) HasPlugin(key string) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	_, ok := r.plugins[key]
 	return ok
 }

@@ -96,7 +96,7 @@ func (room *Room) handleCheckPassword(evt event.Event) event.Event {
 	if !core.CorrectPassword(p, room.password) {
 		evt.SetValue("")
 	} else {
-		room.auth[evt.User()] = true
+		room.SetAuth(evt.User(), true)
 	}
 	room.SendTo(evt.User(), evt)
 	return evt
@@ -244,7 +244,7 @@ func (room *Room) handleRequestSGF(evt event.Event) event.Event {
 func (room *Room) handleTrash(evt event.Event) event.Event {
 	// reset room
 	oldBuffer := room.GetInputBuffer()
-	room.engine = state.NewState(room.Size(), true)
+	room.SetEngine(state.NewState(room.Size(), true))
 
 	// reuse old inputbuffer
 	room.SetInputBuffer(oldBuffer)
@@ -257,7 +257,7 @@ func (room *Room) handleTrash(evt event.Event) event.Event {
 
 func (room *Room) handleUpdateNickname(evt event.Event) event.Event {
 	nickname := evt.Value().(string)
-	room.nicks[evt.User()] = nickname
+	room.SetNick(evt.User(), nickname)
 	userEvt := event.NewEvent("connected_users", room.nicks)
 	userEvt.SetUser(evt.User())
 	return userEvt
@@ -301,7 +301,7 @@ func (room *Room) handleUpdateSettings(evt event.Event) event.Event {
 	room.SetInputBuffer(settings.Buffer)
 	if settings.Size != room.Size() {
 		// essentially trashing
-		room.engine = state.NewState(settings.Size, true)
+		room.SetEngine(state.NewState(settings.Size, true))
 		room.SetInputBuffer(buffer)
 	}
 
@@ -309,9 +309,9 @@ func (room *Room) handleUpdateSettings(evt event.Event) event.Event {
 	// anyone already in the room is added
 	// person who set password automatically gets added
 	for connID := range room.conns {
-		room.auth[connID] = true
+		room.SetAuth(connID, true)
 	}
-	room.password = hashed
+	room.SetPassword(hashed)
 
 	return evt
 }
@@ -351,11 +351,9 @@ func (room *Room) setTimeAfter(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
 		evt = handler(evt)
 		// set last user information
-		room.mu.Lock()
-		defer room.mu.Unlock()
-		room.lastUser = evt.User()
+		room.SetLastUser(evt.User())
 		now := time.Now()
-		room.lastActive = &now
+		room.SetLastActive(&now)
 		return evt
 	}
 }
@@ -399,8 +397,8 @@ func (room *Room) closeOGS(handler EventHandler) EventHandler {
 func (room *Room) authorized(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
 		id := evt.User()
-		_, ok := room.auth[id]
-		if room.password == "" || ok {
+		ok := room.GetAuth(id)
+		if room.GetPassword() == "" || ok {
 			// only go to the next handler if authorized
 			evt = handler(evt)
 		}
@@ -414,11 +412,11 @@ func (room *Room) slow(handler EventHandler) EventHandler {
 		id := evt.User()
 		// check multiple events from the same user in a narrow window (50 ms)
 		now := time.Now()
-		if last, ok := room.lastMessages[id]; !ok {
+		if last, ok := room.GetLastMessages(id); !ok {
 			room.lastMessages[id] = &now
 		} else {
-			diff := now.Sub(*last)
-			room.lastMessages[id] = &now
+			diff := now.Sub(last)
+			room.SetLastMessages(id, &now)
 			if diff.Milliseconds() < room.userBuffer {
 				// don't do the next handler if too fast
 				return evt
@@ -431,14 +429,11 @@ func (room *Room) slow(handler EventHandler) EventHandler {
 // this one is to keep people from tripping over each other
 func (room *Room) outsideBuffer(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
-		var lastUser string
-		room.mu.Lock()
-		lastUser = room.lastUser
-		room.mu.Unlock()
+		lastUser := room.GetLastUser()
 
 		if lastUser != evt.User() {
 			now := time.Now()
-			diff := now.Sub(*room.lastActive)
+			diff := now.Sub(room.GetLastActive())
 			if diff.Milliseconds() < room.GetInputBuffer() {
 				// don't do the next handler if too fast
 				return evt
