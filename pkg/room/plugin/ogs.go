@@ -13,6 +13,7 @@ package plugin
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/jarednogo/board/pkg/core"
@@ -71,7 +72,7 @@ func GetCreds(f fetch.Fetcher) (*Creds, error) {
 
 type OGSConnector struct {
 	Creds   *Creds
-	Socket  *websocket.Conn
+	Socket  io.ReadWriter
 	Room    Room
 	First   int
 	Exit    bool
@@ -354,7 +355,7 @@ func (o *OGSConnector) GamedataToSGF(gamedata map[string]any) string {
 	return sgf
 }
 
-func makeRank(r float64) string {
+func MakeRank(r float64) string {
 	if r < 30 {
 		return fmt.Sprintf("%dk", int(30-r+1))
 	} else {
@@ -375,8 +376,8 @@ func (o *OGSConnector) GameInfoToSGF(gamedata map[string]any) string {
 	whitePlayer := players["white"].(map[string]any)
 	black := blackPlayer["username"].(string)
 	white := whitePlayer["username"].(string)
-	blackRank := makeRank(blackPlayer["rank"].(float64))
-	whiteRank := makeRank(whitePlayer["rank"].(float64))
+	blackRank := MakeRank(blackPlayer["rank"].(float64))
+	whiteRank := MakeRank(whitePlayer["rank"].(float64))
 	sgf = fmt.Sprintf(
 		"(;GM[1]FF[4]CA[UTF-8]SZ[%d]PB[%s]PW[%s]BR[%s]WR[%s]RU[%s]KM[%f]GN[%s]",
 		size, black, white, blackRank, whiteRank, rules, komi, name)

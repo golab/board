@@ -12,21 +12,50 @@ package plugin_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
+
+	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/pkg/room/plugin"
 )
 
-func TestGamedata(t *testing.T) {
-	data := `{"white_player_id":0, "black_player_id":1, "game_name":"game", "komi":0.5, "width":19, "rules":"chinese", "initial_player":"black", "moves":[[15,15,3150],[3,15,1132],[3,3,1643],[15,3,1150]], "initial_state":{"black":"","white":""}}`
+func TestMakeRank(t *testing.T) {
+	testcases := []struct {
+		input  float64
+		output string
+	}{
+		{25, "6k"},
+		{31, "2d"},
+	}
 
-	var payload any
+	for i, tc := range testcases {
+		t.Run(fmt.Sprintf("MakeRank%d", i), func(t *testing.T) {
+			rank := plugin.MakeRank(tc.input)
+			assert.Equal(t, rank, tc.output)
+		})
+	}
+}
+
+func TestGameinfoToSGF(t *testing.T) {
+	data := `{"players": {"black": {"username": "player_black", "rank": 30}, "white": {"username": "player_white", "rank": 29}}, "game_name":"game", "komi":0.5, "width":19, "rules":"chinese"}`
+
+	var payload map[string]any
 	err := json.Unmarshal([]byte(data), &payload)
-	if err != nil {
-		t.Error(err)
-	}
-	_, ok := payload.(map[string]any)
-	if !ok {
-		t.Errorf("error while coercing interface to map[string]any")
-	}
+	assert.NoError(t, err)
 
-	// currently no way to do tests without making network connections
+	o := plugin.OGSConnector{}
+	sgf := o.GameInfoToSGF(payload)
+	_ = sgf
+}
+
+func TestGamedata(t *testing.T) {
+	data := `{"players": {"black": {"username": "player_black", "rank": 30}, "white": {"username": "player_white", "rank": 29}}, "game_name":"game", "komi":0.5, "width":19, "rules":"chinese", "initial_player":"black", "moves":[[15,15,3150],[3,15,1132],[3,3,1643],[15,3,1150]], "initial_state":{"black":"","white":""}}`
+
+	var payload map[string]any
+	err := json.Unmarshal([]byte(data), &payload)
+	assert.NoError(t, err)
+
+	o := &plugin.OGSConnector{}
+	sgf := o.GamedataToSGF(payload)
+	assert.Equal(t, sgf, "(;GM[1]FF[4]CA[UTF-8]SZ[19]PB[player_black]PW[player_white]BR[1d]WR[2k]RU[chinese]KM[0.500000]GN[game];B[pp];W[dp];B[dd];W[pd])")
 }

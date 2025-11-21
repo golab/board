@@ -174,6 +174,19 @@ func TestMixedCaseField(t *testing.T) {
 	assert.Equal(t, c[0], "SomeCopyright")
 }
 
+func TestMultifield(t *testing.T) {
+	p := core.NewParser("(;GM[1]ZZ[foo][bar][baz])")
+	root, err := p.Parse()
+	assert.NoError(t, err)
+	zz, ok := root.Fields["ZZ"]
+	assert.True(t, ok)
+	assert.Equal(t, len(zz), 3)
+	assert.Equal(t, zz[0], "foo")
+	assert.Equal(t, zz[1], "bar")
+	assert.Equal(t, zz[2], "baz")
+
+}
+
 func FuzzParser(f *testing.F) {
 	testcases := []string{"(;)", "(;GM[1];B[aa];W[bb];B[];W[ss])", "(;GM[1];C[comment \"with\" quotes])", sgfsamples.Empty, sgfsamples.SimpleTwoBranches, sgfsamples.SimpleWithComment, sgfsamples.SimpleFourMoves, sgfsamples.SimpleEightMoves, sgfsamples.Scoring1, sgfsamples.PassWithTT, sgfsamples.ChineseNames}
 	for _, tc := range testcases {

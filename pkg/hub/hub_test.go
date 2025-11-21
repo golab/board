@@ -107,6 +107,18 @@ func TestHub3(t *testing.T) {
 	assert.Equal(t, h.MessageCount(), 1)
 }
 
+func TestGetRoom(t *testing.T) {
+	h, err := hub.NewHubWithDB(loader.NewMemoryLoader(), config.Default())
+	assert.NoError(t, err)
+	roomID := "room123"
+	_, err = h.GetRoom(roomID)
+	assert.NotNil(t, err)
+	_ = h.GetOrCreateRoom(roomID)
+	room, err := h.GetRoom(roomID)
+	assert.NoError(t, err)
+	assert.Equal(t, room.ID(), roomID)
+}
+
 /*
 // this test appears to be kind of flaky so i'm removing it for now
 // the integration tests are better anyway

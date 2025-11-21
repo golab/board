@@ -79,6 +79,14 @@ func TestDecodeNumber(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestDecodeRemoveMark(t *testing.T) {
+	val := []any{9.0, 9.0}
+	e := event.NewEvent("remove_mark", val)
+
+	_, err := state.DecodeToCommand(e)
+	assert.NoError(t, err)
+}
+
 func TestDecodeCut(t *testing.T) {
 	e := event.NewEvent("cut", nil)
 
