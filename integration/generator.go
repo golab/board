@@ -38,8 +38,8 @@ func GenerateRandomSGF(seed int, num int) string {
 	return s.ToSGF()
 }
 
-func GenerateNRandomSGF(num, minLength, maxLength int) []string {
-	r := rand.New(rand.NewSource(int64(0)))
+func GenerateNRandomSGF(seed, num, minLength, maxLength int) []string {
+	r := rand.New(rand.NewSource(int64(seed)))
 	sgfs := []string{}
 	for i := 0; i < num; i++ {
 		randLength := r.Intn(maxLength-minLength) + minLength
