@@ -1,7 +1,7 @@
 # Base Makefile — default goal prints help (supports inline "##" and preceding "##" styles)
 .DEFAULT_GOAL := default
 
-.PHONY: default help build test fmt lint run setup clean fuzz coverage-int coverage-unit coverage-integration-html coverage-integration-total coverage-unit-html coverage-unit-total build-docker run-docker test-bench test-race coverage-total coverage-html coverage
+.PHONY: default help build test fmt lint run setup clean test-fuzz coverage-int coverage-unit coverage-integration-html coverage-integration-total coverage-unit-html coverage-unit-total build-docker run-docker test-bench test-race coverage-total coverage-html coverage
 
 VERSION := $(shell git describe --tags 2>/dev/null || echo dev)
 
@@ -36,10 +36,16 @@ lint: setup ## Lint code
 	@echo "==> lint"
 	${PWD}/bin/golangci-lint run
 
-fuzz: ## Fuzz code
-	@echo "==> fuzz"
+test-fuzz: ## Fuzz code
+	@echo "==> test-fuzz"
 	go test ./pkg/core -fuzz=FuzzParser -fuzztime=60s
 	go test ./pkg/twitch/ -fuzz=FuzzParseChat -fuzztime=60s
+
+test-pprof:
+	@echo "==> test-pprof"
+	go test -bench=. -cpuprofile=cpu.prof -benchmem ./integration/
+	go tool pprof -top -nodecount=10 cpu.prof
+	rm cpu.prof integration.test
 
 coverage-unit-total:
 	@echo "==> coverage-unit-total"
