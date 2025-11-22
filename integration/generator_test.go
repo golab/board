@@ -122,3 +122,19 @@ func BenchmarkMergeToSGF(b *testing.B) {
 		i++
 	}
 }
+
+func BenchmarkParse(b *testing.B) {
+	mergedSGFs := []string{}
+	for i := 0; i < 10; i++ {
+		sgfs := sgfsForBenchmark(i, 100)
+		sgf := core.Merge(sgfs)
+		mergedSGFs = append(mergedSGFs, sgf)
+	}
+	i := 0
+	for b.Loop() {
+		sgf := mergedSGFs[i%len(mergedSGFs)]
+		p := core.NewParser(sgf)
+		p.Parse() //nolint:errcheck
+		i++
+	}
+}
