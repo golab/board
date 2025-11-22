@@ -71,11 +71,11 @@ func (n *SGFNode) Coord() *Coord {
 }
 
 func (n *SGFNode) ToSGF(root bool) string {
-	result := ""
+	sb := strings.Builder{}
 	if root {
-		result += "("
+		sb.WriteByte('(')
 	}
-	result += ";"
+	sb.WriteByte(';')
 	fields := []string{}
 	for f := range n.Fields {
 		fields = append(fields, f)
@@ -85,25 +85,28 @@ func (n *SGFNode) ToSGF(root bool) string {
 
 	for _, field := range fields {
 		values := n.Fields[field]
-		result += field
+		sb.WriteString(field)
 		for _, value := range values {
-			result += "["
-			result += strings.ReplaceAll(value, "]", "\\]")
-			result += "]"
+			sb.WriteByte('[')
+			m := strings.ReplaceAll(value, "]", "\\]")
+			sb.WriteString(m)
+			sb.WriteByte(']')
 		}
 	}
 
 	for _, d := range n.Down {
 		if len(n.Down) > 1 {
-			result += "(" + d.ToSGF(false) + ")"
+			sb.WriteByte('(')
+			sb.WriteString(d.ToSGF(false))
+			sb.WriteByte(')')
 		} else {
-			result += d.ToSGF(false)
+			sb.WriteString(d.ToSGF(false))
 		}
 	}
 	if root {
-		result += ")"
+		sb.WriteByte(')')
 	}
-	return result
+	return sb.String()
 }
 
 func NewSGFNode(fields map[string][]string, index int) *SGFNode {

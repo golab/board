@@ -100,18 +100,22 @@ func (s *State) ToSGFIX() string {
 }
 
 func (s *State) toSGF(indexes bool) string {
-	result := "("
+	sb := strings.Builder{}
+	// approximate preallocation, each move being at least 6 characters
+	// i.e. ;B[aa]
+	sb.Grow(6 * len(s.Nodes()))
+	sb.WriteByte('(')
 	stack := []any{s.root}
 	for len(stack) > 0 {
 		i := len(stack) - 1
 		cur := stack[i]
 		stack = stack[:i]
 		if str, ok := cur.(string); ok {
-			result += str
+			sb.WriteString(str)
 			continue
 		}
 		node := cur.(*core.TreeNode)
-		result += ";"
+		sb.WriteByte(';')
 		// throw in other fields
 		fields := []string{}
 		for f := range node.Fields {
@@ -124,16 +128,20 @@ func (s *State) toSGF(indexes bool) string {
 			if key == "IX" {
 				continue
 			}
-			result += key
+			sb.WriteString(key)
 			for _, fieldValue := range multifield {
 				m := strings.ReplaceAll(fieldValue, "]", "\\]")
-				result += fmt.Sprintf("[%s]", m)
+				sb.WriteByte('[')
+				sb.WriteString(m)
+				sb.WriteByte(']')
 			}
 
 		}
 
 		if indexes {
-			result += fmt.Sprintf("IX[%d]", node.Index)
+			sb.WriteString("IX[")
+			sb.WriteString(strconv.Itoa(node.Index))
+			sb.WriteByte(']')
 		}
 
 		if len(node.Down) == 1 {
@@ -149,8 +157,8 @@ func (s *State) toSGF(indexes bool) string {
 		}
 	}
 
-	result += ")"
-	return result
+	sb.WriteByte(')')
+	return sb.String()
 }
 
 func FromSGF(data string) (*State, error) {

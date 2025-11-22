@@ -1,7 +1,7 @@
 # Base Makefile — default goal prints help (supports inline "##" and preceding "##" styles)
 .DEFAULT_GOAL := default
 
-.PHONY: default help build test fmt lint run setup clean fuzz coverage-int coverage-unit coverage-integration-html coverage-integration-total coverage-unit-html coverage-unit-total build-docker run-docker
+.PHONY: default help build test fmt lint run setup clean fuzz coverage-int coverage-unit coverage-integration-html coverage-integration-total coverage-unit-html coverage-unit-total build-docker run-docker bench
 
 VERSION := $(shell git describe --tags 2>/dev/null || echo dev)
 
@@ -108,3 +108,6 @@ run-docker: build-docker ## Run docker container
 	@echo "==> run-docker"
 	docker run -p 8080:8080 board
 
+bench: ## Run benchmarks
+	@echo "==> bench"
+	go test -bench=. -benchmem ./integration/
