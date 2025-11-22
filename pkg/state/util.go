@@ -134,7 +134,7 @@ func (s *State) computeDiffSetup(i int) *core.Diff {
 
 	// find the black stones to add
 	diffAdd := []*core.StoneSet{}
-	if val, ok := n.Fields["AB"]; ok {
+	if val := n.GetField("AB"); len(val) > 0 {
 		add := core.NewCoordSet()
 		for _, v := range val {
 			add.Add(core.LettersToCoord(v))
@@ -144,7 +144,7 @@ func (s *State) computeDiffSetup(i int) *core.Diff {
 	}
 
 	// find the white stones to add
-	if val, ok := n.Fields["AW"]; ok {
+	if val := n.GetField("AW"); len(val) > 0 {
 		add := core.NewCoordSet()
 		for _, v := range val {
 			add.Add(core.LettersToCoord(v))
@@ -155,7 +155,7 @@ func (s *State) computeDiffSetup(i int) *core.Diff {
 
 	// find the stones to remove
 	diffRemove := []*core.StoneSet{}
-	if val, ok := n.Fields["AE"]; ok {
+	if val := n.GetField("AE"); len(val) > 0 {
 		csBlack := core.NewCoordSet()
 		csWhite := core.NewCoordSet()
 		for _, v := range val {

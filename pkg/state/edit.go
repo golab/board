@@ -14,7 +14,7 @@ import (
 	"github.com/jarednogo/board/pkg/core"
 )
 
-func (s *State) addFieldNode(fields map[string][]string, index int) *core.Diff {
+func (s *State) addFieldNode(fields []core.Field, index int) *core.Diff {
 	s.AnyMove()
 	tmp := s.GetNextIndex()
 	if index == -1 {
@@ -37,7 +37,7 @@ func (s *State) addFieldNode(fields map[string][]string, index int) *core.Diff {
 	return diff
 }
 
-func (s *State) addPassNode(col core.Color, fields map[string][]string, index int) {
+func (s *State) addPassNode(col core.Color, fields []core.Field, index int) {
 	s.AnyMove()
 	tmp := s.GetNextIndex()
 	if index == -1 {
@@ -63,7 +63,7 @@ func (s *State) PushHead(x, y int, col core.Color) {
 		coord = nil
 	}
 	index := s.GetNextIndex()
-	fields := make(map[string][]string)
+	fields := []core.Field{}
 	var key string
 	if col == core.Black {
 		key = "B"
@@ -74,8 +74,9 @@ func (s *State) PushHead(x, y int, col core.Color) {
 	if x != -1 {
 		value = coord.ToLetters()
 	}
-	fields[key] = []string{value}
+
 	n := core.NewTreeNode(coord, col, index, s.head, fields)
+	n.AddField(key, value)
 	s.nodes[index] = n
 	if len(s.head.Down) > 0 {
 		s.head.PreferredChild++
@@ -122,20 +123,17 @@ func (s *State) PushHead(x, y int, col core.Color) {
 
 func (s *State) AddNode(coord *core.Coord, col core.Color) *core.Diff {
 	index := s.GetNextIndex()
-	fields := make(map[string][]string)
+	fields := []core.Field{}
 	if col == core.Black {
-		fields["B"] = []string{coord.ToLetters()}
+		fields = append(fields, core.Field{Key: "B", Values: []string{coord.ToLetters()}})
 	} else {
-		fields["W"] = []string{coord.ToLetters()}
+		fields = append(fields, core.Field{Key: "W", Values: []string{coord.ToLetters()}})
 	}
 	return s.addNode(coord, col, fields, index, false)
 }
 
-func (s *State) addNode(coord *core.Coord, col core.Color, fields map[string][]string, index int, force bool) *core.Diff {
+func (s *State) addNode(coord *core.Coord, col core.Color, fields []core.Field, index int, force bool) *core.Diff {
 	s.AnyMove()
-	if fields == nil {
-		fields = make(map[string][]string)
-	}
 
 	if !force {
 		// check to see if it's already there
@@ -193,17 +191,17 @@ func (s *State) AddStones(moves []*core.Stone) {
 		if !found {
 			s.gotoIndex(node.Index) //nolint: errcheck
 
-			fields := make(map[string][]string)
+			fields := []core.Field{}
 			key := "B"
 			if move.Color == core.White {
 				key = "W"
 			}
 
 			if move.Coord == nil {
-				fields[key] = []string{""}
+				fields = append(fields, core.Field{Key: key, Values: []string{""}})
 				s.addPassNode(move.Color, fields, -1)
 			} else {
-				fields[key] = []string{move.Coord.ToLetters()}
+				fields = append(fields, core.Field{Key: key, Values: []string{move.Coord.ToLetters()}})
 				s.addNode(move.Coord, move.Color, fields, -1, false)
 			}
 			node = s.current
@@ -241,14 +239,14 @@ func (s *State) smartGraft(parentIndex int, moves []*core.Stone) {
 		index := s.GetNextIndex()
 
 		// each node needs either B[] or W[] field
-		fields := make(map[string][]string)
+		fields := []core.Field{}
 		var key string
 		if move.Color == core.Black {
 			key = "B"
 		} else {
 			key = "W"
 		}
-		fields[key] = []string{move.Coord.ToLetters()}
+		fields = append(fields, core.Field{Key: key, Values: []string{move.Coord.ToLetters()}})
 
 		// create the node, up is the parent of the new node
 		node := core.NewTreeNode(move.Coord, move.Color, index, up, fields)
@@ -304,14 +302,14 @@ func (s *State) graft(parentIndex int, moves []*core.Stone) {
 		index := s.GetNextIndex()
 
 		// each node needs either B[] or W[] field
-		fields := make(map[string][]string)
+		fields := []core.Field{}
 		var key string
 		if move.Color == core.Black {
 			key = "B"
 		} else {
 			key = "W"
 		}
-		fields[key] = []string{move.Coord.ToLetters()}
+		fields = append(fields, core.Field{Key: key, Values: []string{move.Coord.ToLetters()}})
 
 		// create the node, up is the parent of the new node
 		node := core.NewTreeNode(move.Coord, move.Color, index, up, fields)

@@ -41,17 +41,14 @@ type TreeNode struct {
 	Up             *TreeNode
 	Index          int
 	PreferredChild int
-	Fields         map[string][]string
+	Fields         []Field
 	Diff           *Diff
 	Depth          int
 	BlackCaps      int
 	WhiteCaps      int
 }
 
-func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields map[string][]string) *TreeNode {
-	if fields == nil {
-		fields = make(map[string][]string)
-	}
+func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields []Field) *TreeNode {
 	down := []*TreeNode{}
 	node := &TreeNode{
 		XY:             coord,
@@ -119,13 +116,31 @@ func (n *TreeNode) TrunkNum(i int) int {
 }
 
 func (n *TreeNode) IsMove() bool {
-	if _, ok := n.Fields["B"]; ok {
-		return true
+	bvalues := n.GetField("B")
+	wvalues := n.GetField("W")
+	return len(bvalues) > 0 || len(wvalues) > 0
+}
+
+func (n *TreeNode) GetField(key string) []string {
+	for i := range n.Fields {
+		if n.Fields[i].Key == key {
+			return n.Fields[i].Values
+		}
 	}
-	if _, ok := n.Fields["W"]; ok {
-		return true
+	return nil
+}
+
+func (n *TreeNode) DeleteField(key string) {
+	i := -1
+	for j := range n.Fields {
+		if n.Fields[j].Key == key {
+			i = j
+		}
 	}
-	return false
+	if i == -1 {
+		return
+	}
+	n.Fields = append(n.Fields[:i], n.Fields[i+1:]...)
 }
 
 // SetParent exists to add the depth attribute
@@ -154,21 +169,13 @@ func (n *TreeNode) HasChild(coord *Coord, col Color) (int, bool) {
 }
 
 func (n *TreeNode) Copy() *TreeNode {
-	// copy fields
-	fields := make(map[string][]string)
-	for key, value := range n.Fields {
-		newValue := make([]string, len(value))
-		copy(newValue, value)
-		fields[key] = newValue
-	}
-
 	// parent will get assigned later
 	m := NewTreeNode(
 		n.XY.Copy(),
 		n.Color,
 		0,
 		nil,
-		fields)
+		n.Fields)
 
 	// copy children
 	down := []*TreeNode{}
@@ -195,31 +202,58 @@ func (n *TreeNode) MaxDepth() int {
 }
 
 func (n *TreeNode) OverwriteField(key, value string) {
-	n.Fields[key] = []string{value}
+	for i := range n.Fields {
+		if n.Fields[i].Key == key {
+			n.Fields[i].Values = []string{value}
+			return
+		}
+	}
+	n.Fields = append(n.Fields, Field{Key: key, Values: []string{value}})
+
 }
 
 func (n *TreeNode) AddField(key, value string) {
-	if _, ok := n.Fields[key]; !ok {
-		n.Fields[key] = []string{}
+	for i := range n.Fields {
+		if n.Fields[i].Key == key {
+			n.Fields[i].Values = append(n.Fields[i].Values, value)
+			return
+		}
 	}
-	n.Fields[key] = append(n.Fields[key], value)
+	n.Fields = append(n.Fields, Field{Key: key, Values: []string{value}})
 }
 
 func (n *TreeNode) RemoveField(key, value string) {
-	if _, ok := n.Fields[key]; !ok {
-		return
-	}
-	index := -1
-	for i, v := range n.Fields[key] {
-		if v == value {
-			index = i
+	// find the index of the key
+	i := -1
+	for z := range n.Fields {
+		if n.Fields[z].Key == key {
+			i = z
 		}
 	}
-	if index == -1 {
+
+	// if the key is not present, done
+	if i == -1 {
 		return
 	}
-	n.Fields[key] = append(n.Fields[key][:index], n.Fields[key][index+1:]...)
-	if len(n.Fields[key]) == 0 {
-		delete(n.Fields, key)
+
+	// now find if the value is present
+	j := -1
+	for z := range n.Fields[i].Values {
+		if n.Fields[i].Values[z] == value {
+			j = z
+		}
+	}
+
+	// if the value is not present, done
+	if j == -1 {
+		return
+	}
+
+	// take the value out
+	n.Fields[i].Values = append(n.Fields[i].Values[:j], n.Fields[i].Values[j+1:]...)
+
+	// if there are no values left, take the key out
+	if len(n.Fields[i].Values) == 0 {
+		n.Fields = append(n.Fields[:i], n.Fields[i+1:]...)
 	}
 }

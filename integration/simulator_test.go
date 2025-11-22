@@ -93,13 +93,13 @@ func TestSim2(t *testing.T) {
 		value := make(map[string]any)
 		color := 1.0
 		key := "B"
-		if _, ok := cur.Fields["W"]; ok {
+		if values := cur.GetField("W"); len(values) > 0 {
 			key = "W"
 			color = 2.0
 		}
 		value["color"] = color
 
-		coord := core.LettersToCoord(cur.Fields[key][0])
+		coord := core.LettersToCoord(cur.GetField(key)[0])
 
 		value["coords"] = []any{float64(coord.X), float64(coord.Y)}
 		evt := event.NewEvent("add_stone", value)
@@ -335,10 +335,10 @@ func TestMarks(t *testing.T) {
 	room, err := sim.Hub.GetRoom("room123")
 	assert.NoError(t, err)
 	node := room.Current()
-	assert.Equal(t, node.Fields["TR"][0], "cc")
-	assert.Equal(t, node.Fields["SQ"][0], "dd")
-	assert.Equal(t, node.Fields["LB"][0], "ee:A")
-	assert.Equal(t, node.Fields["LB"][1], "ff:1")
+	assert.Equal(t, node.GetField("TR")[0], "cc")
+	assert.Equal(t, node.GetField("SQ")[0], "dd")
+	assert.Equal(t, node.GetField("LB")[0], "ee:A")
+	assert.Equal(t, node.GetField("LB")[1], "ff:1")
 }
 
 func TestRemoveMark(t *testing.T) {
@@ -352,7 +352,7 @@ func TestRemoveMark(t *testing.T) {
 	room, err := sim.Hub.GetRoom("room123")
 	assert.NoError(t, err)
 	node := room.Current()
-	assert.Equal(t, len(node.Fields["TR"]), 0)
+	assert.Equal(t, len(node.GetField("TR")), 0)
 }
 
 func TestNav(t *testing.T) {
@@ -464,8 +464,7 @@ func TestDraw(t *testing.T) {
 	room, err := sim.Hub.GetRoom("room123")
 	assert.NoError(t, err)
 	node := room.Current()
-	d, ok := node.Fields["PX"]
-	assert.True(t, ok)
+	d := node.GetField("PX")
 	assert.Equal(t, len(d), 1)
 	assert.Equal(t, d[0], "0.0000:0.0000:25.0000:25.0000:#FEFEFE")
 }
@@ -481,8 +480,8 @@ func TestErasePen(t *testing.T) {
 	room, err := sim.Hub.GetRoom("room123")
 	assert.NoError(t, err)
 	node := room.Current()
-	_, ok := node.Fields["PX"]
-	assert.False(t, ok)
+	px := node.GetField("PX")
+	assert.Equal(t, len(px), 0)
 }
 
 func TestComment(t *testing.T) {
@@ -495,8 +494,7 @@ func TestComment(t *testing.T) {
 	room, err := sim.Hub.GetRoom("room123")
 	assert.NoError(t, err)
 	node := room.Current()
-	c, ok := node.Fields["C"]
-	assert.True(t, ok)
+	c := node.GetField("C")
 	assert.Equal(t, len(c), 1)
 	assert.Equal(t, c[0], "some comment\n")
 }

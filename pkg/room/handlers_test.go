@@ -73,6 +73,7 @@ func TestHandleUploadSGF3(t *testing.T) {
 
 	evt := event.NewEvent("upload_sgf", sgfs)
 	r.HandleAny(evt)
+	t.Logf("%s", r.ToSGF())
 	assert.Equal(t, len(r.ToSGF()), 213)
 }
 

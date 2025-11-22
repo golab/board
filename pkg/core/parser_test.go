@@ -15,6 +15,7 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
 )
@@ -44,7 +45,7 @@ func TestParser(t *testing.T) {
 				t.Error(err)
 				return
 			}
-			if val, ok := root.Fields[tt.key]; !ok {
+			if val := root.GetField(tt.key); len(val) == 0 {
 				t.Errorf("key not present: %s", tt.key)
 			} else if len(val) != 1 {
 				t.Errorf("expected length of multifield to be 1, got: %d", len(val))
@@ -106,6 +107,21 @@ func TestMerge(t *testing.T) {
 	}
 }
 
+func TestMerge2(t *testing.T) {
+	sgf1 := sgfsamples.SimpleFourMoves
+	sgf2 := sgfsamples.SimpleEightMoves
+	sgf := core.Merge([]string{sgf1, sgf2})
+	p := core.NewParser(sgf)
+	root, err := p.Parse()
+	assert.NoError(t, err)
+	require.Equal(t, len(root.Down), 2)
+	child1 := root.Down[0]
+	child2 := root.Down[1]
+	// both should have PB, PW, and KM as comments
+	require.Equal(t, len(child1.GetField("C")), 3)
+	require.Equal(t, len(child2.GetField("C")), 3)
+}
+
 func TestPass(t *testing.T) {
 	sgf := "(;GM[1];B[aa];W[bb];B[tt];W[ss])"
 	p := core.NewParser(sgf)
@@ -152,10 +168,8 @@ func TestChineseNames(t *testing.T) {
 	p := core.NewParser(sgfsamples.ChineseNames)
 	root, err := p.Parse()
 	assert.NoError(t, err)
-	pb, ok := root.Fields["PB"]
-	assert.True(t, ok)
-	pw, ok := root.Fields["PW"]
-	assert.True(t, ok)
+	pb := root.GetField("PB")
+	pw := root.GetField("PW")
 
 	assert.Equal(t, len(pb), 1)
 	assert.Equal(t, len(pw), 1)
@@ -168,23 +182,27 @@ func TestMixedCaseField(t *testing.T) {
 	p := core.NewParser(sgfsamples.MixedCaseField)
 	root, err := p.Parse()
 	assert.NoError(t, err)
-	c, ok := root.Fields["COPYRIGHT"]
-	assert.True(t, ok)
+	c := root.GetField("COPYRIGHT")
 	assert.Equal(t, len(c), 1)
 	assert.Equal(t, c[0], "SomeCopyright")
+}
+
+func TestSGFNodeAddField(t *testing.T) {
+	n := &core.SGFNode{}
+	n.AddField("foo", "bar")
+	n.AddField("baz", "bot")
+	assert.Equal(t, len(n.Fields), 2)
 }
 
 func TestMultifield(t *testing.T) {
 	p := core.NewParser("(;GM[1]ZZ[foo][bar][baz])")
 	root, err := p.Parse()
 	assert.NoError(t, err)
-	zz, ok := root.Fields["ZZ"]
-	assert.True(t, ok)
-	assert.Equal(t, len(zz), 3)
+	zz := root.GetField("ZZ")
+	require.Equal(t, len(zz), 3)
 	assert.Equal(t, zz[0], "foo")
 	assert.Equal(t, zz[1], "bar")
 	assert.Equal(t, zz[2], "baz")
-
 }
 
 func FuzzParser(f *testing.F) {

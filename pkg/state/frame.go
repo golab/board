@@ -22,7 +22,7 @@ func (s *State) generateMarks() *core.Marks {
 	if s.current.XY != nil {
 		marks.Current = s.current.XY
 	}
-	if trs, ok := s.current.Fields["TR"]; ok {
+	if trs := s.current.GetField("TR"); len(trs) > 0 {
 		cs := core.NewCoordSet()
 		for _, tr := range trs {
 			c := core.LettersToCoord(tr)
@@ -30,7 +30,8 @@ func (s *State) generateMarks() *core.Marks {
 		}
 		marks.Triangles = cs.List()
 	}
-	if sqs, ok := s.current.Fields["SQ"]; ok {
+
+	if sqs := s.current.GetField("SQ"); len(sqs) > 0 {
 		cs := core.NewCoordSet()
 		for _, sq := range sqs {
 			c := core.LettersToCoord(sq)
@@ -38,7 +39,7 @@ func (s *State) generateMarks() *core.Marks {
 		}
 		marks.Squares = cs.List()
 	}
-	if lbs, ok := s.current.Fields["LB"]; ok {
+	if lbs := s.current.GetField("LB"); len(lbs) > 0 {
 		labels := []*core.Label{}
 		for _, lb := range lbs {
 			spl := strings.Split(lb, ":")
@@ -50,7 +51,7 @@ func (s *State) generateMarks() *core.Marks {
 		marks.Labels = labels
 	}
 
-	if pxs, ok := s.current.Fields["PX"]; ok {
+	if pxs := s.current.GetField("PX"); len(pxs) > 0 {
 		pens := []*core.Pen{}
 		for _, px := range pxs {
 			spl := strings.Split(px, ":")
@@ -83,7 +84,7 @@ func (s *State) generateMetadata() *core.Metadata {
 
 func (s *State) generateComments() []string {
 	cmts := []string{}
-	if c, ok := s.current.Fields["C"]; ok {
+	if c := s.current.GetField("C"); len(c) > 0 {
 		cmts = c
 	}
 	return cmts

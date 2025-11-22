@@ -44,9 +44,10 @@ func TestField1(t *testing.T) {
 
 	root := s.Root()
 	root.AddField("C", "some comment")
+	t.Logf("%v", root.Fields)
 
 	found := false
-	for _, comment := range root.Fields["C"] {
+	for _, comment := range root.GetField("C") {
 		if comment == "some comment" {
 			found = true
 		}
@@ -57,7 +58,7 @@ func TestField1(t *testing.T) {
 
 	root.RemoveField("C", "comment1")
 
-	for _, comment := range root.Fields["C"] {
+	for _, comment := range root.GetField("C") {
 		if comment == "comment1" {
 			t.Errorf("failed to remove comment")
 		}
@@ -154,11 +155,20 @@ func TestOverwriteField(t *testing.T) {
 
 	root := s.Root()
 
-	assert.Equal(t, len(root.Fields["PB"]), 1)
-	assert.Equal(t, root.Fields["PB"][0], "Black")
+	pb := root.GetField("PB")
+	assert.Equal(t, len(pb), 1)
+	assert.Equal(t, pb[0], "Black")
 
 	root.OverwriteField("PB", "foobar")
 
-	assert.Equal(t, len(root.Fields["PB"]), 1)
-	assert.Equal(t, root.Fields["PB"][0], "foobar")
+	pb = root.GetField("PB")
+	assert.Equal(t, len(pb), 1)
+	assert.Equal(t, pb[0], "foobar")
+}
+
+func TestTreeNodeAddField(t *testing.T) {
+	n := &core.TreeNode{}
+	n.AddField("foo", "bar")
+	n.AddField("baz", "bot")
+	assert.Equal(t, len(n.Fields), 2)
 }

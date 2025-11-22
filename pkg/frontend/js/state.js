@@ -240,10 +240,18 @@ class State {
     }
 
     set_gameinfo(fields_object) {
+        let fields = new Map();
+        for (let field of fields_object) {
+            let key = field["key"];
+            let values = field["values"];
+            fields.set(key, values);
+        }
+        /*
         let fields = new Map(Object.entries(fields_object));
         if (fields == null) {
             fields = new Map();
         }
+        */
         let gameinfo = {};
 
         // currently doesn't play very nice with chinese characters

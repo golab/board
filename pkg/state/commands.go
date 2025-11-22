@@ -50,12 +50,12 @@ func (cmd *addStoneCommand) Execute(s *State) (*core.Frame, error) {
 		return nil, nil
 	}
 
-	fields := make(map[string][]string)
+	fields := []core.Field{}
 	key := "B"
 	if cmd.color == core.White {
 		key = "W"
 	}
-	fields[key] = []string{cmd.coord.ToLetters()}
+	fields = append(fields, core.Field{Key: key, Values: []string{cmd.coord.ToLetters()}})
 
 	diff := s.addNode(cmd.coord, cmd.color, fields, -1, false)
 
@@ -82,12 +82,12 @@ func NewPassCommand(color core.Color) Command {
 }
 
 func (cmd *passCommand) Execute(s *State) (*core.Frame, error) {
-	fields := make(map[string][]string)
+	fields := []core.Field{}
 	key := "B"
 	if cmd.color == core.White {
 		key = "W"
 	}
-	fields[key] = []string{""}
+	fields = append(fields, core.Field{Key: key, Values: []string{""}})
 	s.addPassNode(cmd.color, fields, -1)
 
 	return &core.Frame{
@@ -117,8 +117,8 @@ func (cmd *removeStoneCommand) Execute(s *State) (*core.Frame, error) {
 		return nil, nil
 	}
 
-	fields := make(map[string][]string)
-	fields["AE"] = []string{cmd.coord.ToLetters()}
+	fields := []core.Field{}
+	fields = append(fields, core.Field{Key: "AE", Values: []string{cmd.coord.ToLetters()}})
 	diff := s.addFieldNode(fields, -1)
 
 	return &core.Frame{
@@ -225,7 +225,9 @@ func NewRemoveMarkCommand(coord *core.Coord) Command {
 
 func (cmd *removeMarkCommand) Execute(s *State) (*core.Frame, error) {
 	l := cmd.coord.ToLetters()
-	for key, values := range s.current.Fields {
+	for _, field := range s.current.Fields {
+		key := field.Key
+		values := field.Values
 		for _, value := range values {
 			if key == "LB" && value[:2] == l {
 				s.current.RemoveField("LB", value)
@@ -425,7 +427,7 @@ func NewErasePenCommand() Command {
 }
 
 func (cmd *erasePenCommand) Execute(s *State) (*core.Frame, error) {
-	delete(s.current.Fields, "PX")
+	s.current.DeleteField("PX")
 	return nil, nil
 }
 

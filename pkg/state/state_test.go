@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/state"
 )
@@ -57,5 +58,12 @@ func TestHandicap(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.Handicap1)
 	assert.NoError(t, err)
 	root := s.Root()
-	assert.Equal(t, len(root.Fields["AB"]), 4)
+	assert.Equal(t, len(root.GetField("AB")), 4)
+}
+
+func TestMissingSZ(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.MissingSZ)
+	assert.NoError(t, err)
+	sz := s.Size()
+	require.Equal(t, sz, 19)
 }

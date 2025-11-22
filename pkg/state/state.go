@@ -116,15 +116,15 @@ func (s *State) toSGF(indexes bool) string {
 		}
 		node := cur.(*core.TreeNode)
 		sb.WriteByte(';')
-		// throw in other fields
-		fields := []string{}
-		for f := range node.Fields {
-			fields = append(fields, f)
-		}
-		sort.Strings(fields)
 
-		for _, key := range fields {
-			multifield := node.Fields[key]
+		// throw in other fields
+		sort.Slice(node.Fields, func(i, j int) bool {
+			return node.Fields[i].Key < node.Fields[j].Key
+		})
+
+		for _, field := range node.Fields {
+			key := field.Key
+			multifield := field.Values
 			if key == "IX" {
 				continue
 			}
@@ -169,11 +169,11 @@ func FromSGF(data string) (*State, error) {
 	}
 
 	var size int64 = 19
-	if _, ok := root.Fields["SZ"]; ok {
-		sizeField := root.Fields["SZ"]
-		if len(sizeField) != 1 {
-			return nil, fmt.Errorf("SZ cannot be a multifield")
-		}
+	sizeField := root.GetField("SZ")
+	if len(sizeField) > 1 {
+		return nil, fmt.Errorf("SZ cannot be a multifield")
+	}
+	if len(sizeField) == 1 {
 		size, err = strconv.ParseInt(sizeField[0], 10, 64)
 		if err != nil {
 			return nil, err
@@ -192,13 +192,12 @@ func FromSGF(data string) (*State, error) {
 			node := cur.(*core.SGFNode)
 
 			index := -1
-			if indexes, ok := node.Fields["IX"]; ok {
-				if len(indexes) > 0 {
-					_index, err := strconv.ParseInt(indexes[0], 10, 64)
-					index = int(_index)
-					if err != nil {
-						index = -1
-					}
+			indexes := node.GetField("IX")
+			if len(indexes) > 0 {
+				_index, err := strconv.ParseInt(indexes[0], 10, 64)
+				index = int(_index)
+				if err != nil {
+					index = -1
 				}
 			}
 
@@ -233,18 +232,18 @@ func NewState(size int, initRoot bool) *State {
 	root = nil
 	index := 0
 	if initRoot {
-		fields := map[string][]string{}
-		fields["GM"] = []string{"1"}
-		fields["FF"] = []string{"4"}
-		fields["CA"] = []string{"UTF-8"}
-		fields["SZ"] = []string{fmt.Sprintf("%d", size)}
-		fields["PB"] = []string{"Black"}
-		fields["PW"] = []string{"White"}
-		fields["RU"] = []string{"Japanese"}
-		fields["KM"] = []string{"6.5"}
+		fields := []core.Field{}
+		root = core.NewTreeNode(nil, core.NoColor, 0, nil, fields)
+		root.AddField("GM", "1")
+		root.AddField("FF", "4")
+		root.AddField("CA", "UTF-8")
+		root.AddField("SZ", strconv.Itoa(size))
+		root.AddField("PB", "Black")
+		root.AddField("PW", "White")
+		root.AddField("RU", "Japanese")
+		root.AddField("KM", "6.5")
 
 		// coord, color, index, up, fields
-		root = core.NewTreeNode(nil, core.NoColor, 0, nil, fields)
 		nodes[0] = root
 		index = 1
 	}

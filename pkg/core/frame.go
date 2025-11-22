@@ -98,8 +98,8 @@ type Pen struct {
 
 // Metadata provides the size of the board plus any fields (usually from the root node)
 type Metadata struct {
-	Size   int                 `json:"size"`
-	Fields map[string][]string `json:"fields"`
+	Size   int     `json:"size"`
+	Fields []Field `json:"fields"`
 }
 
 // TreeJSONType defines some options for how much data to send in a TreeJSON
