@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package twitch_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
@@ -22,4 +23,31 @@ func TestVerify(t *testing.T) {
 	message := "hello world"
 	sig := "sha256=3ae321e96e012c6cc89b73326f329f0a3d1d7935abc3d819387830ce5f1b3074"
 	assert.True(t, twitch.Verify(secret, message, sig))
+}
+
+func TestParse(t *testing.T) {
+	testcases := []struct {
+		input    string
+		haserror bool
+		command  string
+		body     string
+	}{
+		{"!a b c d", false, "a", "b c d"},
+		{"", true, "", ""},
+		{"cmd", true, "", ""},
+		{"!", true, "", ""},
+		{"!foo bar", false, "foo", "bar"},
+	}
+
+	for i, tc := range testcases {
+		t.Run(fmt.Sprintf("twitchParse%d", i), func(t *testing.T) {
+			chat, err := twitch.Parse(tc.input)
+			if err != nil {
+				assert.True(t, tc.haserror)
+				return
+			}
+			assert.Equal(t, chat.Command, tc.command)
+			assert.Equal(t, chat.Body, tc.body)
+		})
+	}
 }

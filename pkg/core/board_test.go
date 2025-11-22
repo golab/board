@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/pkg/core"
 )
 
@@ -219,4 +220,29 @@ func TestScore(t *testing.T) {
 	if len(dame) != 2 {
 		t.Errorf("dame wrong, expected 0 (got %d)", len(dame))
 	}
+}
+
+func TestBoardCopy(t *testing.T) {
+	b := core.NewBoard(9)
+	for i := 0; i < 9; i++ {
+		b.Move(&core.Coord{i, i}, core.Black)
+	}
+
+	c := b.Copy()
+
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			coord := &core.Coord{i, j}
+			assert.Equal(t, c.Get(coord), b.Get(coord))
+		}
+	}
+}
+
+func TestBoardString(t *testing.T) {
+	b := core.NewBoard(9)
+	for i := 0; i < 9; i++ {
+		b.Move(&core.Coord{i, i}, core.Black)
+	}
+
+	assert.Equal(t, len(b.String()), 171)
 }

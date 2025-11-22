@@ -13,6 +13,7 @@ package core_test
 import (
 	"testing"
 
+	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/state"
@@ -105,7 +106,7 @@ func TestTrunkNum(t *testing.T) {
 	}
 }
 
-func TestCopy(t *testing.T) {
+func TestNodeCopy(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleTwoBranches)
 	if err != nil {
 		t.Error(err)
@@ -116,4 +117,48 @@ func TestCopy(t *testing.T) {
 	if !root.ShallowEqual(c) {
 		t.Errorf("error copying: %v %v", root, c)
 	}
+}
+
+func TestIsMove(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.Resignation1)
+	assert.NoError(t, err)
+
+	root := s.Root()
+	assert.False(t, root.IsMove())
+
+	assert.True(t, len(root.Down) > 0)
+	current := root.Down[0]
+	assert.True(t, current.IsMove())
+
+	assert.True(t, len(current.Down) > 0)
+	current = current.Down[0]
+	assert.True(t, current.IsMove())
+}
+
+func TestRecomputeDepth(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleFourMoves)
+	assert.NoError(t, err)
+
+	root := s.Root()
+
+	root.Depth = 42
+	root.RecomputeDepth()
+	assert.True(t, len(root.Down) > 0)
+	node := root.Down[0]
+	assert.Equal(t, node.Depth, 43)
+}
+
+func TestOverwriteField(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleFourMoves)
+	assert.NoError(t, err)
+
+	root := s.Root()
+
+	assert.Equal(t, len(root.Fields["PB"]), 1)
+	assert.Equal(t, root.Fields["PB"][0], "Black")
+
+	root.OverwriteField("PB", "foobar")
+
+	assert.Equal(t, len(root.Fields["PB"]), 1)
+	assert.Equal(t, root.Fields["PB"][0], "foobar")
 }
