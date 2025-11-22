@@ -51,3 +51,14 @@ func TestParse(t *testing.T) {
 		})
 	}
 }
+
+func FuzzParseChat(f *testing.F) {
+	testcases := []string{"", "!foo bar", "!", "foo bar"}
+	for _, tc := range testcases {
+		f.Add(tc)
+	}
+	f.Fuzz(func(t *testing.T, orig string) {
+		// looking for crashes or panics
+		_, _ = twitch.Parse(orig)
+	})
+}

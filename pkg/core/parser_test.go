@@ -198,6 +198,5 @@ func FuzzParser(f *testing.F) {
 		p := core.NewParser(orig)
 		// looking for crashes or panics
 		_, _ = p.Parse()
-
 	})
 }

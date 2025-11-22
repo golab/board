@@ -1,7 +1,7 @@
 # Base Makefile — default goal prints help (supports inline "##" and preceding "##" styles)
 .DEFAULT_GOAL := default
 
-.PHONY: default help build test fmt lint run setup clean fuzz coverage-int coverage-unit coverage-integration-html coverage-integration-total coverage-unit-html coverage-unit-total build-docker run-docker test-bench test-race
+.PHONY: default help build test fmt lint run setup clean fuzz coverage-int coverage-unit coverage-integration-html coverage-integration-total coverage-unit-html coverage-unit-total build-docker run-docker test-bench test-race coverage-total coverage-html coverage
 
 VERSION := $(shell git describe --tags 2>/dev/null || echo dev)
 
@@ -39,6 +39,7 @@ lint: setup ## Lint code
 fuzz: ## Fuzz code
 	@echo "==> fuzz"
 	go test ./pkg/core -fuzz=FuzzParser -fuzztime=60s
+	go test ./pkg/twitch/ -fuzz=FuzzParseChat -fuzztime=60s
 
 coverage-unit-total:
 	@echo "==> coverage-unit-total"
@@ -71,6 +72,28 @@ coverage-integration-html:
 
 coverage-int: coverage-integration-total coverage-integration-html ## Coverage of integration tests
 	@echo "==> coverage-integration"
+
+coverage-html:
+	@echo "==> coverage-html"
+	@go test ./integration/ -coverprofile=integration.tmp.out -coverpkg=./pkg/hub,./pkg/room,./pkg/state,./pkg/core > /dev/null
+	@go list ./... | grep -v integration | xargs go test -coverprofile=main.tmp.out > /dev/null
+	@echo "mode: set" > cover.out
+	@grep -h -v mode *.tmp.out >> cover.out
+	@go tool cover -html=cover.out
+	@rm *.out
+
+coverage-total:
+	@echo "==> coverage-total"
+	@go test ./integration/ -coverprofile=integration.tmp.out -coverpkg=./pkg/hub,./pkg/room,./pkg/state,./pkg/core -covermode=count > /dev/null
+	@go list ./... | grep -v integration | xargs go test -coverprofile=main.tmp.out -covermode=count > /dev/null
+	@echo "mode: count" > cover.out
+	@grep -h -v mode *.tmp.out >> cover.out
+	@go tool cover -func=cover.out -o=cover.out
+	@tail -n1 cover.out | tr -s '\t'
+	@rm cover.out
+
+coverage: coverage-total coverage-html ## Total coverage
+	@echo "==> coverage"
 
 test-race: ## Test for data races
 	@echo "==> test-race"
