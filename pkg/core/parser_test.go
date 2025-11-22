@@ -99,8 +99,8 @@ func TestMerge(t *testing.T) {
 				t.Error(err)
 				return
 			}
-			if len(root.Down) != tt.num {
-				t.Errorf("expected %d children, got: %d", tt.num, len(root.Down))
+			if root.NumChildren() != tt.num {
+				t.Errorf("expected %d children, got: %d", tt.num, root.NumChildren())
 				return
 			}
 		})
@@ -114,9 +114,9 @@ func TestMerge2(t *testing.T) {
 	p := core.NewParser(sgf)
 	root, err := p.Parse()
 	assert.NoError(t, err)
-	require.Equal(t, len(root.Down), 2)
-	child1 := root.Down[0]
-	child2 := root.Down[1]
+	require.Equal(t, root.NumChildren(), 2)
+	child1 := root.GetChild(0)
+	child2 := root.GetChild(1)
 	// both should have PB, PW, and KM as comments
 	require.Equal(t, len(child1.GetField("C")), 3)
 	require.Equal(t, len(child2.GetField("C")), 3)
@@ -191,7 +191,7 @@ func TestSGFNodeAddField(t *testing.T) {
 	n := &core.SGFNode{}
 	n.AddField("foo", "bar")
 	n.AddField("baz", "bot")
-	assert.Equal(t, len(n.Fields), 2)
+	assert.Equal(t, len(n.Fields()), 2)
 }
 
 func TestMultifield(t *testing.T) {

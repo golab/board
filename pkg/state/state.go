@@ -207,15 +207,15 @@ func FromSGF(data string) (*State, error) {
 			}
 
 			if node.IsPass() {
-				state.addPassNode(node.Color(), node.Fields, index)
+				state.addPassNode(node.Color(), node.Fields(), index)
 			} else if node.IsMove() {
-				state.addNode(node.Coord(), node.Color(), node.Fields, index, true)
+				state.addNode(node.Coord(), node.Color(), node.Fields(), index, true)
 			} else {
-				state.addFieldNode(node.Fields, index)
+				state.addFieldNode(node.Fields(), index)
 			}
-			for i := len(node.Down) - 1; i >= 0; i-- {
+			for i := node.NumChildren() - 1; i >= 0; i-- {
 				stack = append(stack, "<")
-				stack = append(stack, node.Down[i])
+				stack = append(stack, node.GetChild(i))
 			}
 			// TODO: this might be wrong in some cases
 			state.head = state.current

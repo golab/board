@@ -17,6 +17,7 @@ import (
 
 	"github.com/jarednogo/board/integration"
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/event"
@@ -87,8 +88,9 @@ func TestSim2(t *testing.T) {
 	p := core.NewParser(sgfsamples.Scoring2)
 	root, err := p.Parse()
 	assert.NoError(t, err)
-	cur := root.Down[0]
-	for len(cur.Down) != 0 {
+	require.True(t, root.NumChildren() > 0)
+	cur := root.GetChild(0)
+	for cur.NumChildren() != 0 {
 		// simulate an event
 		value := make(map[string]any)
 		color := 1.0
@@ -108,7 +110,7 @@ func TestSim2(t *testing.T) {
 		// let the event pass through all connections
 		sim.FlushAll()
 
-		cur = cur.Down[0]
+		cur = cur.GetChild(0)
 	}
 
 	// disconnect all the clients

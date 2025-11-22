@@ -26,13 +26,23 @@ type Field struct {
 }
 
 type SGFNode struct {
-	Fields []Field
-	Down   []*SGFNode
-	Index  int
+	fields []Field
+	down   []*SGFNode
 }
 
-func NewSGFNode(fields []Field, index int) *SGFNode {
-	return &SGFNode{fields, []*SGFNode{}, index}
+func (n *SGFNode) GetChild(i int) *SGFNode {
+	if i >= 0 && i < len(n.down) {
+		return n.down[i]
+	}
+	return nil
+}
+
+func (n *SGFNode) NumChildren() int {
+	return len(n.down)
+}
+
+func (n *SGFNode) Fields() []Field {
+	return n.fields
 }
 
 func (n *SGFNode) AddField(key, value string) {
@@ -40,19 +50,19 @@ func (n *SGFNode) AddField(key, value string) {
 	if (key == "B" || key == "W") && value == "tt" {
 		value = ""
 	}
-	for i := range n.Fields {
-		if n.Fields[i].Key == key {
-			n.Fields[i].Values = append(n.Fields[i].Values, value)
+	for i := range n.fields {
+		if n.fields[i].Key == key {
+			n.fields[i].Values = append(n.fields[i].Values, value)
 			return
 		}
 	}
-	n.Fields = append(n.Fields, Field{Key: key, Values: []string{value}})
+	n.fields = append(n.fields, Field{Key: key, Values: []string{value}})
 }
 
 func (n *SGFNode) GetField(key string) []string {
-	for i := range n.Fields {
-		if n.Fields[i].Key == key {
-			return n.Fields[i].Values
+	for i := range n.fields {
+		if n.fields[i].Key == key {
+			return n.fields[i].Values
 		}
 	}
 	return nil
@@ -60,15 +70,15 @@ func (n *SGFNode) GetField(key string) []string {
 
 func (n *SGFNode) deleteField(key string) {
 	i := -1
-	for j := range n.Fields {
-		if n.Fields[j].Key == key {
+	for j := range n.fields {
+		if n.fields[j].Key == key {
 			i = j
 		}
 	}
 	if i == -1 {
 		return
 	}
-	n.Fields = append(n.Fields[:i], n.Fields[i+1:]...)
+	n.fields = append(n.fields[:i], n.fields[i+1:]...)
 }
 
 func (n *SGFNode) IsMove() bool {
@@ -115,11 +125,11 @@ func (n *SGFNode) ToSGF(root bool) string {
 	}
 	sb.WriteByte(';')
 
-	sort.Slice(n.Fields, func(i, j int) bool {
-		return n.Fields[i].Key < n.Fields[j].Key
+	sort.Slice(n.fields, func(i, j int) bool {
+		return n.fields[i].Key < n.fields[j].Key
 	})
 
-	for _, field := range n.Fields {
+	for _, field := range n.fields {
 		sb.WriteString(field.Key)
 		for _, value := range field.Values {
 			sb.WriteByte('[')
@@ -129,8 +139,8 @@ func (n *SGFNode) ToSGF(root bool) string {
 		}
 	}
 
-	for _, d := range n.Down {
-		if len(n.Down) > 1 {
+	for _, d := range n.down {
+		if len(n.down) > 1 {
 			sb.WriteByte('(')
 			sb.WriteString(d.ToSGF(false))
 			sb.WriteByte(')')
@@ -145,8 +155,8 @@ func (n *SGFNode) ToSGF(root bool) string {
 }
 
 type Parser struct {
-	Text  []rune
-	Index int
+	text  []rune
+	index int
 }
 
 func NewParser(text string) *Parser {
@@ -240,7 +250,7 @@ func (p *Parser) ParseNodes() ([]*SGFNode, error) {
 			if err != nil {
 				return nil, err
 			}
-			cur.Down = append(cur.Down, next)
+			cur.down = append(cur.down, next)
 			cur = next
 		} else {
 			break
@@ -312,7 +322,7 @@ func (p *Parser) ParseBranch() (*SGFNode, error) {
 				root = node
 				current = cur
 			} else {
-				current.Down = append(current.Down, node)
+				current.down = append(current.down, node)
 				current = cur
 			}
 		} else if c == '(' {
@@ -325,7 +335,7 @@ func (p *Parser) ParseBranch() (*SGFNode, error) {
 				root = newBranch
 				current = newBranch
 			} else {
-				current.Down = append(current.Down, newBranch)
+				current.down = append(current.down, newBranch)
 			}
 		} else if c == ')' {
 			break
@@ -335,19 +345,19 @@ func (p *Parser) ParseBranch() (*SGFNode, error) {
 }
 
 func (p *Parser) read() rune {
-	if p.Index >= len(p.Text) {
+	if p.index >= len(p.text) {
 		return 0
 	}
-	result := p.Text[p.Index]
-	p.Index++
+	result := p.text[p.index]
+	p.index++
 	return result
 }
 
 func (p *Parser) peek(n int) rune {
-	if p.Index+n >= len(p.Text) {
+	if p.index+n >= len(p.text) {
 		return 0
 	}
-	return p.Text[p.Index+n]
+	return p.text[p.index+n]
 }
 
 func Merge(sgfs []string) string {
@@ -403,10 +413,10 @@ func Merge(sgfs []string) string {
 			for _, key := range []string{"RU", "SZ", "KM", "TM", "OT"} {
 				root.deleteField(key)
 			}
-			newRoot.Down = append(newRoot.Down, root)
+			newRoot.down = append(newRoot.down, root)
 		} else {
 			// otherwise save all the children
-			for _, d := range root.Down {
+			for _, d := range root.down {
 				for _, key := range []string{"PB", "PW", "RE", "KM", "DT"} {
 					if len(root.GetField(key)) == 0 {
 						continue
@@ -419,7 +429,7 @@ func Merge(sgfs []string) string {
 					value := fmt.Sprintf("%s: %s", key, rootValue)
 					d.AddField("C", value)
 				}
-				newRoot.Down = append(newRoot.Down, d)
+				newRoot.down = append(newRoot.down, d)
 			}
 		}
 	}
@@ -427,37 +437,3 @@ func Merge(sgfs []string) string {
 	newRoot.AddField("SZ", size)
 	return newRoot.ToSGF(true)
 }
-
-/*
-func Validate(node *SGFNode) (*SGFNode, error) {
-	if node == nil {
-		return nil, nil
-	}
-
-	n := &SGFNode{}
-
-	for _, field := range node.Fields {
-		key := field.Key
-		values := field.Values
-		if (key == "B" || key == "W") && len(values) == 1 && values[0] == "tt" {
-			n.AddField(key, "")
-		} else {
-			n.AddField(key, values[0])
-		}
-	}
-
-	down := []*SGFNode{}
-	for _, d := range node.Down {
-		e, err := Validate(d)
-		if err != nil {
-			return nil, err
-		}
-		down = append(down, e)
-	}
-
-	n.Down = down
-	n.Index = node.Index
-
-	return n, nil
-}
-*/
