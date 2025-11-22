@@ -65,7 +65,7 @@ func NewRoom(id string) *Room {
 		password:     "",
 		auth:         auth,
 		nicks:        nicks,
-		fetcher:      fetch.NewDefaultFetcher(),
+		fetcher:      fetch.NewDefaultFetcher(nil),
 		id:           id,
 		inputBuffer:  250,
 		userBuffer:   100,

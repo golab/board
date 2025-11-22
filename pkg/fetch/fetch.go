@@ -37,10 +37,21 @@ type Fetcher interface {
 	ApprovedFetch(string) (string, error)
 }
 
-type DefaultFetcher struct{}
+type Client interface {
+	Get(string) (*http.Response, error)
+}
 
-func NewDefaultFetcher() *DefaultFetcher {
-	return &DefaultFetcher{}
+type DefaultFetcher struct {
+	client Client
+}
+
+func NewDefaultFetcher(client Client) *DefaultFetcher {
+	if client == nil {
+		client = http.DefaultClient
+	}
+	return &DefaultFetcher{
+		client: client,
+	}
 }
 
 func (f *DefaultFetcher) OGSCheckEnded(ogsURL string) (bool, error) {
@@ -80,7 +91,7 @@ func (f *DefaultFetcher) FetchOGS(ogsURL string) (string, error) {
 }
 
 func (f *DefaultFetcher) Fetch(urlStr string) (string, error) {
-	resp, err := http.Get(urlStr)
+	resp, err := f.client.Get(urlStr)
 	if err != nil {
 		return "", err
 	}

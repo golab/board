@@ -13,6 +13,8 @@ package fetch_test
 import (
 	"testing"
 
+	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/fetch"
 )
 
@@ -33,4 +35,51 @@ func TestOGS(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestOGSCheckEnded(t *testing.T) {
+	mc := fetch.NewMockClient("")
+	f := fetch.NewDefaultFetcher(mc)
+	ended, err := f.OGSCheckEnded("https://online-go.com/game/123")
+	assert.NoError(t, err)
+	assert.True(t, ended)
+}
+
+func TestFetchOGS(t *testing.T) {
+	mc := fetch.NewMockClient(sgfsamples.Resignation1)
+	f := fetch.NewDefaultFetcher(mc)
+	sgf, err := f.FetchOGS("https://online-go.com/game/123")
+	assert.NoError(t, err)
+	assert.Equal(t, len(sgf), len(sgfsamples.Resignation1))
+}
+
+func TestFetchOGSReview(t *testing.T) {
+	mc := fetch.NewMockClient(sgfsamples.Resignation1)
+	f := fetch.NewDefaultFetcher(mc)
+	sgf, err := f.FetchOGS("https://online-go.com/review/123")
+	assert.NoError(t, err)
+	assert.Equal(t, len(sgf), len(sgfsamples.Resignation1))
+}
+
+func TestApprovedOGSFetch(t *testing.T) {
+	mc := fetch.NewMockClient(sgfsamples.Resignation1)
+	f := fetch.NewDefaultFetcher(mc)
+	sgf, err := f.ApprovedFetch("https://online-go.com/game/123")
+	assert.NoError(t, err)
+	assert.Equal(t, len(sgf), len(sgfsamples.Resignation1))
+}
+
+func TestFetchOther(t *testing.T) {
+	mc := fetch.NewMockClient(sgfsamples.Resignation1)
+	f := fetch.NewDefaultFetcher(mc)
+	sgf, err := f.Fetch("https://gokifu.com/somesgf")
+	assert.NoError(t, err)
+	assert.Equal(t, len(sgf), len(sgfsamples.Resignation1))
+}
+
+func TestFetchForbidden(t *testing.T) {
+	mc := fetch.NewMockClient(sgfsamples.Resignation1)
+	f := fetch.NewDefaultFetcher(mc)
+	_, err := f.ApprovedFetch("https://thesgfdatabase.com/somesgf")
+	assert.NotNil(t, err)
 }
