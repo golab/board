@@ -13,15 +13,19 @@ package event
 
 import (
 	"encoding/json"
+
+	"github.com/google/uuid"
 )
 
 type Event interface {
 	Type() string
 	Value() any
 	User() string
+	ID() string
 	SetType(string)
 	SetValue(any)
 	SetUser(string)
+	SetID(string)
 }
 
 // Event is the basic struct for sending and receiving messages over
@@ -30,6 +34,7 @@ type DefaultEvent struct {
 	EventType   string `json:"event"`
 	EventValue  any    `json:"value"`
 	EventUserID string `json:"userid"`
+	id          string
 }
 
 func (e *DefaultEvent) Type() string {
@@ -56,14 +61,27 @@ func (e *DefaultEvent) SetUser(id string) {
 	e.EventUserID = id
 }
 
+func (e *DefaultEvent) ID() string {
+	return e.id
+}
+
+func (e *DefaultEvent) SetID(id string) {
+	e.id = id
+}
+
 func NewEvent(t string, value any) Event {
+	r, _ := uuid.NewRandom()
+	id := r.String()
+
 	return &DefaultEvent{
 		EventType:  t,
-		EventValue: value}
+		EventValue: value,
+		id:         id,
+	}
 }
 
 func EmptyEvent() Event {
-	return &DefaultEvent{}
+	return NewEvent("", nil)
 }
 
 // ErrorEvent is a special case of an Event
@@ -82,9 +100,13 @@ func NopEvent() Event {
 }
 
 func EventFromJSON(data []byte) (Event, error) {
+	r, _ := uuid.NewRandom()
+	id := r.String()
+
 	evt := &DefaultEvent{}
 	if err := json.Unmarshal(data, evt); err != nil {
 		return nil, err
 	}
+	evt.id = id
 	return evt, nil
 }

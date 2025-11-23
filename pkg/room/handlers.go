@@ -122,6 +122,7 @@ func (r *Room) handleUploadSGF(evt event.Event) event.Event {
 	defer func() {
 		if bcast != nil {
 			bcast.SetUser(evt.User())
+			bcast.SetID(evt.ID())
 		}
 	}()
 
@@ -176,6 +177,7 @@ func (r *Room) handleRequestSGF(evt event.Event) event.Event {
 	defer func() {
 		if bcast != nil {
 			bcast.SetUser(evt.User())
+			bcast.SetID(evt.ID())
 		}
 	}()
 
@@ -326,6 +328,7 @@ func (r *Room) handleEvent(evt event.Event) event.Event {
 	defer func() {
 		if bcast != nil {
 			bcast.SetUser(evt.User())
+			bcast.SetID(evt.ID())
 		}
 	}()
 
@@ -451,7 +454,7 @@ func (r *Room) outsideBuffer(handler EventHandler) EventHandler {
 func (r *Room) logEventType(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
 		if r.logger != nil {
-			r.logger.Info("handling event with type", "event_type", evt.Type())
+			r.logger.Info("handling event with type", "event_type", evt.Type(), "event_id", evt.ID())
 		}
 		return handler(evt)
 	}
@@ -460,7 +463,7 @@ func (r *Room) logEventType(handler EventHandler) EventHandler {
 func (r *Room) logEventValue(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
 		if r.logger != nil {
-			r.logger.Info("handling event with value", "event_value", evt.Value().(string))
+			r.logger.Info("handling event with value", "event_value", evt.Value().(string), "event_id", evt.ID())
 		}
 		return handler(evt)
 	}
@@ -473,10 +476,10 @@ func (r *Room) logAfter(handler EventHandler) EventHandler {
 		// (the ogs link doesn't upload the root node data in time)
 		if r.logger != nil && r.GetPlugin("ogs") == nil {
 			if evt.Type() == "error" {
-				r.logger.Error("error while handling", "error", evt.Value().(string))
+				r.logger.Error("error while handling", "error", evt.Value().(string), "event_id", evt.ID())
 			} else {
 				current := r.Current()
-				args := []any{}
+				args := []any{"event_id", evt.ID()}
 				for _, field := range current.AllFields() {
 					args = append(args, field.Key)
 					args = append(args, strings.Join(field.Values, ", "))
