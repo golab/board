@@ -89,23 +89,23 @@ func (r *Room) initHandlers() {
 
 // handlers
 
-func (room *Room) handleIsProtected(evt event.Event) event.Event {
-	evt.SetValue(room.HasPassword())
-	room.SendTo(evt.User(), evt)
+func (r *Room) handleIsProtected(evt event.Event) event.Event {
+	evt.SetValue(r.HasPassword())
+	r.SendTo(evt.User(), evt)
 	return evt
 }
 
-func (room *Room) handleCheckPassword(evt event.Event) event.Event {
+func (r *Room) handleCheckPassword(evt event.Event) event.Event {
 	p := evt.Value().(string)
 
-	password := room.GetPassword()
+	password := r.GetPassword()
 
 	if !core.CorrectPassword(p, password) {
 		evt.SetValue("")
 	} else {
-		room.SetAuth(evt.User(), true)
+		r.SetAuth(evt.User(), true)
 	}
-	room.SendTo(evt.User(), evt)
+	r.SendTo(evt.User(), evt)
 	return evt
 }
 
@@ -117,7 +117,7 @@ func handlePing(evt event.Event) event.Event {
 	return evt
 }
 
-func (room *Room) handleUploadSGF(evt event.Event) event.Event {
+func (r *Room) handleUploadSGF(evt event.Event) event.Event {
 	var bcast event.Event
 	defer func() {
 		if bcast != nil {
@@ -143,10 +143,10 @@ func (room *Room) handleUploadSGF(evt event.Event) event.Event {
 					files = append(files, string(file))
 				}
 				merged := core.Merge(files)
-				bcast = room.UploadSGF(merged)
+				bcast = r.UploadSGF(merged)
 			}
 		} else {
-			bcast = room.UploadSGF(string(decoded))
+			bcast = r.UploadSGF(string(decoded))
 		}
 
 	} else if arr, ok := evt.Value().([]any); ok {
@@ -162,7 +162,7 @@ func (room *Room) handleUploadSGF(evt event.Event) event.Event {
 			sgfs = append(sgfs, string(d))
 		}
 		sgf := core.Merge(sgfs)
-		bcast = room.UploadSGF(sgf)
+		bcast = r.UploadSGF(sgf)
 	} else {
 		bcast = event.ErrorEvent("unreachable")
 	}
@@ -171,7 +171,7 @@ func (room *Room) handleUploadSGF(evt event.Event) event.Event {
 	return bcast
 }
 
-func (room *Room) handleRequestSGF(evt event.Event) event.Event {
+func (r *Room) handleRequestSGF(evt event.Event) event.Event {
 	var bcast event.Event
 	defer func() {
 		if bcast != nil {
@@ -195,7 +195,7 @@ func (room *Room) handleRequestSGF(evt event.Event) event.Event {
 
 		switch ogsType {
 		case "game":
-			ended, err := room.GetFetcher().OGSCheckEnded(url)
+			ended, err := r.GetFetcher().OGSCheckEnded(url)
 			if err != nil {
 				bcast = event.ErrorEvent(err.Error())
 				return bcast
@@ -216,7 +216,7 @@ func (room *Room) handleRequestSGF(evt event.Event) event.Event {
 			}
 			id := int(id64)
 
-			o, err := plugin.NewOGSConnector(room, room.GetFetcher())
+			o, err := plugin.NewOGSConnector(r, r.GetFetcher())
 			if err != nil {
 				bcast = event.ErrorEvent("ogs connector error")
 				return bcast
@@ -227,7 +227,7 @@ func (room *Room) handleRequestSGF(evt event.Event) event.Event {
 				"id":      id,
 				"ogsType": ogsType,
 			}
-			room.RegisterPlugin(o, args)
+			r.RegisterPlugin(o, args)
 
 			if ogsType == "game" {
 				// finish here
@@ -236,36 +236,36 @@ func (room *Room) handleRequestSGF(evt event.Event) event.Event {
 		}
 	}
 
-	data, err := room.GetFetcher().ApprovedFetch(evt.Value().(string))
+	data, err := r.GetFetcher().ApprovedFetch(evt.Value().(string))
 	if err != nil {
 		bcast = event.ErrorEvent(err.Error())
 	} else if data == "Permission denied" {
 		bcast = event.ErrorEvent("Error fetching SGF. Is it a private OGS game?")
 	} else {
-		bcast = room.UploadSGF(string(data))
+		bcast = r.UploadSGF(string(data))
 	}
 
 	return bcast
 }
 
-func (room *Room) handleTrash(evt event.Event) event.Event {
+func (r *Room) handleTrash(evt event.Event) event.Event {
 	// reset room
-	oldBuffer := room.GetInputBuffer()
-	room.SetState(state.NewState(room.Size(), true))
+	oldBuffer := r.GetInputBuffer()
+	r.SetState(state.NewState(r.Size(), true))
 
 	// reuse old inputbuffer
-	room.SetInputBuffer(oldBuffer)
+	r.SetInputBuffer(oldBuffer)
 
-	frame := room.GenerateFullFrame(core.Full)
+	frame := r.GenerateFullFrame(core.Full)
 	bcast := event.FrameEvent(frame)
 	bcast.SetUser(evt.User())
 	return bcast
 }
 
-func (room *Room) handleUpdateNickname(evt event.Event) event.Event {
+func (r *Room) handleUpdateNickname(evt event.Event) event.Event {
 	nickname := evt.Value().(string)
-	room.SetNick(evt.User(), nickname)
-	userEvt := event.NewEvent("connected_users", room.Nicks())
+	r.SetNick(evt.User(), nickname)
+	userEvt := event.NewEvent("connected_users", r.Nicks())
 	userEvt.SetUser(evt.User())
 	return userEvt
 }
@@ -276,7 +276,7 @@ type Settings struct {
 	Password string
 }
 
-func (room *Room) handleUpdateSettings(evt event.Event) event.Event {
+func (r *Room) handleUpdateSettings(evt event.Event) event.Event {
 	sMap := evt.Value().(map[string]any)
 	buffer := int64(sMap["buffer"].(float64))
 	size := int(sMap["size"].(float64))
@@ -287,16 +287,16 @@ func (room *Room) handleUpdateSettings(evt event.Event) event.Event {
 	komi := sMap["komi"].(string)
 
 	if black != "" {
-		room.EditPlayerBlack(black)
+		r.EditPlayerBlack(black)
 	}
 	if white != "" {
-		room.EditPlayerWhite(white)
+		r.EditPlayerWhite(white)
 	}
 	if komi != "" {
-		room.EditKomi(komi)
+		r.EditKomi(komi)
 	}
 
-	room.SetNick(evt.User(), nickname)
+	r.SetNick(evt.User(), nickname)
 
 	password := sMap["password"].(string)
 	hashed := ""
@@ -305,23 +305,23 @@ func (room *Room) handleUpdateSettings(evt event.Event) event.Event {
 	}
 	settings := &Settings{buffer, size, hashed}
 
-	room.SetInputBuffer(settings.Buffer)
-	if settings.Size != room.Size() {
+	r.SetInputBuffer(settings.Buffer)
+	if settings.Size != r.Size() {
 		// essentially trashing
-		room.SetState(state.NewState(settings.Size, true))
-		room.SetInputBuffer(buffer)
+		r.SetState(state.NewState(settings.Size, true))
+		r.SetInputBuffer(buffer)
 	}
 
 	// can be changed
 	// anyone already in the room is added
 	// person who set password automatically gets added
-	room.SetAuthAll()
-	room.SetPassword(hashed)
+	r.SetAuthAll()
+	r.SetPassword(hashed)
 
 	return evt
 }
 
-func (room *Room) handleEvent(evt event.Event) event.Event {
+func (r *Room) handleEvent(evt event.Event) event.Event {
 	var bcast event.Event
 	defer func() {
 		if bcast != nil {
@@ -335,7 +335,7 @@ func (room *Room) handleEvent(evt event.Event) event.Event {
 		return bcast
 	}
 
-	frame, err := room.Execute(cmd)
+	frame, err := r.Execute(cmd)
 	if err != nil {
 		bcast = event.ErrorEvent(err.Error())
 		return bcast
@@ -352,58 +352,58 @@ func (room *Room) handleEvent(evt event.Event) event.Event {
 
 // middleware
 
-func (room *Room) setTimeAfter(handler EventHandler) EventHandler {
+func (r *Room) setTimeAfter(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
 		evt = handler(evt)
 		// set last user information
-		room.SetLastUser(evt.User())
+		r.SetLastUser(evt.User())
 		now := time.Now()
-		room.SetLastActive(&now)
+		r.SetLastActive(&now)
 		return evt
 	}
 }
 
-func (room *Room) broadcastAfter(handler EventHandler) EventHandler {
+func (r *Room) broadcastAfter(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
 		evt = handler(evt)
-		room.Broadcast(evt)
+		r.Broadcast(evt)
 		return evt
 	}
 }
 
-func (room *Room) broadcastFullFrameAfter(handler EventHandler) EventHandler {
+func (r *Room) broadcastFullFrameAfter(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
 		evt = handler(evt)
-		frame := room.GenerateFullFrame(core.Full)
+		frame := r.GenerateFullFrame(core.Full)
 		bcast := event.FrameEvent(frame)
-		room.Broadcast(bcast)
+		r.Broadcast(bcast)
 		return evt
 	}
 }
 
-func (room *Room) broadcastConnectedUsersAfter(handler EventHandler) EventHandler {
+func (r *Room) broadcastConnectedUsersAfter(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
 		evt = handler(evt)
-		userEvt := event.NewEvent("connected_users", room.Nicks())
+		userEvt := event.NewEvent("connected_users", r.Nicks())
 
 		// broadcast connected_users
-		room.Broadcast(userEvt)
+		r.Broadcast(userEvt)
 		return evt
 	}
 }
 
-func (room *Room) closeOGS(handler EventHandler) EventHandler {
+func (r *Room) closeOGS(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
-		room.DeregisterPlugin("ogs")
+		r.DeregisterPlugin("ogs")
 		return handler(evt)
 	}
 }
 
-func (room *Room) authorized(handler EventHandler) EventHandler {
+func (r *Room) authorized(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
 		id := evt.User()
-		ok := room.GetAuth(id)
-		if room.GetPassword() == "" || ok {
+		ok := r.GetAuth(id)
+		if r.GetPassword() == "" || ok {
 			// only go to the next handler if authorized
 			evt = handler(evt)
 		}
@@ -412,17 +412,17 @@ func (room *Room) authorized(handler EventHandler) EventHandler {
 }
 
 // this one is to keep the same user from submitting multiple events too quickly
-func (room *Room) slow(handler EventHandler) EventHandler {
+func (r *Room) slow(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
 		id := evt.User()
 		// check multiple events from the same user in a narrow window (50 ms)
 		now := time.Now()
-		if last, ok := room.GetLastMessages(id); !ok {
-			room.SetLastMessages(id, &now)
+		if last, ok := r.GetLastMessages(id); !ok {
+			r.SetLastMessages(id, &now)
 		} else {
 			diff := now.Sub(last)
-			room.SetLastMessages(id, &now)
-			if diff.Milliseconds() < room.GetUserBuffer() {
+			r.SetLastMessages(id, &now)
+			if diff.Milliseconds() < r.GetUserBuffer() {
 				// don't do the next handler if too fast
 				return evt
 			}
@@ -432,14 +432,14 @@ func (room *Room) slow(handler EventHandler) EventHandler {
 }
 
 // this one is to keep people from tripping over each other
-func (room *Room) outsideBuffer(handler EventHandler) EventHandler {
+func (r *Room) outsideBuffer(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
-		lastUser := room.GetLastUser()
+		lastUser := r.GetLastUser()
 
 		if lastUser != evt.User() {
 			now := time.Now()
-			diff := now.Sub(room.GetLastActive())
-			if diff.Milliseconds() < room.GetInputBuffer() {
+			diff := now.Sub(r.GetLastActive())
+			if diff.Milliseconds() < r.GetInputBuffer() {
 				// don't do the next handler if too fast
 				return evt
 			}
@@ -448,37 +448,37 @@ func (room *Room) outsideBuffer(handler EventHandler) EventHandler {
 	}
 }
 
-func (room *Room) logEventType(handler EventHandler) EventHandler {
+func (r *Room) logEventType(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
-		if room.logger != nil {
-			room.logger.Info("handling event with type", "event_type", evt.Type())
+		if r.logger != nil {
+			r.logger.Info("handling event with type", "event_type", evt.Type())
 		}
 		return handler(evt)
 	}
 }
 
-func (room *Room) logEventValue(handler EventHandler) EventHandler {
+func (r *Room) logEventValue(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
-		if room.logger != nil {
-			room.logger.Info("handling event with value", "event_value", evt.Value().(string))
+		if r.logger != nil {
+			r.logger.Info("handling event with value", "event_value", evt.Value().(string))
 		}
 		return handler(evt)
 	}
 }
 
-func (room *Room) logAfter(handler EventHandler) EventHandler {
+func (r *Room) logAfter(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
 		evt = handler(evt)
 		// only log info if we're not connected to ogs
 		// (the ogs link doesn't upload the root node data in time)
-		if room.logger != nil && room.GetPlugin("ogs") == nil {
-			current := room.Current()
+		if r.logger != nil && r.GetPlugin("ogs") == nil {
+			current := r.Current()
 			args := []any{}
 			for _, field := range current.AllFields() {
 				args = append(args, field.Key)
 				args = append(args, strings.Join(field.Values, ", "))
 			}
-			room.logger.Info("current node", args...)
+			r.logger.Info("current node", args...)
 		}
 		return evt
 	}
@@ -493,7 +493,7 @@ func chain(h EventHandler, middleware ...Middleware) EventHandler {
 
 // HandleAny is only to be used in special occasions because it recreates
 // all the handlers
-func (room *Room) HandleAny(evt event.Event) event.Event {
+func (r *Room) HandleAny(evt event.Event) event.Event {
 	// handle the event
-	return room.GetHandler(evt.Type())(evt)
+	return r.GetHandler(evt.Type())(evt)
 }
