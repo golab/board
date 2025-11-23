@@ -12,7 +12,6 @@ package state
 
 import (
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -118,11 +117,9 @@ func (s *State) toSGF(indexes bool) string {
 		sb.WriteByte(';')
 
 		// throw in other fields
-		sort.Slice(node.Fields, func(i, j int) bool {
-			return node.Fields[i].Key < node.Fields[j].Key
-		})
+		node.SortFields()
 
-		for _, field := range node.Fields {
+		for _, field := range node.AllFields() {
 			key := field.Key
 			multifield := field.Values
 			if key == "IX" {
@@ -207,11 +204,11 @@ func FromSGF(data string) (*State, error) {
 			}
 
 			if node.IsPass() {
-				state.addPassNode(node.Color(), node.Fields(), index)
+				state.addPassNode(node.Color(), node.Fields, index)
 			} else if node.IsMove() {
-				state.addNode(node.Coord(), node.Color(), node.Fields(), index, true)
+				state.addNode(node.Coord(), node.Color(), node.Fields, index, true)
 			} else {
-				state.addFieldNode(node.Fields(), index)
+				state.addFieldNode(node.Fields, index)
 			}
 			for i := node.NumChildren() - 1; i >= 0; i-- {
 				stack = append(stack, "<")
@@ -232,7 +229,7 @@ func NewState(size int, initRoot bool) *State {
 	root = nil
 	index := 0
 	if initRoot {
-		fields := []core.Field{}
+		fields := core.Fields{}
 		root = core.NewTreeNode(nil, core.NoColor, 0, nil, fields)
 		root.AddField("GM", "1")
 		root.AddField("FF", "4")

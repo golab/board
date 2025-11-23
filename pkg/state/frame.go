@@ -77,7 +77,7 @@ func (s *State) generateMarks() *core.Marks {
 func (s *State) generateMetadata() *core.Metadata {
 	m := &core.Metadata{
 		Size:   s.size,
-		Fields: s.root.Fields,
+		Fields: s.root.AllFields(),
 	}
 	return m
 }

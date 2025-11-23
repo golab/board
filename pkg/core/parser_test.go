@@ -171,8 +171,8 @@ func TestChineseNames(t *testing.T) {
 	pb := root.GetField("PB")
 	pw := root.GetField("PW")
 
-	assert.Equal(t, len(pb), 1)
-	assert.Equal(t, len(pw), 1)
+	require.Equal(t, len(pb), 1)
+	require.Equal(t, len(pw), 1)
 
 	assert.Equal(t, pw[0], "王思雅")
 	assert.Equal(t, pb[0], "李晨宇")
@@ -183,7 +183,7 @@ func TestMixedCaseField(t *testing.T) {
 	root, err := p.Parse()
 	assert.NoError(t, err)
 	c := root.GetField("COPYRIGHT")
-	assert.Equal(t, len(c), 1)
+	require.Equal(t, len(c), 1)
 	assert.Equal(t, c[0], "SomeCopyright")
 }
 
@@ -191,7 +191,7 @@ func TestSGFNodeAddField(t *testing.T) {
 	n := &core.SGFNode{}
 	n.AddField("foo", "bar")
 	n.AddField("baz", "bot")
-	assert.Equal(t, len(n.Fields()), 2)
+	assert.Equal(t, len(n.AllFields()), 2)
 }
 
 func TestMultifield(t *testing.T) {

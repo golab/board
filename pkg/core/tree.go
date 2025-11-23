@@ -41,14 +41,14 @@ type TreeNode struct {
 	Up             *TreeNode
 	Index          int
 	PreferredChild int
-	Fields         []Field
-	Diff           *Diff
-	Depth          int
-	BlackCaps      int
-	WhiteCaps      int
+	Fields
+	Diff      *Diff
+	Depth     int
+	BlackCaps int
+	WhiteCaps int
 }
 
-func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields []Field) *TreeNode {
+func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields Fields) *TreeNode {
 	down := []*TreeNode{}
 	node := &TreeNode{
 		XY:             coord,
@@ -121,28 +121,6 @@ func (n *TreeNode) IsMove() bool {
 	return len(bvalues) > 0 || len(wvalues) > 0
 }
 
-func (n *TreeNode) GetField(key string) []string {
-	for i := range n.Fields {
-		if n.Fields[i].Key == key {
-			return n.Fields[i].Values
-		}
-	}
-	return nil
-}
-
-func (n *TreeNode) DeleteField(key string) {
-	i := -1
-	for j := range n.Fields {
-		if n.Fields[j].Key == key {
-			i = j
-		}
-	}
-	if i == -1 {
-		return
-	}
-	n.Fields = append(n.Fields[:i], n.Fields[i+1:]...)
-}
-
 // SetParent exists to add the depth attribute
 func (n *TreeNode) SetParent(up *TreeNode) {
 	n.Up = up
@@ -199,61 +177,4 @@ func (n *TreeNode) MaxDepth() int {
 		}
 	}, n)
 	return depth
-}
-
-func (n *TreeNode) OverwriteField(key, value string) {
-	for i := range n.Fields {
-		if n.Fields[i].Key == key {
-			n.Fields[i].Values = []string{value}
-			return
-		}
-	}
-	n.Fields = append(n.Fields, Field{Key: key, Values: []string{value}})
-
-}
-
-func (n *TreeNode) AddField(key, value string) {
-	for i := range n.Fields {
-		if n.Fields[i].Key == key {
-			n.Fields[i].Values = append(n.Fields[i].Values, value)
-			return
-		}
-	}
-	n.Fields = append(n.Fields, Field{Key: key, Values: []string{value}})
-}
-
-func (n *TreeNode) RemoveField(key, value string) {
-	// find the index of the key
-	i := -1
-	for z := range n.Fields {
-		if n.Fields[z].Key == key {
-			i = z
-		}
-	}
-
-	// if the key is not present, done
-	if i == -1 {
-		return
-	}
-
-	// now find if the value is present
-	j := -1
-	for z := range n.Fields[i].Values {
-		if n.Fields[i].Values[z] == value {
-			j = z
-		}
-	}
-
-	// if the value is not present, done
-	if j == -1 {
-		return
-	}
-
-	// take the value out
-	n.Fields[i].Values = append(n.Fields[i].Values[:j], n.Fields[i].Values[j+1:]...)
-
-	// if there are no values left, take the key out
-	if len(n.Fields[i].Values) == 0 {
-		n.Fields = append(n.Fields[:i], n.Fields[i+1:]...)
-	}
 }

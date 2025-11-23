@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/state"
@@ -44,7 +45,6 @@ func TestField1(t *testing.T) {
 
 	root := s.Root()
 	root.AddField("C", "some comment")
-	t.Logf("%v", root.Fields)
 
 	found := false
 	for _, comment := range root.GetField("C") {
@@ -156,19 +156,19 @@ func TestOverwriteField(t *testing.T) {
 	root := s.Root()
 
 	pb := root.GetField("PB")
-	assert.Equal(t, len(pb), 1)
+	require.Equal(t, len(pb), 1)
 	assert.Equal(t, pb[0], "Black")
 
 	root.OverwriteField("PB", "foobar")
 
 	pb = root.GetField("PB")
-	assert.Equal(t, len(pb), 1)
-	assert.Equal(t, pb[0], "foobar")
+	require.Equal(t, len(pb), 1)
+	require.Equal(t, pb[0], "foobar")
 }
 
 func TestTreeNodeAddField(t *testing.T) {
 	n := &core.TreeNode{}
 	n.AddField("foo", "bar")
 	n.AddField("baz", "bot")
-	assert.Equal(t, len(n.Fields), 2)
+	assert.Equal(t, len(n.AllFields()), 2)
 }

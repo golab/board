@@ -12,7 +12,6 @@ package core
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 )
 
@@ -20,14 +19,9 @@ func IsWhitespace(c rune) bool {
 	return c == '\n' || c == ' ' || c == '\t' || c == '\r'
 }
 
-type Field struct {
-	Key    string   `json:"key"`
-	Values []string `json:"values"`
-}
-
 type SGFNode struct {
-	fields []Field
-	down   []*SGFNode
+	Fields
+	down []*SGFNode
 }
 
 func (n *SGFNode) GetChild(i int) *SGFNode {
@@ -39,46 +33,6 @@ func (n *SGFNode) GetChild(i int) *SGFNode {
 
 func (n *SGFNode) NumChildren() int {
 	return len(n.down)
-}
-
-func (n *SGFNode) Fields() []Field {
-	return n.fields
-}
-
-func (n *SGFNode) AddField(key, value string) {
-	// 'tt' should be read as pass
-	if (key == "B" || key == "W") && value == "tt" {
-		value = ""
-	}
-	for i := range n.fields {
-		if n.fields[i].Key == key {
-			n.fields[i].Values = append(n.fields[i].Values, value)
-			return
-		}
-	}
-	n.fields = append(n.fields, Field{Key: key, Values: []string{value}})
-}
-
-func (n *SGFNode) GetField(key string) []string {
-	for i := range n.fields {
-		if n.fields[i].Key == key {
-			return n.fields[i].Values
-		}
-	}
-	return nil
-}
-
-func (n *SGFNode) deleteField(key string) {
-	i := -1
-	for j := range n.fields {
-		if n.fields[j].Key == key {
-			i = j
-		}
-	}
-	if i == -1 {
-		return
-	}
-	n.fields = append(n.fields[:i], n.fields[i+1:]...)
 }
 
 func (n *SGFNode) IsMove() bool {
@@ -125,9 +79,7 @@ func (n *SGFNode) ToSGF(root bool) string {
 	}
 	sb.WriteByte(';')
 
-	sort.Slice(n.fields, func(i, j int) bool {
-		return n.fields[i].Key < n.fields[j].Key
-	})
+	n.SortFields()
 
 	for _, field := range n.fields {
 		sb.WriteString(field.Key)
@@ -259,6 +211,78 @@ func (p *Parser) ParseNodes() ([]*SGFNode, error) {
 	return []*SGFNode{root, cur}, nil
 }
 
+type property struct {
+	key    string
+	values []string
+}
+
+func (p *Parser) ParseProperty() (*property, error) {
+	prop := &property{}
+	c := p.peek(0)
+	if c < 'A' || c > 'Z' {
+		return nil, fmt.Errorf("bad property (expected key) %c", c)
+	}
+	key, err := p.ParseKey()
+	if err != nil {
+		return nil, err
+	}
+
+	prop.key = key
+
+	p.SkipWhitespace()
+	if p.read() != '[' {
+		return nil, fmt.Errorf("bad property (expected field) %c", c)
+	}
+
+	fields, err := p.ParseOneOrMoreFields(key)
+	if err != nil {
+		return nil, err
+	}
+
+	prop.values = fields
+
+	return prop, nil
+}
+
+func (p *Parser) ParseOneOrMoreFields(key string) ([]string, error) {
+	fields := []string{}
+	// require parse first field
+	field, err := p.ParseOneField(key)
+	if err != nil {
+		return nil, err
+	}
+
+	fields = append(fields, field)
+
+	// potentially parse more fields
+	for {
+		p.SkipWhitespace()
+		if p.peek(0) == '[' {
+			p.read()
+			field, err := p.ParseOneField(key)
+			if err != nil {
+				return nil, err
+			}
+			fields = append(fields, field)
+		} else {
+			break
+		}
+	}
+	return fields, nil
+}
+
+func (p *Parser) ParseOneField(key string) (string, error) {
+	field, err := p.ParseField()
+	if err != nil {
+		return "", err
+	}
+
+	if (key == "B" || key == "W") && field == "tt" {
+		field = ""
+	}
+	return field, nil
+}
+
 func (p *Parser) ParseNode() (*SGFNode, error) {
 	n := &SGFNode{}
 	for {
@@ -267,36 +291,13 @@ func (p *Parser) ParseNode() (*SGFNode, error) {
 		if c == '(' || c == ';' || c == ')' {
 			break
 		}
-		if c < 'A' || c > 'Z' {
-			return nil, fmt.Errorf("bad node (expected key) %c", c)
-		}
-		key, err := p.ParseKey()
-		if err != nil {
-			return nil, err
-		}
-		p.SkipWhitespace()
-		if p.read() != '[' {
-			return nil, fmt.Errorf("bad node (expected field) %c", c)
-		}
-		field, err := p.ParseField()
-		if err != nil {
-			return nil, err
-		}
-		n.AddField(key, field)
 
-		for {
-			p.SkipWhitespace()
-			if p.peek(0) == '[' {
-				p.read()
-				field, err = p.ParseField()
-				if err != nil {
-					return nil, err
-				}
-				n.AddField(key, field)
-			} else {
-				break
-			}
+		prop, err := p.ParseProperty()
+		if err != nil {
+			return nil, err
 		}
+
+		n.SetField(prop.key, prop.values)
 
 		p.SkipWhitespace()
 	}
@@ -411,7 +412,7 @@ func Merge(sgfs []string) string {
 		if hasB || hasW || hasAB || hasAW {
 			// strip fields and save the node
 			for _, key := range []string{"RU", "SZ", "KM", "TM", "OT"} {
-				root.deleteField(key)
+				root.DeleteField(key)
 			}
 			newRoot.down = append(newRoot.down, root)
 		} else {
