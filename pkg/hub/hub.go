@@ -142,7 +142,7 @@ func (h *Hub) Load() {
 			r.SetFetcher(fetch.NewEmptyFetcher())
 		}
 
-		r.SetLogger(h.logger)
+		r.SetLogger(h.logger.With("room_id", r.ID()))
 
 		id := r.ID()
 		h.logger.Info("loading", "room_id", id)

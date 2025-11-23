@@ -11,10 +11,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package hub_test
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
+	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/hub"
@@ -124,78 +128,25 @@ func TestGetRoom(t *testing.T) {
 	assert.Equal(t, room.ID(), roomID)
 }
 
-/*
-// this test appears to be kind of flaky so i'm removing it for now
-// the integration tests are better anyway
-func TestHub4(t *testing.T) {
-	ml := loader.NewMemoryLoader()
-	// messages that expire immediately
-	ml.AddMessage("hello world", 0)
-	ml.AddMessage("server message", 0)
-	// message that doesn't expire immediately
-	ml.AddMessage("save this message", 30)
-	h, err := hub.NewHubWithDB(ml, config.Default())
+func TestRoomLogger(t *testing.T) {
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	h, err := hub.NewHubWithDB(loader.NewMemoryLoader(), config.Default(), logger)
 	assert.NoError(t, err)
+	roomID := "room123"
+	h.GetOrCreateRoom(roomID)
 
-	roomID := "someboard"
-	mock1 := core.NewMockEventChannel()
-	h.Handler(mock1, roomID)
+	mock := event.NewMockEventChannel()
+	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.SimpleEightMoves))
+	evt := event.NewEvent("upload_sgf", sgf)
+	mock.QueuedEvents = append(mock.QueuedEvents, evt)
+	h.Handler(mock, roomID)
 
-	assert.Equal(t, h.RoomCount(), 1)
-
-	h.Save()
-
-	h.Load()
-
-	assert.Equal(t, h.RoomCount(), 1)
-
-	assert.Equal(t, h.MessageCount(), 0)
-	assert.Equal(t, ml.MessageCount(), 3)
-
-	// reads messages from the db (deletes from the db)
-	h.ReadMessages()
-
-	assert.Equal(t, h.MessageCount(), 3)
-	assert.Equal(t, ml.MessageCount(), 0)
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-
-	mock2 := core.NewBlockingMockEventChannel()
-	go func() {
-		defer wg.Done()
-		// mock2.OnConnect() will signal mock2.Ready
-		h.Handler(mock2, roomID)
-	}()
-
-	// block until handler has actually started
-	<-mock2.Ready()
-
-	h.SendMessages()
-
-	mock2.Disconnect()
-
-	wg.Wait()
-
-	// 3 events
-	// initial frame
-	// connected users
-	// one of the hub messages (the one with 30s ttl)
-	assert.Equal(t, len(mock2.SavedEvents), 3)
-	receivedEventTypes := make(map[string]bool)
-	for _, evt := range mock2.SavedEvents {
-		receivedEventTypes[evt.Event] = true
-	}
-
-	_, ok := receivedEventTypes["frame"]
-	_, ok = receivedEventTypes["connected_users"]
-	_, ok = receivedEventTypes["global"]
-
-	assert.True(t, ok)
-	assert.True(t, ok)
-	assert.True(t, ok)
-
-	// one message lives long enough to be saved
-	assert.Equal(t, h.MessageCount(), 1)
+	require.Equal(t, len(logger.Lines()), 5)
+	upload := logger.Lines()[2]
+	log := struct {
+		RoomID string `json:"room_id"`
+	}{}
+	err = json.Unmarshal([]byte(upload), &log)
+	assert.NoError(t, err)
+	assert.Equal(t, log.RoomID, roomID)
 }
-*/
