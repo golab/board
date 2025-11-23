@@ -8,20 +8,24 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package plugin
+package plugin_test
 
-type MockPlugin struct {
-	IsStarted bool
-}
+import (
+	"testing"
 
-func NewMockPlugin() *MockPlugin {
-	return &MockPlugin{}
-}
+	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/pkg/room"
+	"github.com/jarednogo/board/pkg/room/plugin"
+)
 
-func (mp *MockPlugin) Start(map[string]any) {
-	mp.IsStarted = true
-}
+func TestPlugin(t *testing.T) {
+	r := room.NewRoom("")
+	mp := plugin.NewMockPlugin()
+	args := make(map[string]any)
+	args["key"] = "mock"
+	r.RegisterPlugin(mp, args)
+	assert.True(t, mp.IsStarted)
 
-func (mp *MockPlugin) End() {
-	mp.IsStarted = false
+	r.DeregisterPlugin("mock")
+	assert.True(t, !mp.IsStarted)
 }
