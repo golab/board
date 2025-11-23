@@ -29,8 +29,8 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
       # these two lines are specific for a deployment
       # where a proxy (like nginx) routes 127.0.0.1/grafana -> 127.0.0.1:3000
-      #- GF_SERVER_ROOT_URL=http://127.0.0.1/grafana/
-      #- GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_SERVER_ROOT_URL=http://127.0.0.1/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
 
     volumes:
       - grafana_data:/var/lib/grafana
