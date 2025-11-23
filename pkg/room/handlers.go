@@ -40,14 +40,15 @@ func (r *Room) initHandlers() {
 			r.handleUploadSGF,
 			r.outsideBuffer,
 			r.authorized,
-			r.log,
+			r.logEventType,
 			r.closeOGS,
 			r.logAfter,
 			r.broadcastAfter),
 		"request_sgf": chain(
 			r.handleRequestSGF,
 			r.outsideBuffer,
-			r.log,
+			r.logEventType,
+			r.logEventValue,
 			r.authorized,
 			r.closeOGS,
 			r.logAfter,
@@ -447,10 +448,19 @@ func (room *Room) outsideBuffer(handler EventHandler) EventHandler {
 	}
 }
 
-func (room *Room) log(handler EventHandler) EventHandler {
+func (room *Room) logEventType(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
 		if room.logger != nil {
-			room.logger.Info("handling event", "event_type", evt.Type())
+			room.logger.Info("handling event with type", "event_type", evt.Type())
+		}
+		return handler(evt)
+	}
+}
+
+func (room *Room) logEventValue(handler EventHandler) EventHandler {
+	return func(evt event.Event) event.Event {
+		if room.logger != nil {
+			room.logger.Info("handling event with value", "event_value", evt.Value().(string))
 		}
 		return handler(evt)
 	}
@@ -459,7 +469,9 @@ func (room *Room) log(handler EventHandler) EventHandler {
 func (room *Room) logAfter(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
 		evt = handler(evt)
-		if room.logger != nil {
+		// only log info if we're not connected to ogs
+		// (the ogs link doesn't upload the root node data in time)
+		if room.logger != nil && room.GetPlugin("ogs") == nil {
 			current := room.Current()
 			args := []any{}
 			for _, field := range current.AllFields() {

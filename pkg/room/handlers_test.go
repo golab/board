@@ -204,7 +204,8 @@ func TestLogRequestSGF(t *testing.T) {
 
 	evt := event.NewEvent("request_sgf", "http://www.gokifu.com/somefile.sgf")
 	r.HandleAny(evt)
-	require.Equal(t, len(l.Lines()), 2)
+	t.Logf("%v", l.Lines())
+	require.Equal(t, len(l.Lines()), 3)
 	log := struct {
 		EventType string `json:"event_type"`
 	}{}
