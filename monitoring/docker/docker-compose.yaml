@@ -10,15 +10,13 @@ services:
       - "3100:3100"
     restart: unless-stopped
 
-  promtail:
-    image: grafana/promtail:latest
-    container_name: promtail
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
     volumes:
-      - /var/log:/var/log:ro                       # read host logs (read-only)
-      - ./promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro
-      - ./promtail/positions:/var/lib/promtail     # persisted positions
-    command: -config.file=/etc/promtail/config.yaml
-    restart: unless-stopped
+      - /var/log:/var/log:ro
+      - ./alloy:/etc/alloy
+    command: run /etc/alloy/config.alloy
     depends_on:
       - loki
 
@@ -26,7 +24,8 @@ services:
     image: grafana/grafana:latest
     container_name: grafana
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin          # change this in real deployments
+      # change in real deployments
+      - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana
