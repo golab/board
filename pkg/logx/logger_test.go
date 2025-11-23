@@ -102,3 +102,13 @@ func TestMiddleware(t *testing.T) {
 	assert.Equal(t, m["method"], "GET")
 	assert.Equal(t, m["path"], "/foo")
 }
+
+func TestChildLogger(t *testing.T) {
+	// the child writes to the same file as the parent
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	logger.Info("foo")
+	assert.Equal(t, len(logger.Lines()), 1)
+	child := logger.With("room_id", "room123")
+	child.Info("foo")
+	assert.Equal(t, len(logger.Lines()), 2)
+}

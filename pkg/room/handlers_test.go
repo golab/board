@@ -12,13 +12,16 @@ package room_test
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
+	"github.com/jarednogo/board/pkg/logx"
 	"github.com/jarednogo/board/pkg/room"
 )
 
@@ -73,7 +76,6 @@ func TestHandleUploadSGF3(t *testing.T) {
 
 	evt := event.NewEvent("upload_sgf", sgfs)
 	r.HandleAny(evt)
-	t.Logf("%s", r.ToSGF())
 	assert.Equal(t, len(r.ToSGF()), 213)
 }
 
@@ -174,4 +176,39 @@ func TestSlow(t *testing.T) {
 	r.DisableBuffers()
 	r.HandleAny(evt)
 	assert.Equal(t, len(r.ToSGF()), 77)
+}
+
+func TestLogUploadSGF(t *testing.T) {
+	l := logx.NewRecorder(logx.LogLevelInfo)
+	r := room.NewRoom("")
+	r.SetLogger(l)
+
+	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.SimpleEightMoves))
+	evt := event.NewEvent("upload_sgf", sgf)
+	r.HandleAny(evt)
+
+	require.Equal(t, len(l.Lines()), 1)
+	log := struct {
+		EventType string `json:"event_type"`
+	}{}
+	err := json.Unmarshal([]byte(l.Lines()[0]), &log)
+	assert.NoError(t, err)
+	assert.Equal(t, log.EventType, "upload_sgf")
+}
+
+func TestLogRequestSGF(t *testing.T) {
+	l := logx.NewRecorder(logx.LogLevelInfo)
+	r := room.NewRoom("")
+	r.SetLogger(l)
+	r.SetFetcher(fetch.NewMockFetcher(sgfsamples.Empty))
+
+	evt := event.NewEvent("request_sgf", "http://www.gokifu.com/somefile.sgf")
+	r.HandleAny(evt)
+	require.Equal(t, len(l.Lines()), 1)
+	log := struct {
+		EventType string `json:"event_type"`
+	}{}
+	err := json.Unmarshal([]byte(l.Lines()[0]), &log)
+	assert.NoError(t, err)
+	assert.Equal(t, log.EventType, "request_sgf")
 }

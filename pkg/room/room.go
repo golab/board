@@ -20,6 +20,7 @@ import (
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/loader"
+	"github.com/jarednogo/board/pkg/logx"
 	"github.com/jarednogo/board/pkg/message"
 	"github.com/jarednogo/board/pkg/room/plugin"
 	"github.com/jarednogo/board/pkg/state"
@@ -41,6 +42,7 @@ type Room struct {
 	inputBuffer  int64
 	userBuffer   int64
 	timeout      float64
+	logger       logx.Logger
 	mu           sync.Mutex
 }
 
@@ -285,6 +287,12 @@ func (r *Room) GetFetcher() fetch.Fetcher {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return r.fetcher
+}
+
+func (r *Room) SetLogger(l logx.Logger) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.logger = l
 }
 
 func (r *Room) HasPassword() bool {

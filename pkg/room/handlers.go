@@ -40,11 +40,13 @@ func (r *Room) initHandlers() {
 			r.handleUploadSGF,
 			r.outsideBuffer,
 			r.authorized,
+			r.log,
 			r.closeOGS,
 			r.broadcastAfter),
 		"request_sgf": chain(
 			r.handleRequestSGF,
 			r.outsideBuffer,
+			r.log,
 			r.authorized,
 			r.closeOGS,
 			r.broadcastAfter),
@@ -438,6 +440,15 @@ func (room *Room) outsideBuffer(handler EventHandler) EventHandler {
 				// don't do the next handler if too fast
 				return evt
 			}
+		}
+		return handler(evt)
+	}
+}
+
+func (room *Room) log(handler EventHandler) EventHandler {
+	return func(evt event.Event) event.Event {
+		if room.logger != nil {
+			room.logger.Info("handling event", "event_type", evt.Type())
 		}
 		return handler(evt)
 	}

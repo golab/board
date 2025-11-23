@@ -33,6 +33,7 @@ type Logger interface {
 	Info(string, ...any)
 	Warn(string, ...any)
 	Error(string, ...any)
+	With(string, string) Logger
 	AsMiddleware(http.Handler) http.Handler
 }
 
@@ -66,6 +67,10 @@ func NewDefaultLoggerWithWriter(lvl LogLevel, w io.Writer) *DefaultLogger {
 
 func NewDefaultLogger(lvl LogLevel) *DefaultLogger {
 	return NewDefaultLoggerWithWriter(lvl, os.Stderr)
+}
+
+func (l *DefaultLogger) With(key, value string) Logger {
+	return &DefaultLogger{l.s.With(slog.String(key, value))}
 }
 
 func (l *DefaultLogger) Debug(msg string, args ...any) {
@@ -105,4 +110,9 @@ func NewRecorder(lvl LogLevel) *Recorder {
 func (r *Recorder) Lines() []string {
 	s := strings.TrimSpace(r.String())
 	return strings.Split(s, "\n")
+}
+
+func (r *Recorder) With(key, value string) Logger {
+	l := &DefaultLogger{r.s.With(slog.String(key, value))}
+	return &Recorder{Buffer: nil, DefaultLogger: l}
 }

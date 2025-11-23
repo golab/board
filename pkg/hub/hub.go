@@ -142,6 +142,8 @@ func (h *Hub) Load() {
 			r.SetFetcher(fetch.NewEmptyFetcher())
 		}
 
+		r.SetLogger(h.logger)
+
 		id := r.ID()
 		h.logger.Info("loading", "room_id", id)
 		h.SetRoom(id, r)
@@ -244,6 +246,7 @@ func (h *Hub) GetOrCreateRoom(roomID string) *room.Room {
 		if h.cfg.Mode == config.ModeTest {
 			r.SetFetcher(fetch.NewEmptyFetcher())
 		}
+		r.SetLogger(h.logger.With("room_id", roomID))
 		h.rooms[roomID] = r
 		go h.Heartbeat(roomID)
 	}
