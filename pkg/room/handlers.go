@@ -42,6 +42,7 @@ func (r *Room) initHandlers() {
 			r.authorized,
 			r.log,
 			r.closeOGS,
+			r.logAfter,
 			r.broadcastAfter),
 		"request_sgf": chain(
 			r.handleRequestSGF,
@@ -49,6 +50,7 @@ func (r *Room) initHandlers() {
 			r.log,
 			r.authorized,
 			r.closeOGS,
+			r.logAfter,
 			r.broadcastAfter),
 		"trash": chain(
 			r.handleTrash,
@@ -451,6 +453,22 @@ func (room *Room) log(handler EventHandler) EventHandler {
 			room.logger.Info("handling event", "event_type", evt.Type())
 		}
 		return handler(evt)
+	}
+}
+
+func (room *Room) logAfter(handler EventHandler) EventHandler {
+	return func(evt event.Event) event.Event {
+		evt = handler(evt)
+		if room.logger != nil {
+			current := room.Current()
+			args := []any{}
+			for _, field := range current.AllFields() {
+				args = append(args, field.Key)
+				args = append(args, strings.Join(field.Values, ", "))
+			}
+			room.logger.Info("current node", args...)
+		}
+		return evt
 	}
 }
 
