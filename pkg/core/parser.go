@@ -35,7 +35,7 @@ func (n *SGFNode) NumChildren() int {
 	return len(n.down)
 }
 
-func (n *SGFNode) ToSGF(root bool) string {
+func (n *SGFNode) toSGF(root bool) string {
 	sb := strings.Builder{}
 	if root {
 		sb.WriteByte('(')
@@ -57,10 +57,10 @@ func (n *SGFNode) ToSGF(root bool) string {
 	for _, d := range n.down {
 		if len(n.down) > 1 {
 			sb.WriteByte('(')
-			sb.WriteString(d.ToSGF(false))
+			sb.WriteString(d.toSGF(false))
 			sb.WriteByte(')')
 		} else {
-			sb.WriteString(d.ToSGF(false))
+			sb.WriteString(d.toSGF(false))
 		}
 	}
 	if root {
@@ -399,5 +399,5 @@ func Merge(sgfs []string) string {
 	}
 
 	newRoot.AddField("SZ", size)
-	return newRoot.ToSGF(true)
+	return newRoot.toSGF(true)
 }

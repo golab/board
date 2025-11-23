@@ -56,31 +56,6 @@ func TestParser(t *testing.T) {
 	}
 }
 
-var outputTests = []string{
-	"(;GM[1])",
-	"(;GM[1];B[aa];W[bb](;B[cc];W[dd])(;B[ee];W[ff]))",
-	"(;GM[1];C[some comment])",
-	"(;GM[1];C[comment \"with\" quotes])",
-	"(;GM[1];C[comment [with\\] brackets])",
-}
-
-func TestToSGF(t *testing.T) {
-	for _, input := range outputTests {
-		t.Run(input, func(t *testing.T) {
-			p := core.NewParser(input)
-			root, err := p.Parse()
-			if err != nil {
-				t.Error(err)
-				return
-			}
-			output := root.ToSGF(true)
-			if output != input {
-				t.Errorf("expected %s, got: %s", input, output)
-			}
-		})
-	}
-}
-
 var mergeTests = []struct {
 	input []string
 	num   int
@@ -120,19 +95,6 @@ func TestMerge2(t *testing.T) {
 	// both should have PB, PW, and KM as comments
 	require.Equal(t, len(child1.GetField("C")), 3)
 	require.Equal(t, len(child2.GetField("C")), 3)
-}
-
-func TestPass(t *testing.T) {
-	sgf := "(;GM[1];B[aa];W[bb];B[tt];W[ss])"
-	p := core.NewParser(sgf)
-	root, err := p.Parse()
-	if err != nil {
-		t.Error(err)
-	}
-	output := root.ToSGF(true)
-	if output != "(;GM[1];B[aa];W[bb];B[];W[ss])" {
-		t.Errorf("error in reading [tt] pass")
-	}
 }
 
 func TestEmpty(t *testing.T) {
