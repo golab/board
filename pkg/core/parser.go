@@ -35,43 +35,6 @@ func (n *SGFNode) NumChildren() int {
 	return len(n.down)
 }
 
-func (n *SGFNode) IsMove() bool {
-	bvalues := n.GetField("B")
-	wvalues := n.GetField("W")
-	return len(bvalues) > 0 || len(wvalues) > 0
-}
-
-func (n *SGFNode) IsPass() bool {
-	bvalues := n.GetField("B")
-	wvalues := n.GetField("W")
-	return (len(bvalues) == 1 && bvalues[0] == "") ||
-		(len(wvalues) == 1 && wvalues[0] == "")
-}
-
-func (n *SGFNode) Color() Color {
-	bvalues := n.GetField("B")
-	wvalues := n.GetField("W")
-	if len(bvalues) > 0 {
-		return Black
-	}
-	if len(wvalues) > 0 {
-		return White
-	}
-	return NoColor
-}
-
-func (n *SGFNode) Coord() *Coord {
-	bvalues := n.GetField("B")
-	wvalues := n.GetField("W")
-	if len(bvalues) == 1 {
-		return LettersToCoord(bvalues[0])
-	}
-	if len(wvalues) == 1 {
-		return LettersToCoord(wvalues[0])
-	}
-	return nil
-}
-
 func (n *SGFNode) ToSGF(root bool) string {
 	sb := strings.Builder{}
 	if root {

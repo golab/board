@@ -121,3 +121,40 @@ func (f *Fields) SetField(key string, values []string) {
 	}
 	f.fields = append(f.fields, Field{Key: key, Values: values})
 }
+
+func (f *Fields) IsMove() bool {
+	bvalues := f.GetField("B")
+	wvalues := f.GetField("W")
+	return len(bvalues) > 0 || len(wvalues) > 0
+}
+
+func (f *Fields) IsPass() bool {
+	bvalues := f.GetField("B")
+	wvalues := f.GetField("W")
+	return (len(bvalues) == 1 && bvalues[0] == "") ||
+		(len(wvalues) == 1 && wvalues[0] == "")
+}
+
+func (f *Fields) Color() Color {
+	bvalues := f.GetField("B")
+	wvalues := f.GetField("W")
+	if len(bvalues) > 0 {
+		return Black
+	}
+	if len(wvalues) > 0 {
+		return White
+	}
+	return NoColor
+}
+
+func (f *Fields) Coord() *Coord {
+	bvalues := f.GetField("B")
+	wvalues := f.GetField("W")
+	if len(bvalues) == 1 {
+		return LettersToCoord(bvalues[0])
+	}
+	if len(wvalues) == 1 {
+		return LettersToCoord(wvalues[0])
+	}
+	return nil
+}

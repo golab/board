@@ -115,12 +115,6 @@ func (n *TreeNode) TrunkNum(i int) int {
 	return cur.Index
 }
 
-func (n *TreeNode) IsMove() bool {
-	bvalues := n.GetField("B")
-	wvalues := n.GetField("W")
-	return len(bvalues) > 0 || len(wvalues) > 0
-}
-
 // SetParent exists to add the depth attribute
 func (n *TreeNode) SetParent(up *TreeNode) {
 	n.Up = up
