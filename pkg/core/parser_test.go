@@ -114,6 +114,9 @@ var oddTests = []struct {
 	{"(;)", false},
 	{"(;;;)", false},
 	{"garbage(;GM[1])", false},
+	{"totalgarbage", true},
+	{"( ; GM [1] )", false},
+	{"garbage (abc, def) stuff", true},
 }
 
 func TestOdd(t *testing.T) {

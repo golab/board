@@ -42,8 +42,8 @@ func (r *Room) initHandlers() {
 			r.authorized,
 			r.logEventType,
 			r.closeOGS,
-			r.logAfter,
-			r.broadcastAfter),
+			r.broadcastAfter,
+			r.logAfter),
 		"request_sgf": chain(
 			r.handleRequestSGF,
 			r.outsideBuffer,
@@ -51,8 +51,8 @@ func (r *Room) initHandlers() {
 			r.logEventValue,
 			r.authorized,
 			r.closeOGS,
-			r.logAfter,
-			r.broadcastAfter),
+			r.broadcastAfter,
+			r.logAfter),
 		"trash": chain(
 			r.handleTrash,
 			r.outsideBuffer,
@@ -472,13 +472,17 @@ func (r *Room) logAfter(handler EventHandler) EventHandler {
 		// only log info if we're not connected to ogs
 		// (the ogs link doesn't upload the root node data in time)
 		if r.logger != nil && r.GetPlugin("ogs") == nil {
-			current := r.Current()
-			args := []any{}
-			for _, field := range current.AllFields() {
-				args = append(args, field.Key)
-				args = append(args, strings.Join(field.Values, ", "))
+			if evt.Type() == "error" {
+				r.logger.Error("error while handling", "error", evt.Value().(string))
+			} else {
+				current := r.Current()
+				args := []any{}
+				for _, field := range current.AllFields() {
+					args = append(args, field.Key)
+					args = append(args, strings.Join(field.Values, ", "))
+				}
+				r.logger.Info("current node", args...)
 			}
-			r.logger.Info("current node", args...)
 		}
 		return evt
 	}

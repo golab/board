@@ -272,6 +272,7 @@ func (p *Parser) ParseBranch() (*SGFNode, error) {
 	var root *SGFNode
 	var current *SGFNode
 	for {
+		p.SkipWhitespace()
 		c := p.read()
 		if c == 0 {
 			return nil, fmt.Errorf("unfinished branch, expected ')'")
@@ -303,6 +304,8 @@ func (p *Parser) ParseBranch() (*SGFNode, error) {
 			}
 		} else if c == ')' {
 			break
+		} else {
+			return nil, fmt.Errorf("improperly formatted branch")
 		}
 	}
 	return root, nil
