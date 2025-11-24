@@ -25,7 +25,7 @@ services:
     container_name: grafana
     environment:
       # change in real deployments
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
       - GF_USERS_ALLOW_SIGN_UP=false
       # these two lines are specific for a deployment
       # where a proxy (like nginx) routes 127.0.0.1/grafana -> 127.0.0.1:3000
