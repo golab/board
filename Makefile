@@ -144,10 +144,10 @@ test-bench: ## Run benchmarks
 monitoring-up: build ## Run app and monitoring
 	mkdir -p monitoring/logs
 	./build/main > monitoring/logs/board.log &
-	LOG_PATH=./logs docker compose -f monitoring/docker-compose.yaml up -d
+	GRAFANA_ROOT_URL="" GRAFANA_SUB_PATH="" LOG_PATH=./logs docker compose -f monitoring/docker-compose.yaml up -d
 	@echo "Remember to shut everything down with 'make monitoring-down'"
 
 monitoring-down: ## Close app and monitoring
 	killall main || true
-	LOG_PATH=./logs docker compose -f monitoring/docker-compose.yaml down
+	GRAFANA_ROOT_URL="" GRAFANA_SUB_PATH="" LOG_PATH=./logs docker compose -f monitoring/docker-compose.yaml down
 

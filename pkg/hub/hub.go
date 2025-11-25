@@ -171,7 +171,7 @@ func (h *Hub) Heartbeat(roomID string) {
 	// close the room down
 	err = r.Close()
 	if err != nil {
-		h.logger.Error("failed to close room", "err", err)
+		h.logger.Error("failed to close room", "err", err, "room_id", roomID)
 	}
 
 	// delete the room from the server map
@@ -180,7 +180,7 @@ func (h *Hub) Heartbeat(roomID string) {
 	// delete it from the database
 	err = h.db.DeleteRoom(roomID)
 	if err != nil {
-		h.logger.Error("failed to delete room", "err", err)
+		h.logger.Error("failed to delete room", "err", err, "room_id", roomID)
 	}
 }
 
