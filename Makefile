@@ -142,12 +142,11 @@ test-bench: ## Run benchmarks
 	go test -bench=. -benchmem ./integration/
 
 monitoring-up: build ## Run app and monitoring
-	mkdir -p monitoring/logs
-	./build/main > monitoring/logs/board.log &
-	GRAFANA_ROOT_URL="" GRAFANA_SUB_PATH="" LOG_PATH=./logs docker compose -f monitoring/docker-compose.yaml up -d
+	mkdir -p ./logs
+	GRAFANA_ROOT_URL="" GRAFANA_SUB_PATH="" LOG_PATH=./logs docker compose -f docker-compose.yaml up -d
+	@docker logs -f board > ./logs/board.log &
 	@echo "Remember to shut everything down with 'make monitoring-down'"
 
 monitoring-down: ## Close app and monitoring
-	killall main || true
-	GRAFANA_ROOT_URL="" GRAFANA_SUB_PATH="" LOG_PATH=./logs docker compose -f monitoring/docker-compose.yaml down
+	GRAFANA_ROOT_URL="" GRAFANA_SUB_PATH="" LOG_PATH=./logs docker compose -f docker-compose.yaml down
 

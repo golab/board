@@ -1,10 +1,18 @@
 services:
+  board:
+    container_name: board
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+
   loki:
     image: grafana/loki:latest
     container_name: loki
     volumes:
       - loki_data:/var/loki
-      - ./loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - ./monitoring/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
     command: -config.file=/etc/loki/local-config.yaml
     ports:
       - "3100:3100"
@@ -15,7 +23,7 @@ services:
     container_name: alloy
     volumes:
       - ${LOG_PATH}:/var/log:ro
-      - ./alloy:/etc/alloy
+      - ./monitoring/alloy:/etc/alloy
     command: run /etc/alloy/config.alloy
     depends_on:
       - loki
@@ -34,7 +42,7 @@ services:
 
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
     ports:
       - "3000:3000"
     restart: unless-stopped
