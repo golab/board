@@ -6,7 +6,7 @@ loki.write "local_loki" {
 
 local.file_match "varlogs" {
   path_targets = [{
-    __path__ = "/var/log/board/*.log",
+    __path__ = "/var/log/*.log",
   }]
 }
 

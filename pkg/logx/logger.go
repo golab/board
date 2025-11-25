@@ -66,7 +66,7 @@ func NewDefaultLoggerWithWriter(lvl LogLevel, w io.Writer) *DefaultLogger {
 }
 
 func NewDefaultLogger(lvl LogLevel) *DefaultLogger {
-	return NewDefaultLoggerWithWriter(lvl, os.Stderr)
+	return NewDefaultLoggerWithWriter(lvl, os.Stdout)
 }
 
 func (l *DefaultLogger) With(key, value string) Logger {

@@ -1,7 +1,7 @@
 # Base Makefile — default goal prints help (supports inline "##" and preceding "##" styles)
 .DEFAULT_GOAL := default
 
-.PHONY: default help build test fmt lint run setup clean test-fuzz coverage-int coverage-unit coverage-integration-html coverage-integration-total coverage-unit-html coverage-unit-total build-docker run-docker test-bench test-race coverage-total coverage-html coverage
+.PHONY: default help build test fmt lint run setup clean test-fuzz coverage-int coverage-unit coverage-integration-html coverage-integration-total coverage-unit-html coverage-unit-total build-docker run-docker test-bench test-race coverage-total coverage-html coverage monitoring-up monitoring-down
 
 VERSION := $(shell git describe --tags 2>/dev/null || echo dev)
 
@@ -140,3 +140,14 @@ run-docker: build-docker ## Run docker container
 test-bench: ## Run benchmarks
 	@echo "==> test-bench"
 	go test -bench=. -benchmem ./integration/
+
+monitoring-up: build ## Run app and monitoring
+	mkdir -p monitoring/logs
+	./build/main > monitoring/logs/board.log &
+	LOG_PATH=./logs docker compose -f monitoring/docker-compose.yaml up -d
+	@echo "Remember to shut everything down with 'make monitoring-down'"
+
+monitoring-down: ## Close app and monitoring
+	killall main || true
+	LOG_PATH=./logs docker compose -f monitoring/docker-compose.yaml down
+
