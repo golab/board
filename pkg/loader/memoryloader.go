@@ -35,10 +35,6 @@ func (ml *MemoryLoader) MessageCount() int {
 	return len(ml.messages)
 }
 
-func (ml *MemoryLoader) Setup() error {
-	return nil
-}
-
 func (ml *MemoryLoader) TwitchGetRoom(broadcaster string) string {
 	if roomID, ok := ml.twitch[broadcaster]; ok {
 		return roomID
@@ -83,5 +79,9 @@ func (ml *MemoryLoader) LoadAllMessages() ([]*MessageJSON, error) {
 
 func (ml *MemoryLoader) DeleteAllMessages() error {
 	ml.messages = []*MessageJSON{}
+	return nil
+}
+
+func (ml *MemoryLoader) Close() error {
 	return nil
 }

@@ -24,8 +24,7 @@ func TestSqliteLoader(t *testing.T) {
 	path := filepath.Join(tmp, "board.db")
 
 	// test setup
-	ldr := loader.NewSqliteLoader(path)
-	err := ldr.Setup()
+	ldr, err := loader.NewSqliteLoader(path)
 	assert.NoError(t, err)
 
 	// test adding a twitch room

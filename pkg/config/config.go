@@ -71,8 +71,9 @@ func (c *twitchConfig) redact() {
 type dbConfigType string
 
 const (
-	DBConfigTypeSqlite dbConfigType = "sqlite"
-	DBConfigTypeMemory dbConfigType = "memory"
+	DBConfigTypeSqlite   dbConfigType = "sqlite"
+	DBConfigTypePostgres dbConfigType = "postgres"
+	DBConfigTypeMemory   dbConfigType = "memory"
 )
 
 type dbConfig struct {

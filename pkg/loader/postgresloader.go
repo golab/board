@@ -12,23 +12,33 @@ package loader
 
 import (
 	"database/sql"
-	"os"
-	"path/filepath"
+	"time"
 
-	// blank import is utilized to register the driver with the
-	// database/sql package without directly using any of its
-	// exported functions or types in the importing file
-	_ "modernc.org/sqlite"
+	// blank import necessary for postgres driver
+	_ "github.com/lib/pq"
 )
 
-func NewSqliteLoader(path string) (*DBLoader, error) {
-	if err := mkDirs(path); err != nil {
-		return nil, err
-	}
-	db, err := sql.Open("sqlite", "file:"+path)
+func NewPostgresLoader(dsn string) (*DBLoader, error) {
+	var err error
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, err
 	}
+
+	// Verify connection is good
+	healthy := false
+	for i := 0; i < 10; i++ {
+		if err = db.Ping(); err == nil {
+			healthy = true
+			break
+		}
+		time.Sleep(time.Second)
+	}
+
+	if !healthy {
+		return nil, err
+	}
+
 	ldr := &DBLoader{db}
 	err = ldr.setup()
 
@@ -37,14 +47,4 @@ func NewSqliteLoader(path string) (*DBLoader, error) {
 	}
 
 	return ldr, nil
-}
-
-func mkDirs(path string) error {
-	dir := filepath.Dir(path)
-
-	err := os.MkdirAll(dir, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	return nil
 }

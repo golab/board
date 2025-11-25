@@ -20,8 +20,6 @@ import (
 func TestMemoryLoader(t *testing.T) {
 	ml := loader.NewMemoryLoader()
 
-	assert.NoError(t, ml.Setup())
-
 	ml.AddMessage("test", 30)
 	assert.Equal(t, ml.MessageCount(), 1)
 

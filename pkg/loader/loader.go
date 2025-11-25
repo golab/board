@@ -10,6 +10,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 package loader
 
+import (
+	"encoding/json"
+)
+
 type MessageJSON struct {
 	Text string `json:"message"`
 	TTL  int    `json:"ttl"`
@@ -26,7 +30,7 @@ type LoadJSON struct {
 }
 
 type Loader interface {
-	Setup() error
+	Close() error
 	TwitchGetRoom(string) string
 	TwitchSetRoom(string, string) error
 
@@ -38,6 +42,25 @@ type Loader interface {
 	DeleteAllMessages() error
 }
 
-func NewDefaultLoader(path string) Loader {
+func NewDefaultLoader(path string) (Loader, error) {
 	return NewSqliteLoader(path)
+}
+
+type Prefs map[string]int
+
+func (p Prefs) ToString() (string, error) {
+	data, err := json.Marshal(p)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+func PrefsFromString(s string) (Prefs, error) {
+	p := make(map[string]int)
+	err := json.Unmarshal([]byte(s), &p)
+	if err != nil {
+		return nil, err
+	}
+	return Prefs(p), nil
 }

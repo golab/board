@@ -55,19 +55,25 @@ type Hub struct {
 func NewHub(cfg *config.Config, logger logx.Logger) (*Hub, error) {
 	// get database setup
 	var db loader.Loader
-	if cfg.DB.Type == config.DBConfigTypeMemory {
+	var err error
+	switch cfg.DB.Type {
+	case config.DBConfigTypeMemory:
 		db = loader.NewMemoryLoader()
-	} else {
-		db = loader.NewDefaultLoader(cfg.DB.Path)
+	case config.DBConfigTypePostgres:
+		db, err = loader.NewPostgresLoader(cfg.DB.Path)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		db, err = loader.NewDefaultLoader(cfg.DB.Path)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return NewHubWithDB(db, cfg, logger)
 }
 
 func NewHubWithDB(db loader.Loader, cfg *config.Config, logger logx.Logger) (*Hub, error) {
-	err := db.Setup()
-	if err != nil {
-		return nil, err
-	}
 	s := &Hub{
 		rooms:    make(map[string]*room.Room),
 		messages: []*message.Message{},

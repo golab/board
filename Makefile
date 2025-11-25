@@ -141,7 +141,7 @@ test-bench: ## Run benchmarks
 	@echo "==> test-bench"
 	go test -bench=. -benchmem ./integration/
 
-monitoring-up: build ## Run app and monitoring
+monitoring-up: ## Run app and monitoring
 	mkdir -p ./logs
 	GRAFANA_ROOT_URL="" GRAFANA_SUB_PATH="" LOG_PATH=./logs docker compose --profile monitoring -f docker-compose.yaml up -d
 	@docker logs -f board > ./logs/board.log &
