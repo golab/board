@@ -47,9 +47,9 @@ func (r *Room) initHandlers() {
 		"request_sgf": chain(
 			r.handleRequestSGF,
 			r.outsideBuffer,
+			r.authorized,
 			r.logEventType,
 			r.logEventValue,
-			r.authorized,
 			r.closeOGS,
 			r.broadcastAfter,
 			r.logAfter),
@@ -57,14 +57,17 @@ func (r *Room) initHandlers() {
 			r.handleTrash,
 			r.outsideBuffer,
 			r.authorized,
+			r.logEventType,
 			r.closeOGS,
 			r.broadcastAfter),
 		"update_nickname": chain(
 			r.handleUpdateNickname,
+			r.logEventType,
 			r.broadcastAfter),
 		"update_settings": chain(
 			r.handleUpdateSettings,
 			r.authorized,
+			r.logEventType,
 			r.broadcastConnectedUsersAfter,
 			r.broadcastAfter,
 			r.broadcastFullFrameAfter),
