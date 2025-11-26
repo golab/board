@@ -26,4 +26,4 @@ common:
     kvstore:
       store: inmemory
   replication_factor: 1
-  path_prefix: /tmp/loki
+  path_prefix: /var/loki/chunks

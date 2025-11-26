@@ -12,6 +12,15 @@ services:
       - postgres
     profiles: ["monitoring"]
 
+  loki-init:
+    image: alpine
+    container_name: loki-init
+    command: ["sh", "-c", "chown -R 10001:10001 /var/loki"]
+    volumes:
+      - loki_data:/var/loki
+    restart: "no"
+    profiles: ["monitoring", "prod"]
+
   loki:
     image: grafana/loki:latest
     container_name: loki
@@ -23,6 +32,8 @@ services:
       - "3100:3100"
     restart: unless-stopped
     profiles: ["monitoring", "prod"]
+    depends_on:
+      - loki-init
 
   alloy:
     image: grafana/alloy:latest

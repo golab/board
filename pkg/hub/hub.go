@@ -170,7 +170,7 @@ func (h *Hub) Heartbeat(roomID string) {
 		if diff.Seconds() > r.GetTimeout() {
 			break
 		}
-		h.logger.Info("inactive", "room_id", roomID, "duration", diff.String())
+		h.logger.Debug("inactive", "room_id", roomID, "duration", diff.String())
 	}
 	h.logger.Info("clearing board", "room_id", roomID)
 
