@@ -28,7 +28,7 @@ services:
     image: grafana/alloy:latest
     container_name: alloy
     volumes:
-      - ${LOG_PATH}:/var/log:ro
+      - ${LOG_PATH:-./logs}:/var/log:ro
       - ./monitoring/alloy:/etc/alloy
     command: run /etc/alloy/config.alloy
     depends_on:
