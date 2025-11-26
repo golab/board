@@ -11,43 +11,33 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package loader
 
 import (
-	"database/sql"
-	"os"
-	"path/filepath"
+	"fmt"
+	"testing"
 
-	// blank import is utilized to register the driver with the
-	// database/sql package without directly using any of its
-	// exported functions or types in the importing file
-	_ "modernc.org/sqlite"
+	"github.com/jarednogo/board/internal/assert"
 )
 
-func NewSqliteLoader(path string) (*BaseLoader, error) {
-	if err := mkDirs(path); err != nil {
-		return nil, err
+func TestRebind(t *testing.T) {
+	testcases := []struct {
+		input  string
+		output string
+	}{
+		{"abcd (?, ?)", "abcd ($1, $2)"},
+		{"?", "$1"},
+		{"????", "$1$2$3$4"},
+		{"", ""},
+		{"foobar", "foobar"},
 	}
-	db, err := sql.Open("sqlite", "file:"+path)
-	if err != nil {
-		return nil, err
-	}
+
 	ldr := &BaseLoader{
-		db:     db,
-		dbType: DBTypeSqlite,
-	}
-	err = ldr.setup()
-
-	if err != nil {
-		return nil, err
+		db:     nil,
+		dbType: DBTypePostgres,
 	}
 
-	return ldr, nil
-}
-
-func mkDirs(path string) error {
-	dir := filepath.Dir(path)
-
-	err := os.MkdirAll(dir, os.ModePerm)
-	if err != nil {
-		return err
+	for i, tc := range testcases {
+		t.Run(fmt.Sprintf("rebind%d", i), func(t *testing.T) {
+			output := ldr.rebind(tc.input)
+			assert.Equal(t, output, tc.output)
+		})
 	}
-	return nil
 }
