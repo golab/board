@@ -10,49 +10,54 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 package require
 
-import (
-	"testing"
-)
+type Tester interface {
+	Errorf(string, ...any)
+	Fatalf(string, ...any)
+	Helper()
+}
 
-func Equal[V comparable](t *testing.T, got, expected V) {
+func Equal[V comparable](t Tester, got, expected V) {
 	t.Helper()
 	if got != expected {
 		t.Fatalf("expected %v, got %v", expected, got)
 	}
 }
 
-func NotEqual[V comparable](t *testing.T, got, expectednot V) {
+func NotEqual[V comparable](t Tester, got, expectednot V) {
 	t.Helper()
 	if got == expectednot {
 		t.Fatalf("expected something else, got %v", got)
 	}
 }
 
-func True(t *testing.T, got bool) {
+func True(t Tester, got bool) {
 	Equal(t, got, true)
 }
 
-func False(t *testing.T, got bool) {
+func False(t Tester, got bool) {
 	Equal(t, got, false)
 }
 
-func Zero[V comparable](t *testing.T, got V) {
+func Zero[V comparable](t Tester, got V) {
 	var expected V
 	Equal(t, got, expected)
 }
 
-func NoError(t *testing.T, err error) {
+func NoError(t Tester, err error) {
 	t.Helper()
 	if err != nil {
 		t.Fatalf("expected nil error, got %v", err)
 	}
 }
 
-func ErrorIs(t *testing.T, got, expected error) {
-	Equal(t, got, expected)
+func ErrorIs(t Tester, got, expected error) {
+	if got == nil || expected == nil {
+		t.Fatalf("unexpected nil error")
+		return
+	}
+	Equal(t, got.Error(), expected.Error())
 }
 
-func NotNil[V comparable](t *testing.T, got V) {
-	var vnil V
-	NotEqual(t, got, vnil)
+func NotNil(t Tester, got any) {
+	NotEqual(t, got, nil)
 }
