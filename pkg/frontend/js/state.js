@@ -401,12 +401,15 @@ class State {
         white_stone_icon.setAttribute("class", old_black_stone);
 
         // change modals
+        /*
         for (let modal of document.getElementsByClassName("modal-content")) {
             modal.style.background = bg_color;
             modal.style.color = fg_color;
         }
+        */
 
         // change modal close labels
+        /*
         for (let close of document.getElementsByClassName("btn-close")) {
             if (this.dark_mode) {
                 close.classList.add("btn-close-white");
@@ -414,7 +417,9 @@ class State {
                 close.classList.remove("btn-close-white");
             }
         }
+        */
 
+        /*
         for (let bar of document.querySelectorAll(".form-control, .form-select, #upload-textarea")) {
             if (this.dark_mode) {
                 bar.style.backgroundColor = "#444444";
@@ -423,6 +428,13 @@ class State {
                 bar.style.backgroundColor = "#FFFFFF";
                 bar.style.color = "#000000";
             }
+        }
+        */
+
+        if (this.dark_mode) {
+            document.documentElement.setAttribute("data-bs-theme", "dark");
+        } else {
+            document.documentElement.setAttribute("data-bs-theme", "light");
         }
     }
 
