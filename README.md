@@ -11,6 +11,8 @@ Put stones on it. Like a real board.
 
 ## Features
 - Shared control of the go board
+- User-specified URLs
+- Password-protected rooms
 - Browser-based
 - Desktop and mobile compatible
 - Sync with live OGS games
