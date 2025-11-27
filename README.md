@@ -19,5 +19,5 @@ Put stones on it. Like a real board.
 
 ## Contributing
 - Report bugs or suggest features on [discord](https://discord.gg/y4wGZyed3e)
-- Open pull requests or issues on Github
+- Devs: see [the docs](docs/dev.md) for more info on contributing code
 - Use and share with friends
