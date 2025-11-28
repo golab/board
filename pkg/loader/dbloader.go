@@ -50,7 +50,7 @@ func (ldr *BaseLoader) setup() error {
 
 func (ldr *BaseLoader) sqliteSetup() error {
 	// Create the 'rooms' table if it doesn't exist
-	_, err := ldr.db.Exec(
+	_, err := ldr.Exec(
 		`CREATE TABLE IF NOT EXISTS rooms (
 			id TEXT PRIMARY KEY,
 			sgf TEXT NOT NULL,
@@ -67,7 +67,7 @@ func (ldr *BaseLoader) sqliteSetup() error {
 	}
 
 	// Create the 'messages' table if it doesn't exist
-	_, err = ldr.db.Exec(
+	_, err = ldr.Exec(
 		`CREATE TABLE IF NOT EXISTS messages (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			text TEXT NOT NULL,
@@ -80,7 +80,7 @@ func (ldr *BaseLoader) sqliteSetup() error {
 	}
 
 	// create the 'twitch' table if it doesn't exist
-	_, err = ldr.db.Exec(
+	_, err = ldr.Exec(
 		`CREATE TABLE IF NOT EXISTS twitch (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			broadcaster TEXT NOT NULL,
@@ -93,7 +93,7 @@ func (ldr *BaseLoader) sqliteSetup() error {
 
 func (ldr *BaseLoader) postgresSetup() error {
 	// Create the 'rooms' table if it doesn't exist
-	_, err := ldr.db.Exec(
+	_, err := ldr.Exec(
 		`CREATE TABLE IF NOT EXISTS rooms (
 			id TEXT PRIMARY KEY,
 			sgf TEXT NOT NULL,
@@ -110,7 +110,7 @@ func (ldr *BaseLoader) postgresSetup() error {
 	}
 
 	// Create the 'messages' table if it doesn't exist
-	_, err = ldr.db.Exec(
+	_, err = ldr.Exec(
 		`CREATE TABLE IF NOT EXISTS messages (
 			id SERIAL PRIMARY KEY,
 			text TEXT NOT NULL,
@@ -123,7 +123,7 @@ func (ldr *BaseLoader) postgresSetup() error {
 	}
 
 	// create the 'twitch' table if it doesn't exist
-	_, err = ldr.db.Exec(
+	_, err = ldr.Exec(
 		`CREATE TABLE IF NOT EXISTS twitch (
 			id SERIAL PRIMARY KEY,
 			broadcaster TEXT NOT NULL,
