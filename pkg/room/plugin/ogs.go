@@ -340,7 +340,7 @@ func (o *OGSConnector) GamedataToSGF(gamedata map[string]any) string {
 
 	for index, m := range gamedata["moves"].([]any) {
 		arr := m.([]any)
-		c := &core.Coord{X: int(arr[0].(float64)), Y: int(arr[1].(float64))}
+		c := core.NewCoord(int(arr[0].(float64)), int(arr[1].(float64)))
 
 		col := "B"
 

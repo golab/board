@@ -28,7 +28,7 @@ func GenerateRandomSGF(seed int, num int) string {
 	for numMoves < num {
 		x := r.Intn(size)
 		y := r.Intn(size)
-		c := &core.Coord{X: x, Y: y}
+		c := core.NewCoord(x, y)
 		if s.Board().Legal(c, col) {
 			s.AddNode(c, col)
 			col = core.Opposite(col)
