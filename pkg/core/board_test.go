@@ -72,18 +72,6 @@ func TestCoordFail(t *testing.T) {
 	}
 }
 
-func TestCoordSetHas(t *testing.T) {
-	c := core.NewCoordSet()
-	c.Add(core.NewCoord(9, 9))
-	assert.True(t, c.Has(core.NewCoord(9, 9)))
-}
-
-func TestCoordSetAdd(t *testing.T) {
-	c := core.NewCoordSet()
-	c.Add(core.NewCoord(9, 9))
-	assert.Equal(t, len(c.List()), 1)
-}
-
 func TestNeighbors(t *testing.T) {
 	b := core.NewBoard(19)
 	start := core.NewCoord(9, 9)

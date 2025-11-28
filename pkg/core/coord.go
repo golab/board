@@ -16,11 +16,8 @@ import (
 	"strings"
 )
 
-// WARNING: this is hardcoded to do CoordSet indexing
-// we can always increase it, but be aware this exists
 const maxBoardSize = 19
 
-// compute all 361 *Coord once, and store in a table
 var allCoords [maxBoardSize][maxBoardSize]*Coord
 
 func init() {
@@ -32,40 +29,9 @@ func init() {
 }
 
 // CoordSet is used for quickly checking a set for existence of coords
-//type CoordSet map[int]*Coord
+type CoordSet map[int]*Coord
 
-type CoordSet [maxBoardSize * maxBoardSize]bool
-
-func (cs *CoordSet) Has(c *Coord) bool {
-	return cs[c.Index()]
-}
-
-func (cs *CoordSet) Add(c *Coord) {
-	cs[c.Index()] = true
-}
-
-func (cs *CoordSet) AddAll(ds *CoordSet) {
-	for i, val := range ds {
-		if val {
-			cs[i] = true
-		}
-	}
-}
-
-func (cs *CoordSet) Remove(c *Coord) {
-	cs[c.Index()] = false
-}
-
-func (cs *CoordSet) RemoveAll(ds *CoordSet) {
-	for i, val := range ds {
-		if val {
-			cs[i] = false
-		}
-	}
-}
-
-/*
-// Has: uses Index as the key
+// Has: uses ToLetters as the key
 func (cs CoordSet) Has(c *Coord) bool {
 	_, ok := cs[c.Index()]
 	return ok
@@ -91,15 +57,12 @@ func (cs CoordSet) RemoveAll(ds CoordSet) {
 		cs.Remove(d)
 	}
 }
-*/
 
 // String is for debugging
-func (cs *CoordSet) String() string {
+func (cs CoordSet) String() string {
 	s := "["
-	for k, val := range cs {
-		if val {
-			s += FromIndex(k).ToLetters()
-		}
+	for k := range cs {
+		s += FromIndex(k).ToLetters()
 		s += " "
 	}
 	s += "]"
@@ -107,20 +70,17 @@ func (cs *CoordSet) String() string {
 }
 
 // List converts the map to an array
-func (cs *CoordSet) List() []*Coord {
+func (cs CoordSet) List() []*Coord {
 	l := []*Coord{}
-	for i, val := range cs {
-		if val {
-			c := FromIndex(i)
-			l = append(l, c)
-		}
+	for _, c := range cs {
+		l = append(l, c)
 	}
 	return l
 }
 
 // IsSubsetOf checks for set inclusion
-func (cs *CoordSet) IsSubsetOf(other *CoordSet) bool {
-	for _, v := range cs.List() {
+func (cs CoordSet) IsSubsetOf(other CoordSet) bool {
+	for _, v := range cs {
 		if !other.Has(v) {
 			return false
 		}
@@ -129,13 +89,13 @@ func (cs *CoordSet) IsSubsetOf(other *CoordSet) bool {
 }
 
 // Equal does IsSubsetOf twice
-func (cs *CoordSet) Equal(other *CoordSet) bool {
+func (cs CoordSet) Equal(other CoordSet) bool {
 	return cs.IsSubsetOf(other) && other.IsSubsetOf(cs)
 }
 
 // NewCoordSet makes an empty CoordSet
-func NewCoordSet() *CoordSet {
-	return &CoordSet{}
+func NewCoordSet() CoordSet {
+	return CoordSet(make(map[int]*Coord))
 }
 
 // StoneSet is an array of Coords plus a Color
@@ -174,7 +134,7 @@ func (s *StoneSet) String() string {
 }
 
 // NewStoneSet takes a CoordSet and a Color and turns it into a StoneSet
-func NewStoneSet(s *CoordSet, c Color) *StoneSet {
+func NewStoneSet(s CoordSet, c Color) *StoneSet {
 	return &StoneSet{s.List(), c}
 }
 
@@ -188,13 +148,17 @@ func NewCoord(x, y int) *Coord {
 	return allCoords[x][y]
 }
 
-// String is for debugging
-func (c *Coord) String() string {
-	return fmt.Sprintf("(%d, %d)", c.X, c.Y)
+func FromIndex(i int) *Coord {
+	return NewCoord(i/maxBoardSize, i%maxBoardSize)
 }
 
 func (c *Coord) Index() int {
 	return c.X*maxBoardSize + c.Y
+}
+
+// String is for debugging
+func (c *Coord) String() string {
+	return fmt.Sprintf("(%d, %d)", c.X, c.Y)
 }
 
 // ToLetters is sgf-specific (notice the inclusion of 'i')
@@ -220,10 +184,6 @@ func (c *Coord) Copy() *Coord {
 		return nil
 	}
 	return NewCoord(c.X, c.Y)
-}
-
-func FromIndex(i int) *Coord {
-	return NewCoord(i/maxBoardSize, i%maxBoardSize)
 }
 
 // LettersToCoord takes a pair of letters and turns it into a Coord

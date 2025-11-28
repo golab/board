@@ -31,8 +31,8 @@ type State struct {
 	size       int
 	board      *core.Board
 	clipboard  *core.TreeNode
-	markedDead *core.CoordSet
-	markedDame *core.CoordSet
+	markedDead core.CoordSet
+	markedDame core.CoordSet
 }
 
 func (s *State) HeadColor() core.Color {
