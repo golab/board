@@ -697,3 +697,25 @@ func TestLogs(t *testing.T) {
 	_, ok = msgs["disconnection"]
 	assert.True(t, ok)
 }
+
+func TestPushHead(t *testing.T) {
+	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.Resignation1))
+	evts := []event.Event{
+		event.NewEvent("upload_sgf", sgf),
+		event.NewEvent("fastforward", sgf),
+	}
+
+	sim, err := integration.SimWithEvents("room123", evts)
+	assert.NoError(t, err)
+	room, err := sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+
+	// before Pushhead, there should be black stones at (2, 11) and (2, 10)
+	assert.Equal(t, room.Board().Get(&core.Coord{X: 2.0, Y: 11.0}), core.Black)
+	assert.Equal(t, room.Board().Get(&core.Coord{X: 2.0, Y: 10.0}), core.Black)
+
+	// this white stone captures two black stones
+	room.PushHead(1, 11, core.White)
+	assert.Equal(t, room.Board().Get(&core.Coord{X: 2.0, Y: 11.0}), core.NoColor)
+	assert.Equal(t, room.Board().Get(&core.Coord{X: 2.0, Y: 10.0}), core.NoColor)
+}
