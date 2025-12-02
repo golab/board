@@ -39,7 +39,7 @@ func TestScore1(t *testing.T) {
 
 	markedDead := core.NewCoordSet()
 	for _, d := range dead {
-		coord := &core.Coord{X: d[0], Y: d[1]}
+		coord := core.NewCoord(d[0], d[1])
 		gp := s.Board().FindGroup(coord)
 		markedDead.AddAll(gp.Coords)
 	}
@@ -74,7 +74,7 @@ func TestScore2(t *testing.T) {
 
 	markedDead := core.NewCoordSet()
 	for _, d := range dead {
-		coord := &core.Coord{X: d[0], Y: d[1]}
+		coord := core.NewCoord(d[0], d[1])
 		gp := s.Board().FindGroup(coord)
 		markedDead.AddAll(gp.Coords)
 	}
@@ -228,23 +228,23 @@ func TestGenerateMarks(t *testing.T) {
 	s.right()
 
 	// add a triangle
-	coord := &core.Coord{X: 9, Y: 9}
+	coord := core.NewCoord(9, 9)
 	_, err = NewAddTriangleCommand(coord).Execute(s)
 	assert.NoError(t, err)
 
 	// add a square
-	coord = &core.Coord{X: 10, Y: 10}
+	coord = core.NewCoord(10, 10)
 	_, err = NewAddSquareCommand(coord).Execute(s)
 	assert.NoError(t, err)
 
 	// add a letter
-	coord = &core.Coord{X: 11, Y: 11}
+	coord = core.NewCoord(11, 11)
 	letter := "A"
 	_, err = NewAddLetterCommand(coord, letter).Execute(s)
 	assert.NoError(t, err)
 
 	// add a number
-	coord = &core.Coord{X: 12, Y: 12}
+	coord = core.NewCoord(12, 12)
 	number := 1
 	_, err = NewAddNumberCommand(coord, number).Execute(s)
 	assert.NoError(t, err)
@@ -255,18 +255,18 @@ func TestGenerateMarks(t *testing.T) {
 
 	marks := s.generateMarks()
 
-	assert.True(t, marks.Current.Equal(&core.Coord{X: 15, Y: 3}))
+	assert.True(t, marks.Current.Equal(core.NewCoord(15, 3)))
 
 	assert.Equal(t, len(marks.Triangles), 1)
-	assert.True(t, marks.Triangles[0].Equal(&core.Coord{X: 9, Y: 9}))
+	assert.True(t, marks.Triangles[0].Equal(core.NewCoord(9, 9)))
 
 	assert.Equal(t, len(marks.Squares), 1)
-	assert.True(t, marks.Squares[0].Equal(&core.Coord{X: 10, Y: 10}))
+	assert.True(t, marks.Squares[0].Equal(core.NewCoord(10, 10)))
 
 	assert.Equal(t, len(marks.Labels), 2)
 
-	assert.True(t, marks.Labels[0].Coord.Equal(&core.Coord{X: 11, Y: 11}))
-	assert.True(t, marks.Labels[1].Coord.Equal(&core.Coord{X: 12, Y: 12}))
+	assert.True(t, marks.Labels[0].Coord.Equal(core.NewCoord(11, 11)))
+	assert.True(t, marks.Labels[1].Coord.Equal(core.NewCoord(12, 12)))
 
 	assert.Equal(t, marks.Labels[0].Text, "A")
 	assert.Equal(t, marks.Labels[1].Text, "1")

@@ -82,7 +82,7 @@ func TestChild(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	coord := &core.Coord{3, 3}
+	coord := core.NewCoord(3, 3)
 	ind, has := s.Root().HasChild(coord, core.Black)
 	if !has {
 		t.Errorf("failed to find child")

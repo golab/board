@@ -58,7 +58,7 @@ func (s *State) addPassNode(col core.Color, fields core.Fields, index int) {
 }
 
 func (s *State) PushHead(x, y int, col core.Color) {
-	coord := &core.Coord{X: x, Y: y}
+	coord := core.NewCoord(x, y)
 	if x == -1 || y == -1 {
 		coord = nil
 	}

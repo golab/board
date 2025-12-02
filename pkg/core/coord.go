@@ -16,18 +16,30 @@ import (
 	"strings"
 )
 
+const maxBoardSize = 19
+
+var allCoords [maxBoardSize][maxBoardSize]*Coord
+
+func init() {
+	for r := 0; r < maxBoardSize; r++ {
+		for c := 0; c < maxBoardSize; c++ {
+			allCoords[r][c] = &Coord{X: r, Y: c}
+		}
+	}
+}
+
 // CoordSet is used for quickly checking a set for existence of coords
-type CoordSet map[string]*Coord
+type CoordSet map[int]*Coord
 
 // Has: uses ToLetters as the key
 func (cs CoordSet) Has(c *Coord) bool {
-	_, ok := cs[c.ToLetters()]
+	_, ok := cs[c.Index()]
 	return ok
 }
 
 // Add adds a coord to the set
 func (cs CoordSet) Add(c *Coord) {
-	cs[c.ToLetters()] = c
+	cs[c.Index()] = c
 }
 
 func (cs CoordSet) AddAll(ds CoordSet) {
@@ -37,7 +49,7 @@ func (cs CoordSet) AddAll(ds CoordSet) {
 }
 
 func (cs CoordSet) Remove(c *Coord) {
-	delete(cs, c.ToLetters())
+	delete(cs, c.Index())
 }
 
 func (cs CoordSet) RemoveAll(ds CoordSet) {
@@ -50,7 +62,7 @@ func (cs CoordSet) RemoveAll(ds CoordSet) {
 func (cs CoordSet) String() string {
 	s := "["
 	for k := range cs {
-		s += k
+		s += FromIndex(k).ToLetters()
 		s += " "
 	}
 	s += "]"
@@ -83,7 +95,7 @@ func (cs CoordSet) Equal(other CoordSet) bool {
 
 // NewCoordSet makes an empty CoordSet
 func NewCoordSet() CoordSet {
-	return CoordSet(make(map[string]*Coord))
+	return CoordSet(make(map[int]*Coord))
 }
 
 // StoneSet is an array of Coords plus a Color
@@ -132,6 +144,18 @@ type Coord struct {
 	Y int `json:"y"`
 }
 
+func NewCoord(x, y int) *Coord {
+	return allCoords[x][y]
+}
+
+func FromIndex(i int) *Coord {
+	return NewCoord(i/maxBoardSize, i%maxBoardSize)
+}
+
+func (c *Coord) Index() int {
+	return c.X*maxBoardSize + c.Y
+}
+
 // String is for debugging
 func (c *Coord) String() string {
 	return fmt.Sprintf("(%d, %d)", c.X, c.Y)
@@ -159,7 +183,7 @@ func (c *Coord) Copy() *Coord {
 	if c == nil {
 		return nil
 	}
-	return &Coord{c.X, c.Y}
+	return NewCoord(c.X, c.Y)
 }
 
 // LettersToCoord takes a pair of letters and turns it into a Coord
@@ -168,7 +192,7 @@ func LettersToCoord(s string) *Coord {
 		return nil
 	}
 	t := strings.ToLower(s)
-	return &Coord{int(t[0] - 97), int(t[1] - 97)}
+	return NewCoord(int(t[0]-97), int(t[1]-97))
 }
 
 // InterfaceToCoord essentially coerces the interface into a [2]int
@@ -189,7 +213,7 @@ func InterfaceToCoord(ifc any) (*Coord, error) {
 	}
 	x := coords[0]
 	y := coords[1]
-	return &Coord{x, y}, nil
+	return NewCoord(x, y), nil
 }
 
 // Stone is a Coord plus a Color
@@ -200,7 +224,7 @@ type Stone struct {
 }
 
 func NewStone(x, y int, c Color) *Stone {
-	coord := &Coord{x, y}
+	coord := NewCoord(x, y)
 	return &Stone{
 		Coord: coord,
 		Color: c,
@@ -234,5 +258,5 @@ func AlphanumericToCoord(s string, size int) (*Coord, error) {
 		x = int(letter - 'a' - 1)
 	}
 
-	return &Coord{x, y}, nil
+	return NewCoord(x, y), nil
 }

@@ -23,7 +23,7 @@ func TestCommandAddStone(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err)
 
-	coord := &core.Coord{X: 9, Y: 9}
+	coord := core.NewCoord(9, 9)
 	color := core.Black
 	_, err = state.NewAddStoneCommand(coord, color).Execute(s)
 	assert.NoError(t, err)
@@ -42,7 +42,7 @@ func TestCommandRemoveStone(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err)
 
-	coord := &core.Coord{X: 9, Y: 9}
+	coord := core.NewCoord(9, 9)
 	_, err = state.NewRemoveStoneCommand(coord).Execute(s)
 	assert.NoError(t, err)
 }
@@ -51,7 +51,7 @@ func TestCommandRemoveMark(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err)
 
-	coord := &core.Coord{X: 9, Y: 9}
+	coord := core.NewCoord(9, 9)
 	_, err = state.NewRemoveMarkCommand(coord).Execute(s)
 	assert.NoError(t, err)
 }
@@ -118,7 +118,7 @@ func TestCommandGotoCoord(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err)
 
-	coord := &core.Coord{X: 9, Y: 9}
+	coord := core.NewCoord(9, 9)
 
 	_, err = state.NewGotoCoordCommand(coord).Execute(s)
 	assert.NoError(t, err)
@@ -209,7 +209,7 @@ func TestCommandMarkDead(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err)
 
-	coord := &core.Coord{X: 9, Y: 9}
+	coord := core.NewCoord(9, 9)
 
 	_, err = state.NewMarkDeadCommand(coord).Execute(s)
 	assert.NoError(t, err)

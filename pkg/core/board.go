@@ -127,7 +127,7 @@ func (b *Board) Neighbors(c *Coord) CoordSet {
 			if newX >= b.Size || newY >= b.Size {
 				continue
 			}
-			nbs.Add(&Coord{newX, newY})
+			nbs.Add(NewCoord(newX, newY))
 		}
 	}
 	return nbs
@@ -186,7 +186,7 @@ func (b *Board) Groups() []*Group {
 	// go through the whole board
 	for i := 0; i < b.Size; i++ {
 		for j := 0; j < b.Size; j++ {
-			coord := &Coord{i, j}
+			coord := NewCoord(i, j)
 			// if we haven't checked it yet and there's a stone here
 			if !check[[2]int{i, j}] && b.Get(coord) != NoColor {
 				// find the group it's part of
@@ -308,9 +308,9 @@ func (b *Board) CurrentDiff() *Diff {
 		for i, c := range row {
 			switch c {
 			case Black:
-				black.Add(&Coord{i, j})
+				black.Add(NewCoord(i, j))
 			case White:
-				white.Add(&Coord{i, j})
+				white.Add(NewCoord(i, j))
 			}
 		}
 	}
@@ -411,7 +411,7 @@ func (b *Board) Score(dead CoordSet, markedDame CoordSet) ([]*Coord, []*Coord, [
 			case Black, White:
 			case NoColor:
 				if grid[j][i] == NotCovered {
-					area, t := b.FindArea(&Coord{i, j}, dead)
+					area, t := b.FindArea(NewCoord(i, j), dead)
 					for _, coord := range area {
 						// this only happens because of marked dame
 						if dame.Has(coord) {

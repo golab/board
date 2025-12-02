@@ -29,6 +29,11 @@ func NewSqliteLoader(path string) (*BaseLoader, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// nice fix for concurrency issues
+	// added a regression test to ensure this stays fixed
+	db.SetMaxOpenConns(1)
+
 	ldr := &BaseLoader{
 		db:     db,
 		dbType: DBTypeSqlite,

@@ -67,3 +67,8 @@ func TestMissingSZ(t *testing.T) {
 	sz := s.Size()
 	require.Equal(t, sz, 19)
 }
+
+func TestSuicide(t *testing.T) {
+	_, err := state.FromSGF(sgfsamples.Suicide1)
+	assert.NotNil(t, err)
+}

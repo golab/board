@@ -8,43 +8,23 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package integration
+package core_test
 
 import (
-	"math/rand"
+	"testing"
 
+	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/pkg/core"
-	"github.com/jarednogo/board/pkg/state"
 )
 
-func GenerateRandomSGF(seed int, num int) string {
-	r := rand.New(rand.NewSource(int64(seed)))
-
-	size := 19
-
-	s := state.NewState(size, true)
-	numMoves := 0
-	col := core.Black
-	for numMoves < num {
-		x := r.Intn(size)
-		y := r.Intn(size)
-		c := core.NewCoord(x, y)
-		if s.Board().Legal(c, col) {
-			s.AddNode(c, col)
-			col = core.Opposite(col)
-			numMoves++
-		}
-	}
-	return s.ToSGF()
+func TestCoordSetHas(t *testing.T) {
+	c := core.NewCoordSet()
+	c.Add(core.NewCoord(9, 9))
+	assert.True(t, c.Has(core.NewCoord(9, 9)))
 }
 
-func GenerateNRandomSGF(seed, num, minLength, maxLength int) []string {
-	r := rand.New(rand.NewSource(int64(seed)))
-	sgfs := []string{}
-	for i := 0; i < num; i++ {
-		randLength := r.Intn(maxLength-minLength) + minLength
-		sgf := GenerateRandomSGF(i, randLength)
-		sgfs = append(sgfs, sgf)
-	}
-	return sgfs
+func TestCoordSetAdd(t *testing.T) {
+	c := core.NewCoordSet()
+	c.Add(core.NewCoord(9, 9))
+	assert.Equal(t, len(c.List()), 1)
 }
