@@ -134,7 +134,7 @@ func TestScore3(t *testing.T) {
 }
 
 func TestScore4(t *testing.T) {
-	s, err := FromSGF(sgfsamples.AtariDame)
+	s, err := FromSGF(sgfsamples.AtariDame1)
 	assert.NoError(t, err)
 
 	s.fastForward()
@@ -164,6 +164,33 @@ func TestScore4(t *testing.T) {
 
 	assert.Equal(t, len(blackDead), 0)
 	assert.Equal(t, len(whiteDead), 1)
+
+	assert.Equal(t, current.BlackCaps, 0)
+	assert.Equal(t, current.WhiteCaps, 0)
+
+	assert.Equal(t, len(dame), 1)
+}
+
+func TestScore5(t *testing.T) {
+	s, err := FromSGF(sgfsamples.AtariDame2)
+	assert.NoError(t, err)
+
+	s.fastForward()
+
+	scoreResult := s.board.Score(core.NewCoordSet(), core.NewCoordSet())
+	blackArea := scoreResult.BlackArea
+	whiteArea := scoreResult.WhiteArea
+	blackDead := scoreResult.BlackDead
+	whiteDead := scoreResult.WhiteDead
+	dame := scoreResult.Dame
+
+	current := s.Current()
+
+	assert.Equal(t, len(blackArea), 10)
+	assert.Equal(t, len(whiteArea), 41)
+
+	assert.Equal(t, len(blackDead), 0)
+	assert.Equal(t, len(whiteDead), 0)
 
 	assert.Equal(t, current.BlackCaps, 0)
 	assert.Equal(t, current.WhiteCaps, 0)
