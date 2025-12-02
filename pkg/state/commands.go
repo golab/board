@@ -562,7 +562,12 @@ func NewScoreCommand() Command {
 }
 
 func (cmd *scoreCommand) Execute(s *State) (*core.Frame, error) {
-	blackArea, whiteArea, blackDead, whiteDead, dame := s.board.Score(s.markedDead, s.markedDame)
+	scoreResult := s.board.Score(s.markedDead, s.markedDame)
+	blackArea := scoreResult.BlackArea
+	whiteArea := scoreResult.WhiteArea
+	blackDead := scoreResult.BlackDead
+	whiteDead := scoreResult.WhiteDead
+	dame := scoreResult.Dame
 	frame := &core.Frame{
 		BlackCaps: s.current.BlackCaps + len(blackArea) + len(whiteDead),
 		WhiteCaps: s.current.WhiteCaps + len(whiteArea) + len(blackDead),

@@ -257,7 +257,13 @@ func TestScore(t *testing.T) {
 	markedDame.Add(core.NewCoord(8, 4))
 	markedDame.Add(core.NewCoord(8, 5))
 
-	blackArea, whiteArea, blackDead, whiteDead, dame := b.Score(markedDead, markedDame)
+	scoreResult := b.Score(markedDead, markedDame)
+	blackArea := scoreResult.BlackArea
+	whiteArea := scoreResult.WhiteArea
+	blackDead := scoreResult.BlackDead
+	whiteDead := scoreResult.WhiteDead
+	dame := scoreResult.Dame
+
 	if len(blackArea) != 34 {
 		t.Errorf("blackArea wrong, expected 34 (got %d)", len(blackArea))
 	}
@@ -288,9 +294,12 @@ func TestScore2(t *testing.T) {
 
 	b.Move(core.NewCoord(8, 4), core.White)
 
-	blackArea, whiteArea, blackDead, whiteDead, dame := b.Score(
-		core.NewCoordSet(),
-		core.NewCoordSet())
+	scoreResult := b.Score(core.NewCoordSet(), core.NewCoordSet())
+	blackArea := scoreResult.BlackArea
+	whiteArea := scoreResult.WhiteArea
+	blackDead := scoreResult.BlackDead
+	whiteDead := scoreResult.WhiteDead
+	dame := scoreResult.Dame
 
 	assert.Equal(t, len(blackArea), 32)
 	assert.Equal(t, len(whiteArea), 27)
@@ -324,7 +333,7 @@ func TestBoardString(t *testing.T) {
 	assert.Equal(t, len(b.String()), 171)
 }
 
-func TestDetectAtariDame(t *testing.T) {
+func TestDetectAtariDame1(t *testing.T) {
 	b := core.NewBoard(9)
 	b.Set(core.NewCoord(1, 0), core.Black)
 	b.Set(core.NewCoord(3, 0), core.Black)

@@ -18,6 +18,7 @@ const (
 	Empty Color = iota
 	Black
 	White
+	Filled
 )
 
 // Opposite: Black -> White, White -> Black, Empty -> Empty

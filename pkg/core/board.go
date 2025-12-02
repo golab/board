@@ -188,7 +188,7 @@ func (b *Board) Groups() []*Group {
 		for j := 0; j < b.Size; j++ {
 			coord := NewCoord(i, j)
 			// if we haven't checked it yet and there's a stone here
-			if !check[[2]int{i, j}] && b.Get(coord) != Empty {
+			if !check[[2]int{i, j}] && b.Get(coord) != Empty && b.Get(coord) != Filled {
 				// find the group it's part of
 				gp := b.FindGroup(coord)
 				for _, c := range gp.Coords {
@@ -373,28 +373,52 @@ func (b *Board) DetectAtariDame(dead, dame CoordSet) CoordSet {
 	// first make a copy
 	c := b.Copy()
 
-	// then fill in all the dame with black stones
+	// then fill in all the dame with a "filler"
 	for _, d := range dame.List() {
-		c.Set(d, Black)
+		c.Set(d, Filled)
 	}
 
-	// find the (living) groups with 1 liberty
+	// these are the "atari" dame to be returned
 	points := NewCoordSet()
-	gps := c.Groups()
-	for _, gp := range gps {
-		if len(gp.Libs) == 1 {
-			rep := gp.Coords.List()[0]
-			if dead.Has(rep) {
-				continue
+
+	// loop
+	for {
+		changed := false
+		// find the (living) groups with 1 liberty
+		gps := c.Groups()
+		for _, gp := range gps {
+			if len(gp.Libs) == 1 {
+				rep := gp.Coords.List()[0]
+				lib := gp.Libs.List()[0]
+
+				// if it's dead, nothing to do
+				if dead.Has(rep) {
+					continue
+				}
+				// add the liberty to the list of atari dame
+				points.Add(lib)
+
+				// fill it and keep going
+				c.Set(lib, Filled)
+				changed = true
 			}
-			// add the liberty to the list of atari dame
-			points.Add(gp.Libs.List()[0])
+		}
+		if !changed {
+			break
 		}
 	}
 	return points
 }
 
-func (b *Board) Score(dead CoordSet, markedDame CoordSet) ([]*Coord, []*Coord, []*Coord, []*Coord, []*Coord) {
+type ScoreResult struct {
+	BlackArea []*Coord
+	WhiteArea []*Coord
+	BlackDead []*Coord
+	WhiteDead []*Coord
+	Dame      []*Coord
+}
+
+func (b *Board) Score(dead CoordSet, markedDame CoordSet) *ScoreResult {
 	blackArea := NewCoordSet()
 	whiteArea := NewCoordSet()
 	blackDead := NewCoordSet()
@@ -464,9 +488,11 @@ func (b *Board) Score(dead CoordSet, markedDame CoordSet) ([]*Coord, []*Coord, [
 		whiteArea.Remove(a)
 	}
 
-	return blackArea.List(),
-		whiteArea.List(),
-		blackDead.List(),
-		whiteDead.List(),
-		dame.List()
+	return &ScoreResult{
+		BlackArea: blackArea.List(),
+		WhiteArea: whiteArea.List(),
+		BlackDead: blackDead.List(),
+		WhiteDead: whiteDead.List(),
+		Dame:      dame.List(),
+	}
 }
