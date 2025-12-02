@@ -22,7 +22,7 @@ var oppTests = []struct {
 	input  core.Color
 	output core.Color
 }{
-	{core.NoColor, core.NoColor},
+	{core.Empty, core.Empty},
 	{core.Black, core.White},
 	{core.White, core.Black},
 }
@@ -142,8 +142,8 @@ func TestBoard2(t *testing.T) {
 	b.Move(core.NewCoord(10, 11), core.White)
 	b.Move(core.NewCoord(10, 12), core.Black)
 	g := b.Get(core.NewCoord(10, 11))
-	if g != core.NoColor {
-		t.Errorf("error with capture, expected %v, got: %v", core.NoColor, g)
+	if g != core.Empty {
+		t.Errorf("error with capture, expected %v, got: %v", core.Empty, g)
 	}
 }
 
@@ -322,24 +322,6 @@ func TestBoardString(t *testing.T) {
 	}
 
 	assert.Equal(t, len(b.String()), 171)
-}
-
-func TestFillBambooJoints(t *testing.T) {
-	b := core.NewBoard(9)
-	b.Set(core.NewCoord(1, 1), core.Black)
-	b.Set(core.NewCoord(1, 2), core.Black)
-	b.Set(core.NewCoord(3, 1), core.Black)
-	b.Set(core.NewCoord(3, 2), core.Black)
-	dame := core.NewCoordSet()
-	dame.Add(core.NewCoord(2, 1))
-	dame.Add(core.NewCoord(2, 2))
-
-	assert.Equal(t, b.Get(core.NewCoord(2, 1)), core.NoColor)
-	assert.Equal(t, b.Get(core.NewCoord(2, 2)), core.NoColor)
-
-	b.FillBambooJoints(dame)
-	assert.Equal(t, b.Get(core.NewCoord(2, 1)), core.Black)
-	assert.Equal(t, b.Get(core.NewCoord(2, 2)), core.Black)
 }
 
 func TestDetectAtariDame(t *testing.T) {

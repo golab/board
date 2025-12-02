@@ -528,7 +528,7 @@ func (cmd *graftCommand) Execute(s *State) (*core.Frame, error) {
 	// setup the moves array and initial color
 	moves := []*core.Stone{}
 	col := s.nodes[parentIndex].Color
-	if col == core.NoColor {
+	if col == core.Empty {
 		col = core.White
 	}
 
@@ -589,7 +589,7 @@ func (cmd *markDeadCommand) Execute(s *State) (*core.Frame, error) {
 		return nil, nil
 	}
 
-	if s.board.Get(cmd.coord) == core.NoColor {
+	if s.board.Get(cmd.coord) == core.Empty {
 		dame, _ := s.board.FindArea(cmd.coord, core.NewCoordSet())
 		if s.markedDame.Has(cmd.coord) {
 			s.markedDame.RemoveAll(dame)

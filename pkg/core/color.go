@@ -11,16 +11,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 // the core package provides basic functionality to all the major components of the code
 package core
 
-// Color is one of NoColor, Black, or White
+// Color is one of Empty, Black, or White
 type Color int
 
 const (
-	NoColor Color = iota
+	Empty Color = iota
 	Black
 	White
 )
 
-// Opposite: Black -> White, White -> Black, NoColor -> NoColor
+// Opposite: Black -> White, White -> Black, Empty -> Empty
 func Opposite(c Color) Color {
 	if c == Black {
 		return White
@@ -28,7 +28,7 @@ func Opposite(c Color) Color {
 	if c == White {
 		return Black
 	}
-	return NoColor
+	return Empty
 }
 
 // String is just for debugging purposes

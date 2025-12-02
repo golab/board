@@ -80,7 +80,7 @@ func (b *Board) String() string {
 func (b *Board) Clear() {
 	for i := 0; i < b.Size; i++ {
 		for j := 0; j < b.Size; j++ {
-			b.Points[i][j] = NoColor
+			b.Points[i][j] = Empty
 		}
 	}
 }
@@ -101,7 +101,7 @@ func (b *Board) Set(c *Coord, col Color) {
 
 func (b *Board) Get(c *Coord) Color {
 	if c.Y >= b.Size || c.X >= b.Size {
-		return NoColor
+		return Empty
 	}
 	return b.Points[c.Y][c.X]
 }
@@ -110,32 +110,6 @@ func (b *Board) SetMany(cs []*Coord, col Color) {
 	for _, c := range cs {
 		b.Set(c, col)
 	}
-}
-
-func (b *Board) bambooNbdH(c *Coord) (*Coord, CoordSet) {
-	if c.X >= b.Size-1 || c.Y >= b.Size-1 || c.X == 0 {
-		return nil, nil
-	}
-	nbs := NewCoordSet()
-	nbs.Add(NewCoord(c.X-1, c.Y))
-	nbs.Add(NewCoord(c.X-1, c.Y+1))
-	nbs.Add(NewCoord(c.X+1, c.Y))
-	nbs.Add(NewCoord(c.X+1, c.Y+1))
-
-	return NewCoord(c.X, c.Y+1), nbs
-}
-
-func (b *Board) bambooNbdV(c *Coord) (*Coord, CoordSet) {
-	if c.X >= b.Size-1 || c.Y >= b.Size-1 || c.Y == 0 {
-		return nil, nil
-	}
-	nbs := NewCoordSet()
-	nbs.Add(NewCoord(c.X, c.Y+1))
-	nbs.Add(NewCoord(c.X, c.Y-1))
-	nbs.Add(NewCoord(c.X+1, c.Y+1))
-	nbs.Add(NewCoord(c.X+1, c.Y-1))
-
-	return NewCoord(c.X+1, c.Y), nbs
 }
 
 func (b *Board) Neighbors(c *Coord) CoordSet {
@@ -164,8 +138,8 @@ func (b *Board) FindGroup(start *Coord) *Group {
 	col := b.Get(start)
 
 	// if it's empty, return empty group
-	if col == NoColor {
-		return NewGroup(nil, nil, NoColor)
+	if col == Empty {
+		return NewGroup(nil, nil, Empty)
 	}
 
 	// initiate the stack
@@ -195,7 +169,7 @@ func (b *Board) FindGroup(start *Coord) *Group {
 			// add to the stack
 			if b.Get(nb) == col && !elts.Has(nb) {
 				stack = append(stack, nb)
-			} else if b.Get(nb) == NoColor {
+			} else if b.Get(nb) == Empty {
 				libs.Add(nb)
 			}
 		}
@@ -214,7 +188,7 @@ func (b *Board) Groups() []*Group {
 		for j := 0; j < b.Size; j++ {
 			coord := NewCoord(i, j)
 			// if we haven't checked it yet and there's a stone here
-			if !check[[2]int{i, j}] && b.Get(coord) != NoColor {
+			if !check[[2]int{i, j}] && b.Get(coord) != Empty {
 				// find the group it's part of
 				gp := b.FindGroup(coord)
 				for _, c := range gp.Coords {
@@ -231,14 +205,14 @@ func (b *Board) Groups() []*Group {
 
 func (b *Board) Legal(start *Coord, col Color) bool {
 	// if there's already a stone there, it's illegal
-	if b.Get(start) != NoColor {
+	if b.Get(start) != Empty {
 		return false
 		// not legal
 	}
 
 	// this should be undone at the end
 	b.Set(start, col)
-	defer b.Set(start, NoColor)
+	defer b.Set(start, Empty)
 
 	// if it has >0 libs, it's legal
 	gp := b.FindGroup(start)
@@ -250,7 +224,7 @@ func (b *Board) Legal(start *Coord, col Color) bool {
 	// only check neighboring area for optimization
 	nbs := b.Neighbors(start)
 	for _, nb := range nbs {
-		if b.Get(nb) == NoColor {
+		if b.Get(nb) == Empty {
 			continue
 		}
 		gp := b.FindGroup(nb)
@@ -292,7 +266,7 @@ func (b *Board) WouldKill(start *Coord, col Color) *StoneSet {
 
 func (b *Board) RemoveDead(start *Coord, col Color) *StoneSet {
 	w := b.WouldKill(start, col)
-	b.SetMany(w.Coords, NoColor)
+	b.SetMany(w.Coords, Empty)
 	return w
 }
 
@@ -323,7 +297,7 @@ func (b *Board) ApplyDiff(d *Diff) {
 		b.SetMany(add.Coords, add.Color)
 	}
 	for _, remove := range d.Remove {
-		b.SetMany(remove.Coords, NoColor)
+		b.SetMany(remove.Coords, Empty)
 	}
 }
 
@@ -355,7 +329,7 @@ const (
 )
 
 func (b *Board) FindArea(start *Coord, dead CoordSet) (CoordSet, EmptyPointType) {
-	if b.Get(start) != NoColor {
+	if b.Get(start) != Empty {
 		return nil, NotCovered
 	}
 
@@ -379,7 +353,7 @@ func (b *Board) FindArea(start *Coord, dead CoordSet) (CoordSet, EmptyPointType)
 		// compute neighbors
 		nbs := b.Neighbors(point)
 		for _, nb := range nbs {
-			if b.Get(nb) == NoColor && !elts.Has(nb) {
+			if b.Get(nb) == Empty && !elts.Has(nb) {
 				stack = append(stack, nb)
 			} else if b.Get(nb) == Black && !dead.Has(nb) {
 				t |= BlackPoint
@@ -393,60 +367,6 @@ func (b *Board) FindArea(start *Coord, dead CoordSet) (CoordSet, EmptyPointType)
 		}
 	}
 	return elts, t
-}
-
-func (b *Board) FillBambooJoints(dame CoordSet) {
-	// go through all the dame
-	for _, point := range dame.List() {
-		// extract the horizontal bamboo shape
-		color := NoColor
-		nbV, bambooNbdV := b.bambooNbdV(point)
-		if nbV == nil {
-			continue
-		}
-		correctColor := true
-		for _, bnb := range bambooNbdV.List() {
-			// check to see if they're all the same color
-			if color == NoColor {
-				color = b.Get(bnb)
-			}
-			if b.Get(bnb) != color {
-				correctColor = false
-				break
-			}
-		}
-		if dame.Has(nbV) && correctColor {
-			// fill in the bamboo joint
-			b.Set(point, color)
-			b.Set(nbV, color)
-		}
-	}
-
-	for _, point := range dame.List() {
-		// extract the vertical bamboo shape
-		color := NoColor
-
-		nbH, bambooNbdH := b.bambooNbdH(point)
-		if nbH == nil {
-			continue
-		}
-		correctColor := true
-		for _, bnb := range bambooNbdH.List() {
-			// check to see if they're all the same color
-			if color == NoColor {
-				color = b.Get(bnb)
-			}
-			if b.Get(bnb) != color {
-				correctColor = false
-				break
-			}
-		}
-		if dame.Has(nbH) && correctColor {
-			// fill in the bamboo joint
-			b.Set(point, color)
-			b.Set(nbH, color)
-		}
-	}
 }
 
 func (b *Board) DetectAtariDame(dead, dame CoordSet) CoordSet {
@@ -505,9 +425,6 @@ func (b *Board) Score(dead CoordSet, markedDame CoordSet) ([]*Coord, []*Coord, [
 	// add marked dame to dame
 	dame.AddAll(markedDame)
 
-	// fill in bamboo joints
-	//b.FillBambooJoints(dame)
-
 	// go through every empty point in the grid
 	// anything that hasn't been handled yet gets assigned to either
 	// - black area
@@ -517,7 +434,7 @@ func (b *Board) Score(dead CoordSet, markedDame CoordSet) ([]*Coord, []*Coord, [
 		for i, c := range row {
 			switch c {
 			case Black, White:
-			case NoColor:
+			case Empty:
 				if grid[j][i] == NotCovered {
 					area, t := b.FindArea(NewCoord(i, j), dead)
 					for _, coord := range area {

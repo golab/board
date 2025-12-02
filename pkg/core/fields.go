@@ -144,7 +144,7 @@ func (f *Fields) Color() Color {
 	if len(wvalues) > 0 {
 		return White
 	}
-	return NoColor
+	return Empty
 }
 
 func (f *Fields) Coord() *Coord {
