@@ -112,6 +112,32 @@ func (b *Board) SetMany(cs []*Coord, col Color) {
 	}
 }
 
+func (b *Board) bambooNbdH(c *Coord) (*Coord, CoordSet) {
+	if c.X >= b.Size-1 || c.Y >= b.Size-1 || c.X == 0 {
+		return nil, nil
+	}
+	nbs := NewCoordSet()
+	nbs.Add(NewCoord(c.X-1, c.Y))
+	nbs.Add(NewCoord(c.X-1, c.Y+1))
+	nbs.Add(NewCoord(c.X+1, c.Y))
+	nbs.Add(NewCoord(c.X+1, c.Y+1))
+
+	return NewCoord(c.X, c.Y+1), nbs
+}
+
+func (b *Board) bambooNbdV(c *Coord) (*Coord, CoordSet) {
+	if c.X >= b.Size-1 || c.Y >= b.Size-1 || c.Y == 0 {
+		return nil, nil
+	}
+	nbs := NewCoordSet()
+	nbs.Add(NewCoord(c.X, c.Y+1))
+	nbs.Add(NewCoord(c.X, c.Y-1))
+	nbs.Add(NewCoord(c.X+1, c.Y+1))
+	nbs.Add(NewCoord(c.X+1, c.Y-1))
+
+	return NewCoord(c.X+1, c.Y), nbs
+}
+
 func (b *Board) Neighbors(c *Coord) CoordSet {
 	nbs := NewCoordSet()
 	for x := -1; x <= 1; x++ {
@@ -369,6 +395,85 @@ func (b *Board) FindArea(start *Coord, dead CoordSet) (CoordSet, EmptyPointType)
 	return elts, t
 }
 
+func (b *Board) FillBambooJoints(dame CoordSet) {
+	// go through all the dame
+	for _, point := range dame.List() {
+		// extract the horizontal bamboo shape
+		color := NoColor
+		nbV, bambooNbdV := b.bambooNbdV(point)
+		if nbV == nil {
+			continue
+		}
+		correctColor := true
+		for _, bnb := range bambooNbdV.List() {
+			// check to see if they're all the same color
+			if color == NoColor {
+				color = b.Get(bnb)
+			}
+			if b.Get(bnb) != color {
+				correctColor = false
+				break
+			}
+		}
+		if dame.Has(nbV) && correctColor {
+			// fill in the bamboo joint
+			b.Set(point, color)
+			b.Set(nbV, color)
+		}
+	}
+
+	for _, point := range dame.List() {
+		// extract the vertical bamboo shape
+		color := NoColor
+
+		nbH, bambooNbdH := b.bambooNbdH(point)
+		if nbH == nil {
+			continue
+		}
+		correctColor := true
+		for _, bnb := range bambooNbdH.List() {
+			// check to see if they're all the same color
+			if color == NoColor {
+				color = b.Get(bnb)
+			}
+			if b.Get(bnb) != color {
+				correctColor = false
+				break
+			}
+		}
+		if dame.Has(nbH) && correctColor {
+			// fill in the bamboo joint
+			b.Set(point, color)
+			b.Set(nbH, color)
+		}
+	}
+}
+
+func (b *Board) DetectAtariDame(dead, dame CoordSet) CoordSet {
+	// first make a copy
+	c := b.Copy()
+
+	// then fill in all the dame with black stones
+	for _, d := range dame.List() {
+		c.Set(d, Black)
+	}
+
+	// find the (living) groups with 1 liberty
+	points := NewCoordSet()
+	gps := c.Groups()
+	for _, gp := range gps {
+		if len(gp.Libs) == 1 {
+			rep := gp.Coords.List()[0]
+			if dead.Has(rep) {
+				continue
+			}
+			// add the liberty to the list of atari dame
+			points.Add(gp.Libs.List()[0])
+		}
+	}
+	return points
+}
+
 func (b *Board) Score(dead CoordSet, markedDame CoordSet) ([]*Coord, []*Coord, []*Coord, []*Coord, []*Coord) {
 	blackArea := NewCoordSet()
 	whiteArea := NewCoordSet()
@@ -400,6 +505,9 @@ func (b *Board) Score(dead CoordSet, markedDame CoordSet) ([]*Coord, []*Coord, [
 	// add marked dame to dame
 	dame.AddAll(markedDame)
 
+	// fill in bamboo joints
+	//b.FillBambooJoints(dame)
+
 	// go through every empty point in the grid
 	// anything that hasn't been handled yet gets assigned to either
 	// - black area
@@ -430,6 +538,13 @@ func (b *Board) Score(dead CoordSet, markedDame CoordSet) ([]*Coord, []*Coord, [
 				}
 			}
 		}
+	}
+
+	// remove points that need to be filled
+	fillAtari := b.DetectAtariDame(dead, dame)
+	for _, a := range fillAtari.List() {
+		blackArea.Remove(a)
+		whiteArea.Remove(a)
 	}
 
 	return blackArea.List(),

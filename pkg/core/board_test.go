@@ -275,6 +275,30 @@ func TestScore(t *testing.T) {
 	}
 }
 
+func TestScore2(t *testing.T) {
+	b := core.NewBoard(9)
+	for x := 0; x < 8; x++ {
+		b.Move(core.NewCoord(x, 4), core.Black)
+		b.Move(core.NewCoord(x, 5), core.White)
+	}
+
+	b.Move(core.NewCoord(7, 3), core.Black)
+	b.Move(core.NewCoord(7, 2), core.Black)
+	b.Move(core.NewCoord(8, 2), core.Black)
+
+	b.Move(core.NewCoord(8, 4), core.White)
+
+	blackArea, whiteArea, blackDead, whiteDead, dame := b.Score(
+		core.NewCoordSet(),
+		core.NewCoordSet())
+
+	assert.Equal(t, len(blackArea), 32)
+	assert.Equal(t, len(whiteArea), 27)
+	assert.Equal(t, len(blackDead), 0)
+	assert.Equal(t, len(whiteDead), 0)
+	assert.Equal(t, len(dame), 1)
+}
+
 func TestBoardCopy(t *testing.T) {
 	b := core.NewBoard(9)
 	for i := 0; i < 9; i++ {
@@ -298,4 +322,55 @@ func TestBoardString(t *testing.T) {
 	}
 
 	assert.Equal(t, len(b.String()), 171)
+}
+
+func TestFillBambooJoints(t *testing.T) {
+	b := core.NewBoard(9)
+	b.Set(core.NewCoord(1, 1), core.Black)
+	b.Set(core.NewCoord(1, 2), core.Black)
+	b.Set(core.NewCoord(3, 1), core.Black)
+	b.Set(core.NewCoord(3, 2), core.Black)
+	dame := core.NewCoordSet()
+	dame.Add(core.NewCoord(2, 1))
+	dame.Add(core.NewCoord(2, 2))
+
+	assert.Equal(t, b.Get(core.NewCoord(2, 1)), core.NoColor)
+	assert.Equal(t, b.Get(core.NewCoord(2, 2)), core.NoColor)
+
+	b.FillBambooJoints(dame)
+	assert.Equal(t, b.Get(core.NewCoord(2, 1)), core.Black)
+	assert.Equal(t, b.Get(core.NewCoord(2, 2)), core.Black)
+}
+
+func TestDetectAtariDame(t *testing.T) {
+	b := core.NewBoard(9)
+	b.Set(core.NewCoord(1, 0), core.Black)
+	b.Set(core.NewCoord(3, 0), core.Black)
+	b.Set(core.NewCoord(5, 0), core.Black)
+	b.Set(core.NewCoord(7, 0), core.Black)
+	b.Set(core.NewCoord(2, 1), core.Black)
+	b.Set(core.NewCoord(3, 1), core.Black)
+	b.Set(core.NewCoord(4, 1), core.Black)
+	b.Set(core.NewCoord(5, 1), core.Black)
+	b.Set(core.NewCoord(6, 1), core.Black)
+	b.Set(core.NewCoord(7, 1), core.Black)
+	b.Set(core.NewCoord(0, 1), core.White)
+	b.Set(core.NewCoord(1, 1), core.White)
+	b.Set(core.NewCoord(1, 2), core.White)
+	b.Set(core.NewCoord(2, 2), core.White)
+	b.Set(core.NewCoord(3, 2), core.White)
+	b.Set(core.NewCoord(4, 2), core.White)
+	b.Set(core.NewCoord(5, 2), core.White)
+	b.Set(core.NewCoord(6, 2), core.White)
+	b.Set(core.NewCoord(7, 2), core.White)
+	b.Set(core.NewCoord(8, 2), core.White)
+	b.Set(core.NewCoord(8, 1), core.White)
+	b.Set(core.NewCoord(8, 0), core.White)
+
+	dead := core.NewCoordSet()
+	dame := core.NewCoordSet()
+	dame.Add(core.NewCoord(0, 0))
+	ad := b.DetectAtariDame(dead, dame)
+
+	assert.True(t, ad.Has(core.NewCoord(2, 0)))
 }
