@@ -251,7 +251,7 @@ func (h *Hub) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 		// create the event
 		e := event.NewEvent("graft", branch)
 
-		h.logger.Info("grafting", "branch", branch, "broadcaster", broadcaster)
+		h.logger.Info("grafting", "branch", branch, "broadcaster", broadcaster, "room_id", roomID)
 		r.HandleAny(e)
 	}
 
