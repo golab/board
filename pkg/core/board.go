@@ -167,7 +167,7 @@ func (b *Board) FindGroup(start *Coord) *Group {
 			// if it's the right color
 			// and we haven't visited it yet
 			// add to the stack
-			if b.Get(nb) == col && !elts.Has(nb) {
+			if ColorEqual(b.Get(nb), col) && !elts.Has(nb) {
 				stack = append(stack, nb)
 			} else if b.Get(nb) == Empty {
 				libs.Add(nb)
@@ -188,7 +188,7 @@ func (b *Board) Groups() []*Group {
 		for j := 0; j < b.Size; j++ {
 			coord := NewCoord(i, j)
 			// if we haven't checked it yet and there's a stone here
-			if !check[[2]int{i, j}] && b.Get(coord) != Empty && b.Get(coord) != Filled {
+			if !check[[2]int{i, j}] && (b.Get(coord) == Black || b.Get(coord) == White) {
 				// find the group it's part of
 				gp := b.FindGroup(coord)
 				for _, c := range gp.Coords {
@@ -375,7 +375,7 @@ func (b *Board) DetectAtariDame(dead, dame CoordSet) CoordSet {
 
 	// then fill in all the dame with a "filler"
 	for _, d := range dame.List() {
-		c.Set(d, Filled)
+		c.Set(d, FillDame)
 	}
 
 	// these are the "atari" dame to be returned
@@ -399,7 +399,8 @@ func (b *Board) DetectAtariDame(dead, dame CoordSet) CoordSet {
 				points.Add(lib)
 
 				// fill it and keep going
-				c.Set(lib, Filled)
+				col := c.Get(rep)
+				c.Set(lib, Fill(col))
 				changed = true
 			}
 		}

@@ -198,6 +198,60 @@ func TestScore5(t *testing.T) {
 	assert.Equal(t, len(dame), 1)
 }
 
+func TestScore6(t *testing.T) {
+	s, err := FromSGF(sgfsamples.AtariDame3)
+	assert.NoError(t, err)
+
+	s.fastForward()
+
+	scoreResult := s.board.Score(core.NewCoordSet(), core.NewCoordSet())
+	blackArea := scoreResult.BlackArea
+	whiteArea := scoreResult.WhiteArea
+	blackDead := scoreResult.BlackDead
+	whiteDead := scoreResult.WhiteDead
+	dame := scoreResult.Dame
+
+	current := s.Current()
+
+	assert.Equal(t, len(blackArea), 4)
+	assert.Equal(t, len(whiteArea), 52)
+
+	assert.Equal(t, len(blackDead), 0)
+	assert.Equal(t, len(whiteDead), 0)
+
+	assert.Equal(t, current.BlackCaps, 0)
+	assert.Equal(t, current.WhiteCaps, 0)
+
+	assert.Equal(t, len(dame), 2)
+}
+
+func TestScore7(t *testing.T) {
+	s, err := FromSGF(sgfsamples.AtariDame4)
+	assert.NoError(t, err)
+
+	s.fastForward()
+
+	scoreResult := s.board.Score(core.NewCoordSet(), core.NewCoordSet())
+	blackArea := scoreResult.BlackArea
+	whiteArea := scoreResult.WhiteArea
+	blackDead := scoreResult.BlackDead
+	whiteDead := scoreResult.WhiteDead
+	dame := scoreResult.Dame
+
+	current := s.Current()
+
+	assert.Equal(t, len(blackArea), 26)
+	assert.Equal(t, len(whiteArea), 5)
+
+	assert.Equal(t, len(blackDead), 0)
+	assert.Equal(t, len(whiteDead), 0)
+
+	assert.Equal(t, current.BlackCaps, 0)
+	assert.Equal(t, current.WhiteCaps, 0)
+
+	assert.Equal(t, len(dame), 1)
+}
+
 func TestState3(t *testing.T) {
 	s, err := FromSGF(sgfsamples.SimpleTwoBranches)
 	assert.NoError(t, err)

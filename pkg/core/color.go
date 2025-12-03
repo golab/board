@@ -18,7 +18,9 @@ const (
 	Empty Color = iota
 	Black
 	White
-	Filled
+	FillBlack
+	FillWhite
+	FillDame
 )
 
 // Opposite: Black -> White, White -> Black, Empty -> Empty
@@ -30,6 +32,43 @@ func Opposite(c Color) Color {
 		return Black
 	}
 	return Empty
+}
+
+func Fill(c Color) Color {
+	switch c {
+	case Empty:
+		return FillDame
+	case Black:
+		return FillBlack
+	case White:
+		return FillWhite
+	case FillBlack:
+		return FillBlack
+	case FillWhite:
+		return FillWhite
+	case FillDame:
+		return FillDame
+	}
+	return FillDame
+}
+
+func ColorEqual(c, d Color) bool {
+	if c == d {
+		return true
+	}
+	if c == Black && d == FillBlack {
+		return true
+	}
+	if c == FillBlack && d == Black {
+		return true
+	}
+	if c == White && d == FillWhite {
+		return true
+	}
+	if c == FillWhite && d == White {
+		return true
+	}
+	return false
 }
 
 // String is just for debugging purposes
