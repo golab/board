@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/jarednogo/board/blob/main/LICENSE)
 [![Discord](https://img.shields.io/badge/discord-5865F2?logo=discord&logoColor=white)](https://discord.gg/y4wGZyed3e)
 
-Put stones on it. Like a real board.
+Put stones on it. Like in real life.
 
 ![dark mode screenshot](docs/img/darkmode.png)
 
