@@ -15,7 +15,7 @@ export function create_comments(_state) {
     let container = document.getElementById("comments");
     let comments = document.createElement("div");
     comments.style.textAlign = "left";
-    comments.style.background = "#FEFEFE";
+    //comments.style.background = "#FEFEFE";
     let input_bar = document.createElement("input");
     input_bar.placeholder = "Comment...";
 
