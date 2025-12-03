@@ -75,19 +75,17 @@ func (h *Hub) twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tc := twitch.NewDefaultTwitchClient(h.cfg.Twitch.ClientID, h.cfg.Twitch.Secret, h.cfg.Twitch.BotID, h.cfg.Server.URL)
-
 	if code != "" {
 
 		// use the code to get an access token
-		token, err := tc.GetUserAccessToken(code)
+		token, err := h.tc.GetUserAccessToken(code)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusForbidden)
 			return
 		}
 
 		// use the user access token to get the user id
-		user, err := tc.GetUsers(token)
+		user, err := h.tc.GetUsers(token)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusForbidden)
 			return
@@ -95,7 +93,7 @@ func (h *Hub) twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
 
 		// get an app access token (one could imagine putting this
 		// in the subscribe function directly)
-		token, err = tc.GetAppAccessToken()
+		token, err = h.tc.GetAppAccessToken()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusForbidden)
 			return
@@ -103,14 +101,14 @@ func (h *Hub) twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
 
 		if scope == "" {
 			// unsubscribe logic
-			id, err := tc.GetSubscription(user)
+			id, err := h.tc.GetSubscription(user)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusForbidden)
 				return
 			}
 
 			// unsubscribe
-			err = tc.Unsubscribe(id, token)
+			err = h.tc.Unsubscribe(id, token)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusForbidden)
 				return
@@ -118,7 +116,7 @@ func (h *Hub) twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
 			h.logger.Info("unsubscribing", "id", id, "user", user)
 		} else {
 			// subscribe, get subscription id
-			id, err := tc.Subscribe(user, token)
+			id, err := h.tc.Subscribe(user, token)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusForbidden)
 				return

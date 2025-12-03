@@ -23,6 +23,7 @@ import (
 	"github.com/jarednogo/board/pkg/logx"
 	"github.com/jarednogo/board/pkg/message"
 	"github.com/jarednogo/board/pkg/room"
+	"github.com/jarednogo/board/pkg/twitch"
 	"golang.org/x/net/websocket"
 )
 
@@ -46,6 +47,7 @@ type Hub struct {
 	rooms    map[string]*room.Room
 	messages []*message.Message
 	db       loader.Loader
+	tc       twitch.TwitchClient
 	mu       sync.Mutex
 	cfg      *config.Config
 	logger   logx.Logger
@@ -74,10 +76,17 @@ func NewHub(cfg *config.Config, logger logx.Logger) (*Hub, error) {
 }
 
 func NewHubWithDB(db loader.Loader, cfg *config.Config, logger logx.Logger) (*Hub, error) {
+	tc := twitch.NewDefaultTwitchClient(
+		cfg.Twitch.ClientID,
+		cfg.Twitch.Secret,
+		cfg.Twitch.BotID,
+		cfg.Server.URL,
+	)
 	s := &Hub{
 		rooms:    make(map[string]*room.Room),
 		messages: []*message.Message{},
 		db:       db,
+		tc:       tc,
 		cfg:      cfg,
 		logger:   logger,
 	}

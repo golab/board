@@ -88,6 +88,7 @@ type TwitchClient interface {
 	Unsubscribe(string, string) error
 	Subscribe(string, string) (string, error)
 	GetSubscription(string) (string, error)
+	SetHTTPClient(HTTPClient)
 }
 
 type HTTPClient interface {

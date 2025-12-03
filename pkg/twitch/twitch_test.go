@@ -11,47 +11,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package twitch_test
 
 import (
-	"bytes"
 	"fmt"
-	"io"
-	"net/http"
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/pkg/twitch"
 )
 
-func MockHTTPResponse(status int, body string) *http.Response {
-	return &http.Response{
-		StatusCode: status,
-		Status:     http.StatusText(status),
-		Header:     make(http.Header),
-		Body:       io.NopCloser(bytes.NewBufferString(body)),
-	}
-}
-
-type MockHTTPClient struct {
-	responses []string
-	index     int
-}
-
-func NewMockHTTPClient(responses []string) *MockHTTPClient {
-	return &MockHTTPClient{responses: responses}
-}
-
-func (c *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
-	response := ""
-	if c.index < len(c.responses) {
-		response = c.responses[c.index]
-		c.index++
-	}
-	return MockHTTPResponse(200, response), nil
-}
-
 func TestGetUserAccessToken(t *testing.T) {
 	tc := twitch.NewDefaultTwitchClient("", "", "", "")
 	responses := []string{`{"access_token": "foobar"}`}
-	tc.SetHTTPClient(NewMockHTTPClient(responses))
+	tc.SetHTTPClient(twitch.NewMockHTTPClient(responses))
 	token, err := tc.GetUserAccessToken("")
 	assert.NoError(t, err)
 	assert.Equal(t, token, "foobar")
@@ -60,7 +30,7 @@ func TestGetUserAccessToken(t *testing.T) {
 func TestGetUsers(t *testing.T) {
 	tc := twitch.NewDefaultTwitchClient("", "", "", "")
 	responses := []string{`{"data": [{"id": "123456789", "login": "some_login"}]}`}
-	tc.SetHTTPClient(NewMockHTTPClient(responses))
+	tc.SetHTTPClient(twitch.NewMockHTTPClient(responses))
 	user, err := tc.GetUsers("")
 	assert.NoError(t, err)
 	assert.Equal(t, user, "123456789")
@@ -69,7 +39,7 @@ func TestGetUsers(t *testing.T) {
 func TestGetAppAccessToken(t *testing.T) {
 	tc := twitch.NewDefaultTwitchClient("", "", "", "")
 	responses := []string{`{"access_token": "foobar"}`}
-	tc.SetHTTPClient(NewMockHTTPClient(responses))
+	tc.SetHTTPClient(twitch.NewMockHTTPClient(responses))
 	user, err := tc.GetAppAccessToken()
 	assert.NoError(t, err)
 	assert.Equal(t, user, "foobar")
@@ -78,7 +48,7 @@ func TestGetAppAccessToken(t *testing.T) {
 func TestUnsubscribe(t *testing.T) {
 	tc := twitch.NewDefaultTwitchClient("", "", "", "")
 	responses := []string{`{"access_token": "foobar"}`}
-	tc.SetHTTPClient(NewMockHTTPClient(responses))
+	tc.SetHTTPClient(twitch.NewMockHTTPClient(responses))
 	err := tc.Unsubscribe("", "")
 	assert.NoError(t, err)
 }
@@ -86,7 +56,7 @@ func TestUnsubscribe(t *testing.T) {
 func TestSubscribe(t *testing.T) {
 	tc := twitch.NewDefaultTwitchClient("", "", "", "")
 	responses := []string{`{"data": [{"id": "123456789"}]}`}
-	tc.SetHTTPClient(NewMockHTTPClient(responses))
+	tc.SetHTTPClient(twitch.NewMockHTTPClient(responses))
 	id, err := tc.Subscribe("", "")
 	assert.NoError(t, err)
 	assert.Equal(t, id, "123456789")
@@ -95,7 +65,7 @@ func TestSubscribe(t *testing.T) {
 func TestAlreadySubscribed(t *testing.T) {
 	tc := twitch.NewDefaultTwitchClient("", "", "", "")
 	responses := []string{`{"message": "subscription exists"}`}
-	tc.SetHTTPClient(NewMockHTTPClient(responses))
+	tc.SetHTTPClient(twitch.NewMockHTTPClient(responses))
 	_, err := tc.Subscribe("", "")
 	assert.ErrorIs(t, err, fmt.Errorf("subscription exists"))
 }
@@ -106,7 +76,7 @@ func TestGetSubscription(t *testing.T) {
 		`{"access_token": "foobar"}`,
 		`{"total":1, "data": [{"id": "subscription123", "condition": {"broadcaster_user_id": "abc123"}}]}`,
 	}
-	tc.SetHTTPClient(NewMockHTTPClient(responses))
+	tc.SetHTTPClient(twitch.NewMockHTTPClient(responses))
 	id, err := tc.GetSubscription("abc123")
 	assert.NoError(t, err)
 	assert.Equal(t, id, "subscription123")
