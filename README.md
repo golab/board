@@ -20,6 +20,5 @@ Put stones on it. Like a real board.
 - Free and open source
 
 ## Contributing
-- Report bugs or suggest features on [discord](https://discord.gg/y4wGZyed3e)
-- Devs: see [the docs](docs/dev.md) for more info on contributing code
-- Use and share with friends
+- Report bugs or suggest features on [Discord](https://discord.gg/y4wGZyed3e), or open [an issue](https://github.com/jarednogo/board/issues/new) on GitHub.
+- Developers: see the [dev docs](docs/dev.md) for details on contributing code.
