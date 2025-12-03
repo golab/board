@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-func IsWhitespace(c rune) bool {
+func isWhitespace(c rune) bool {
 	return c == '\n' || c == ' ' || c == '\t' || c == '\r'
 }
 
@@ -23,6 +23,9 @@ type SGFNode struct {
 	Fields
 	down []*SGFNode
 }
+
+// GetChild and NumChildren aren't just for parser_test
+// also used in state
 
 func (n *SGFNode) GetChild(i int) *SGFNode {
 	if i >= 0 && i < len(n.down) {
@@ -79,11 +82,11 @@ func NewParser(text string) *Parser {
 }
 
 func (p *Parser) Parse() (*SGFNode, error) {
-	p.SkipWhitespace()
-	p.SkipIfNot('(')
+	p.skipWhitespace()
+	p.skipIfNot('(')
 	c := p.read()
 	if c == '(' {
-		root, err := p.ParseBranch()
+		root, err := p.parseBranch()
 		if err != nil {
 			return nil, err
 		}
@@ -92,9 +95,9 @@ func (p *Parser) Parse() (*SGFNode, error) {
 	return nil, fmt.Errorf("unexpected %c", c)
 }
 
-func (p *Parser) SkipWhitespace() {
+func (p *Parser) skipWhitespace() {
 	for {
-		if IsWhitespace(p.peek(0)) {
+		if isWhitespace(p.peek(0)) {
 			p.read()
 		} else {
 			break
@@ -102,7 +105,7 @@ func (p *Parser) SkipWhitespace() {
 	}
 }
 
-func (p *Parser) SkipIfNot(r rune) {
+func (p *Parser) skipIfNot(r rune) {
 	for {
 		c := p.peek(0)
 		if c == rune(0) {
@@ -115,8 +118,8 @@ func (p *Parser) SkipIfNot(r rune) {
 	}
 }
 
-func (p *Parser) ParseKey() (string, error) {
-	s := ""
+func (p *Parser) parseKey() (string, error) {
+	sb := strings.Builder{}
 	for {
 		c := p.peek(0)
 		if c == 0 {
@@ -124,17 +127,17 @@ func (p *Parser) ParseKey() (string, error) {
 		} else if c >= 'a' && c <= 'z' {
 			r := p.read()
 			r -= 32
-			s += string([]rune{r})
+			sb.WriteRune(r)
 		} else if c < 'A' || c > 'Z' {
 			break
 		} else {
-			s += string([]rune{p.read()})
+			sb.WriteRune(p.read())
 		}
 	}
-	return s, nil
+	return sb.String(), nil
 }
 
-func (p *Parser) ParseField() (string, error) {
+func (p *Parser) parseField() (string, error) {
 	sb := strings.Builder{}
 	for {
 		t := p.read()
@@ -150,8 +153,8 @@ func (p *Parser) ParseField() (string, error) {
 	return sb.String(), nil
 }
 
-func (p *Parser) ParseNodes() ([]*SGFNode, error) {
-	n, err := p.ParseNode()
+func (p *Parser) parseNodes() ([]*SGFNode, error) {
+	n, err := p.parseNode()
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +164,7 @@ func (p *Parser) ParseNodes() ([]*SGFNode, error) {
 		c := p.peek(0)
 		if c == ';' {
 			p.read()
-			next, err := p.ParseNode()
+			next, err := p.parseNode()
 			if err != nil {
 				return nil, err
 			}
@@ -179,25 +182,25 @@ type property struct {
 	values []string
 }
 
-func (p *Parser) ParseProperty() (*property, error) {
+func (p *Parser) parseProperty() (*property, error) {
 	prop := &property{}
 	c := p.peek(0)
 	if c < 'A' || c > 'Z' {
 		return nil, fmt.Errorf("bad property (expected key) %c", c)
 	}
-	key, err := p.ParseKey()
+	key, err := p.parseKey()
 	if err != nil {
 		return nil, err
 	}
 
 	prop.key = key
 
-	p.SkipWhitespace()
+	p.skipWhitespace()
 	if p.read() != '[' {
 		return nil, fmt.Errorf("bad property (expected field) %c", c)
 	}
 
-	fields, err := p.ParseOneOrMoreFields(key)
+	fields, err := p.parseOneOrMoreFields(key)
 	if err != nil {
 		return nil, err
 	}
@@ -207,10 +210,10 @@ func (p *Parser) ParseProperty() (*property, error) {
 	return prop, nil
 }
 
-func (p *Parser) ParseOneOrMoreFields(key string) ([]string, error) {
+func (p *Parser) parseOneOrMoreFields(key string) ([]string, error) {
 	fields := []string{}
 	// require parse first field
-	field, err := p.ParseOneField(key)
+	field, err := p.parseOneField(key)
 	if err != nil {
 		return nil, err
 	}
@@ -219,10 +222,10 @@ func (p *Parser) ParseOneOrMoreFields(key string) ([]string, error) {
 
 	// potentially parse more fields
 	for {
-		p.SkipWhitespace()
+		p.skipWhitespace()
 		if p.peek(0) == '[' {
 			p.read()
-			field, err := p.ParseOneField(key)
+			field, err := p.parseOneField(key)
 			if err != nil {
 				return nil, err
 			}
@@ -234,8 +237,8 @@ func (p *Parser) ParseOneOrMoreFields(key string) ([]string, error) {
 	return fields, nil
 }
 
-func (p *Parser) ParseOneField(key string) (string, error) {
-	field, err := p.ParseField()
+func (p *Parser) parseOneField(key string) (string, error) {
+	field, err := p.parseField()
 	if err != nil {
 		return "", err
 	}
@@ -246,38 +249,38 @@ func (p *Parser) ParseOneField(key string) (string, error) {
 	return field, nil
 }
 
-func (p *Parser) ParseNode() (*SGFNode, error) {
+func (p *Parser) parseNode() (*SGFNode, error) {
 	n := &SGFNode{}
 	for {
-		p.SkipWhitespace()
+		p.skipWhitespace()
 		c := p.peek(0)
 		if c == '(' || c == ';' || c == ')' {
 			break
 		}
 
-		prop, err := p.ParseProperty()
+		prop, err := p.parseProperty()
 		if err != nil {
 			return nil, err
 		}
 
 		n.SetField(prop.key, prop.values)
 
-		p.SkipWhitespace()
+		p.skipWhitespace()
 	}
 
 	return n, nil
 }
 
-func (p *Parser) ParseBranch() (*SGFNode, error) {
+func (p *Parser) parseBranch() (*SGFNode, error) {
 	var root *SGFNode
 	var current *SGFNode
 	for {
-		p.SkipWhitespace()
+		p.skipWhitespace()
 		c := p.read()
 		if c == 0 {
 			return nil, fmt.Errorf("unfinished branch, expected ')'")
 		} else if c == ';' {
-			nodes, err := p.ParseNodes()
+			nodes, err := p.parseNodes()
 			if err != nil {
 				return nil, err
 			}
@@ -291,7 +294,7 @@ func (p *Parser) ParseBranch() (*SGFNode, error) {
 				current = cur
 			}
 		} else if c == '(' {
-			newBranch, err := p.ParseBranch()
+			newBranch, err := p.parseBranch()
 			if err != nil {
 				return nil, err
 			}
