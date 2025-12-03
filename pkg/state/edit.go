@@ -20,7 +20,7 @@ func (s *State) addFieldNode(fields core.Fields, index int) *core.Diff {
 	if index == -1 {
 		index = tmp
 	}
-	n := core.NewTreeNode(nil, core.NoColor, index, s.current, fields)
+	n := core.NewTreeNode(nil, core.Empty, index, s.current, fields)
 	s.nodes[index] = n
 	if s.root == nil {
 		s.root = n

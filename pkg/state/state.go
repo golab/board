@@ -230,7 +230,7 @@ func NewState(size int, initRoot bool) *State {
 	index := 0
 	if initRoot {
 		fields := core.Fields{}
-		root = core.NewTreeNode(nil, core.NoColor, 0, nil, fields)
+		root = core.NewTreeNode(nil, core.Empty, 0, nil, fields)
 		root.AddField("GM", "1")
 		root.AddField("FF", "4")
 		root.AddField("CA", "UTF-8")

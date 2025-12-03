@@ -177,5 +177,5 @@ func TestUUID(t *testing.T) {
 func TestColor(t *testing.T) {
 	assert.Equal(t, core.Black.String(), "B")
 	assert.Equal(t, core.White.String(), "W")
-	assert.Equal(t, core.NoColor.String(), "+")
+	assert.Equal(t, core.Empty.String(), "+")
 }

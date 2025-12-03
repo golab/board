@@ -58,6 +58,16 @@ func (cs CoordSet) RemoveAll(ds CoordSet) {
 	}
 }
 
+func (cs CoordSet) Intersect(ds CoordSet) CoordSet {
+	result := NewCoordSet()
+	for k, v := range ds {
+		if _, ok := cs[k]; ok {
+			result.Add(v)
+		}
+	}
+	return result
+}
+
 // String is for debugging
 func (cs CoordSet) String() string {
 	s := "["

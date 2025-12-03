@@ -716,6 +716,6 @@ func TestPushHead(t *testing.T) {
 
 	// this white stone captures two black stones
 	room.PushHead(1, 11, core.White)
-	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 11.0)), core.NoColor)
-	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 10.0)), core.NoColor)
+	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 11.0)), core.Empty)
+	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 10.0)), core.Empty)
 }
