@@ -369,13 +369,13 @@ func (b *Board) FindArea(start *Coord, dead CoordSet) (CoordSet, EmptyPointType)
 	return elts, t
 }
 
-func (b *Board) DetectAtariDame(dead, dame CoordSet) CoordSet {
+func (b *Board) detectAtariDame(col Color, dead, dame CoordSet) CoordSet {
 	// first make a copy
 	c := b.Copy()
 
 	// then fill in all the dame with a "filler"
 	for _, d := range dame.List() {
-		c.Set(d, FillDame)
+		c.Set(d, col)
 	}
 
 	// these are the "atari" dame to be returned
@@ -409,6 +409,17 @@ func (b *Board) DetectAtariDame(dead, dame CoordSet) CoordSet {
 		}
 	}
 	return points
+}
+
+func (b *Board) DetectAtariDame(dead, dame CoordSet) CoordSet {
+	// first detect by filling in dame with FillBlack
+	bDame := b.detectAtariDame(FillBlack, dead, dame)
+
+	// then FillWhite
+	wDame := b.detectAtariDame(FillWhite, dead, dame)
+
+	// return the intersection
+	return bDame.Intersect(wDame)
 }
 
 type ScoreResult struct {
