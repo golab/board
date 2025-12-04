@@ -182,6 +182,75 @@ export function create_buttons(_state) {
     add_tooltip(settings_button, "Settings");
     button_row3.appendChild(settings_button);
 
+    //////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////
+
+    let dropdown_div = document.createElement("div");
+    dropdown_div.hidden = true;
+    dropdown_div.classList.add("dropdown");
+    dropdown_div.id = "dropdown-div";
+    dropdown_div.style.maxWidth = "40px";
+
+    let toggle = new_icon_button("");
+    toggle.classList.add("dropdown-toggle");
+    toggle.setAttribute("type", "button");
+    toggle.setAttribute("data-bs-toggle", "dropdown");
+    dropdown_div.appendChild(toggle);
+
+    let ul = document.createElement("ul");
+    ul.classList.add("dropdown-menu");
+    ul.id = "dropdown-menu";
+    ul.style.maxWidth = "50px";
+    dropdown_div.appendChild(ul);
+
+    button_row3.appendChild(dropdown_div);
+
+    ///////////
+    function reveal_dropdown() {
+        dropdown_div.hidden = false;
+    }
+    
+    function hide_dropdown() {
+        dropdown_div.hidden = true;
+    }   
+
+    function dropdown_add(elt) {
+        let li = document.createElement("li");
+        let wrapper = document.createElement("div");
+        wrapper.classList.add("dropdown-item");
+        wrapper.appendChild(elt);
+        li.appendChild(wrapper);
+        ul.appendChild(li);
+    }
+
+    function row3_to_dropdown() {
+        let children = [];
+        for (let child of button_row3.children) {
+            children.push(child);
+        }
+        for (let child of children) {
+            dropdown_add(child);
+        }
+        reveal_dropdown();
+    }
+
+    function dropdown_to_row3() {
+        let children = [];
+        for (let li of ul.children) {
+            children.push(li);
+        }
+        for (let li of children) {
+            ul.removeChild(li);
+            let wrapper = li.children[0];
+            let child = wrapper.children[0];
+            button_row3.appendChild(child);
+        }
+        hide_dropdown();
+    }
+    //////////
+
+    //dropdown_add(settings_button);
+
     // arrows
 
     // rewind
@@ -210,6 +279,8 @@ export function create_buttons(_state) {
     let fastforward_button = new_icon_button("bi-fast-forward-fill", () => state.network_handler.prepare_fastforward());
     add_tooltip(fastforward_button, "Fast forward to end");
     arrows.appendChild(fastforward_button);
+
+    arrows.appendChild(dropdown_div);
 
     // TODO: rethink this please
     let w = (state.width + state.pad*2);
@@ -298,6 +369,7 @@ export function create_buttons(_state) {
             p.insertBefore(b2_container, black_namecard_container);
 
             white_namecard_container.classList.remove("ps-lg-4");
+            dropdown_to_row3();
 
         } else if (row1_length > b1_container.offsetWidth+4 ||
             row2_length > b2_container.offsetWidth+4) {
@@ -318,9 +390,12 @@ export function create_buttons(_state) {
             p.insertBefore(black_namecard_container, b2_container);
 
             white_namecard_container.classList.add("ps-lg-4");
+            row3_to_dropdown();
         }
     }
-    return {resize,};
+    return {
+        resize,
+    };
 }
 
 function children_width(elt) {
