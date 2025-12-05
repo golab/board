@@ -25,7 +25,7 @@ import (
 type Room interface {
 	HeadColor() core.Color
 	PushHead(int, int, core.Color)
-	GenerateFullFrame(core.TreeJSONType) *core.Frame
+	BroadcastFullFrame()
 	AddStones([]*core.Stone)
 	Broadcast(event.Event)
 	UploadSGF(string) event.Event
@@ -255,18 +255,13 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			y := int(move[1].(float64))
 
 			col := core.Black
-			//curColor := o.Room.State.Head.Color
 			curColor := o.Room.HeadColor()
 			if curColor == core.Black {
 				col = core.White
 			}
-			//o.Room.State.PushHead(x, y, col)
 			o.Room.PushHead(x, y, col)
 
-			//frame := o.Room.State.GenerateFullFrame(core.Full)
-			frame := o.Room.GenerateFullFrame(core.Full)
-			evt := event.FrameEvent(frame)
-			o.Room.Broadcast(evt)
+			o.Room.BroadcastFullFrame()
 
 		} else if topic == fmt.Sprintf("game/%d/gamedata", gameID) {
 			payload := arr[1].(map[string]any)
@@ -325,10 +320,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			o.Room.AddStones(movesArr)
 
 			// Send full board update after adding pattern
-			//frame := o.Room.State.GenerateFullFrame(core.Full)
-			frame := o.Room.GenerateFullFrame(core.Full)
-			evt := event.FrameEvent(frame)
-			o.Room.Broadcast(evt)
+			o.Room.BroadcastFullFrame()
 		}
 	}
 	return nil

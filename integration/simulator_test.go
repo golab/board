@@ -21,6 +21,7 @@ import (
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/event"
+	"github.com/jarednogo/board/pkg/state"
 )
 
 func TestSim1(t *testing.T) {
@@ -245,7 +246,7 @@ func TestScoring1(t *testing.T) {
 	sim, err := integration.SimWithEvents("room123", evts)
 	assert.NoError(t, err)
 	saved := sim.Clients[0].SavedEvents
-	final, ok := (saved[len(saved)-1].Value()).(*core.Frame)
+	final, ok := (saved[len(saved)-1].Value()).(*state.Frame)
 	assert.True(t, ok)
 	assert.Equal(t, final.BlackCaps, 92)
 	assert.Equal(t, final.WhiteCaps, 74)
@@ -266,7 +267,7 @@ func TestScoring3(t *testing.T) {
 	sim, err := integration.SimWithEvents("room123", evts)
 	assert.NoError(t, err)
 	saved := sim.Clients[0].SavedEvents
-	final, ok := (saved[len(saved)-1].Value()).(*core.Frame)
+	final, ok := (saved[len(saved)-1].Value()).(*state.Frame)
 	assert.True(t, ok)
 	assert.Equal(t, final.BlackCaps, 29)
 	assert.Equal(t, final.WhiteCaps, 90)

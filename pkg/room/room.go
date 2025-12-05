@@ -363,7 +363,7 @@ func (r *Room) UploadSGF(sgf string) event.Event {
 	r.SetState(s)
 
 	// replace evt with frame data
-	frame := r.GenerateFullFrame(core.Full)
+	frame := r.GenerateFullFrame(state.Full)
 	return event.FrameEvent(frame)
 }
 
@@ -401,7 +401,7 @@ func (r *Room) RegisterConnection(ec event.EventChannel) string {
 	r.mu.Unlock()
 
 	// send initial state
-	frame := r.GenerateFullFrame(core.Full)
+	frame := r.GenerateFullFrame(state.Full)
 	evt := event.FrameEvent(frame)
 	ec.SendEvent(evt) //nolint:errcheck
 
@@ -491,7 +491,7 @@ func (r *Room) HasPlugin(key string) bool {
 	return ok
 }
 
-func (r *Room) Execute(cmd state.Command) (*core.Frame, error) {
+func (r *Room) Execute(cmd state.Command) (*state.Frame, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return cmd.Execute(r.state)
@@ -504,7 +504,7 @@ func (r *Room) Size() int {
 	return r.state.Size()
 }
 
-func (r *Room) GenerateFullFrame(t core.TreeJSONType) *core.Frame {
+func (r *Room) GenerateFullFrame(t state.TreeJSONType) *state.Frame {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return r.state.GenerateFullFrame(t)
@@ -569,4 +569,10 @@ func (r *Room) Board() *core.Board {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return r.state.Board().Copy()
+}
+
+func (r *Room) BroadcastFullFrame() {
+	frame := r.GenerateFullFrame(state.Full)
+	evt := event.FrameEvent(frame)
+	r.Broadcast(evt)
 }

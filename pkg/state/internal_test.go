@@ -136,7 +136,7 @@ func TestStateJSON(t *testing.T) {
 	assert.Equal(t, j.NextIndex, 9)
 	assert.Equal(t, j.Location, "0,0,0,0")
 
-	tr := s.saveTree(core.FullFrame)
+	tr := s.saveTree(FullFrame)
 	assert.Equal(t, tr.Depth, 8)
 	assert.Equal(t, tr.Current, 4)
 	assert.Equal(t, tr.Up, 0)

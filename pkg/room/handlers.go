@@ -261,7 +261,7 @@ func (r *Room) handleTrash(evt event.Event) event.Event {
 	// reuse old inputbuffer
 	r.SetInputBuffer(oldBuffer)
 
-	frame := r.GenerateFullFrame(core.Full)
+	frame := r.GenerateFullFrame(state.Full)
 	bcast := event.FrameEvent(frame)
 	bcast.SetUser(evt.User())
 	return bcast
@@ -380,7 +380,7 @@ func (r *Room) broadcastAfter(handler EventHandler) EventHandler {
 func (r *Room) broadcastFullFrameAfter(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
 		evt = handler(evt)
-		frame := r.GenerateFullFrame(core.Full)
+		frame := r.GenerateFullFrame(state.Full)
 		bcast := event.FrameEvent(frame)
 		r.Broadcast(bcast)
 		return evt

@@ -19,7 +19,7 @@ import (
 )
 
 type Command interface {
-	Execute(*State) (*core.Frame, error)
+	Execute(*State) (*Frame, error)
 }
 
 type addStoneCommand struct {
@@ -31,7 +31,7 @@ func NewAddStoneCommand(coord *core.Coord, color core.Color) Command {
 	return &addStoneCommand{coord, color}
 }
 
-func (cmd *addStoneCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *addStoneCommand) Execute(s *State) (*Frame, error) {
 	x := cmd.coord.X
 	y := cmd.coord.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
@@ -42,7 +42,7 @@ func (cmd *addStoneCommand) Execute(s *State) (*core.Frame, error) {
 	// this is just a gotoindex operation
 	if child, ok := s.current.HasChild(cmd.coord, cmd.color); ok {
 		s.gotoIndex(child) //nolint: errcheck
-		return s.GenerateFullFrame(core.CurrentAndPreferred), nil
+		return s.GenerateFullFrame(CurrentAndPreferred), nil
 	}
 
 	// do nothing on a suicide move
@@ -61,13 +61,13 @@ func (cmd *addStoneCommand) Execute(s *State) (*core.Frame, error) {
 
 	marks := s.generateMarks()
 
-	return &core.Frame{
-		Type:      core.DiffFrame,
+	return &Frame{
+		Type:      DiffFrame,
 		Diff:      diff,
 		Marks:     marks,
 		Comments:  nil,
 		Metadata:  nil,
-		TreeJSON:  s.saveTree(core.PartialNodes),
+		TreeJSON:  s.saveTree(PartialNodes),
 		BlackCaps: s.current.BlackCaps,
 		WhiteCaps: s.current.WhiteCaps,
 	}, nil
@@ -81,7 +81,7 @@ func NewPassCommand(color core.Color) Command {
 	return &passCommand{color}
 }
 
-func (cmd *passCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *passCommand) Execute(s *State) (*Frame, error) {
 	fields := core.Fields{}
 	key := "B"
 	if cmd.color == core.White {
@@ -90,13 +90,13 @@ func (cmd *passCommand) Execute(s *State) (*core.Frame, error) {
 	fields.AddField(key, "")
 	s.addPassNode(cmd.color, fields, -1)
 
-	return &core.Frame{
-		Type:      core.DiffFrame,
+	return &Frame{
+		Type:      DiffFrame,
 		Diff:      nil,
 		Marks:     nil,
 		Comments:  nil,
 		Metadata:  nil,
-		TreeJSON:  s.saveTree(core.PartialNodes),
+		TreeJSON:  s.saveTree(PartialNodes),
 		BlackCaps: s.current.BlackCaps,
 		WhiteCaps: s.current.WhiteCaps,
 	}, nil
@@ -110,7 +110,7 @@ func NewRemoveStoneCommand(coord *core.Coord) Command {
 	return &removeStoneCommand{coord}
 }
 
-func (cmd *removeStoneCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *removeStoneCommand) Execute(s *State) (*Frame, error) {
 	x := cmd.coord.X
 	y := cmd.coord.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
@@ -121,13 +121,13 @@ func (cmd *removeStoneCommand) Execute(s *State) (*core.Frame, error) {
 	fields.AddField("AE", cmd.coord.ToLetters())
 	diff := s.addFieldNode(fields, -1)
 
-	return &core.Frame{
-		Type:      core.DiffFrame,
+	return &Frame{
+		Type:      DiffFrame,
 		Diff:      diff,
 		Marks:     nil,
 		Comments:  nil,
 		Metadata:  nil,
-		TreeJSON:  s.saveTree(core.PartialNodes),
+		TreeJSON:  s.saveTree(PartialNodes),
 		BlackCaps: s.current.BlackCaps,
 		WhiteCaps: s.current.WhiteCaps,
 	}, nil
@@ -141,7 +141,7 @@ func NewAddTriangleCommand(coord *core.Coord) Command {
 	return &addTriangleCommand{coord}
 }
 
-func (cmd *addTriangleCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *addTriangleCommand) Execute(s *State) (*Frame, error) {
 	x := cmd.coord.X
 	y := cmd.coord.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
@@ -160,7 +160,7 @@ func NewAddSquareCommand(coord *core.Coord) Command {
 	return &addSquareCommand{coord}
 }
 
-func (cmd *addSquareCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *addSquareCommand) Execute(s *State) (*Frame, error) {
 	x := cmd.coord.X
 	y := cmd.coord.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
@@ -180,7 +180,7 @@ func NewAddLetterCommand(coord *core.Coord, letter string) Command {
 	return &addLetterCommand{coord, letter}
 }
 
-func (cmd *addLetterCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *addLetterCommand) Execute(s *State) (*Frame, error) {
 	x := cmd.coord.X
 	y := cmd.coord.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
@@ -202,7 +202,7 @@ func NewAddNumberCommand(coord *core.Coord, number int) Command {
 	return &addNumberCommand{coord, number}
 }
 
-func (cmd *addNumberCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *addNumberCommand) Execute(s *State) (*Frame, error) {
 	x := cmd.coord.X
 	y := cmd.coord.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
@@ -223,7 +223,7 @@ func NewRemoveMarkCommand(coord *core.Coord) Command {
 	return &removeMarkCommand{coord}
 }
 
-func (cmd *removeMarkCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *removeMarkCommand) Execute(s *State) (*Frame, error) {
 	l := cmd.coord.ToLetters()
 	for _, field := range s.current.AllFields() {
 		key := field.Key
@@ -247,17 +247,17 @@ func NewLeftCommand() Command {
 	return &leftCommand{}
 }
 
-func (cmd *leftCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *leftCommand) Execute(s *State) (*Frame, error) {
 	diff := s.left()
 	marks := s.generateMarks()
 	comments := s.generateComments()
-	return &core.Frame{
-		Type:      core.DiffFrame,
+	return &Frame{
+		Type:      DiffFrame,
 		Diff:      diff,
 		Marks:     marks,
 		Comments:  comments,
 		Metadata:  nil,
-		TreeJSON:  s.saveTree(core.CurrentOnly),
+		TreeJSON:  s.saveTree(CurrentOnly),
 		BlackCaps: s.current.BlackCaps,
 		WhiteCaps: s.current.WhiteCaps,
 	}, nil
@@ -269,18 +269,18 @@ func NewRightCommand() Command {
 	return &rightCommand{}
 }
 
-func (cmd *rightCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *rightCommand) Execute(s *State) (*Frame, error) {
 	diff := s.right()
 	marks := s.generateMarks()
 	comments := s.generateComments()
 
-	return &core.Frame{
-		Type:      core.DiffFrame,
+	return &Frame{
+		Type:      DiffFrame,
 		Diff:      diff,
 		Marks:     marks,
 		Comments:  comments,
 		Metadata:  nil,
-		TreeJSON:  s.saveTree(core.CurrentOnly),
+		TreeJSON:  s.saveTree(CurrentOnly),
 		BlackCaps: s.current.BlackCaps,
 		WhiteCaps: s.current.WhiteCaps,
 	}, nil
@@ -292,18 +292,18 @@ func NewUpCommand() Command {
 	return &upCommand{}
 }
 
-func (cmd *upCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *upCommand) Execute(s *State) (*Frame, error) {
 	s.up()
 	// for the current mark
 	marks := s.generateMarks()
 
-	return &core.Frame{
-		Type:      core.DiffFrame,
+	return &Frame{
+		Type:      DiffFrame,
 		Diff:      nil,
 		Marks:     marks,
 		Comments:  nil,
 		Metadata:  nil,
-		TreeJSON:  s.saveTree(core.CurrentAndPreferred),
+		TreeJSON:  s.saveTree(CurrentAndPreferred),
 		BlackCaps: s.current.BlackCaps,
 		WhiteCaps: s.current.WhiteCaps,
 	}, nil
@@ -315,19 +315,19 @@ func NewDownCommand() Command {
 	return &downCommand{}
 }
 
-func (cmd *downCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *downCommand) Execute(s *State) (*Frame, error) {
 	s.down()
 
 	// for the current mark
 	marks := s.generateMarks()
 
-	return &core.Frame{
-		Type:      core.DiffFrame,
+	return &Frame{
+		Type:      DiffFrame,
 		Diff:      nil,
 		Marks:     marks,
 		Comments:  nil,
 		Metadata:  nil,
-		TreeJSON:  s.saveTree(core.CurrentAndPreferred),
+		TreeJSON:  s.saveTree(CurrentAndPreferred),
 		BlackCaps: s.current.BlackCaps,
 		WhiteCaps: s.current.WhiteCaps,
 	}, nil
@@ -339,9 +339,9 @@ func NewRewindCommand() Command {
 	return &rewindCommand{}
 }
 
-func (cmd *rewindCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *rewindCommand) Execute(s *State) (*Frame, error) {
 	s.rewind()
-	return s.GenerateFullFrame(core.CurrentOnly), nil
+	return s.GenerateFullFrame(CurrentOnly), nil
 }
 
 type fastForwardCommand struct{}
@@ -350,9 +350,9 @@ func NewFastForwardCommand() Command {
 	return &fastForwardCommand{}
 }
 
-func (cmd *fastForwardCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *fastForwardCommand) Execute(s *State) (*Frame, error) {
 	s.fastForward()
-	return s.GenerateFullFrame(core.CurrentOnly), nil
+	return s.GenerateFullFrame(CurrentOnly), nil
 }
 
 type gotoGridCommand struct {
@@ -363,9 +363,9 @@ func NewGotoGridCommand(index int) Command {
 	return &gotoGridCommand{index}
 }
 
-func (cmd *gotoGridCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *gotoGridCommand) Execute(s *State) (*Frame, error) {
 	s.gotoIndex(cmd.index) //nolint: errcheck
-	return s.GenerateFullFrame(core.CurrentAndPreferred), nil
+	return s.GenerateFullFrame(CurrentAndPreferred), nil
 }
 
 type gotoCoordCommand struct {
@@ -376,11 +376,11 @@ func NewGotoCoordCommand(coord *core.Coord) Command {
 	return &gotoCoordCommand{coord}
 }
 
-func (cmd *gotoCoordCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *gotoCoordCommand) Execute(s *State) (*Frame, error) {
 	x := cmd.coord.X
 	y := cmd.coord.Y
 	s.gotoCoord(x, y)
-	return s.GenerateFullFrame(core.CurrentAndPreferred), nil
+	return s.GenerateFullFrame(CurrentAndPreferred), nil
 }
 
 type commentCommand struct {
@@ -391,7 +391,7 @@ func NewCommentCommand(text string) Command {
 	return &commentCommand{text}
 }
 
-func (cmd *commentCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *commentCommand) Execute(s *State) (*Frame, error) {
 	s.current.AddField("C", cmd.text+"\n")
 	return nil, nil
 }
@@ -408,7 +408,7 @@ func NewDrawCommand(x0, y0, x1, y1 float64, color string) Command {
 	return &drawCommand{x0, y0, x1, y1, color}
 }
 
-func (cmd *drawCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *drawCommand) Execute(s *State) (*Frame, error) {
 	value := fmt.Sprintf(
 		"%.4f:%.4f:%.4f:%.4f:%s",
 		cmd.x0,
@@ -426,7 +426,7 @@ func NewErasePenCommand() Command {
 	return &erasePenCommand{}
 }
 
-func (cmd *erasePenCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *erasePenCommand) Execute(s *State) (*Frame, error) {
 	s.current.DeleteField("PX")
 	return nil, nil
 }
@@ -437,17 +437,17 @@ func NewCutCommand() Command {
 	return &cutCommand{}
 }
 
-func (cmd *cutCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *cutCommand) Execute(s *State) (*Frame, error) {
 	diff := s.cut()
 	marks := s.generateMarks()
 	comments := s.generateComments()
-	return &core.Frame{
-		Type:      core.DiffFrame,
+	return &Frame{
+		Type:      DiffFrame,
 		Diff:      diff,
 		Marks:     marks,
 		Comments:  comments,
 		Metadata:  nil,
-		TreeJSON:  s.saveTree(core.Full),
+		TreeJSON:  s.saveTree(Full),
 		BlackCaps: s.current.BlackCaps,
 		WhiteCaps: s.current.WhiteCaps,
 	}, nil
@@ -459,7 +459,7 @@ func NewCopyCommand() Command {
 	return &copyCommand{}
 }
 
-func (cmd *copyCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *copyCommand) Execute(s *State) (*Frame, error) {
 	s.clipboard = s.current.Copy()
 	return nil, nil
 }
@@ -470,7 +470,7 @@ func NewPasteCommand() Command {
 	return &pasteCommand{}
 }
 
-func (cmd *pasteCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *pasteCommand) Execute(s *State) (*Frame, error) {
 	if s.clipboard == nil {
 		return nil, nil
 	}
@@ -478,13 +478,13 @@ func (cmd *pasteCommand) Execute(s *State) (*core.Frame, error) {
 	s.paste()
 
 	marks := s.generateMarks()
-	return &core.Frame{
-		Type:      core.DiffFrame,
+	return &Frame{
+		Type:      DiffFrame,
 		Diff:      nil,
 		Marks:     marks,
 		Comments:  nil,
 		Metadata:  nil,
-		TreeJSON:  s.saveTree(core.Full),
+		TreeJSON:  s.saveTree(Full),
 		BlackCaps: s.current.BlackCaps,
 		WhiteCaps: s.current.WhiteCaps,
 	}, nil
@@ -498,7 +498,7 @@ func NewGraftCommand(text string) Command {
 	return &graftCommand{text}
 }
 
-func (cmd *graftCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *graftCommand) Execute(s *State) (*Frame, error) {
 	tokens := strings.Split(cmd.text, " ")
 
 	// currently accepting the first arg as a move number or not
@@ -561,14 +561,14 @@ func NewScoreCommand() Command {
 	return &scoreCommand{}
 }
 
-func (cmd *scoreCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *scoreCommand) Execute(s *State) (*Frame, error) {
 	scoreResult := s.board.Score(s.markedDead, s.markedDame)
 	blackArea := scoreResult.BlackArea
 	whiteArea := scoreResult.WhiteArea
 	blackDead := scoreResult.BlackDead
 	whiteDead := scoreResult.WhiteDead
 	dame := scoreResult.Dame
-	frame := &core.Frame{
+	frame := &Frame{
 		BlackCaps: s.current.BlackCaps + len(blackArea) + len(whiteDead),
 		WhiteCaps: s.current.WhiteCaps + len(whiteArea) + len(blackDead),
 		BlackArea: blackArea,
@@ -587,7 +587,7 @@ func NewMarkDeadCommand(coord *core.Coord) Command {
 	return &markDeadCommand{coord}
 }
 
-func (cmd *markDeadCommand) Execute(s *State) (*core.Frame, error) {
+func (cmd *markDeadCommand) Execute(s *State) (*Frame, error) {
 	x := cmd.coord.X
 	y := cmd.coord.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {

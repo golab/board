@@ -37,26 +37,26 @@ func (s *State) Save() *StateJSON {
 	return stateStruct
 }
 
-func (s *State) saveTree(t core.TreeJSONType) *core.TreeJSON {
+func (s *State) saveTree(t TreeJSONType) *TreeJSON {
 	// only really used when we have a partial tree
 	up := 0
 	root := 0
 
 	// nodes
-	var nodes map[int]*core.NodeJSON
+	var nodes map[int]*NodeJSON
 
-	if t >= core.PartialNodes {
-		nodes = make(map[int]*core.NodeJSON)
+	if t >= PartialNodes {
+		nodes = make(map[int]*NodeJSON)
 		var start *core.TreeNode
 		// we can choose to send the full or just a partial tree
 		// based on which node we start on
 
 		switch t {
-		case core.PartialNodes:
+		case PartialNodes:
 			start = s.current
 			up = start.Up.Index
 			root = start.Index
-		case core.Full:
+		case Full:
 			start = s.root
 		}
 		core.Fmap(func(n *core.TreeNode) {
@@ -64,7 +64,7 @@ func (s *State) saveTree(t core.TreeJSONType) *core.TreeJSON {
 			for _, c := range n.Down {
 				down = append(down, c.Index)
 			}
-			nodes[n.Index] = &core.NodeJSON{
+			nodes[n.Index] = &NodeJSON{
 				Color: n.Color,
 				Down:  down,
 				Depth: n.Depth,
@@ -75,7 +75,7 @@ func (s *State) saveTree(t core.TreeJSONType) *core.TreeJSON {
 
 	// preferred
 	var preferred []int
-	if t >= core.CurrentAndPreferred {
+	if t >= CurrentAndPreferred {
 		node := s.root
 		preferred = []int{node.Index}
 		for len(node.Down) != 0 {
@@ -84,7 +84,7 @@ func (s *State) saveTree(t core.TreeJSONType) *core.TreeJSON {
 		}
 	}
 
-	return &core.TreeJSON{
+	return &TreeJSON{
 		Nodes:     nodes,
 		Current:   s.current.Index,
 		Preferred: preferred,
