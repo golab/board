@@ -220,12 +220,16 @@ export function create_modals(_state) {
         let nickname_bar = document.createElement("input")
         nickname_bar.setAttribute("class", "form-control");
         nickname_bar.id = id + "-nickname-bar";
+
+        nickname_bar.value = localStorage.getItem("nickname") || "";
+
         nickname_bar.addEventListener(
             "keypress",
             (event) => {
                 if (event.key == "Enter") {
                     hide_modal(id);
                     let nickname = nickname_bar.value;
+                    localStorage.setItem("nickname", nickname);
                     state.network_handler.prepare_nickname(nickname);
                 }
             }
