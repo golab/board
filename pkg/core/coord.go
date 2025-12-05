@@ -72,7 +72,7 @@ func (cs CoordSet) Intersect(ds CoordSet) CoordSet {
 func (cs CoordSet) String() string {
 	s := "["
 	for k := range cs {
-		s += FromIndex(k).ToLetters()
+		s += indexToCoord(k).ToLetters()
 		s += " "
 	}
 	s += "]"
@@ -164,7 +164,7 @@ func NewCoord(x, y int) *Coord {
 	return allCoords[x][y]
 }
 
-func FromIndex(i int) *Coord {
+func indexToCoord(i int) *Coord {
 	return NewCoord(i/maxBoardSize, i%maxBoardSize)
 }
 
