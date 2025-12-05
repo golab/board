@@ -155,6 +155,12 @@ type Coord struct {
 }
 
 func NewCoord(x, y int) *Coord {
+	if x < 0 || x >= len(allCoords) {
+		return nil
+	}
+	if y < 0 || y >= len(allCoords[x]) {
+		return nil
+	}
 	return allCoords[x][y]
 }
 

@@ -100,7 +100,10 @@ func (b *Board) Set(c *Coord, col Color) {
 }
 
 func (b *Board) Get(c *Coord) Color {
-	if c.Y >= b.Size || c.X >= b.Size {
+	if c == nil {
+		return Empty
+	}
+	if c.Y >= b.Size || c.X >= b.Size || c.Y < 0 || c.X < 0 {
 		return Empty
 	}
 	return b.Points[c.Y][c.X]
@@ -225,6 +228,7 @@ func (b *Board) Legal(start *Coord, col Color) bool {
 	nbs := b.Neighbors(start)
 	for _, nb := range nbs {
 		if b.Get(nb) == Empty {
+			// unreachable
 			continue
 		}
 		gp := b.FindGroup(nb)

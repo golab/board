@@ -15,8 +15,63 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/pkg/core"
 )
+
+func TestString(t *testing.T) {
+	b := core.NewBoard(9)
+	b.Set(core.NewCoord(1, 0), core.Black)
+	b.Set(core.NewCoord(2, 0), core.Black)
+	b.Set(core.NewCoord(3, 0), core.Black)
+	g := b.FindGroup(core.NewCoord(3, 0))
+	assert.Equal(t, g.Color, core.Black)
+	assert.Equal(t, len(g.String()), 16)
+}
+
+func TestEmptyGroup(t *testing.T) {
+	g := core.NewGroup(nil, nil, core.Empty)
+	assert.Equal(t, g.Color, core.Empty)
+	assert.NotNil(t, g.Coords)
+	assert.NotNil(t, g.Libs)
+}
+
+func TestGetEmpty(t *testing.T) {
+	b := core.NewBoard(9)
+	assert.Equal(t, b.Get(core.NewCoord(9, 0)), core.Empty)
+	assert.Equal(t, b.Get(core.NewCoord(0, 9)), core.Empty)
+	assert.Equal(t, b.Get(core.NewCoord(-1, 0)), core.Empty)
+	assert.Equal(t, b.Get(core.NewCoord(0, -1)), core.Empty)
+}
+
+func TestFindGroupEmpty(t *testing.T) {
+	b := core.NewBoard(9)
+	g := b.FindGroup(core.NewCoord(0, 0))
+	assert.Equal(t, g.Color, core.Empty)
+	assert.NotNil(t, g.Coords)
+	assert.NotNil(t, g.Libs)
+}
+
+func TestExistingLegal(t *testing.T) {
+	b := core.NewBoard(9)
+	b.Set(core.NewCoord(1, 0), core.Black)
+	legal := b.Legal(core.NewCoord(1, 0), core.Black)
+	assert.False(t, legal)
+}
+
+func TestLegalMove(t *testing.T) {
+	b := core.NewBoard(9)
+	b.Set(core.NewCoord(1, 0), core.Black)
+	diff := b.Move(core.NewCoord(1, 0), core.Black)
+	assert.Zero(t, diff)
+}
+
+func TestFindAreaNonempty(t *testing.T) {
+	b := core.NewBoard(9)
+	b.Set(core.NewCoord(1, 0), core.Black)
+	_, typ := b.FindArea(core.NewCoord(1, 0), nil)
+	assert.Equal(t, typ, core.NotCovered)
+}
 
 var oppTests = []struct {
 	input  core.Color
@@ -110,7 +165,9 @@ func TestWouldKill(t *testing.T) {
 	b.Move(core.NewCoord(10, 11), core.White)
 	start := core.NewCoord(10, 12)
 	s := b.WouldKill(start, core.White)
-	t.Logf("%v", s)
+	require.Equal(t, len(s.Coords), 1)
+	assert.Equal(t, s.Color, core.White)
+	assert.True(t, s.Coords[0].Equal(core.NewCoord(10, 11)))
 }
 
 func TestLegal(t *testing.T) {
@@ -364,4 +421,57 @@ func TestDetectAtariDame1(t *testing.T) {
 	ad := b.DetectAtariDame(dead, dame)
 
 	assert.True(t, ad.Has(core.NewCoord(2, 0)))
+}
+
+func TestDetectAtariDame2(t *testing.T) {
+	b := core.NewBoard(9)
+
+	b.Set(core.NewCoord(4, 0), core.Black)
+	b.Set(core.NewCoord(4, 1), core.Black)
+	b.Set(core.NewCoord(4, 2), core.Black)
+	b.Set(core.NewCoord(4, 3), core.Black)
+	b.Set(core.NewCoord(4, 4), core.Black)
+	b.Set(core.NewCoord(4, 5), core.Black)
+	b.Set(core.NewCoord(4, 6), core.Black)
+	b.Set(core.NewCoord(4, 7), core.Black)
+	b.Set(core.NewCoord(4, 8), core.Black)
+	b.Set(core.NewCoord(2, 8), core.Black)
+
+	b.Set(core.NewCoord(5, 0), core.White)
+	b.Set(core.NewCoord(5, 1), core.White)
+	b.Set(core.NewCoord(5, 2), core.White)
+	b.Set(core.NewCoord(5, 3), core.White)
+	b.Set(core.NewCoord(5, 4), core.White)
+	b.Set(core.NewCoord(5, 5), core.White)
+	b.Set(core.NewCoord(5, 6), core.White)
+	b.Set(core.NewCoord(5, 7), core.White)
+	b.Set(core.NewCoord(5, 8), core.White)
+	b.Set(core.NewCoord(3, 8), core.White)
+
+	dead := core.NewCoordSet()
+	dead.Add(core.NewCoord(3, 8))
+	dame := core.NewCoordSet()
+	ad := b.DetectAtariDame(dead, dame)
+	assert.Equal(t, len(ad), 0)
+}
+
+func TestScoreDame(t *testing.T) {
+	b := core.NewBoard(5)
+	b.Set(core.NewCoord(1, 0), core.Black)
+	b.Set(core.NewCoord(1, 1), core.Black)
+	b.Set(core.NewCoord(1, 2), core.Black)
+	b.Set(core.NewCoord(1, 3), core.Black)
+	b.Set(core.NewCoord(1, 4), core.Black)
+
+	b.Set(core.NewCoord(3, 0), core.White)
+	b.Set(core.NewCoord(3, 1), core.White)
+	b.Set(core.NewCoord(3, 2), core.White)
+	b.Set(core.NewCoord(3, 3), core.White)
+	b.Set(core.NewCoord(3, 4), core.White)
+
+	dead := core.NewCoordSet()
+	dame := core.NewCoordSet()
+	dame.Add(core.NewCoord(2, 2))
+	sr := b.Score(dead, dame)
+	assert.Equal(t, len(sr.Dame), 5)
 }
