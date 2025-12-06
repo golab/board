@@ -16,6 +16,7 @@ import (
 
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 // FrameType can be either DiffFrame or FullFrame
@@ -28,32 +29,32 @@ const (
 
 // Frame provides the data for when the board needs to be updated (not the explorer)
 type Frame struct {
-	Type      FrameType     `json:"type"`
-	Diff      *core.Diff    `json:"diff"`
-	Marks     *Marks        `json:"marks"`
-	Comments  []string      `json:"comments"`
-	Metadata  *Metadata     `json:"metadata"`
-	TreeJSON  *TreeJSON     `json:"tree"`
-	BlackCaps int           `json:"black_caps"`
-	WhiteCaps int           `json:"white_caps"`
-	BlackArea []*core.Coord `json:"black_area"`
-	WhiteArea []*core.Coord `json:"white_area"`
-	Dame      []*core.Coord `json:"dame"`
+	Type      FrameType      `json:"type"`
+	Diff      *core.Diff     `json:"diff"`
+	Marks     *Marks         `json:"marks"`
+	Comments  []string       `json:"comments"`
+	Metadata  *Metadata      `json:"metadata"`
+	TreeJSON  *TreeJSON      `json:"tree"`
+	BlackCaps int            `json:"black_caps"`
+	WhiteCaps int            `json:"white_caps"`
+	BlackArea []*coord.Coord `json:"black_area"`
+	WhiteArea []*coord.Coord `json:"white_area"`
+	Dame      []*coord.Coord `json:"dame"`
 }
 
 // Marks provides data for any marks on the board
 type Marks struct {
-	Current   *core.Coord   `json:"current"`
-	Squares   []*core.Coord `json:"squares"`
-	Triangles []*core.Coord `json:"triangles"`
-	Labels    []*Label      `json:"labels"`
-	Pens      []*Pen        `json:"pens"`
+	Current   *coord.Coord   `json:"current"`
+	Squares   []*coord.Coord `json:"squares"`
+	Triangles []*coord.Coord `json:"triangles"`
+	Labels    []*Label       `json:"labels"`
+	Pens      []*Pen         `json:"pens"`
 }
 
 // Label can be any text, but typically single digits or letters
 type Label struct {
-	Coord *core.Coord `json:"coord"`
-	Text  string      `json:"text"`
+	Coord *coord.Coord `json:"coord"`
+	Text  string       `json:"text"`
 }
 
 // Pen contains a start and end coordinate plus a color
@@ -105,18 +106,18 @@ func (s *State) generateMarks() *Marks {
 		marks.Current = s.current.XY
 	}
 	if trs := s.current.GetField("TR"); len(trs) > 0 {
-		cs := core.NewCoordSet()
+		cs := coord.NewCoordSet()
 		for _, tr := range trs {
-			c := core.LettersToCoord(tr)
+			c := coord.LettersToCoord(tr)
 			cs.Add(c)
 		}
 		marks.Triangles = cs.List()
 	}
 
 	if sqs := s.current.GetField("SQ"); len(sqs) > 0 {
-		cs := core.NewCoordSet()
+		cs := coord.NewCoordSet()
 		for _, sq := range sqs {
-			c := core.LettersToCoord(sq)
+			c := coord.LettersToCoord(sq)
 			cs.Add(c)
 		}
 		marks.Squares = cs.List()
@@ -125,7 +126,7 @@ func (s *State) generateMarks() *Marks {
 		labels := []*Label{}
 		for _, lb := range lbs {
 			spl := strings.Split(lb, ":")
-			c := core.LettersToCoord(spl[0])
+			c := coord.LettersToCoord(spl[0])
 			text := spl[1]
 			label := &Label{Coord: c, Text: text}
 			labels = append(labels, label)

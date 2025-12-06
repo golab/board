@@ -11,14 +11,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 // the core package provides basic functionality to all the major components of the code
 package core
 
+import (
+	"github.com/jarednogo/board/pkg/core/coord"
+)
+
 // Diff contains two StoneSets (Add and Remove) and is a key component of a Frame
 type Diff struct {
-	Add    []*StoneSet `json:"add"`
-	Remove []*StoneSet `json:"remove"`
+	Add    []*coord.StoneSet `json:"add"`
+	Remove []*coord.StoneSet `json:"remove"`
 }
 
 // NewDiff makes a Diff based on two StoneSets
-func NewDiff(add, remove []*StoneSet) *Diff {
+func NewDiff(add, remove []*coord.StoneSet) *Diff {
 	return &Diff{
 		Add:    add,
 		Remove: remove,
@@ -30,8 +34,8 @@ func (d *Diff) Copy() *Diff {
 	if d == nil {
 		return nil
 	}
-	add := []*StoneSet{}
-	remove := []*StoneSet{}
+	add := []*coord.StoneSet{}
+	remove := []*coord.StoneSet{}
 	for _, a := range d.Add {
 		add = append(add, a.Copy())
 	}

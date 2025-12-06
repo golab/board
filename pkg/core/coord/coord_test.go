@@ -8,23 +8,23 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package core_test
+package coord_test
 
 import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 func TestCoordSetHas(t *testing.T) {
-	c := core.NewCoordSet()
-	c.Add(core.NewCoord(9, 9))
-	assert.True(t, c.Has(core.NewCoord(9, 9)))
+	c := coord.NewCoordSet()
+	c.Add(coord.NewCoord(9, 9))
+	assert.True(t, c.Has(coord.NewCoord(9, 9)))
 }
 
 func TestCoordSetAdd(t *testing.T) {
-	c := core.NewCoordSet()
-	c.Add(core.NewCoord(9, 9))
+	c := coord.NewCoordSet()
+	c.Add(coord.NewCoord(9, 9))
 	assert.Equal(t, len(c.List()), 1)
 }

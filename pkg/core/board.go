@@ -25,11 +25,12 @@ import (
 	"fmt"
 
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 type Group struct {
-	Coords CoordSet
-	Libs   CoordSet
+	Coords coord.CoordSet
+	Libs   coord.CoordSet
 	Color  color.Color
 }
 
@@ -37,12 +38,12 @@ func (g *Group) String() string {
 	return fmt.Sprintf("(%v, %v)", g.Coords, g.Color)
 }
 
-func NewGroup(coords CoordSet, libs CoordSet, col color.Color) *Group {
+func NewGroup(coords coord.CoordSet, libs coord.CoordSet, col color.Color) *Group {
 	if coords == nil {
-		coords = NewCoordSet()
+		coords = coord.NewCoordSet()
 	}
 	if libs == nil {
-		libs = NewCoordSet()
+		libs = coord.NewCoordSet()
 	}
 	return &Group{
 		Coords: coords,
@@ -97,11 +98,11 @@ func (b *Board) Copy() *Board {
 	return c
 }
 
-func (b *Board) Set(c *Coord, col color.Color) {
+func (b *Board) Set(c *coord.Coord, col color.Color) {
 	b.Points[c.Y][c.X] = col
 }
 
-func (b *Board) Get(c *Coord) color.Color {
+func (b *Board) Get(c *coord.Coord) color.Color {
 	if c == nil {
 		return color.Empty
 	}
@@ -111,14 +112,14 @@ func (b *Board) Get(c *Coord) color.Color {
 	return b.Points[c.Y][c.X]
 }
 
-func (b *Board) SetMany(cs []*Coord, col color.Color) {
+func (b *Board) SetMany(cs []*coord.Coord, col color.Color) {
 	for _, c := range cs {
 		b.Set(c, col)
 	}
 }
 
-func (b *Board) Neighbors(c *Coord) CoordSet {
-	nbs := NewCoordSet()
+func (b *Board) Neighbors(c *coord.Coord) coord.CoordSet {
+	nbs := coord.NewCoordSet()
 	for x := -1; x <= 1; x++ {
 		for y := -1; y <= 1; y++ {
 			if (x != 0 && y != 0) || (x == 0 && y == 0) {
@@ -132,13 +133,13 @@ func (b *Board) Neighbors(c *Coord) CoordSet {
 			if newX >= b.Size || newY >= b.Size {
 				continue
 			}
-			nbs.Add(NewCoord(newX, newY))
+			nbs.Add(coord.NewCoord(newX, newY))
 		}
 	}
 	return nbs
 }
 
-func (b *Board) FindGroup(start *Coord) *Group {
+func (b *Board) FindGroup(start *coord.Coord) *Group {
 	// get the color of the starting point
 	col := b.Get(start)
 
@@ -148,14 +149,14 @@ func (b *Board) FindGroup(start *Coord) *Group {
 	}
 
 	// initiate the stack
-	stack := []*Coord{start}
+	stack := []*coord.Coord{start}
 
 	// keep track of liberties as we go
 	// map so we don't double count
-	libs := NewCoordSet()
+	libs := coord.NewCoordSet()
 
 	// initiate elements
-	elts := NewCoordSet()
+	elts := coord.NewCoordSet()
 
 	// start DFS
 	for len(stack) > 0 {
@@ -191,11 +192,11 @@ func (b *Board) Groups() []*Group {
 	// go through the whole board
 	for i := 0; i < b.Size; i++ {
 		for j := 0; j < b.Size; j++ {
-			coord := NewCoord(i, j)
+			crd := coord.NewCoord(i, j)
 			// if we haven't checked it yet and there's a stone here
-			if !check[[2]int{i, j}] && (b.Get(coord) == color.Black || b.Get(coord) == color.White) {
+			if !check[[2]int{i, j}] && (b.Get(crd) == color.Black || b.Get(crd) == color.White) {
 				// find the group it's part of
-				gp := b.FindGroup(coord)
+				gp := b.FindGroup(crd)
 				for _, c := range gp.Coords {
 					// check off everything in the group
 					check[[2]int{c.X, c.Y}] = true
@@ -208,7 +209,7 @@ func (b *Board) Groups() []*Group {
 	return groups
 }
 
-func (b *Board) Legal(start *Coord, col color.Color) bool {
+func (b *Board) Legal(start *coord.Coord, col color.Color) bool {
 	// if there's already a stone there, it's illegal
 	if b.Get(start) != color.Empty {
 		return false
@@ -245,12 +246,12 @@ func (b *Board) Legal(start *Coord, col color.Color) bool {
 	return false
 }
 
-func (b *Board) WouldKill(start *Coord, col color.Color) *StoneSet {
+func (b *Board) WouldKill(start *coord.Coord, col color.Color) *coord.StoneSet {
 	// we pretend a stone of color Opposite(col) was just played at start
 	a := b.Get(start)
 	b.Set(start, col.Opposite())
 	defer b.Set(start, a)
-	dead := NewCoordSet()
+	dead := coord.NewCoordSet()
 	for _, nb := range b.Neighbors(start) {
 		// if we've already marked the stone dead
 		// or it's the wrong color
@@ -262,21 +263,21 @@ func (b *Board) WouldKill(start *Coord, col color.Color) *StoneSet {
 		gp := b.FindGroup(nb)
 		// if it's dead, add each to the list
 		if len(gp.Libs) == 0 {
-			for _, coord := range gp.Coords {
-				dead.Add(coord)
+			for _, crd := range gp.Coords {
+				dead.Add(crd)
 			}
 		}
 	}
-	return NewStoneSet(dead, col)
+	return coord.NewStoneSet(dead, col)
 }
 
-func (b *Board) RemoveDead(start *Coord, col color.Color) *StoneSet {
+func (b *Board) RemoveDead(start *coord.Coord, col color.Color) *coord.StoneSet {
 	w := b.WouldKill(start, col)
 	b.SetMany(w.Coords, color.Empty)
 	return w
 }
 
-func (b *Board) Move(start *Coord, col color.Color) *Diff {
+func (b *Board) Move(start *coord.Coord, col color.Color) *Diff {
 	// check to see if it's legal
 	if !b.Legal(start, col) {
 		return nil
@@ -289,10 +290,10 @@ func (b *Board) Move(start *Coord, col color.Color) *Diff {
 	remove := b.RemoveDead(start, col.Opposite())
 
 	// return diff
-	cs := NewCoordSet()
+	cs := coord.NewCoordSet()
 	cs.Add(start)
-	add := NewStoneSet(cs, col)
-	return NewDiff([]*StoneSet{add}, []*StoneSet{remove})
+	add := coord.NewStoneSet(cs, col)
+	return NewDiff([]*coord.StoneSet{add}, []*coord.StoneSet{remove})
 }
 
 func (b *Board) ApplyDiff(d *Diff) {
@@ -308,21 +309,21 @@ func (b *Board) ApplyDiff(d *Diff) {
 }
 
 func (b *Board) CurrentDiff() *Diff {
-	black := NewCoordSet()
-	white := NewCoordSet()
+	black := coord.NewCoordSet()
+	white := coord.NewCoordSet()
 	for j, row := range b.Points {
 		for i, c := range row {
 			switch c {
 			case color.Black:
-				black.Add(NewCoord(i, j))
+				black.Add(coord.NewCoord(i, j))
 			case color.White:
-				white.Add(NewCoord(i, j))
+				white.Add(coord.NewCoord(i, j))
 			}
 		}
 	}
-	addBlack := NewStoneSet(black, color.Black)
-	addWhite := NewStoneSet(white, color.White)
-	return NewDiff([]*StoneSet{addBlack, addWhite}, nil)
+	addBlack := coord.NewStoneSet(black, color.Black)
+	addWhite := coord.NewStoneSet(white, color.White)
+	return NewDiff([]*coord.StoneSet{addBlack, addWhite}, nil)
 }
 
 type EmptyPointType int
@@ -334,7 +335,7 @@ const (
 	Dame
 )
 
-func (b *Board) FindArea(start *Coord, dead CoordSet) (CoordSet, EmptyPointType) {
+func (b *Board) FindArea(start *coord.Coord, dead coord.CoordSet) (coord.CoordSet, EmptyPointType) {
 	if b.Get(start) != color.Empty {
 		return nil, NotCovered
 	}
@@ -342,10 +343,10 @@ func (b *Board) FindArea(start *Coord, dead CoordSet) (CoordSet, EmptyPointType)
 	t := NotCovered
 
 	// initiate the stack
-	stack := []*Coord{start}
+	stack := []*coord.Coord{start}
 
 	// initiate elements
-	elts := NewCoordSet()
+	elts := coord.NewCoordSet()
 
 	// start DFS
 	for len(stack) > 0 {
@@ -375,7 +376,7 @@ func (b *Board) FindArea(start *Coord, dead CoordSet) (CoordSet, EmptyPointType)
 	return elts, t
 }
 
-func (b *Board) detectAtariDame(col color.Color, dead, dame CoordSet) CoordSet {
+func (b *Board) detectAtariDame(col color.Color, dead, dame coord.CoordSet) coord.CoordSet {
 	// first make a copy
 	c := b.Copy()
 
@@ -385,7 +386,7 @@ func (b *Board) detectAtariDame(col color.Color, dead, dame CoordSet) CoordSet {
 	}
 
 	// these are the "atari" dame to be returned
-	points := NewCoordSet()
+	points := coord.NewCoordSet()
 
 	// loop
 	for {
@@ -417,7 +418,7 @@ func (b *Board) detectAtariDame(col color.Color, dead, dame CoordSet) CoordSet {
 	return points
 }
 
-func (b *Board) DetectAtariDame(dead, dame CoordSet) CoordSet {
+func (b *Board) DetectAtariDame(dead, dame coord.CoordSet) coord.CoordSet {
 	// first detect by filling in dame with FillBlack
 	bDame := b.detectAtariDame(color.FillBlack, dead, dame)
 
@@ -429,19 +430,19 @@ func (b *Board) DetectAtariDame(dead, dame CoordSet) CoordSet {
 }
 
 type ScoreResult struct {
-	BlackArea []*Coord
-	WhiteArea []*Coord
-	BlackDead []*Coord
-	WhiteDead []*Coord
-	Dame      []*Coord
+	BlackArea []*coord.Coord
+	WhiteArea []*coord.Coord
+	BlackDead []*coord.Coord
+	WhiteDead []*coord.Coord
+	Dame      []*coord.Coord
 }
 
-func (b *Board) Score(dead CoordSet, markedDame CoordSet) *ScoreResult {
-	blackArea := NewCoordSet()
-	whiteArea := NewCoordSet()
-	blackDead := NewCoordSet()
-	whiteDead := NewCoordSet()
-	dame := NewCoordSet()
+func (b *Board) Score(dead coord.CoordSet, markedDame coord.CoordSet) *ScoreResult {
+	blackArea := coord.NewCoordSet()
+	whiteArea := coord.NewCoordSet()
+	blackDead := coord.NewCoordSet()
+	whiteDead := coord.NewCoordSet()
+	dame := coord.NewCoordSet()
 
 	// make a new grid to keep track of territory
 	grid := [][]EmptyPointType{}
@@ -451,16 +452,16 @@ func (b *Board) Score(dead CoordSet, markedDame CoordSet) *ScoreResult {
 	}
 
 	// add dead stones to the grid, then double count for both area and caps
-	for _, coord := range dead {
-		switch col := b.Get(coord); col {
+	for _, crd := range dead {
+		switch col := b.Get(crd); col {
 		case color.Black:
-			grid[coord.Y][coord.X] = WhitePoint
-			whiteArea.Add(coord)
-			blackDead.Add(coord)
+			grid[crd.Y][crd.X] = WhitePoint
+			whiteArea.Add(crd)
+			blackDead.Add(crd)
 		case color.White:
-			grid[coord.Y][coord.X] = BlackPoint
-			blackArea.Add(coord)
-			whiteDead.Add(coord)
+			grid[crd.Y][crd.X] = BlackPoint
+			blackArea.Add(crd)
+			whiteDead.Add(crd)
 		}
 	}
 
@@ -478,20 +479,20 @@ func (b *Board) Score(dead CoordSet, markedDame CoordSet) *ScoreResult {
 			case color.Black, color.White:
 			case color.Empty:
 				if grid[j][i] == NotCovered {
-					area, t := b.FindArea(NewCoord(i, j), dead)
-					for _, coord := range area {
+					area, t := b.FindArea(coord.NewCoord(i, j), dead)
+					for _, crd := range area {
 						// this only happens because of marked dame
-						if dame.Has(coord) {
+						if dame.Has(crd) {
 							continue
 						}
-						grid[coord.Y][coord.X] = t
+						grid[crd.Y][crd.X] = t
 						switch t {
 						case BlackPoint:
-							blackArea.Add(coord)
+							blackArea.Add(crd)
 						case WhitePoint:
-							whiteArea.Add(coord)
+							whiteArea.Add(crd)
 						case Dame:
-							dame.Add(coord)
+							dame.Add(crd)
 						}
 					}
 				}

@@ -13,8 +13,8 @@ package integration
 import (
 	"math/rand"
 
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/state"
 )
 
@@ -29,7 +29,7 @@ func GenerateRandomSGF(seed int, num int) string {
 	for numMoves < num {
 		x := r.Intn(size)
 		y := r.Intn(size)
-		c := core.NewCoord(x, y)
+		c := coord.NewCoord(x, y)
 		if s.Board().Legal(c, col) {
 			s.AddNode(c, col)
 			col = col.Opposite()

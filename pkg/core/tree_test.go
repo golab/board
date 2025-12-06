@@ -18,6 +18,7 @@ import (
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/state"
 )
 
@@ -83,7 +84,7 @@ func TestChild(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	coord := core.NewCoord(3, 3)
+	coord := coord.NewCoord(3, 3)
 	ind, has := s.Root().HasChild(coord, color.Black)
 	if !has {
 		t.Errorf("failed to find child")

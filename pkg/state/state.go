@@ -17,6 +17,7 @@ import (
 
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 const Letters = "ABCDEFGHIJKLNMOPQRSTUVWXYZ"
@@ -32,8 +33,8 @@ type State struct {
 	size       int
 	board      *core.Board
 	clipboard  *core.TreeNode
-	markedDead core.CoordSet
-	markedDame core.CoordSet
+	markedDead coord.CoordSet
+	markedDame coord.CoordSet
 }
 
 func (s *State) HeadColor() color.Color {
@@ -87,8 +88,8 @@ func (s *State) Nodes() map[int]*core.TreeNode {
 }
 
 func (s *State) AnyMove() {
-	s.markedDead = core.NewCoordSet()
-	s.markedDame = core.NewCoordSet()
+	s.markedDead = coord.NewCoordSet()
+	s.markedDame = coord.NewCoordSet()
 }
 
 func (s *State) ToSGF() string {
@@ -255,6 +256,6 @@ func NewState(size int, initRoot bool) *State {
 		size:       size,
 		board:      board,
 		clipboard:  nil,
-		markedDead: core.NewCoordSet(),
-		markedDame: core.NewCoordSet()}
+		markedDead: coord.NewCoordSet(),
+		markedDame: coord.NewCoordSet()}
 }

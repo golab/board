@@ -18,19 +18,20 @@ import (
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 func TestDiff1(t *testing.T) {
 	b := core.NewBoard(19)
-	b.Move(core.NewCoord(10, 10), color.Black)
-	b.Move(core.NewCoord(11, 11), color.Black)
-	b.Move(core.NewCoord(9, 11), color.Black)
+	b.Move(coord.NewCoord(10, 10), color.Black)
+	b.Move(coord.NewCoord(11, 11), color.Black)
+	b.Move(coord.NewCoord(9, 11), color.Black)
 
-	mv1 := core.NewCoord(10, 11)
+	mv1 := coord.NewCoord(10, 11)
 	b.Move(mv1, color.White)
 
 	// capture
-	mv2 := core.NewCoord(10, 12)
+	mv2 := coord.NewCoord(10, 12)
 	diff := b.Move(mv2, color.Black)
 
 	e := diff.Copy()
@@ -82,7 +83,7 @@ func TestInterface1(t *testing.T) {
 		t.Error(err)
 	}
 
-	c, err := core.InterfaceToCoord(ifc)
+	c, err := coord.InterfaceToCoord(ifc)
 	if err != nil {
 		t.Error(err)
 	}
@@ -92,29 +93,29 @@ func TestInterface1(t *testing.T) {
 }
 
 func TestCoordSetRemove(t *testing.T) {
-	cs := core.NewCoordSet()
-	cs.Add(core.NewCoord(0, 1))
-	cs.Add(core.NewCoord(0, 2))
-	cs.Add(core.NewCoord(0, 3))
-	cs.Remove(core.NewCoord(0, 2))
-	if cs.Has(core.NewCoord(0, 2)) {
+	cs := coord.NewCoordSet()
+	cs.Add(coord.NewCoord(0, 1))
+	cs.Add(coord.NewCoord(0, 2))
+	cs.Add(coord.NewCoord(0, 3))
+	cs.Remove(coord.NewCoord(0, 2))
+	if cs.Has(coord.NewCoord(0, 2)) {
 		t.Errorf("error removing coord")
 	}
 }
 
 func TestCoordSetRemoveAll(t *testing.T) {
-	cs := core.NewCoordSet()
-	ds := core.NewCoordSet()
+	cs := coord.NewCoordSet()
+	ds := coord.NewCoordSet()
 	for x := 0; x < 10; x++ {
-		cs.Add(core.NewCoord(0, x))
+		cs.Add(coord.NewCoord(0, x))
 		if x < 5 {
-			ds.Add(core.NewCoord(0, x))
+			ds.Add(coord.NewCoord(0, x))
 		}
 	}
 
 	cs.RemoveAll(ds)
 	for x := 0; x < 5; x++ {
-		if cs.Has(core.NewCoord(0, x)) {
+		if cs.Has(coord.NewCoord(0, x)) {
 			t.Errorf("error removing multiple coords")
 		}
 	}
@@ -122,18 +123,18 @@ func TestCoordSetRemoveAll(t *testing.T) {
 
 var alphaTests = []struct {
 	input    string
-	output   *core.Coord
+	output   *coord.Coord
 	hasError bool
 }{
-	{"a1", core.NewCoord(0, 18), false},
-	{"j1", core.NewCoord(8, 18), false},
+	{"a1", coord.NewCoord(0, 18), false},
+	{"j1", coord.NewCoord(8, 18), false},
 	{"i1", nil, true},
 }
 
 func TestAlphanumericToCoord(t *testing.T) {
 	for i, tt := range alphaTests {
 		t.Run(fmt.Sprintf("alpha%d", i), func(t *testing.T) {
-			coord, err := core.AlphanumericToCoord(tt.input, 19)
+			coord, err := coord.AlphanumericToCoord(tt.input, 19)
 			if tt.output != nil && !coord.Equal(tt.output) {
 				t.Errorf(
 					"wrong output in TestAlphanumeric: %v (expected %v)",

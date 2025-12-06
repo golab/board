@@ -21,6 +21,7 @@ import (
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/state"
 )
@@ -103,7 +104,7 @@ func TestSim2(t *testing.T) {
 		}
 		value["color"] = color
 
-		coord := core.LettersToCoord(cur.GetField(key)[0])
+		coord := coord.LettersToCoord(cur.GetField(key)[0])
 
 		value["coords"] = []any{float64(coord.X), float64(coord.Y)}
 		evt := event.NewEvent("add_stone", value)
@@ -289,7 +290,7 @@ func TestAddStone(t *testing.T) {
 	assert.NoError(t, err)
 	room, err := sim.Hub.GetRoom("room123")
 	assert.NoError(t, err)
-	assert.True(t, room.Current().XY.Equal(core.NewCoord(2, 2)))
+	assert.True(t, room.Current().XY.Equal(coord.NewCoord(2, 2)))
 }
 
 func TestPass(t *testing.T) {
@@ -385,7 +386,7 @@ func TestNav(t *testing.T) {
 	room, err := sim.Hub.GetRoom("room123")
 	assert.NoError(t, err)
 	node := room.Current()
-	assert.True(t, node.XY.Equal(core.NewCoord(2.0, 2.0)))
+	assert.True(t, node.XY.Equal(coord.NewCoord(2.0, 2.0)))
 }
 
 func TestGotoGrid(t *testing.T) {
@@ -399,7 +400,7 @@ func TestGotoGrid(t *testing.T) {
 	room, err := sim.Hub.GetRoom("room123")
 	assert.NoError(t, err)
 	node := room.Current()
-	assert.True(t, node.XY.Equal(core.NewCoord(1.0, 1.0)))
+	assert.True(t, node.XY.Equal(coord.NewCoord(1.0, 1.0)))
 }
 
 func TestGotoCoord(t *testing.T) {
@@ -430,7 +431,7 @@ func TestCut(t *testing.T) {
 	assert.NoError(t, err)
 	node := room.Current()
 	assert.Equal(t, len(node.Down), 0)
-	assert.True(t, node.XY.Equal(core.NewCoord(15.0, 3.0)))
+	assert.True(t, node.XY.Equal(coord.NewCoord(15.0, 3.0)))
 }
 
 func TestCutClipboard(t *testing.T) {
@@ -454,8 +455,8 @@ func TestCutClipboard(t *testing.T) {
 	assert.NoError(t, err)
 	room, err := sim.Hub.GetRoom("room123")
 	assert.NoError(t, err)
-	assert.Equal(t, room.Board().Get(core.NewCoord(16.0, 14.0)), color.Black)
-	assert.Equal(t, room.Board().Get(core.NewCoord(17.0, 14.0)), color.White)
+	assert.Equal(t, room.Board().Get(coord.NewCoord(16.0, 14.0)), color.Black)
+	assert.Equal(t, room.Board().Get(coord.NewCoord(17.0, 14.0)), color.White)
 }
 
 func TestDraw(t *testing.T) {
@@ -514,10 +515,10 @@ func TestGraft(t *testing.T) {
 	room, err := sim.Hub.GetRoom("room123")
 	assert.NoError(t, err)
 	board := room.Board()
-	assert.Equal(t, board.Get(core.NewCoord(9.0, 9.0)), color.Black)
-	assert.Equal(t, board.Get(core.NewCoord(9.0, 8.0)), color.White)
-	assert.Equal(t, board.Get(core.NewCoord(9.0, 7.0)), color.Black)
-	assert.Equal(t, board.Get(core.NewCoord(9.0, 6.0)), color.White)
+	assert.Equal(t, board.Get(coord.NewCoord(9.0, 9.0)), color.Black)
+	assert.Equal(t, board.Get(coord.NewCoord(9.0, 8.0)), color.White)
+	assert.Equal(t, board.Get(coord.NewCoord(9.0, 7.0)), color.Black)
+	assert.Equal(t, board.Get(coord.NewCoord(9.0, 6.0)), color.White)
 }
 
 func TestTrash(t *testing.T) {
@@ -713,11 +714,11 @@ func TestPushHead(t *testing.T) {
 	assert.NoError(t, err)
 
 	// before Pushhead, there should be black stones at (2, 11) and (2, 10)
-	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 11.0)), color.Black)
-	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 10.0)), color.Black)
+	assert.Equal(t, room.Board().Get(coord.NewCoord(2.0, 11.0)), color.Black)
+	assert.Equal(t, room.Board().Get(coord.NewCoord(2.0, 10.0)), color.Black)
 
 	// this white stone captures two black stones
 	room.PushHead(1, 11, color.White)
-	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 11.0)), color.Empty)
-	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 10.0)), color.Empty)
+	assert.Equal(t, room.Board().Get(coord.NewCoord(2.0, 11.0)), color.Empty)
+	assert.Equal(t, room.Board().Get(coord.NewCoord(2.0, 10.0)), color.Empty)
 }

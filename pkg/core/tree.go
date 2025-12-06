@@ -12,6 +12,7 @@ package core
 
 import (
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 // Fmap applies a function f to every node under (and including) root
@@ -39,7 +40,7 @@ func Fmap(f func(*TreeNode), root *TreeNode) {
 }
 
 type TreeNode struct {
-	XY             *Coord
+	XY             *coord.Coord
 	Color          color.Color
 	Down           []*TreeNode
 	Up             *TreeNode
@@ -52,10 +53,10 @@ type TreeNode struct {
 	WhiteCaps int
 }
 
-func NewTreeNode(coord *Coord, col color.Color, index int, up *TreeNode, fields Fields) *TreeNode {
+func NewTreeNode(crd *coord.Coord, col color.Color, index int, up *TreeNode, fields Fields) *TreeNode {
 	down := []*TreeNode{}
 	node := &TreeNode{
-		XY:             coord,
+		XY:             crd,
 		Color:          col,
 		Down:           down,
 		Up:             nil,
@@ -135,9 +136,9 @@ func (n *TreeNode) RecomputeDepth() {
 	}, n)
 }
 
-func (n *TreeNode) HasChild(coord *Coord, col color.Color) (int, bool) {
+func (n *TreeNode) HasChild(crd *coord.Coord, col color.Color) (int, bool) {
 	for _, node := range n.Down {
-		if node.XY.Equal(coord) && node.Color == col {
+		if node.XY.Equal(crd) && node.Color == col {
 			return node.Index, true
 		}
 	}

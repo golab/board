@@ -18,14 +18,15 @@ import (
 	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 func TestString(t *testing.T) {
 	b := core.NewBoard(9)
-	b.Set(core.NewCoord(1, 0), color.Black)
-	b.Set(core.NewCoord(2, 0), color.Black)
-	b.Set(core.NewCoord(3, 0), color.Black)
-	g := b.FindGroup(core.NewCoord(3, 0))
+	b.Set(coord.NewCoord(1, 0), color.Black)
+	b.Set(coord.NewCoord(2, 0), color.Black)
+	b.Set(coord.NewCoord(3, 0), color.Black)
+	g := b.FindGroup(coord.NewCoord(3, 0))
 	assert.Equal(t, g.Color, color.Black)
 	assert.Equal(t, len(g.String()), 16)
 }
@@ -39,15 +40,15 @@ func TestEmptyGroup(t *testing.T) {
 
 func TestGetEmpty(t *testing.T) {
 	b := core.NewBoard(9)
-	assert.Equal(t, b.Get(core.NewCoord(9, 0)), color.Empty)
-	assert.Equal(t, b.Get(core.NewCoord(0, 9)), color.Empty)
-	assert.Equal(t, b.Get(core.NewCoord(-1, 0)), color.Empty)
-	assert.Equal(t, b.Get(core.NewCoord(0, -1)), color.Empty)
+	assert.Equal(t, b.Get(coord.NewCoord(9, 0)), color.Empty)
+	assert.Equal(t, b.Get(coord.NewCoord(0, 9)), color.Empty)
+	assert.Equal(t, b.Get(coord.NewCoord(-1, 0)), color.Empty)
+	assert.Equal(t, b.Get(coord.NewCoord(0, -1)), color.Empty)
 }
 
 func TestFindGroupEmpty(t *testing.T) {
 	b := core.NewBoard(9)
-	g := b.FindGroup(core.NewCoord(0, 0))
+	g := b.FindGroup(coord.NewCoord(0, 0))
 	assert.Equal(t, g.Color, color.Empty)
 	assert.NotNil(t, g.Coords)
 	assert.NotNil(t, g.Libs)
@@ -55,22 +56,22 @@ func TestFindGroupEmpty(t *testing.T) {
 
 func TestExistingLegal(t *testing.T) {
 	b := core.NewBoard(9)
-	b.Set(core.NewCoord(1, 0), color.Black)
-	legal := b.Legal(core.NewCoord(1, 0), color.Black)
+	b.Set(coord.NewCoord(1, 0), color.Black)
+	legal := b.Legal(coord.NewCoord(1, 0), color.Black)
 	assert.False(t, legal)
 }
 
 func TestLegalMove(t *testing.T) {
 	b := core.NewBoard(9)
-	b.Set(core.NewCoord(1, 0), color.Black)
-	diff := b.Move(core.NewCoord(1, 0), color.Black)
+	b.Set(coord.NewCoord(1, 0), color.Black)
+	diff := b.Move(coord.NewCoord(1, 0), color.Black)
 	assert.Zero(t, diff)
 }
 
 func TestFindAreaNonempty(t *testing.T) {
 	b := core.NewBoard(9)
-	b.Set(core.NewCoord(1, 0), color.Black)
-	_, typ := b.FindArea(core.NewCoord(1, 0), nil)
+	b.Set(coord.NewCoord(1, 0), color.Black)
+	_, typ := b.FindArea(coord.NewCoord(1, 0), nil)
 	assert.Equal(t, typ, core.NotCovered)
 }
 
@@ -106,7 +107,7 @@ var coordTests = []struct {
 func TestCoord(t *testing.T) {
 	for i, tt := range coordTests {
 		t.Run(fmt.Sprintf("coord%d", i), func(t *testing.T) {
-			coord := core.LettersToCoord(tt.input)
+			coord := coord.LettersToCoord(tt.input)
 			if coord.X != tt.x || coord.Y != tt.y {
 				t.Errorf("input coord %s mapped to %v, expected: (%d, %d)", tt.input, coord, tt.x, tt.y)
 			}
@@ -115,77 +116,77 @@ func TestCoord(t *testing.T) {
 }
 
 func TestCoordFail(t *testing.T) {
-	if core.LettersToCoord("") != nil {
+	if coord.LettersToCoord("") != nil {
 		t.Errorf("empty string should not convert to coords")
 	}
 
-	if core.LettersToCoord("a") != nil {
+	if coord.LettersToCoord("a") != nil {
 		t.Errorf("length one string should not convert to coords")
 	}
 
-	if core.LettersToCoord("abc") != nil {
+	if coord.LettersToCoord("abc") != nil {
 		t.Errorf("length three string should not convert to coords")
 	}
 }
 
 func TestNeighbors(t *testing.T) {
 	b := core.NewBoard(19)
-	start := core.NewCoord(9, 9)
+	start := coord.NewCoord(9, 9)
 	nbs := b.Neighbors(start)
 	assert.Equal(t, len(nbs.List()), 4)
 }
 
 func TestFindGroup(t *testing.T) {
 	b := core.NewBoard(19)
-	b.Move(core.NewCoord(10, 10), color.Black)
-	b.Move(core.NewCoord(11, 11), color.Black)
-	b.Move(core.NewCoord(9, 11), color.Black)
-	b.Move(core.NewCoord(10, 11), color.Black)
-	b.Move(core.NewCoord(10, 12), color.Black)
-	g := b.FindGroup(core.NewCoord(10, 12))
+	b.Move(coord.NewCoord(10, 10), color.Black)
+	b.Move(coord.NewCoord(11, 11), color.Black)
+	b.Move(coord.NewCoord(9, 11), color.Black)
+	b.Move(coord.NewCoord(10, 11), color.Black)
+	b.Move(coord.NewCoord(10, 12), color.Black)
+	g := b.FindGroup(coord.NewCoord(10, 12))
 	assert.Equal(t, g.Color, color.Black)
 	assert.Equal(t, len(g.Coords.List()), 5)
 }
 
 func TestLibs(t *testing.T) {
 	b := core.NewBoard(19)
-	b.Set(core.NewCoord(10, 10), color.Black)
-	b.Set(core.NewCoord(11, 11), color.Black)
-	b.Set(core.NewCoord(9, 11), color.Black)
-	b.Set(core.NewCoord(10, 12), color.Black)
-	b.Set(core.NewCoord(10, 11), color.White)
-	g := b.FindGroup(core.NewCoord(10, 11))
+	b.Set(coord.NewCoord(10, 10), color.Black)
+	b.Set(coord.NewCoord(11, 11), color.Black)
+	b.Set(coord.NewCoord(9, 11), color.Black)
+	b.Set(coord.NewCoord(10, 12), color.Black)
+	b.Set(coord.NewCoord(10, 11), color.White)
+	g := b.FindGroup(coord.NewCoord(10, 11))
 	assert.Equal(t, len(g.Libs.List()), 0)
 }
 
 func TestWouldKill(t *testing.T) {
 	b := core.NewBoard(19)
-	b.Move(core.NewCoord(10, 10), color.Black)
-	b.Move(core.NewCoord(11, 11), color.Black)
-	b.Move(core.NewCoord(9, 11), color.Black)
-	b.Move(core.NewCoord(10, 11), color.White)
-	start := core.NewCoord(10, 12)
+	b.Move(coord.NewCoord(10, 10), color.Black)
+	b.Move(coord.NewCoord(11, 11), color.Black)
+	b.Move(coord.NewCoord(9, 11), color.Black)
+	b.Move(coord.NewCoord(10, 11), color.White)
+	start := coord.NewCoord(10, 12)
 	s := b.WouldKill(start, color.White)
 	require.Equal(t, len(s.Coords), 1)
 	assert.Equal(t, s.Color, color.White)
-	assert.True(t, s.Coords[0].Equal(core.NewCoord(10, 11)))
+	assert.True(t, s.Coords[0].Equal(coord.NewCoord(10, 11)))
 }
 
 func TestLegal(t *testing.T) {
 	b := core.NewBoard(19)
-	b.Set(core.NewCoord(10, 10), color.Black)
-	b.Set(core.NewCoord(11, 11), color.Black)
-	b.Set(core.NewCoord(9, 11), color.Black)
-	legal := b.Legal(core.NewCoord(10, 11), color.White)
+	b.Set(coord.NewCoord(10, 10), color.Black)
+	b.Set(coord.NewCoord(11, 11), color.Black)
+	b.Set(coord.NewCoord(9, 11), color.Black)
+	legal := b.Legal(coord.NewCoord(10, 11), color.White)
 	assert.True(t, legal)
-	b.Set(core.NewCoord(10, 12), color.Black)
-	legal = b.Legal(core.NewCoord(10, 11), color.White)
+	b.Set(coord.NewCoord(10, 12), color.Black)
+	legal = b.Legal(coord.NewCoord(10, 11), color.White)
 	assert.False(t, legal)
 }
 
 func TestBoard1(t *testing.T) {
 	b := core.NewBoard(19)
-	c := core.NewCoord(10, 10)
+	c := coord.NewCoord(10, 10)
 	b.Set(c, color.Black)
 	if b.Get(c) != color.Black {
 		t.Errorf("error with set and get")
@@ -194,12 +195,12 @@ func TestBoard1(t *testing.T) {
 
 func TestBoard2(t *testing.T) {
 	b := core.NewBoard(19)
-	b.Move(core.NewCoord(10, 10), color.Black)
-	b.Move(core.NewCoord(11, 11), color.Black)
-	b.Move(core.NewCoord(9, 11), color.Black)
-	b.Move(core.NewCoord(10, 11), color.White)
-	b.Move(core.NewCoord(10, 12), color.Black)
-	g := b.Get(core.NewCoord(10, 11))
+	b.Move(coord.NewCoord(10, 10), color.Black)
+	b.Move(coord.NewCoord(11, 11), color.Black)
+	b.Move(coord.NewCoord(9, 11), color.Black)
+	b.Move(coord.NewCoord(10, 11), color.White)
+	b.Move(coord.NewCoord(10, 12), color.Black)
+	g := b.Get(coord.NewCoord(10, 11))
 	if g != color.Empty {
 		t.Errorf("error with capture, expected %v, got: %v", color.Empty, g)
 	}
@@ -207,12 +208,12 @@ func TestBoard2(t *testing.T) {
 
 func TestBoard3(t *testing.T) {
 	b := core.NewBoard(19)
-	b.Move(core.NewCoord(0, 1), color.Black)
-	b.Move(core.NewCoord(1, 0), color.Black)
-	b.Move(core.NewCoord(2, 0), color.White)
-	b.Move(core.NewCoord(1, 1), color.White)
-	b.Move(core.NewCoord(0, 0), color.White)
-	g := b.Get(core.NewCoord(0, 0))
+	b.Move(coord.NewCoord(0, 1), color.Black)
+	b.Move(coord.NewCoord(1, 0), color.Black)
+	b.Move(coord.NewCoord(2, 0), color.White)
+	b.Move(coord.NewCoord(1, 1), color.White)
+	b.Move(coord.NewCoord(0, 0), color.White)
+	g := b.Get(coord.NewCoord(0, 0))
 	if g != color.White {
 		t.Errorf("error with capture, expected %v, got: %v", color.White, g)
 	}
@@ -220,9 +221,9 @@ func TestBoard3(t *testing.T) {
 
 func TestBoard4(t *testing.T) {
 	b := core.NewBoard(19)
-	cs := core.NewCoordSet()
+	cs := coord.NewCoordSet()
 	for i := 0; i < 5; i++ {
-		c := core.NewCoord(10, i)
+		c := coord.NewCoord(10, i)
 		cs.Add(c)
 	}
 	b.SetMany(cs.List(), color.Black)
@@ -240,11 +241,11 @@ func TestBoard4(t *testing.T) {
 
 func TestCurrentDiff(t *testing.T) {
 	b := core.NewBoard(19)
-	c1 := core.NewCoord(0, 1)
-	c2 := core.NewCoord(1, 0)
-	c3 := core.NewCoord(2, 0)
-	c4 := core.NewCoord(1, 1)
-	c5 := core.NewCoord(0, 0)
+	c1 := coord.NewCoord(0, 1)
+	c2 := coord.NewCoord(1, 0)
+	c3 := coord.NewCoord(2, 0)
+	c4 := coord.NewCoord(1, 1)
+	c5 := coord.NewCoord(0, 0)
 	b.Move(c1, color.Black)
 	b.Move(c2, color.Black)
 	b.Move(c3, color.White)
@@ -253,15 +254,15 @@ func TestCurrentDiff(t *testing.T) {
 
 	diff := b.CurrentDiff()
 
-	c := core.NewCoordSet()
+	c := coord.NewCoordSet()
 	c.Add(c1)
-	addBlack := core.NewStoneSet(c, color.Black)
+	addBlack := coord.NewStoneSet(c, color.Black)
 
-	d := core.NewCoordSet()
+	d := coord.NewCoordSet()
 	d.Add(c3)
 	d.Add(c4)
 	d.Add(c5)
-	addWhite := core.NewStoneSet(d, color.White)
+	addWhite := coord.NewStoneSet(d, color.White)
 
 	if !diff.Add[0].Equal(addBlack) {
 		t.Errorf("addBlack wrong")
@@ -279,9 +280,9 @@ func TestCurrentDiff(t *testing.T) {
 func TestFindArea(t *testing.T) {
 	b := core.NewBoard(19)
 	for x := 0; x < 4; x++ {
-		b.Move(core.NewCoord(x, 3-x), color.Black)
+		b.Move(coord.NewCoord(x, 3-x), color.Black)
 	}
-	cs, tp := b.FindArea(core.NewCoord(0, 0), core.NewCoordSet())
+	cs, tp := b.FindArea(coord.NewCoord(0, 0), coord.NewCoordSet())
 	if len(cs.List()) != 6 {
 		t.Errorf("error finding empty area: got %d (expected 6)", len(cs))
 	}
@@ -293,27 +294,27 @@ func TestFindArea(t *testing.T) {
 func TestScore(t *testing.T) {
 	b := core.NewBoard(9)
 	for x := 0; x < 9; x++ {
-		b.Move(core.NewCoord(x, 4), color.Black)
-		b.Move(core.NewCoord(x, 5), color.White)
+		b.Move(coord.NewCoord(x, 4), color.Black)
+		b.Move(coord.NewCoord(x, 5), color.White)
 	}
 
-	b.Move(core.NewCoord(7, 3), color.Black)
-	b.Move(core.NewCoord(8, 3), color.Black)
+	b.Move(coord.NewCoord(7, 3), color.Black)
+	b.Move(coord.NewCoord(8, 3), color.Black)
 
-	b.Move(core.NewCoord(7, 6), color.White)
-	b.Move(core.NewCoord(8, 6), color.White)
+	b.Move(coord.NewCoord(7, 6), color.White)
+	b.Move(coord.NewCoord(8, 6), color.White)
 
 	// dead stones
-	b.Move(core.NewCoord(0, 0), color.White)
-	b.Move(core.NewCoord(8, 8), color.Black)
+	b.Move(coord.NewCoord(0, 0), color.White)
+	b.Move(coord.NewCoord(8, 8), color.Black)
 
-	markedDead := core.NewCoordSet()
-	markedDead.Add(core.NewCoord(0, 0))
-	markedDead.Add(core.NewCoord(8, 8))
+	markedDead := coord.NewCoordSet()
+	markedDead.Add(coord.NewCoord(0, 0))
+	markedDead.Add(coord.NewCoord(8, 8))
 
-	markedDame := core.NewCoordSet()
-	markedDame.Add(core.NewCoord(8, 4))
-	markedDame.Add(core.NewCoord(8, 5))
+	markedDame := coord.NewCoordSet()
+	markedDame.Add(coord.NewCoord(8, 4))
+	markedDame.Add(coord.NewCoord(8, 5))
 
 	scoreResult := b.Score(markedDead, markedDame)
 	blackArea := scoreResult.BlackArea
@@ -342,17 +343,17 @@ func TestScore(t *testing.T) {
 func TestScore2(t *testing.T) {
 	b := core.NewBoard(9)
 	for x := 0; x < 8; x++ {
-		b.Move(core.NewCoord(x, 4), color.Black)
-		b.Move(core.NewCoord(x, 5), color.White)
+		b.Move(coord.NewCoord(x, 4), color.Black)
+		b.Move(coord.NewCoord(x, 5), color.White)
 	}
 
-	b.Move(core.NewCoord(7, 3), color.Black)
-	b.Move(core.NewCoord(7, 2), color.Black)
-	b.Move(core.NewCoord(8, 2), color.Black)
+	b.Move(coord.NewCoord(7, 3), color.Black)
+	b.Move(coord.NewCoord(7, 2), color.Black)
+	b.Move(coord.NewCoord(8, 2), color.Black)
 
-	b.Move(core.NewCoord(8, 4), color.White)
+	b.Move(coord.NewCoord(8, 4), color.White)
 
-	scoreResult := b.Score(core.NewCoordSet(), core.NewCoordSet())
+	scoreResult := b.Score(coord.NewCoordSet(), coord.NewCoordSet())
 	blackArea := scoreResult.BlackArea
 	whiteArea := scoreResult.WhiteArea
 	blackDead := scoreResult.BlackDead
@@ -369,14 +370,14 @@ func TestScore2(t *testing.T) {
 func TestBoardCopy(t *testing.T) {
 	b := core.NewBoard(9)
 	for i := 0; i < 9; i++ {
-		b.Move(core.NewCoord(i, i), color.Black)
+		b.Move(coord.NewCoord(i, i), color.Black)
 	}
 
 	c := b.Copy()
 
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
-			coord := core.NewCoord(i, j)
+			coord := coord.NewCoord(i, j)
 			assert.Equal(t, c.Get(coord), b.Get(coord))
 		}
 	}
@@ -385,7 +386,7 @@ func TestBoardCopy(t *testing.T) {
 func TestBoardString(t *testing.T) {
 	b := core.NewBoard(9)
 	for i := 0; i < 9; i++ {
-		b.Move(core.NewCoord(i, i), color.Black)
+		b.Move(coord.NewCoord(i, i), color.Black)
 	}
 
 	assert.Equal(t, len(b.String()), 171)
@@ -393,86 +394,86 @@ func TestBoardString(t *testing.T) {
 
 func TestDetectAtariDame1(t *testing.T) {
 	b := core.NewBoard(9)
-	b.Set(core.NewCoord(1, 0), color.Black)
-	b.Set(core.NewCoord(3, 0), color.Black)
-	b.Set(core.NewCoord(5, 0), color.Black)
-	b.Set(core.NewCoord(7, 0), color.Black)
-	b.Set(core.NewCoord(2, 1), color.Black)
-	b.Set(core.NewCoord(3, 1), color.Black)
-	b.Set(core.NewCoord(4, 1), color.Black)
-	b.Set(core.NewCoord(5, 1), color.Black)
-	b.Set(core.NewCoord(6, 1), color.Black)
-	b.Set(core.NewCoord(7, 1), color.Black)
-	b.Set(core.NewCoord(0, 1), color.White)
-	b.Set(core.NewCoord(1, 1), color.White)
-	b.Set(core.NewCoord(1, 2), color.White)
-	b.Set(core.NewCoord(2, 2), color.White)
-	b.Set(core.NewCoord(3, 2), color.White)
-	b.Set(core.NewCoord(4, 2), color.White)
-	b.Set(core.NewCoord(5, 2), color.White)
-	b.Set(core.NewCoord(6, 2), color.White)
-	b.Set(core.NewCoord(7, 2), color.White)
-	b.Set(core.NewCoord(8, 2), color.White)
-	b.Set(core.NewCoord(8, 1), color.White)
-	b.Set(core.NewCoord(8, 0), color.White)
+	b.Set(coord.NewCoord(1, 0), color.Black)
+	b.Set(coord.NewCoord(3, 0), color.Black)
+	b.Set(coord.NewCoord(5, 0), color.Black)
+	b.Set(coord.NewCoord(7, 0), color.Black)
+	b.Set(coord.NewCoord(2, 1), color.Black)
+	b.Set(coord.NewCoord(3, 1), color.Black)
+	b.Set(coord.NewCoord(4, 1), color.Black)
+	b.Set(coord.NewCoord(5, 1), color.Black)
+	b.Set(coord.NewCoord(6, 1), color.Black)
+	b.Set(coord.NewCoord(7, 1), color.Black)
+	b.Set(coord.NewCoord(0, 1), color.White)
+	b.Set(coord.NewCoord(1, 1), color.White)
+	b.Set(coord.NewCoord(1, 2), color.White)
+	b.Set(coord.NewCoord(2, 2), color.White)
+	b.Set(coord.NewCoord(3, 2), color.White)
+	b.Set(coord.NewCoord(4, 2), color.White)
+	b.Set(coord.NewCoord(5, 2), color.White)
+	b.Set(coord.NewCoord(6, 2), color.White)
+	b.Set(coord.NewCoord(7, 2), color.White)
+	b.Set(coord.NewCoord(8, 2), color.White)
+	b.Set(coord.NewCoord(8, 1), color.White)
+	b.Set(coord.NewCoord(8, 0), color.White)
 
-	dead := core.NewCoordSet()
-	dame := core.NewCoordSet()
-	dame.Add(core.NewCoord(0, 0))
+	dead := coord.NewCoordSet()
+	dame := coord.NewCoordSet()
+	dame.Add(coord.NewCoord(0, 0))
 	ad := b.DetectAtariDame(dead, dame)
 
-	assert.True(t, ad.Has(core.NewCoord(2, 0)))
+	assert.True(t, ad.Has(coord.NewCoord(2, 0)))
 }
 
 func TestDetectAtariDame2(t *testing.T) {
 	b := core.NewBoard(9)
 
-	b.Set(core.NewCoord(4, 0), color.Black)
-	b.Set(core.NewCoord(4, 1), color.Black)
-	b.Set(core.NewCoord(4, 2), color.Black)
-	b.Set(core.NewCoord(4, 3), color.Black)
-	b.Set(core.NewCoord(4, 4), color.Black)
-	b.Set(core.NewCoord(4, 5), color.Black)
-	b.Set(core.NewCoord(4, 6), color.Black)
-	b.Set(core.NewCoord(4, 7), color.Black)
-	b.Set(core.NewCoord(4, 8), color.Black)
-	b.Set(core.NewCoord(2, 8), color.Black)
+	b.Set(coord.NewCoord(4, 0), color.Black)
+	b.Set(coord.NewCoord(4, 1), color.Black)
+	b.Set(coord.NewCoord(4, 2), color.Black)
+	b.Set(coord.NewCoord(4, 3), color.Black)
+	b.Set(coord.NewCoord(4, 4), color.Black)
+	b.Set(coord.NewCoord(4, 5), color.Black)
+	b.Set(coord.NewCoord(4, 6), color.Black)
+	b.Set(coord.NewCoord(4, 7), color.Black)
+	b.Set(coord.NewCoord(4, 8), color.Black)
+	b.Set(coord.NewCoord(2, 8), color.Black)
 
-	b.Set(core.NewCoord(5, 0), color.White)
-	b.Set(core.NewCoord(5, 1), color.White)
-	b.Set(core.NewCoord(5, 2), color.White)
-	b.Set(core.NewCoord(5, 3), color.White)
-	b.Set(core.NewCoord(5, 4), color.White)
-	b.Set(core.NewCoord(5, 5), color.White)
-	b.Set(core.NewCoord(5, 6), color.White)
-	b.Set(core.NewCoord(5, 7), color.White)
-	b.Set(core.NewCoord(5, 8), color.White)
-	b.Set(core.NewCoord(3, 8), color.White)
+	b.Set(coord.NewCoord(5, 0), color.White)
+	b.Set(coord.NewCoord(5, 1), color.White)
+	b.Set(coord.NewCoord(5, 2), color.White)
+	b.Set(coord.NewCoord(5, 3), color.White)
+	b.Set(coord.NewCoord(5, 4), color.White)
+	b.Set(coord.NewCoord(5, 5), color.White)
+	b.Set(coord.NewCoord(5, 6), color.White)
+	b.Set(coord.NewCoord(5, 7), color.White)
+	b.Set(coord.NewCoord(5, 8), color.White)
+	b.Set(coord.NewCoord(3, 8), color.White)
 
-	dead := core.NewCoordSet()
-	dead.Add(core.NewCoord(3, 8))
-	dame := core.NewCoordSet()
+	dead := coord.NewCoordSet()
+	dead.Add(coord.NewCoord(3, 8))
+	dame := coord.NewCoordSet()
 	ad := b.DetectAtariDame(dead, dame)
 	assert.Equal(t, len(ad), 0)
 }
 
 func TestScoreDame(t *testing.T) {
 	b := core.NewBoard(5)
-	b.Set(core.NewCoord(1, 0), color.Black)
-	b.Set(core.NewCoord(1, 1), color.Black)
-	b.Set(core.NewCoord(1, 2), color.Black)
-	b.Set(core.NewCoord(1, 3), color.Black)
-	b.Set(core.NewCoord(1, 4), color.Black)
+	b.Set(coord.NewCoord(1, 0), color.Black)
+	b.Set(coord.NewCoord(1, 1), color.Black)
+	b.Set(coord.NewCoord(1, 2), color.Black)
+	b.Set(coord.NewCoord(1, 3), color.Black)
+	b.Set(coord.NewCoord(1, 4), color.Black)
 
-	b.Set(core.NewCoord(3, 0), color.White)
-	b.Set(core.NewCoord(3, 1), color.White)
-	b.Set(core.NewCoord(3, 2), color.White)
-	b.Set(core.NewCoord(3, 3), color.White)
-	b.Set(core.NewCoord(3, 4), color.White)
+	b.Set(coord.NewCoord(3, 0), color.White)
+	b.Set(coord.NewCoord(3, 1), color.White)
+	b.Set(coord.NewCoord(3, 2), color.White)
+	b.Set(coord.NewCoord(3, 3), color.White)
+	b.Set(coord.NewCoord(3, 4), color.White)
 
-	dead := core.NewCoordSet()
-	dame := core.NewCoordSet()
-	dame.Add(core.NewCoord(2, 2))
+	dead := coord.NewCoordSet()
+	dame := coord.NewCoordSet()
+	dame.Add(coord.NewCoord(2, 2))
 	sr := b.Score(dead, dame)
 	assert.Equal(t, len(sr.Dame), 5)
 }

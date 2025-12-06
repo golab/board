@@ -13,6 +13,7 @@ package state
 import (
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 func (s *State) addFieldNode(fields core.Fields, index int) *core.Diff {
@@ -59,9 +60,9 @@ func (s *State) addPassNode(col color.Color, fields core.Fields, index int) {
 }
 
 func (s *State) PushHead(x, y int, col color.Color) {
-	coord := core.NewCoord(x, y)
+	crd := coord.NewCoord(x, y)
 	if x == -1 || y == -1 {
-		coord = nil
+		crd = nil
 	}
 	index := s.GetNextIndex()
 	fields := core.Fields{}
@@ -73,10 +74,10 @@ func (s *State) PushHead(x, y int, col color.Color) {
 	}
 	value := ""
 	if x != -1 {
-		value = coord.ToLetters()
+		value = crd.ToLetters()
 	}
 
-	n := core.NewTreeNode(coord, col, index, s.head, fields)
+	n := core.NewTreeNode(crd, col, index, s.head, fields)
 	n.AddField(key, value)
 	s.nodes[index] = n
 	if len(s.head.Down) > 0 {
@@ -98,7 +99,7 @@ func (s *State) PushHead(x, y int, col color.Color) {
 		s.gotoIndex(s.head.Index) //nolint: errcheck
 
 		// compute diff
-		diff = s.board.Move(coord, col)
+		diff = s.board.Move(crd, col)
 
 		// go back to saved index
 		s.gotoIndex(save) //nolint: errcheck
@@ -108,7 +109,7 @@ func (s *State) PushHead(x, y int, col color.Color) {
 		// otherwise
 		if x != -1 {
 			// if we are tracking, just compute the diff
-			diff = s.board.Move(coord, col)
+			diff = s.board.Move(crd, col)
 		}
 
 		// and follow along
@@ -122,18 +123,18 @@ func (s *State) PushHead(x, y int, col color.Color) {
 	s.head.SetDiff(diff)
 }
 
-func (s *State) AddNode(coord *core.Coord, col color.Color) *core.Diff {
+func (s *State) AddNode(crd *coord.Coord, col color.Color) *core.Diff {
 	index := s.GetNextIndex()
 	fields := core.Fields{}
 	if col == color.Black {
-		fields.AddField("B", coord.ToLetters())
+		fields.AddField("B", crd.ToLetters())
 	} else {
-		fields.AddField("W", coord.ToLetters())
+		fields.AddField("W", crd.ToLetters())
 	}
-	return s.addNode(coord, col, fields, index, false)
+	return s.addNode(crd, col, fields, index, false)
 }
 
-func (s *State) addNode(coord *core.Coord, col color.Color, fields core.Fields, index int, force bool) *core.Diff {
+func (s *State) addNode(crd *coord.Coord, col color.Color, fields core.Fields, index int, force bool) *core.Diff {
 	s.AnyMove()
 
 	if !force {
@@ -141,9 +142,9 @@ func (s *State) addNode(coord *core.Coord, col color.Color, fields core.Fields, 
 		for i, node := range s.current.Down {
 			coordOld := node.XY
 			if coordOld != nil &&
-				coord != nil &&
-				coordOld.X == coord.X &&
-				coordOld.Y == coord.Y &&
+				crd != nil &&
+				coordOld.X == crd.X &&
+				coordOld.Y == crd.Y &&
 				node.Color == color.Color(col) {
 				s.current.PreferredChild = i
 				s.right()
@@ -156,7 +157,7 @@ func (s *State) addNode(coord *core.Coord, col color.Color, fields core.Fields, 
 	if index == -1 {
 		index = tmp
 	}
-	n := core.NewTreeNode(coord, color.Color(col), index, s.current, fields)
+	n := core.NewTreeNode(crd, color.Color(col), index, s.current, fields)
 
 	s.nodes[index] = n
 	if s.root == nil {
@@ -166,12 +167,12 @@ func (s *State) addNode(coord *core.Coord, col color.Color, fields core.Fields, 
 		s.current.PreferredChild = len(s.current.Down) - 1
 	}
 	s.current = n
-	diff := s.board.Move(coord, color.Color(col))
+	diff := s.board.Move(crd, color.Color(col))
 	s.current.SetDiff(diff)
 	return diff
 }
 
-func (s *State) AddStones(moves []*core.Stone) {
+func (s *State) AddStones(moves []*coord.Stone) {
 	node := s.root
 	locationSave := s.current.Index
 
@@ -212,7 +213,7 @@ func (s *State) AddStones(moves []*core.Stone) {
 }
 
 // SmartGraft doesn't duplicate existing moves
-func (s *State) smartGraft(parentIndex int, moves []*core.Stone) {
+func (s *State) smartGraft(parentIndex int, moves []*coord.Stone) {
 	parent := s.nodes[parentIndex]
 	savedPrefs := make(map[int]int)
 	save := s.current.Index
@@ -286,7 +287,7 @@ func (s *State) smartGraft(parentIndex int, moves []*core.Stone) {
 }
 
 // Graft may duplicate existing moves
-func (s *State) graft(parentIndex int, moves []*core.Stone) {
+func (s *State) graft(parentIndex int, moves []*coord.Stone) {
 	parent := s.nodes[parentIndex]
 	savedPref := parent.PreferredChild
 	save := s.current.Index

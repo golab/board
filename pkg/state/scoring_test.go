@@ -15,7 +15,7 @@ import (
 
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/internal/sgfsamples"
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 func TestScore1(t *testing.T) {
@@ -37,14 +37,14 @@ func TestScore1(t *testing.T) {
 		{3, 13},
 	}
 
-	markedDead := core.NewCoordSet()
+	markedDead := coord.NewCoordSet()
 	for _, d := range dead {
-		coord := core.NewCoord(d[0], d[1])
+		coord := coord.NewCoord(d[0], d[1])
 		gp := s.Board().FindGroup(coord)
 		markedDead.AddAll(gp.Coords)
 	}
 
-	scoreResult := s.board.Score(markedDead, core.NewCoordSet())
+	scoreResult := s.board.Score(markedDead, coord.NewCoordSet())
 	blackArea := scoreResult.BlackArea
 	whiteArea := scoreResult.WhiteArea
 	blackDead := scoreResult.BlackDead
@@ -76,14 +76,14 @@ func TestScore2(t *testing.T) {
 		{15, 12},
 	}
 
-	markedDead := core.NewCoordSet()
+	markedDead := coord.NewCoordSet()
 	for _, d := range dead {
-		coord := core.NewCoord(d[0], d[1])
+		coord := coord.NewCoord(d[0], d[1])
 		gp := s.Board().FindGroup(coord)
 		markedDead.AddAll(gp.Coords)
 	}
 
-	scoreResult := s.board.Score(markedDead, core.NewCoordSet())
+	scoreResult := s.board.Score(markedDead, coord.NewCoordSet())
 	blackArea := scoreResult.BlackArea
 	whiteArea := scoreResult.WhiteArea
 	blackDead := scoreResult.BlackDead
@@ -110,9 +110,9 @@ func TestScore3(t *testing.T) {
 
 	s.fastForward()
 
-	markedDead := core.NewCoordSet()
+	markedDead := coord.NewCoordSet()
 
-	scoreResult := s.board.Score(markedDead, core.NewCoordSet())
+	scoreResult := s.board.Score(markedDead, coord.NewCoordSet())
 	blackArea := scoreResult.BlackArea
 	whiteArea := scoreResult.WhiteArea
 	blackDead := scoreResult.BlackDead
@@ -143,14 +143,14 @@ func TestScore4(t *testing.T) {
 		{5, 6},
 	}
 
-	markedDead := core.NewCoordSet()
+	markedDead := coord.NewCoordSet()
 	for _, d := range dead {
-		coord := core.NewCoord(d[0], d[1])
+		coord := coord.NewCoord(d[0], d[1])
 		gp := s.Board().FindGroup(coord)
 		markedDead.AddAll(gp.Coords)
 	}
 
-	scoreResult := s.board.Score(markedDead, core.NewCoordSet())
+	scoreResult := s.board.Score(markedDead, coord.NewCoordSet())
 	blackArea := scoreResult.BlackArea
 	whiteArea := scoreResult.WhiteArea
 	blackDead := scoreResult.BlackDead
@@ -177,7 +177,7 @@ func TestScore5(t *testing.T) {
 
 	s.fastForward()
 
-	scoreResult := s.board.Score(core.NewCoordSet(), core.NewCoordSet())
+	scoreResult := s.board.Score(coord.NewCoordSet(), coord.NewCoordSet())
 	blackArea := scoreResult.BlackArea
 	whiteArea := scoreResult.WhiteArea
 	blackDead := scoreResult.BlackDead
@@ -204,7 +204,7 @@ func TestScore6(t *testing.T) {
 
 	s.fastForward()
 
-	scoreResult := s.board.Score(core.NewCoordSet(), core.NewCoordSet())
+	scoreResult := s.board.Score(coord.NewCoordSet(), coord.NewCoordSet())
 	blackArea := scoreResult.BlackArea
 	whiteArea := scoreResult.WhiteArea
 	blackDead := scoreResult.BlackDead
@@ -231,7 +231,7 @@ func TestScore7(t *testing.T) {
 
 	s.fastForward()
 
-	scoreResult := s.board.Score(core.NewCoordSet(), core.NewCoordSet())
+	scoreResult := s.board.Score(coord.NewCoordSet(), coord.NewCoordSet())
 	blackArea := scoreResult.BlackArea
 	whiteArea := scoreResult.WhiteArea
 	blackDead := scoreResult.BlackDead
@@ -258,7 +258,7 @@ func TestScore8(t *testing.T) {
 
 	s.fastForward()
 
-	scoreResult := s.board.Score(core.NewCoordSet(), core.NewCoordSet())
+	scoreResult := s.board.Score(coord.NewCoordSet(), coord.NewCoordSet())
 	blackArea := scoreResult.BlackArea
 	whiteArea := scoreResult.WhiteArea
 	blackDead := scoreResult.BlackDead

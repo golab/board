@@ -18,6 +18,7 @@ import (
 
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/loader"
@@ -529,7 +530,7 @@ func (r *Room) EditKomi(s string) {
 	r.state.EditKomi(s)
 }
 
-func (r *Room) AddStones(moves []*core.Stone) {
+func (r *Room) AddStones(moves []*coord.Stone) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.state.AddStones(moves)

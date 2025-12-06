@@ -16,8 +16,8 @@ import (
 	"io"
 	"time"
 
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"golang.org/x/net/websocket"
@@ -27,7 +27,7 @@ type Room interface {
 	HeadColor() color.Color
 	PushHead(int, int, color.Color)
 	BroadcastFullFrame()
-	AddStones([]*core.Stone)
+	AddStones([]*coord.Stone)
 	Broadcast(event.Event)
 	UploadSGF(string) event.Event
 }
@@ -290,7 +290,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			}
 			moves := payload["m"].(string)
 
-			movesArr := []*core.Stone{}
+			movesArr := []*coord.Stone{}
 			currentColor := color.Black
 			if o.First == 1 {
 				currentColor = color.White
@@ -309,11 +309,11 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 						currentColor = color.White
 					case "..":
 						//Pass
-						movesArr = append(movesArr, &core.Stone{Coord: nil, Color: currentColor})
+						movesArr = append(movesArr, &coord.Stone{Coord: nil, Color: currentColor})
 						currentColor = currentColor.Opposite()
 					default:
-						coord := core.LettersToCoord(coordStr)
-						movesArr = append(movesArr, &core.Stone{Coord: coord, Color: currentColor})
+						crd := coord.LettersToCoord(coordStr)
+						movesArr = append(movesArr, &coord.Stone{Coord: crd, Color: currentColor})
 						currentColor = currentColor.Opposite()
 					}
 				}
@@ -333,7 +333,7 @@ func (o *OGSConnector) GamedataToSGF(gamedata map[string]any) string {
 
 	for index, m := range gamedata["moves"].([]any) {
 		arr := m.([]any)
-		c := core.NewCoord(int(arr[0].(float64)), int(arr[1].(float64)))
+		c := coord.NewCoord(int(arr[0].(float64)), int(arr[1].(float64)))
 
 		col := "B"
 

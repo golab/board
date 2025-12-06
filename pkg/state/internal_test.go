@@ -15,8 +15,8 @@ import (
 
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/internal/sgfsamples"
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 func TestState3(t *testing.T) {
@@ -69,10 +69,10 @@ func TestAddStones(t *testing.T) {
 	assert.NoError(t, err)
 
 	// add three new moves
-	moves := []*core.Stone{
-		core.NewStone(9, 9, color.Black),
-		core.NewStone(10, 10, color.White),
-		core.NewStone(11, 11, color.Black),
+	moves := []*coord.Stone{
+		coord.NewStone(9, 9, color.Black),
+		coord.NewStone(10, 10, color.White),
+		coord.NewStone(11, 11, color.Black),
 	}
 
 	s.AddStones(moves)
@@ -97,11 +97,11 @@ func TestGraft(t *testing.T) {
 	s, err := FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err)
 
-	moves := []*core.Stone{
-		core.NewStone(9, 9, color.Black),
-		core.NewStone(10, 10, color.White),
-		core.NewStone(11, 11, color.Black),
-		core.NewStone(12, 12, color.Black),
+	moves := []*coord.Stone{
+		coord.NewStone(9, 9, color.Black),
+		coord.NewStone(10, 10, color.White),
+		coord.NewStone(11, 11, color.Black),
+		coord.NewStone(12, 12, color.Black),
 	}
 
 	// dumb graft
@@ -151,25 +151,25 @@ func TestGenerateMarks(t *testing.T) {
 	s.right()
 
 	// add a triangle
-	coord := core.NewCoord(9, 9)
-	_, err = NewAddTriangleCommand(coord).Execute(s)
+	crd := coord.NewCoord(9, 9)
+	_, err = NewAddTriangleCommand(crd).Execute(s)
 	assert.NoError(t, err)
 
 	// add a square
-	coord = core.NewCoord(10, 10)
-	_, err = NewAddSquareCommand(coord).Execute(s)
+	crd = coord.NewCoord(10, 10)
+	_, err = NewAddSquareCommand(crd).Execute(s)
 	assert.NoError(t, err)
 
 	// add a letter
-	coord = core.NewCoord(11, 11)
+	crd = coord.NewCoord(11, 11)
 	letter := "A"
-	_, err = NewAddLetterCommand(coord, letter).Execute(s)
+	_, err = NewAddLetterCommand(crd, letter).Execute(s)
 	assert.NoError(t, err)
 
 	// add a number
-	coord = core.NewCoord(12, 12)
+	crd = coord.NewCoord(12, 12)
 	number := 1
-	_, err = NewAddNumberCommand(coord, number).Execute(s)
+	_, err = NewAddNumberCommand(crd, number).Execute(s)
 	assert.NoError(t, err)
 
 	// add pen stroke
@@ -178,18 +178,18 @@ func TestGenerateMarks(t *testing.T) {
 
 	marks := s.generateMarks()
 
-	assert.True(t, marks.Current.Equal(core.NewCoord(15, 3)))
+	assert.True(t, marks.Current.Equal(coord.NewCoord(15, 3)))
 
 	assert.Equal(t, len(marks.Triangles), 1)
-	assert.True(t, marks.Triangles[0].Equal(core.NewCoord(9, 9)))
+	assert.True(t, marks.Triangles[0].Equal(coord.NewCoord(9, 9)))
 
 	assert.Equal(t, len(marks.Squares), 1)
-	assert.True(t, marks.Squares[0].Equal(core.NewCoord(10, 10)))
+	assert.True(t, marks.Squares[0].Equal(coord.NewCoord(10, 10)))
 
 	assert.Equal(t, len(marks.Labels), 2)
 
-	assert.True(t, marks.Labels[0].Coord.Equal(core.NewCoord(11, 11)))
-	assert.True(t, marks.Labels[1].Coord.Equal(core.NewCoord(12, 12)))
+	assert.True(t, marks.Labels[0].Coord.Equal(coord.NewCoord(11, 11)))
+	assert.True(t, marks.Labels[1].Coord.Equal(coord.NewCoord(12, 12)))
 
 	assert.Equal(t, marks.Labels[0].Text, "A")
 	assert.Equal(t, marks.Labels[1].Text, "1")

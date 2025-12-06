@@ -15,6 +15,7 @@ import (
 
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 func (s *State) prefs() map[string]int {
@@ -134,33 +135,33 @@ func (s *State) computeDiffSetup(i int) *core.Diff {
 	defer s.gotoIndex(save) //nolint: errcheck
 
 	// find the black stones to add
-	diffAdd := []*core.StoneSet{}
+	diffAdd := []*coord.StoneSet{}
 	if val := n.GetField("AB"); len(val) > 0 {
-		add := core.NewCoordSet()
+		add := coord.NewCoordSet()
 		for _, v := range val {
-			add.Add(core.LettersToCoord(v))
+			add.Add(coord.LettersToCoord(v))
 		}
-		stoneSet := core.NewStoneSet(add, color.Black)
+		stoneSet := coord.NewStoneSet(add, color.Black)
 		diffAdd = append(diffAdd, stoneSet)
 	}
 
 	// find the white stones to add
 	if val := n.GetField("AW"); len(val) > 0 {
-		add := core.NewCoordSet()
+		add := coord.NewCoordSet()
 		for _, v := range val {
-			add.Add(core.LettersToCoord(v))
+			add.Add(coord.LettersToCoord(v))
 		}
-		stoneSet := core.NewStoneSet(add, color.White)
+		stoneSet := coord.NewStoneSet(add, color.White)
 		diffAdd = append(diffAdd, stoneSet)
 	}
 
 	// find the stones to remove
-	diffRemove := []*core.StoneSet{}
+	diffRemove := []*coord.StoneSet{}
 	if val := n.GetField("AE"); len(val) > 0 {
-		csBlack := core.NewCoordSet()
-		csWhite := core.NewCoordSet()
+		csBlack := coord.NewCoordSet()
+		csWhite := coord.NewCoordSet()
 		for _, v := range val {
-			coord := core.LettersToCoord(v)
+			coord := coord.LettersToCoord(v)
 			col := s.board.Get(coord)
 			switch col {
 			case color.Black:
@@ -169,8 +170,8 @@ func (s *State) computeDiffSetup(i int) *core.Diff {
 				csWhite.Add(coord)
 			}
 		}
-		removeBlack := core.NewStoneSet(csBlack, color.Black)
-		removeWhite := core.NewStoneSet(csWhite, color.White)
+		removeBlack := coord.NewStoneSet(csBlack, color.Black)
+		removeWhite := coord.NewStoneSet(csWhite, color.White)
 		diffRemove = append(diffRemove, removeBlack)
 		diffRemove = append(diffRemove, removeWhite)
 	}

@@ -17,6 +17,7 @@ import (
 
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 type Command interface {
@@ -24,30 +25,30 @@ type Command interface {
 }
 
 type addStoneCommand struct {
-	coord *core.Coord
+	crd   *coord.Coord
 	color color.Color
 }
 
-func NewAddStoneCommand(coord *core.Coord, color color.Color) Command {
-	return &addStoneCommand{coord, color}
+func NewAddStoneCommand(crd *coord.Coord, color color.Color) Command {
+	return &addStoneCommand{crd, color}
 }
 
 func (cmd *addStoneCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.coord.X
-	y := cmd.coord.Y
+	x := cmd.crd.X
+	y := cmd.crd.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
 	// if a child already exists with that coord and col, then actually
 	// this is just a gotoindex operation
-	if child, ok := s.current.HasChild(cmd.coord, cmd.color); ok {
+	if child, ok := s.current.HasChild(cmd.crd, cmd.color); ok {
 		s.gotoIndex(child) //nolint: errcheck
 		return s.GenerateFullFrame(CurrentAndPreferred), nil
 	}
 
 	// do nothing on a suicide move
-	if !s.board.Legal(cmd.coord, cmd.color) {
+	if !s.board.Legal(cmd.crd, cmd.color) {
 		return nil, nil
 	}
 
@@ -56,9 +57,9 @@ func (cmd *addStoneCommand) Execute(s *State) (*Frame, error) {
 	if cmd.color == color.White {
 		key = "W"
 	}
-	fields.AddField(key, cmd.coord.ToLetters())
+	fields.AddField(key, cmd.crd.ToLetters())
 
-	diff := s.addNode(cmd.coord, cmd.color, fields, -1, false)
+	diff := s.addNode(cmd.crd, cmd.color, fields, -1, false)
 
 	marks := s.generateMarks()
 
@@ -104,22 +105,22 @@ func (cmd *passCommand) Execute(s *State) (*Frame, error) {
 }
 
 type removeStoneCommand struct {
-	coord *core.Coord
+	crd *coord.Coord
 }
 
-func NewRemoveStoneCommand(coord *core.Coord) Command {
-	return &removeStoneCommand{coord}
+func NewRemoveStoneCommand(crd *coord.Coord) Command {
+	return &removeStoneCommand{crd}
 }
 
 func (cmd *removeStoneCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.coord.X
-	y := cmd.coord.Y
+	x := cmd.crd.X
+	y := cmd.crd.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
 	fields := core.Fields{}
-	fields.AddField("AE", cmd.coord.ToLetters())
+	fields.AddField("AE", cmd.crd.ToLetters())
 	diff := s.addFieldNode(fields, -1)
 
 	return &Frame{
@@ -135,97 +136,97 @@ func (cmd *removeStoneCommand) Execute(s *State) (*Frame, error) {
 }
 
 type addTriangleCommand struct {
-	coord *core.Coord
+	crd *coord.Coord
 }
 
-func NewAddTriangleCommand(coord *core.Coord) Command {
-	return &addTriangleCommand{coord}
+func NewAddTriangleCommand(crd *coord.Coord) Command {
+	return &addTriangleCommand{crd}
 }
 
 func (cmd *addTriangleCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.coord.X
-	y := cmd.coord.Y
+	x := cmd.crd.X
+	y := cmd.crd.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
-	l := cmd.coord.ToLetters()
+	l := cmd.crd.ToLetters()
 	s.current.AddField("TR", l)
 	return nil, nil
 }
 
 type addSquareCommand struct {
-	coord *core.Coord
+	crd *coord.Coord
 }
 
-func NewAddSquareCommand(coord *core.Coord) Command {
-	return &addSquareCommand{coord}
+func NewAddSquareCommand(crd *coord.Coord) Command {
+	return &addSquareCommand{crd}
 }
 
 func (cmd *addSquareCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.coord.X
-	y := cmd.coord.Y
+	x := cmd.crd.X
+	y := cmd.crd.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
-	l := cmd.coord.ToLetters()
+	l := cmd.crd.ToLetters()
 	s.current.AddField("SQ", l)
 	return nil, nil
 }
 
 type addLetterCommand struct {
-	coord  *core.Coord
+	crd    *coord.Coord
 	letter string
 }
 
-func NewAddLetterCommand(coord *core.Coord, letter string) Command {
-	return &addLetterCommand{coord, letter}
+func NewAddLetterCommand(crd *coord.Coord, letter string) Command {
+	return &addLetterCommand{crd, letter}
 }
 
 func (cmd *addLetterCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.coord.X
-	y := cmd.coord.Y
+	x := cmd.crd.X
+	y := cmd.crd.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
-	l := cmd.coord.ToLetters()
+	l := cmd.crd.ToLetters()
 	lb := fmt.Sprintf("%s:%s", l, cmd.letter)
 	s.current.AddField("LB", lb)
 	return nil, nil
 }
 
 type addNumberCommand struct {
-	coord  *core.Coord
+	crd    *coord.Coord
 	number int
 }
 
-func NewAddNumberCommand(coord *core.Coord, number int) Command {
-	return &addNumberCommand{coord, number}
+func NewAddNumberCommand(crd *coord.Coord, number int) Command {
+	return &addNumberCommand{crd, number}
 }
 
 func (cmd *addNumberCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.coord.X
-	y := cmd.coord.Y
+	x := cmd.crd.X
+	y := cmd.crd.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
-	l := cmd.coord.ToLetters()
+	l := cmd.crd.ToLetters()
 	lb := fmt.Sprintf("%s:%d", l, cmd.number)
 	s.current.AddField("LB", lb)
 	return nil, nil
 }
 
 type removeMarkCommand struct {
-	coord *core.Coord
+	crd *coord.Coord
 }
 
-func NewRemoveMarkCommand(coord *core.Coord) Command {
-	return &removeMarkCommand{coord}
+func NewRemoveMarkCommand(crd *coord.Coord) Command {
+	return &removeMarkCommand{crd}
 }
 
 func (cmd *removeMarkCommand) Execute(s *State) (*Frame, error) {
-	l := cmd.coord.ToLetters()
+	l := cmd.crd.ToLetters()
 	for _, field := range s.current.AllFields() {
 		key := field.Key
 		values := field.Values
@@ -370,16 +371,16 @@ func (cmd *gotoGridCommand) Execute(s *State) (*Frame, error) {
 }
 
 type gotoCoordCommand struct {
-	coord *core.Coord
+	crd *coord.Coord
 }
 
-func NewGotoCoordCommand(coord *core.Coord) Command {
-	return &gotoCoordCommand{coord}
+func NewGotoCoordCommand(crd *coord.Coord) Command {
+	return &gotoCoordCommand{crd}
 }
 
 func (cmd *gotoCoordCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.coord.X
-	y := cmd.coord.Y
+	x := cmd.crd.X
+	y := cmd.crd.Y
 	s.gotoCoord(x, y)
 	return s.GenerateFullFrame(CurrentAndPreferred), nil
 }
@@ -527,7 +528,7 @@ func (cmd *graftCommand) Execute(s *State) (*Frame, error) {
 	}
 
 	// setup the moves array and initial color
-	moves := []*core.Stone{}
+	moves := []*coord.Stone{}
 	col := s.nodes[parentIndex].Color
 	if col == color.Empty {
 		col = color.White
@@ -537,7 +538,7 @@ func (cmd *graftCommand) Execute(s *State) (*Frame, error) {
 	for _, tok := range tokens[start:] {
 
 		// convert to a Coord
-		coord, err := core.AlphanumericToCoord(tok, s.size)
+		crd, err := coord.AlphanumericToCoord(tok, s.size)
 		if err != nil {
 			return nil, err
 		}
@@ -546,7 +547,7 @@ func (cmd *graftCommand) Execute(s *State) (*Frame, error) {
 		col = col.Opposite()
 
 		// create a new move
-		move := &core.Stone{Coord: coord, Color: col}
+		move := &coord.Stone{Coord: crd, Color: col}
 		moves = append(moves, move)
 	}
 
@@ -581,30 +582,30 @@ func (cmd *scoreCommand) Execute(s *State) (*Frame, error) {
 }
 
 type markDeadCommand struct {
-	coord *core.Coord
+	crd *coord.Coord
 }
 
-func NewMarkDeadCommand(coord *core.Coord) Command {
-	return &markDeadCommand{coord}
+func NewMarkDeadCommand(crd *coord.Coord) Command {
+	return &markDeadCommand{crd}
 }
 
 func (cmd *markDeadCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.coord.X
-	y := cmd.coord.Y
+	x := cmd.crd.X
+	y := cmd.crd.Y
 	if x >= s.size || y >= s.size || x < 0 || y < 0 {
 		return nil, nil
 	}
 
-	if s.board.Get(cmd.coord) == color.Empty {
-		dame, _ := s.board.FindArea(cmd.coord, core.NewCoordSet())
-		if s.markedDame.Has(cmd.coord) {
+	if s.board.Get(cmd.crd) == color.Empty {
+		dame, _ := s.board.FindArea(cmd.crd, coord.NewCoordSet())
+		if s.markedDame.Has(cmd.crd) {
 			s.markedDame.RemoveAll(dame)
 		} else {
 			s.markedDame.AddAll(dame)
 		}
 	} else {
-		gp := s.board.FindGroup(cmd.coord)
-		if s.markedDead.Has(cmd.coord) {
+		gp := s.board.FindGroup(cmd.crd)
+		if s.markedDead.Has(cmd.crd) {
 			s.markedDead.RemoveAll(gp.Coords)
 		} else {
 			s.markedDead.AddAll(gp.Coords)

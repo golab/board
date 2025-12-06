@@ -15,6 +15,7 @@ import (
 	"sort"
 
 	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 type Field struct {
@@ -149,14 +150,14 @@ func (f *Fields) Color() color.Color {
 	return color.Empty
 }
 
-func (f *Fields) Coord() *Coord {
+func (f *Fields) Coord() *coord.Coord {
 	bvalues := f.GetField("B")
 	wvalues := f.GetField("W")
 	if len(bvalues) == 1 {
-		return LettersToCoord(bvalues[0])
+		return coord.LettersToCoord(bvalues[0])
 	}
 	if len(wvalues) == 1 {
-		return LettersToCoord(wvalues[0])
+		return coord.LettersToCoord(wvalues[0])
 	}
 	return nil
 }
