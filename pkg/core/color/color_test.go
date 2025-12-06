@@ -8,5 +8,17 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-// the core package provides basic functionality to all the major components of the code
-package core
+package color_test
+
+import (
+	"testing"
+
+	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/pkg/core/color"
+)
+
+func TestColor(t *testing.T) {
+	assert.Equal(t, color.Black.String(), "B")
+	assert.Equal(t, color.White.String(), "W")
+	assert.Equal(t, color.Empty.String(), "+")
+}
