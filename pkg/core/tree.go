@@ -13,6 +13,7 @@ package core
 import (
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/jarednogo/board/pkg/core/fields"
 )
 
 // Fmap applies a function f to every node under (and including) root
@@ -46,14 +47,14 @@ type TreeNode struct {
 	Up             *TreeNode
 	Index          int
 	PreferredChild int
-	Fields
+	fields.Fields
 	Diff      *Diff
 	Depth     int
 	BlackCaps int
 	WhiteCaps int
 }
 
-func NewTreeNode(crd *coord.Coord, col color.Color, index int, up *TreeNode, fields Fields) *TreeNode {
+func NewTreeNode(crd *coord.Coord, col color.Color, index int, up *TreeNode, flds fields.Fields) *TreeNode {
 	down := []*TreeNode{}
 	node := &TreeNode{
 		XY:             crd,
@@ -62,7 +63,7 @@ func NewTreeNode(crd *coord.Coord, col color.Color, index int, up *TreeNode, fie
 		Up:             nil,
 		Index:          index,
 		PreferredChild: 0,
-		Fields:         fields,
+		Fields:         flds,
 		Diff:           nil,
 		Depth:          0,
 		BlackCaps:      0,

@@ -15,9 +15,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/jarednogo/board/pkg/core/fields"
 )
 
 type Command interface {
@@ -52,14 +52,14 @@ func (cmd *addStoneCommand) Execute(s *State) (*Frame, error) {
 		return nil, nil
 	}
 
-	fields := core.Fields{}
+	flds := fields.Fields{}
 	key := "B"
 	if cmd.color == color.White {
 		key = "W"
 	}
-	fields.AddField(key, cmd.crd.ToLetters())
+	flds.AddField(key, cmd.crd.ToLetters())
 
-	diff := s.addNode(cmd.crd, cmd.color, fields, -1, false)
+	diff := s.addNode(cmd.crd, cmd.color, flds, -1, false)
 
 	marks := s.generateMarks()
 
@@ -84,13 +84,13 @@ func NewPassCommand(color color.Color) Command {
 }
 
 func (cmd *passCommand) Execute(s *State) (*Frame, error) {
-	fields := core.Fields{}
+	flds := fields.Fields{}
 	key := "B"
 	if cmd.color == color.White {
 		key = "W"
 	}
-	fields.AddField(key, "")
-	s.addPassNode(cmd.color, fields, -1)
+	flds.AddField(key, "")
+	s.addPassNode(cmd.color, flds, -1)
 
 	return &Frame{
 		Type:      DiffFrame,
@@ -119,9 +119,9 @@ func (cmd *removeStoneCommand) Execute(s *State) (*Frame, error) {
 		return nil, nil
 	}
 
-	fields := core.Fields{}
-	fields.AddField("AE", cmd.crd.ToLetters())
-	diff := s.addFieldNode(fields, -1)
+	flds := fields.Fields{}
+	flds.AddField("AE", cmd.crd.ToLetters())
+	diff := s.addFieldNode(flds, -1)
 
 	return &Frame{
 		Type:      DiffFrame,

@@ -18,6 +18,7 @@ import (
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/jarednogo/board/pkg/core/fields"
 )
 
 const Letters = "ABCDEFGHIJKLNMOPQRSTUVWXYZ"
@@ -231,8 +232,8 @@ func NewState(size int, initRoot bool) *State {
 	root = nil
 	index := 0
 	if initRoot {
-		fields := core.Fields{}
-		root = core.NewTreeNode(nil, color.Empty, 0, nil, fields)
+		flds := fields.Fields{}
+		root = core.NewTreeNode(nil, color.Empty, 0, nil, flds)
 		root.AddField("GM", "1")
 		root.AddField("FF", "4")
 		root.AddField("CA", "UTF-8")

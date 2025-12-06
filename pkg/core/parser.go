@@ -13,6 +13,8 @@ package core
 import (
 	"fmt"
 	"strings"
+
+	"github.com/jarednogo/board/pkg/core/fields"
 )
 
 func isWhitespace(c rune) bool {
@@ -20,7 +22,7 @@ func isWhitespace(c rune) bool {
 }
 
 type SGFNode struct {
-	Fields
+	fields.Fields
 	down []*SGFNode
 }
 
@@ -47,7 +49,7 @@ func (n *SGFNode) toSGF(root bool) string {
 
 	n.SortFields()
 
-	for _, field := range n.fields {
+	for _, field := range n.AllFields() {
 		sb.WriteString(field.Key)
 		for _, value := range field.Values {
 			sb.WriteByte('[')
@@ -200,25 +202,25 @@ func (p *Parser) parseProperty() (*property, error) {
 		return nil, fmt.Errorf("bad property (expected field) %c", c)
 	}
 
-	fields, err := p.parseOneOrMoreFields(key)
+	flds, err := p.parseOneOrMoreFields(key)
 	if err != nil {
 		return nil, err
 	}
 
-	prop.values = fields
+	prop.values = flds
 
 	return prop, nil
 }
 
 func (p *Parser) parseOneOrMoreFields(key string) ([]string, error) {
-	fields := []string{}
+	flds := []string{}
 	// require parse first field
 	field, err := p.parseOneField(key)
 	if err != nil {
 		return nil, err
 	}
 
-	fields = append(fields, field)
+	flds = append(flds, field)
 
 	// potentially parse more fields
 	for {
@@ -229,12 +231,12 @@ func (p *Parser) parseOneOrMoreFields(key string) ([]string, error) {
 			if err != nil {
 				return nil, err
 			}
-			fields = append(fields, field)
+			flds = append(flds, field)
 		} else {
 			break
 		}
 	}
-	return fields, nil
+	return flds, nil
 }
 
 func (p *Parser) parseOneField(key string) (string, error) {

@@ -17,6 +17,7 @@ import (
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/jarednogo/board/pkg/core/fields"
 )
 
 // FrameType can be either DiffFrame or FullFrame
@@ -68,8 +69,8 @@ type Pen struct {
 
 // Metadata provides the size of the board plus any fields (usually from the root node)
 type Metadata struct {
-	Size   int          `json:"size"`
-	Fields []core.Field `json:"fields"`
+	Size   int            `json:"size"`
+	Fields []fields.Field `json:"fields"`
 }
 
 // TreeJSONType defines some options for how much data to send in a TreeJSON

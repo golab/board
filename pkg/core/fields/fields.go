@@ -9,7 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 // the core package provides basic functionality to all the major components of the code
-package core
+package fields
 
 import (
 	"sort"
