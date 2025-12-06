@@ -11,14 +11,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package state
 
 import (
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/core/fields"
 	"github.com/jarednogo/board/pkg/core/tree"
 )
 
-func (s *State) addFieldNode(flds fields.Fields, index int) *core.Diff {
+func (s *State) addFieldNode(flds fields.Fields, index int) *coord.Diff {
 	s.AnyMove()
 	tmp := s.GetNextIndex()
 	if index == -1 {
@@ -90,7 +89,7 @@ func (s *State) PushHead(x, y int, col color.Color) {
 	// tracking the head or not
 	tracking := s.current == s.head
 
-	var diff *core.Diff
+	var diff *coord.Diff
 
 	// if we're not tracking the head
 	if !tracking {
@@ -125,7 +124,7 @@ func (s *State) PushHead(x, y int, col color.Color) {
 	s.head.SetDiff(diff)
 }
 
-func (s *State) AddNode(crd *coord.Coord, col color.Color) *core.Diff {
+func (s *State) AddNode(crd *coord.Coord, col color.Color) *coord.Diff {
 	index := s.GetNextIndex()
 	flds := fields.Fields{}
 	if col == color.Black {
@@ -136,7 +135,7 @@ func (s *State) AddNode(crd *coord.Coord, col color.Color) *core.Diff {
 	return s.addNode(crd, col, flds, index, false)
 }
 
-func (s *State) addNode(crd *coord.Coord, col color.Color, flds fields.Fields, index int, force bool) *core.Diff {
+func (s *State) addNode(crd *coord.Coord, col color.Color, flds fields.Fields, index int, force bool) *coord.Diff {
 	s.AnyMove()
 
 	if !force {
@@ -343,7 +342,7 @@ func (s *State) graft(parentIndex int, moves []*coord.Stone) {
 	parent.PreferredChild = savedPref
 }
 
-func (s *State) cut() *core.Diff {
+func (s *State) cut() *coord.Diff {
 	s.AnyMove()
 	// store the current index
 	index := s.current.Index

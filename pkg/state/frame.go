@@ -14,7 +14,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/core/fields"
@@ -31,7 +30,7 @@ const (
 // Frame provides the data for when the board needs to be updated (not the explorer)
 type Frame struct {
 	Type      FrameType      `json:"type"`
-	Diff      *core.Diff     `json:"diff"`
+	Diff      *coord.Diff    `json:"diff"`
 	Marks     *Marks         `json:"marks"`
 	Comments  []string       `json:"comments"`
 	Metadata  *Metadata      `json:"metadata"`

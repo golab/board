@@ -11,7 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package tree
 
 import (
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/core/fields"
@@ -49,7 +48,7 @@ type TreeNode struct {
 	Index          int
 	PreferredChild int
 	fields.Fields
-	Diff      *core.Diff
+	Diff      *coord.Diff
 	Depth     int
 	BlackCaps int
 	WhiteCaps int
@@ -85,7 +84,7 @@ func (n *TreeNode) ShallowEqual(m *TreeNode) bool {
 		n.Depth == m.Depth
 }
 
-func (n *TreeNode) SetDiff(diff *core.Diff) {
+func (n *TreeNode) SetDiff(diff *coord.Diff) {
 	n.Diff = diff
 	b := 0
 	w := 0

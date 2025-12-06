@@ -13,7 +13,7 @@ package state
 import (
 	"strings"
 
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 func (s *State) SetLocation(loc string) {
@@ -27,7 +27,7 @@ func (s *State) SetLocation(loc string) {
 
 }
 
-func (s *State) left() *core.Diff {
+func (s *State) left() *coord.Diff {
 	s.AnyMove()
 	if s.current.Up != nil {
 		d := s.current.Diff.Invert()
@@ -38,7 +38,7 @@ func (s *State) left() *core.Diff {
 	return nil
 }
 
-func (s *State) right() *core.Diff {
+func (s *State) right() *coord.Diff {
 	s.AnyMove()
 	if len(s.current.Down) > 0 {
 		index := s.current.PreferredChild

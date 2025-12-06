@@ -13,7 +13,6 @@ package state
 import (
 	"fmt"
 
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 )
@@ -94,7 +93,7 @@ func (s *State) locate() string {
 	return result
 }
 
-func (s *State) computeDiffMove(i int) *core.Diff {
+func (s *State) computeDiffMove(i int) *coord.Diff {
 	save := s.current.Index
 	n, ok := s.nodes[i]
 	if !ok {
@@ -117,7 +116,7 @@ func (s *State) computeDiffMove(i int) *core.Diff {
 	return diff
 }
 
-func (s *State) computeDiffSetup(i int) *core.Diff {
+func (s *State) computeDiffSetup(i int) *coord.Diff {
 	save := s.current.Index
 	n, ok := s.nodes[i]
 	if !ok {
@@ -175,6 +174,6 @@ func (s *State) computeDiffSetup(i int) *core.Diff {
 		diffRemove = append(diffRemove, removeBlack)
 		diffRemove = append(diffRemove, removeWhite)
 	}
-	diff := core.NewDiff(diffAdd, diffRemove)
+	diff := coord.NewDiff(diffAdd, diffRemove)
 	return diff
 }

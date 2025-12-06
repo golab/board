@@ -24,7 +24,6 @@ AB, AE, and AW are setup properties
 import (
 	"fmt"
 
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 )
@@ -278,7 +277,7 @@ func (b *Board) RemoveDead(start *coord.Coord, col color.Color) *coord.StoneSet 
 	return w
 }
 
-func (b *Board) Move(start *coord.Coord, col color.Color) *core.Diff {
+func (b *Board) Move(start *coord.Coord, col color.Color) *coord.Diff {
 	// check to see if it's legal
 	if !b.Legal(start, col) {
 		return nil
@@ -294,10 +293,10 @@ func (b *Board) Move(start *coord.Coord, col color.Color) *core.Diff {
 	cs := coord.NewCoordSet()
 	cs.Add(start)
 	add := coord.NewStoneSet(cs, col)
-	return core.NewDiff([]*coord.StoneSet{add}, []*coord.StoneSet{remove})
+	return coord.NewDiff([]*coord.StoneSet{add}, []*coord.StoneSet{remove})
 }
 
-func (b *Board) ApplyDiff(d *core.Diff) {
+func (b *Board) ApplyDiff(d *coord.Diff) {
 	if d == nil {
 		return
 	}
@@ -309,7 +308,7 @@ func (b *Board) ApplyDiff(d *core.Diff) {
 	}
 }
 
-func (b *Board) CurrentDiff() *core.Diff {
+func (b *Board) CurrentDiff() *coord.Diff {
 	black := coord.NewCoordSet()
 	white := coord.NewCoordSet()
 	for j, row := range b.Points {
@@ -324,7 +323,7 @@ func (b *Board) CurrentDiff() *core.Diff {
 	}
 	addBlack := coord.NewStoneSet(black, color.Black)
 	addWhite := coord.NewStoneSet(white, color.White)
-	return core.NewDiff([]*coord.StoneSet{addBlack, addWhite}, nil)
+	return coord.NewDiff([]*coord.StoneSet{addBlack, addWhite}, nil)
 }
 
 type EmptyPointType int
