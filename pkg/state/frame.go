@@ -109,7 +109,7 @@ func (s *State) generateMarks() *Marks {
 	if trs := s.current.GetField("TR"); len(trs) > 0 {
 		cs := coord.NewCoordSet()
 		for _, tr := range trs {
-			c := coord.LettersToCoord(tr)
+			c := coord.FromLetters(tr)
 			cs.Add(c)
 		}
 		marks.Triangles = cs.List()
@@ -118,7 +118,7 @@ func (s *State) generateMarks() *Marks {
 	if sqs := s.current.GetField("SQ"); len(sqs) > 0 {
 		cs := coord.NewCoordSet()
 		for _, sq := range sqs {
-			c := coord.LettersToCoord(sq)
+			c := coord.FromLetters(sq)
 			cs.Add(c)
 		}
 		marks.Squares = cs.List()
@@ -127,7 +127,7 @@ func (s *State) generateMarks() *Marks {
 		labels := []*Label{}
 		for _, lb := range lbs {
 			spl := strings.Split(lb, ":")
-			c := coord.LettersToCoord(spl[0])
+			c := coord.FromLetters(spl[0])
 			text := spl[1]
 			label := &Label{Coord: c, Text: text}
 			labels = append(labels, label)

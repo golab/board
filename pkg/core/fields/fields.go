@@ -154,10 +154,10 @@ func (f *Fields) Coord() *coord.Coord {
 	bvalues := f.GetField("B")
 	wvalues := f.GetField("W")
 	if len(bvalues) == 1 {
-		return coord.LettersToCoord(bvalues[0])
+		return coord.FromLetters(bvalues[0])
 	}
 	if len(wvalues) == 1 {
-		return coord.LettersToCoord(wvalues[0])
+		return coord.FromLetters(wvalues[0])
 	}
 	return nil
 }

@@ -83,7 +83,7 @@ func TestInterface1(t *testing.T) {
 		t.Error(err)
 	}
 
-	c, err := coord.InterfaceToCoord(ifc)
+	c, err := coord.FromInterface(ifc)
 	if err != nil {
 		t.Error(err)
 	}
@@ -134,7 +134,7 @@ var alphaTests = []struct {
 func TestAlphanumericToCoord(t *testing.T) {
 	for i, tt := range alphaTests {
 		t.Run(fmt.Sprintf("alpha%d", i), func(t *testing.T) {
-			coord, err := coord.AlphanumericToCoord(tt.input, 19)
+			coord, err := coord.FromAlphanumeric(tt.input, 19)
 			if tt.output != nil && !coord.Equal(tt.output) {
 				t.Errorf(
 					"wrong output in TestAlphanumeric: %v (expected %v)",

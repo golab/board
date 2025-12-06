@@ -104,7 +104,7 @@ func TestSim2(t *testing.T) {
 		}
 		value["color"] = color
 
-		coord := coord.LettersToCoord(cur.GetField(key)[0])
+		coord := coord.FromLetters(cur.GetField(key)[0])
 
 		value["coords"] = []any{float64(coord.X), float64(coord.Y)}
 		evt := event.NewEvent("add_stone", value)

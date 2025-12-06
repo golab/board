@@ -22,7 +22,7 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 	switch evt.Type() {
 	case "add_stone":
 		val := evt.Value().(map[string]any)
-		c, err := coord.InterfaceToCoord(val["coords"])
+		c, err := coord.FromInterface(val["coords"])
 		if err != nil {
 			return nil, err
 		}
@@ -32,26 +32,26 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 		col := color.Color(evt.Value().(float64))
 		return NewPassCommand(col), nil
 	case "remove_stone":
-		c, err := coord.InterfaceToCoord(evt.Value())
+		c, err := coord.FromInterface(evt.Value())
 		if err != nil {
 			return nil, err
 		}
 		return NewRemoveStoneCommand(c), nil
 	case "triangle":
-		c, err := coord.InterfaceToCoord(evt.Value())
+		c, err := coord.FromInterface(evt.Value())
 		if err != nil {
 			return nil, err
 		}
 		return NewAddTriangleCommand(c), nil
 	case "square":
-		c, err := coord.InterfaceToCoord(evt.Value())
+		c, err := coord.FromInterface(evt.Value())
 		if err != nil {
 			return nil, err
 		}
 		return NewAddSquareCommand(c), nil
 	case "letter":
 		val := evt.Value().(map[string]any)
-		c, err := coord.InterfaceToCoord(val["coords"])
+		c, err := coord.FromInterface(val["coords"])
 		if err != nil {
 			return nil, err
 		}
@@ -59,14 +59,14 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 		return NewAddLetterCommand(c, letter), nil
 	case "number":
 		val := evt.Value().(map[string]any)
-		c, err := coord.InterfaceToCoord(val["coords"])
+		c, err := coord.FromInterface(val["coords"])
 		if err != nil {
 			return nil, err
 		}
 		number := int(val["number"].(float64))
 		return NewAddNumberCommand(c, number), nil
 	case "remove_mark":
-		c, err := coord.InterfaceToCoord(evt.Value())
+		c, err := coord.FromInterface(evt.Value())
 		if err != nil {
 			return nil, err
 		}
@@ -89,7 +89,7 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 		index := int(evt.Value().(float64))
 		return NewGotoGridCommand(index), nil
 	case "goto_coord":
-		c, err := coord.InterfaceToCoord(evt.Value())
+		c, err := coord.FromInterface(evt.Value())
 		if err != nil {
 			return nil, err
 		}
@@ -130,7 +130,7 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 	case "score":
 		return NewScoreCommand(), nil
 	case "markdead":
-		c, err := coord.InterfaceToCoord(evt.Value())
+		c, err := coord.FromInterface(evt.Value())
 		if err != nil {
 			return nil, err
 		}

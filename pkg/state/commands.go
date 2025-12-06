@@ -538,7 +538,7 @@ func (cmd *graftCommand) Execute(s *State) (*Frame, error) {
 	for _, tok := range tokens[start:] {
 
 		// convert to a Coord
-		crd, err := coord.AlphanumericToCoord(tok, s.size)
+		crd, err := coord.FromAlphanumeric(tok, s.size)
 		if err != nil {
 			return nil, err
 		}

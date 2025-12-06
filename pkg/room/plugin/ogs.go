@@ -312,7 +312,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 						movesArr = append(movesArr, &coord.Stone{Coord: nil, Color: currentColor})
 						currentColor = currentColor.Opposite()
 					default:
-						crd := coord.LettersToCoord(coordStr)
+						crd := coord.FromLetters(coordStr)
 						movesArr = append(movesArr, &coord.Stone{Coord: crd, Color: currentColor})
 						currentColor = currentColor.Opposite()
 					}

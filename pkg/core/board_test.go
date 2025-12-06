@@ -107,7 +107,7 @@ var coordTests = []struct {
 func TestCoord(t *testing.T) {
 	for i, tt := range coordTests {
 		t.Run(fmt.Sprintf("coord%d", i), func(t *testing.T) {
-			coord := coord.LettersToCoord(tt.input)
+			coord := coord.FromLetters(tt.input)
 			if coord.X != tt.x || coord.Y != tt.y {
 				t.Errorf("input coord %s mapped to %v, expected: (%d, %d)", tt.input, coord, tt.x, tt.y)
 			}
@@ -116,15 +116,15 @@ func TestCoord(t *testing.T) {
 }
 
 func TestCoordFail(t *testing.T) {
-	if coord.LettersToCoord("") != nil {
+	if coord.FromLetters("") != nil {
 		t.Errorf("empty string should not convert to coords")
 	}
 
-	if coord.LettersToCoord("a") != nil {
+	if coord.FromLetters("a") != nil {
 		t.Errorf("length one string should not convert to coords")
 	}
 
-	if coord.LettersToCoord("abc") != nil {
+	if coord.FromLetters("abc") != nil {
 		t.Errorf("length three string should not convert to coords")
 	}
 }

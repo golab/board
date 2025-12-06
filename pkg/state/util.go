@@ -139,7 +139,7 @@ func (s *State) computeDiffSetup(i int) *core.Diff {
 	if val := n.GetField("AB"); len(val) > 0 {
 		add := coord.NewCoordSet()
 		for _, v := range val {
-			add.Add(coord.LettersToCoord(v))
+			add.Add(coord.FromLetters(v))
 		}
 		stoneSet := coord.NewStoneSet(add, color.Black)
 		diffAdd = append(diffAdd, stoneSet)
@@ -149,7 +149,7 @@ func (s *State) computeDiffSetup(i int) *core.Diff {
 	if val := n.GetField("AW"); len(val) > 0 {
 		add := coord.NewCoordSet()
 		for _, v := range val {
-			add.Add(coord.LettersToCoord(v))
+			add.Add(coord.FromLetters(v))
 		}
 		stoneSet := coord.NewStoneSet(add, color.White)
 		diffAdd = append(diffAdd, stoneSet)
@@ -161,7 +161,7 @@ func (s *State) computeDiffSetup(i int) *core.Diff {
 		csBlack := coord.NewCoordSet()
 		csWhite := coord.NewCoordSet()
 		for _, v := range val {
-			coord := coord.LettersToCoord(v)
+			coord := coord.FromLetters(v)
 			col := s.board.Get(coord)
 			switch col {
 			case color.Black:

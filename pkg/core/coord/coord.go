@@ -204,8 +204,8 @@ func (c *Coord) Copy() *Coord {
 	return NewCoord(c.X, c.Y)
 }
 
-// LettersToCoord takes a pair of letters and turns it into a Coord
-func LettersToCoord(s string) *Coord {
+// FromLetters takes a pair of letters and turns it into a Coord
+func FromLetters(s string) *Coord {
 	if len(s) != 2 {
 		return nil
 	}
@@ -215,7 +215,7 @@ func LettersToCoord(s string) *Coord {
 
 // InterfaceToCoord essentially coerces the interface into a [2]int
 // then turns that into a Coord
-func InterfaceToCoord(ifc any) (*Coord, error) {
+func FromInterface(ifc any) (*Coord, error) {
 	coords := make([]int, 0)
 
 	// coerce the value to an array
@@ -249,8 +249,8 @@ func NewStone(x, y int, c color.Color) *Stone {
 	}
 }
 
-// AlphanumericToCoord converts a string like "c17" to a Coord
-func AlphanumericToCoord(s string, size int) (*Coord, error) {
+// FromAlphanumeric converts a string like "c17" to a Coord
+func FromAlphanumeric(s string, size int) (*Coord, error) {
 	s = strings.ToLower(s)
 	if len(s) < 2 {
 		return nil, fmt.Errorf("failure to parse: %s", s)
