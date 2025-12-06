@@ -8,9 +8,10 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package core
+package tree
 
 import (
+	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/core/fields"
@@ -48,7 +49,7 @@ type TreeNode struct {
 	Index          int
 	PreferredChild int
 	fields.Fields
-	Diff      *Diff
+	Diff      *core.Diff
 	Depth     int
 	BlackCaps int
 	WhiteCaps int
@@ -84,7 +85,7 @@ func (n *TreeNode) ShallowEqual(m *TreeNode) bool {
 		n.Depth == m.Depth
 }
 
-func (n *TreeNode) SetDiff(diff *Diff) {
+func (n *TreeNode) SetDiff(diff *core.Diff) {
 	n.Diff = diff
 	b := 0
 	w := 0

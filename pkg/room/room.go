@@ -16,10 +16,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/board"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/jarednogo/board/pkg/core/tree"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/loader"
@@ -561,7 +561,7 @@ func (r *Room) ToSGFIX() string {
 	return r.state.ToSGFIX()
 }
 
-func (r *Room) Current() *core.TreeNode {
+func (r *Room) Current() *tree.TreeNode {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	c := *r.state.Current()

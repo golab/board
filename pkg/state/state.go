@@ -15,12 +15,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/board"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/core/fields"
 	"github.com/jarednogo/board/pkg/core/parser"
+	"github.com/jarednogo/board/pkg/core/tree"
 )
 
 const Letters = "ABCDEFGHIJKLNMOPQRSTUVWXYZ"
@@ -28,14 +28,14 @@ const Letters = "ABCDEFGHIJKLNMOPQRSTUVWXYZ"
 // as a rule, anything that would need to get sent to new connections
 // should be stored here
 type State struct {
-	root       *core.TreeNode
-	current    *core.TreeNode
-	head       *core.TreeNode
-	nodes      map[int]*core.TreeNode
+	root       *tree.TreeNode
+	current    *tree.TreeNode
+	head       *tree.TreeNode
+	nodes      map[int]*tree.TreeNode
 	nextIndex  int
 	size       int
 	board      *board.Board
-	clipboard  *core.TreeNode
+	clipboard  *tree.TreeNode
 	markedDead coord.CoordSet
 	markedDame coord.CoordSet
 }
@@ -62,11 +62,11 @@ func (s *State) Board() *board.Board {
 	return s.board
 }
 
-func (s *State) Current() *core.TreeNode {
+func (s *State) Current() *tree.TreeNode {
 	return s.current
 }
 
-func (s *State) Root() *core.TreeNode {
+func (s *State) Root() *tree.TreeNode {
 	return s.root
 }
 
@@ -82,11 +82,11 @@ func (s *State) EditKomi(value string) {
 	s.root.OverwriteField("KM", value)
 }
 
-func (s *State) Head() *core.TreeNode {
+func (s *State) Head() *tree.TreeNode {
 	return s.head
 }
 
-func (s *State) Nodes() map[int]*core.TreeNode {
+func (s *State) Nodes() map[int]*tree.TreeNode {
 	return s.nodes
 }
 
@@ -118,7 +118,7 @@ func (s *State) toSGF(indexes bool) string {
 			sb.WriteString(str)
 			continue
 		}
-		node := cur.(*core.TreeNode)
+		node := cur.(*tree.TreeNode)
 		sb.WriteByte(';')
 
 		// throw in other fields
@@ -229,13 +229,13 @@ func FromSGF(data string) (*State, error) {
 }
 
 func NewState(size int, initRoot bool) *State {
-	nodes := make(map[int]*core.TreeNode)
-	var root *core.TreeNode
+	nodes := make(map[int]*tree.TreeNode)
+	var root *tree.TreeNode
 	root = nil
 	index := 0
 	if initRoot {
 		flds := fields.Fields{}
-		root = core.NewTreeNode(nil, color.Empty, 0, nil, flds)
+		root = tree.NewTreeNode(nil, color.Empty, 0, nil, flds)
 		root.AddField("GM", "1")
 		root.AddField("FF", "4")
 		root.AddField("CA", "UTF-8")

@@ -15,6 +15,7 @@ import (
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/core/fields"
+	"github.com/jarednogo/board/pkg/core/tree"
 )
 
 func (s *State) addFieldNode(flds fields.Fields, index int) *core.Diff {
@@ -23,7 +24,7 @@ func (s *State) addFieldNode(flds fields.Fields, index int) *core.Diff {
 	if index == -1 {
 		index = tmp
 	}
-	n := core.NewTreeNode(nil, color.Empty, index, s.current, flds)
+	n := tree.NewTreeNode(nil, color.Empty, index, s.current, flds)
 	s.nodes[index] = n
 	if s.root == nil {
 		s.root = n
@@ -46,7 +47,7 @@ func (s *State) addPassNode(col color.Color, flds fields.Fields, index int) {
 	if index == -1 {
 		index = tmp
 	}
-	n := core.NewTreeNode(nil, col, index, s.current, flds)
+	n := tree.NewTreeNode(nil, col, index, s.current, flds)
 	s.nodes[index] = n
 	if s.root == nil {
 		s.root = n
@@ -78,13 +79,13 @@ func (s *State) PushHead(x, y int, col color.Color) {
 		value = crd.ToLetters()
 	}
 
-	n := core.NewTreeNode(crd, col, index, s.head, flds)
+	n := tree.NewTreeNode(crd, col, index, s.head, flds)
 	n.AddField(key, value)
 	s.nodes[index] = n
 	if len(s.head.Down) > 0 {
 		s.head.PreferredChild++
 	}
-	s.head.Down = append([]*core.TreeNode{n}, s.head.Down...)
+	s.head.Down = append([]*tree.TreeNode{n}, s.head.Down...)
 
 	// tracking the head or not
 	tracking := s.current == s.head
@@ -158,7 +159,7 @@ func (s *State) addNode(crd *coord.Coord, col color.Color, flds fields.Fields, i
 	if index == -1 {
 		index = tmp
 	}
-	n := core.NewTreeNode(crd, color.Color(col), index, s.current, flds)
+	n := tree.NewTreeNode(crd, color.Color(col), index, s.current, flds)
 
 	s.nodes[index] = n
 	if s.root == nil {
@@ -219,7 +220,7 @@ func (s *State) smartGraft(parentIndex int, moves []*coord.Stone) {
 	savedPrefs := make(map[int]int)
 	save := s.current.Index
 
-	var graft *core.TreeNode
+	var graft *tree.TreeNode
 	up := parent
 
 	for _, move := range moves {
@@ -252,7 +253,7 @@ func (s *State) smartGraft(parentIndex int, moves []*coord.Stone) {
 		flds.AddField(key, move.Coord.ToLetters())
 
 		// create the node, up is the parent of the new node
-		node := core.NewTreeNode(move.Coord, move.Color, index, up, flds)
+		node := tree.NewTreeNode(move.Coord, move.Color, index, up, flds)
 
 		// keep track of the first new node
 		if graft == nil {
@@ -293,7 +294,7 @@ func (s *State) graft(parentIndex int, moves []*coord.Stone) {
 	savedPref := parent.PreferredChild
 	save := s.current.Index
 
-	var graft *core.TreeNode
+	var graft *tree.TreeNode
 	up := parent
 
 	for _, move := range moves {
@@ -315,7 +316,7 @@ func (s *State) graft(parentIndex int, moves []*coord.Stone) {
 		flds.AddField(key, move.Coord.ToLetters())
 
 		// create the node, up is the parent of the new node
-		node := core.NewTreeNode(move.Coord, move.Color, index, up, flds)
+		node := tree.NewTreeNode(move.Coord, move.Color, index, up, flds)
 
 		// keep track of the first node
 		if graft == nil {
@@ -372,7 +373,7 @@ func (s *State) cut() *core.Diff {
 	s.current.Down = append(s.current.Down[:j], s.current.Down[j+1:]...)
 
 	// delete all the nodes from the nodes map
-	core.Fmap(func(n *core.TreeNode) {
+	tree.Fmap(func(n *tree.TreeNode) {
 		delete(s.nodes, n.Index)
 	}, branch)
 
@@ -395,7 +396,7 @@ func (s *State) paste() {
 	// only possible with state context because of GetNextIndex
 	// consider other ways of reindexing, or maybe this should be its
 	// own function
-	core.Fmap(func(n *core.TreeNode) {
+	tree.Fmap(func(n *tree.TreeNode) {
 		i := s.GetNextIndex()
 		n.Index = i
 		s.nodes[i] = n
@@ -412,7 +413,7 @@ func (s *State) paste() {
 	branch.RecomputeDepth()
 
 	// recompute diffs
-	core.Fmap(func(n *core.TreeNode) {
+	tree.Fmap(func(n *tree.TreeNode) {
 		if n.IsMove() {
 			n.SetDiff(s.computeDiffMove(n.Index))
 		} else {

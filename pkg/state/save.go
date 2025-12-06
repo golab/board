@@ -13,7 +13,7 @@ package state
 import (
 	"encoding/base64"
 
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/tree"
 )
 
 type StateJSON struct {
@@ -47,7 +47,7 @@ func (s *State) saveTree(t TreeJSONType) *TreeJSON {
 
 	if t >= PartialNodes {
 		nodes = make(map[int]*NodeJSON)
-		var start *core.TreeNode
+		var start *tree.TreeNode
 		// we can choose to send the full or just a partial tree
 		// based on which node we start on
 
@@ -59,7 +59,7 @@ func (s *State) saveTree(t TreeJSONType) *TreeJSON {
 		case Full:
 			start = s.root
 		}
-		core.Fmap(func(n *core.TreeNode) {
+		tree.Fmap(func(n *tree.TreeNode) {
 			down := []int{}
 			for _, c := range n.Down {
 				down = append(down, c.Index)
