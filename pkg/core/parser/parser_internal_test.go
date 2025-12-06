@@ -27,7 +27,7 @@ var outputTests = []string{
 func TestToSGF(t *testing.T) {
 	for _, input := range outputTests {
 		t.Run(input, func(t *testing.T) {
-			p := NewParser(input)
+			p := New(input)
 			root, err := p.Parse()
 			assert.NoError(t, err)
 			output := root.toSGF(true)
@@ -38,7 +38,7 @@ func TestToSGF(t *testing.T) {
 
 func TestPass(t *testing.T) {
 	sgf := "(;GM[1];B[aa];W[bb];B[tt];W[ss])"
-	p := NewParser(sgf)
+	p := New(sgf)
 	root, err := p.Parse()
 	if err != nil {
 		t.Error(err)

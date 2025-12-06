@@ -163,7 +163,7 @@ func (s *State) toSGF(indexes bool) string {
 }
 
 func FromSGF(data string) (*State, error) {
-	p := parser.NewParser(data)
+	p := parser.New(data)
 	root, err := p.Parse()
 	if err != nil {
 		return nil, err

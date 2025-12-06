@@ -79,7 +79,7 @@ type Parser struct {
 	index int
 }
 
-func NewParser(text string) *Parser {
+func New(text string) *Parser {
 	return &Parser{[]rune(text), 0}
 }
 
@@ -351,7 +351,7 @@ func Merge(sgfs []string) string {
 
 	size := ""
 	for _, sgf := range sgfs {
-		p := NewParser(sgf)
+		p := New(sgf)
 		root, err := p.Parse()
 		if err != nil {
 			// on error, just continue

@@ -133,7 +133,7 @@ func BenchmarkParse(b *testing.B) {
 	i := 0
 	for b.Loop() {
 		sgf := mergedSGFs[i%len(mergedSGFs)]
-		p := parser.NewParser(sgf)
+		p := parser.New(sgf)
 		p.Parse() //nolint:errcheck
 		i++
 	}

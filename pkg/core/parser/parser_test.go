@@ -39,7 +39,7 @@ var fieldTests = []struct {
 func TestParser(t *testing.T) {
 	for _, tt := range fieldTests {
 		t.Run(tt.input, func(t *testing.T) {
-			p := parser.NewParser(tt.input)
+			p := parser.New(tt.input)
 			root, err := p.Parse()
 			if err != nil {
 				t.Error(err)
@@ -68,7 +68,7 @@ func TestMerge(t *testing.T) {
 	for i, tt := range mergeTests {
 		t.Run(fmt.Sprintf("merge%d", i), func(t *testing.T) {
 			merged := parser.Merge(tt.input)
-			p := parser.NewParser(merged)
+			p := parser.New(merged)
 			root, err := p.Parse()
 			if err != nil {
 				t.Error(err)
@@ -86,7 +86,7 @@ func TestMerge2(t *testing.T) {
 	sgf1 := sgfsamples.SimpleFourMoves
 	sgf2 := sgfsamples.SimpleEightMoves
 	sgf := parser.Merge([]string{sgf1, sgf2})
-	p := parser.NewParser(sgf)
+	p := parser.New(sgf)
 	root, err := p.Parse()
 	assert.NoError(t, err)
 	require.Equal(t, root.NumChildren(), 2)
@@ -99,7 +99,7 @@ func TestMerge2(t *testing.T) {
 
 func TestEmpty(t *testing.T) {
 	sgf := "()"
-	p := parser.NewParser(sgf)
+	p := parser.New(sgf)
 	_, err := p.Parse()
 	if err != nil {
 		t.Error(err)
@@ -122,7 +122,7 @@ var oddTests = []struct {
 func TestOdd(t *testing.T) {
 	for _, tt := range oddTests {
 		t.Run(tt.input, func(t *testing.T) {
-			p := parser.NewParser(tt.input)
+			p := parser.New(tt.input)
 			_, err := p.Parse()
 			assert.Equal(t, err != nil, tt.err)
 		})
@@ -130,7 +130,7 @@ func TestOdd(t *testing.T) {
 }
 
 func TestChineseNames(t *testing.T) {
-	p := parser.NewParser(sgfsamples.ChineseNames)
+	p := parser.New(sgfsamples.ChineseNames)
 	root, err := p.Parse()
 	assert.NoError(t, err)
 	pb := root.GetField("PB")
@@ -144,7 +144,7 @@ func TestChineseNames(t *testing.T) {
 }
 
 func TestMixedCaseField(t *testing.T) {
-	p := parser.NewParser(sgfsamples.MixedCaseField)
+	p := parser.New(sgfsamples.MixedCaseField)
 	root, err := p.Parse()
 	assert.NoError(t, err)
 	c := root.GetField("COPYRIGHT")
@@ -160,7 +160,7 @@ func TestSGFNodeAddField(t *testing.T) {
 }
 
 func TestMultifield(t *testing.T) {
-	p := parser.NewParser("(;GM[1]ZZ[foo][bar][baz])")
+	p := parser.New("(;GM[1]ZZ[foo][bar][baz])")
 	root, err := p.Parse()
 	assert.NoError(t, err)
 	zz := root.GetField("ZZ")
@@ -178,7 +178,7 @@ func FuzzParser(f *testing.F) {
 	}
 
 	f.Fuzz(func(t *testing.T, orig string) {
-		p := parser.NewParser(orig)
+		p := parser.New(orig)
 		// looking for crashes or panics
 		_, _ = p.Parse()
 	})

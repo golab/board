@@ -88,7 +88,7 @@ func TestSim2(t *testing.T) {
 	assert.NoError(t, err)
 	room.DisableBuffers()
 
-	p := parser.NewParser(sgfsamples.Scoring2)
+	p := parser.New(sgfsamples.Scoring2)
 	root, err := p.Parse()
 	assert.NoError(t, err)
 	require.True(t, root.NumChildren() > 0)
