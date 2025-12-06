@@ -22,8 +22,10 @@ var sanitizeTests = []struct {
 	input  string
 	output string
 }{
-	{"  AAA  ", "AAA"},
-	{"http://www.example.com?foo=bar&baz=bot", "httpwwwexamplecomfoobarbazbot"},
+	{"  AAA  ", "aaa"},
+	{"http://www.example.com?foo=Bar&baz=BOT", "httpwwwexamplecomfoobarbazbot"},
+	{"AbC-123", "abc-123"},
+	{"MyCoolBoard", "mycoolboard"},
 }
 
 func TestSanitize(t *testing.T) {
@@ -37,5 +39,5 @@ func TestSanitize(t *testing.T) {
 
 func TestUUID(t *testing.T) {
 	s := core.UUID4()
-	assert.Equal(t, len(s), 32)
+	assert.Equal(t, len(s), 36)
 }

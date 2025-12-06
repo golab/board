@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/pkg/app"
 	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/logx"
@@ -58,7 +59,7 @@ func TestTwitch(t *testing.T) {
 	req = httptest.NewRequest("POST", "/apps/twitch/callback", bytes.NewBuffer(body))
 	a.Router.ServeHTTP(rec, req)
 
-	room, err := a.Hub.GetRoom("Board")
-	assert.NoError(t, err)
+	room, err := a.Hub.GetRoom("board")
+	require.NoError(t, err)
 	assert.Equal(t, len(room.ToSGF()), 77)
 }

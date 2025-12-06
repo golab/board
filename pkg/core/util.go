@@ -12,20 +12,24 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package core
 
 import (
+	"strings"
+
 	"github.com/google/uuid"
 )
 
 // Sanitize ensures strings only contain letters and numbers
 func Sanitize(s string) string {
-	ok := []rune{}
+	sb := strings.Builder{}
 	for _, c := range s {
+		if c >= 'A' && c <= 'Z' {
+			sb.WriteRune(c + 32)
+		}
 		if (c >= '0' && c <= '9') ||
-			(c >= 'A' && c <= 'Z') ||
-			(c >= 'a' && c <= 'z') {
-			ok = append(ok, c)
+			(c >= 'a' && c <= 'z') || c == '-' {
+			sb.WriteRune(c)
 		}
 	}
-	return string(ok)
+	return sb.String()
 }
 
 // UUID4 makes and sanitizes a new uuid
