@@ -1,7 +1,7 @@
 # Base Makefile — default goal prints help (supports inline "##" and preceding "##" styles)
 .DEFAULT_GOAL := default
 
-.PHONY: default help build test fmt lint run setup clean test-fuzz coverage-int coverage-unit coverage-integration-html coverage-integration-total coverage-unit-html coverage-unit-total build-docker run-docker test-bench test-race coverage-total coverage-html coverage monitoring-up monitoring-down
+.PHONY: default help build test fmt lint run setup clean test-fuzz coverage-int coverage-unit coverage-integration-html coverage-integration-total coverage-unit-html coverage-unit-total build-docker run-docker test-bench test-race coverage-total coverage-html coverage monitoring-up monitoring-down gremlins
 
 VERSION := $(shell git describe --tags 2>/dev/null || echo dev)
 
@@ -27,6 +27,8 @@ setup: ## Setup environment
 	@echo "==> setup"
 	@[ -x ${PWD}/bin/golangci-lint ] || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b ${PWD}/bin v2.5.0
 	@[ -x ${PWD}/bin/air ] || curl -sSfL https://raw.githubusercontent.com/air-verse/air/master/install.sh | sh -s -- -b ${PWD}/bin
+	@[ -x ${PWD}/bin/gremlins ] || GOBIN=${PWD}/bin go install github.com/go-gremlins/gremlins/cmd/gremlins@v0.5.0
+
 
 fmt: ## Format code
 	@echo "==> format"
@@ -151,3 +153,5 @@ monitoring-up: ## Run app and monitoring
 monitoring-down: ## Close app and monitoring
 	docker compose --profile monitoring -f docker-compose.yaml down
 
+gremlins: ## Unleash gremlins
+	./bin/gremlins unleash
