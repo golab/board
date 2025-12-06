@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
 )
 
 var outputTests = []string{
@@ -47,4 +48,53 @@ func TestPass(t *testing.T) {
 	if output != "(;GM[1];B[aa];W[bb];B[];W[ss])" {
 		t.Errorf("error in reading [tt] pass")
 	}
+}
+
+func TestParseKey1(t *testing.T) {
+	text := ""
+	p := New(text)
+	_, err := p.parseKey()
+	assert.NotNil(t, err)
+}
+
+func TestParseKey2(t *testing.T) {
+	text := "ABC[123]"
+	p := New(text)
+	key, err := p.parseKey()
+	require.NoError(t, err)
+	assert.Equal(t, key, "ABC")
+}
+
+func TestParseKey3(t *testing.T) {
+	text := "Abc[123]"
+	p := New(text)
+	key, err := p.parseKey()
+	require.NoError(t, err)
+	assert.Equal(t, key, "ABC")
+}
+
+func TestParseField1(t *testing.T) {
+	text := "123]"
+	p := New(text)
+	field, err := p.parseField()
+	require.NoError(t, err)
+	assert.Equal(t, field, "123")
+}
+
+func TestParseField2(t *testing.T) {
+	text := "123"
+	p := New(text)
+	_, err := p.parseField()
+	assert.NotNil(t, err)
+}
+
+func TestParseField3(t *testing.T) {
+	text := "123\\]abc]"
+	p := New(text)
+	field, err := p.parseField()
+	require.NoError(t, err)
+	assert.Equal(t, field, "123]abc")
+}
+
+func TestParseNodes(t *testing.T) {
 }

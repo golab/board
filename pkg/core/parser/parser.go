@@ -155,7 +155,12 @@ func (p *Parser) parseField() (string, error) {
 	return sb.String(), nil
 }
 
-func (p *Parser) parseNodes() ([]*SGFNode, error) {
+type parseNodesResult struct {
+	root *SGFNode
+	cur  *SGFNode
+}
+
+func (p *Parser) parseNodes() (*parseNodesResult, error) {
 	n, err := p.parseNode()
 	if err != nil {
 		return nil, err
@@ -176,7 +181,7 @@ func (p *Parser) parseNodes() ([]*SGFNode, error) {
 			break
 		}
 	}
-	return []*SGFNode{root, cur}, nil
+	return &parseNodesResult{root, cur}, nil
 }
 
 type property struct {
@@ -282,12 +287,12 @@ func (p *Parser) parseBranch() (*SGFNode, error) {
 		if c == 0 {
 			return nil, fmt.Errorf("unfinished branch, expected ')'")
 		} else if c == ';' {
-			nodes, err := p.parseNodes()
+			result, err := p.parseNodes()
 			if err != nil {
 				return nil, err
 			}
-			node := nodes[0]
-			cur := nodes[1]
+			node := result.root
+			cur := result.cur
 			if root == nil {
 				root = node
 				current = cur

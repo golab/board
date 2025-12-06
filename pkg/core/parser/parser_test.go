@@ -170,6 +170,16 @@ func TestMultifield(t *testing.T) {
 	assert.Equal(t, zz[2], "baz")
 }
 
+func TestGetChild(t *testing.T) {
+	p := parser.New("(;A[b](;C[d])(;E[f]))")
+	root, err := p.Parse()
+	require.NoError(t, err)
+	assert.NotNil(t, root.GetChild(0))
+	assert.NotNil(t, root.GetChild(1))
+	assert.Zero(t, root.GetChild(2))
+	assert.Zero(t, root.GetChild(-1))
+}
+
 func FuzzParser(f *testing.F) {
 	testcases := []string{"(;)", "(;GM[1];B[aa];W[bb];B[];W[ss])", "(;GM[1];C[comment \"with\" quotes])", sgfsamples.Empty, sgfsamples.SimpleTwoBranches, sgfsamples.SimpleWithComment, sgfsamples.SimpleFourMoves, sgfsamples.SimpleEightMoves, sgfsamples.Scoring1, sgfsamples.PassWithTT, sgfsamples.ChineseNames}
 	for _, tc := range testcases {
