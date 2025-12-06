@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package core
+package board
 
 /*
 reference: https://www.red-bean.com/sgf/user_guide/index.html#move_vs_place
@@ -24,6 +24,7 @@ AB, AE, and AW are setup properties
 import (
 	"fmt"
 
+	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 )
@@ -277,7 +278,7 @@ func (b *Board) RemoveDead(start *coord.Coord, col color.Color) *coord.StoneSet 
 	return w
 }
 
-func (b *Board) Move(start *coord.Coord, col color.Color) *Diff {
+func (b *Board) Move(start *coord.Coord, col color.Color) *core.Diff {
 	// check to see if it's legal
 	if !b.Legal(start, col) {
 		return nil
@@ -293,10 +294,10 @@ func (b *Board) Move(start *coord.Coord, col color.Color) *Diff {
 	cs := coord.NewCoordSet()
 	cs.Add(start)
 	add := coord.NewStoneSet(cs, col)
-	return NewDiff([]*coord.StoneSet{add}, []*coord.StoneSet{remove})
+	return core.NewDiff([]*coord.StoneSet{add}, []*coord.StoneSet{remove})
 }
 
-func (b *Board) ApplyDiff(d *Diff) {
+func (b *Board) ApplyDiff(d *core.Diff) {
 	if d == nil {
 		return
 	}
@@ -308,7 +309,7 @@ func (b *Board) ApplyDiff(d *Diff) {
 	}
 }
 
-func (b *Board) CurrentDiff() *Diff {
+func (b *Board) CurrentDiff() *core.Diff {
 	black := coord.NewCoordSet()
 	white := coord.NewCoordSet()
 	for j, row := range b.Points {
@@ -323,7 +324,7 @@ func (b *Board) CurrentDiff() *Diff {
 	}
 	addBlack := coord.NewStoneSet(black, color.Black)
 	addWhite := coord.NewStoneSet(white, color.White)
-	return NewDiff([]*coord.StoneSet{addBlack, addWhite}, nil)
+	return core.NewDiff([]*coord.StoneSet{addBlack, addWhite}, nil)
 }
 
 type EmptyPointType int

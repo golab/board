@@ -17,12 +17,13 @@ import (
 
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/board"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 func TestDiff1(t *testing.T) {
-	b := core.NewBoard(19)
+	b := board.NewBoard(19)
 	b.Move(coord.NewCoord(10, 10), color.Black)
 	b.Move(coord.NewCoord(11, 11), color.Black)
 	b.Move(coord.NewCoord(9, 11), color.Black)

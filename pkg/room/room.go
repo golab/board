@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/board"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/event"
@@ -567,7 +568,7 @@ func (r *Room) Current() *core.TreeNode {
 	return &c
 }
 
-func (r *Room) Board() *core.Board {
+func (r *Room) Board() *board.Board {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return r.state.Board().Copy()

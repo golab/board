@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/board"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/core/fields"
@@ -33,7 +34,7 @@ type State struct {
 	nodes      map[int]*core.TreeNode
 	nextIndex  int
 	size       int
-	board      *core.Board
+	board      *board.Board
 	clipboard  *core.TreeNode
 	markedDead coord.CoordSet
 	markedDame coord.CoordSet
@@ -57,7 +58,7 @@ func (s *State) Size() int {
 	return s.size
 }
 
-func (s *State) Board() *core.Board {
+func (s *State) Board() *board.Board {
 	return s.board
 }
 
@@ -248,7 +249,7 @@ func NewState(size int, initRoot bool) *State {
 		nodes[0] = root
 		index = 1
 	}
-	board := core.NewBoard(size)
+	brd := board.NewBoard(size)
 	return &State{
 		root:       root,
 		current:    root,
@@ -256,7 +257,7 @@ func NewState(size int, initRoot bool) *State {
 		nodes:      nodes,
 		nextIndex:  index,
 		size:       size,
-		board:      board,
+		board:      brd,
 		clipboard:  nil,
 		markedDead: coord.NewCoordSet(),
 		markedDame: coord.NewCoordSet()}
