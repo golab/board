@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/pkg/core/board"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
@@ -162,4 +163,202 @@ func TestAlphanumericToCoord(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAddAll(t *testing.T) {
+	cs := coord.NewCoordSet()
+	ds := coord.NewCoordSet()
+	ds.Add(coord.NewCoord(0, 0))
+	ds.Add(coord.NewCoord(1, 1))
+	ds.Add(coord.NewCoord(2, 2))
+	cs.AddAll(ds)
+	assert.True(t, cs.Has(coord.NewCoord(0, 0)))
+	assert.True(t, cs.Has(coord.NewCoord(1, 1)))
+	assert.True(t, cs.Has(coord.NewCoord(2, 2)))
+}
+
+func TestIntersect(t *testing.T) {
+	cs := coord.NewCoordSet()
+	ds := coord.NewCoordSet()
+	cs.Add(coord.NewCoord(0, 0))
+	cs.Add(coord.NewCoord(2, 2))
+	ds.Add(coord.NewCoord(0, 0))
+	ds.Add(coord.NewCoord(1, 1))
+
+	i := cs.Intersect(ds)
+	assert.Equal(t, len(i.List()), 1)
+	assert.True(t, i.Has(coord.NewCoord(0, 0)))
+}
+
+func TestString(t *testing.T) {
+	cs := coord.NewCoordSet()
+	cs.Add(coord.NewCoord(0, 0))
+	cs.Add(coord.NewCoord(2, 2))
+	assert.Equal(t, len(cs.String()), 8)
+}
+
+func TestSubset(t *testing.T) {
+	cs := coord.NewCoordSet()
+	ds := coord.NewCoordSet()
+	ds.Add(coord.NewCoord(0, 0))
+	ds.Add(coord.NewCoord(1, 1))
+	ds.Add(coord.NewCoord(2, 2))
+	cs.Add(coord.NewCoord(0, 0))
+	assert.True(t, cs.IsSubsetOf(ds))
+	assert.False(t, ds.IsSubsetOf(cs))
+}
+
+func TestEqual(t *testing.T) {
+	cs := coord.NewCoordSet()
+	ds := coord.NewCoordSet()
+	ds.Add(coord.NewCoord(0, 0))
+	ds.Add(coord.NewCoord(1, 1))
+	ds.Add(coord.NewCoord(2, 2))
+	cs.AddAll(ds)
+	assert.True(t, cs.Equal(ds))
+}
+
+func TestCopyStoneSet(t *testing.T) {
+	cs := coord.NewCoordSet()
+	cs.Add(coord.NewCoord(0, 0))
+	s := coord.NewStoneSet(cs, color.Black)
+	r := s.Copy()
+	assert.Equal(t, len(r.Coords), 1)
+}
+
+func TestCopyStoneSetNil(t *testing.T) {
+	var s *coord.StoneSet
+	r := s.Copy()
+	assert.Zero(t, r)
+}
+
+func TestEqualStoneSet(t *testing.T) {
+	cs := coord.NewCoordSet()
+	ds := coord.NewCoordSet()
+
+	cs.Add(coord.NewCoord(0, 0))
+	ds.Add(coord.NewCoord(0, 0))
+
+	s := coord.NewStoneSet(cs, color.Black)
+	r := coord.NewStoneSet(ds, color.Black)
+	assert.True(t, r.Equal(s))
+}
+
+func TestStoneSetString(t *testing.T) {
+	cs := coord.NewCoordSet()
+	cs.Add(coord.NewCoord(0, 0))
+	s := coord.NewStoneSet(cs, color.Black)
+	assert.Equal(t, len(s.String()), 12)
+}
+
+func TestNewCoord(t *testing.T) {
+	assert.Zero(t, coord.NewCoord(0, 1000))
+	assert.Zero(t, coord.NewCoord(1000, 0))
+	assert.Zero(t, coord.NewCoord(-1, 0))
+	assert.Zero(t, coord.NewCoord(0, -1))
+}
+
+func TestCoordString(t *testing.T) {
+	c := coord.NewCoord(3, 3)
+	assert.Equal(t, c.String(), "(3, 3)")
+}
+
+func TestToLetters(t *testing.T) {
+	c := coord.NewCoord(3, 3)
+	assert.Equal(t, c.ToLetters(), "dd")
+}
+
+func TestCoordEqual1(t *testing.T) {
+	var c *coord.Coord
+	assert.True(t, c.Equal(c))
+}
+
+func TestCoordEqual2(t *testing.T) {
+	var c *coord.Coord
+	d := coord.NewCoord(1, 1)
+	assert.False(t, c.Equal(d))
+}
+
+func TestCoordCopy(t *testing.T) {
+	var c *coord.Coord
+	assert.Zero(t, c.Copy())
+}
+
+func TestFromLetters1(t *testing.T) {
+	c := coord.FromLetters("abc")
+	assert.Zero(t, c)
+}
+
+func TestFromLetters2(t *testing.T) {
+	c := coord.FromLetters("cc")
+	assert.True(t, c.Equal(coord.NewCoord(2, 2)))
+}
+
+func TestFromInterface(t *testing.T) {
+	_, err := coord.FromInterface(0)
+	assert.NotNil(t, err)
+}
+
+func TestNewStone(t *testing.T) {
+	s := coord.NewStone(3, 3, color.Black)
+	assert.True(t, s.Coord.Equal(coord.NewCoord(3, 3)))
+	assert.Equal(t, s.Color, color.Black)
+}
+
+func TestFromAlphanumeric1(t *testing.T) {
+	_, err := coord.FromAlphanumeric("x", 19)
+	assert.NotNil(t, err)
+}
+
+func TestFromAlphanumeric2(t *testing.T) {
+	_, err := coord.FromAlphanumeric("cy", 19)
+	assert.NotNil(t, err)
+}
+
+func TestFromAlphanumeric3(t *testing.T) {
+	_, err := coord.FromAlphanumeric("c0", 19)
+	assert.NotNil(t, err)
+}
+
+func TestFromAlphanumeric4(t *testing.T) {
+	_, err := coord.FromAlphanumeric("c20", 19)
+	assert.NotNil(t, err)
+}
+
+func TestDiff(t *testing.T) {
+	cs := coord.NewCoordSet()
+	ds := coord.NewCoordSet()
+
+	cs.Add(coord.NewCoord(0, 0))
+	ds.Add(coord.NewCoord(1, 1))
+
+	s1 := []*coord.StoneSet{coord.NewStoneSet(cs, color.Black)}
+	s2 := []*coord.StoneSet{coord.NewStoneSet(ds, color.White)}
+
+	diff := coord.NewDiff(s1, s2)
+	idiff := diff.Invert()
+
+	require.Equal(t, len(idiff.Add), 1)
+	require.Equal(t, len(idiff.Remove), 1)
+	add := idiff.Add[0]
+	remove := idiff.Remove[0]
+
+	require.Equal(t, len(add.Coords), 1)
+	require.Equal(t, len(remove.Coords), 1)
+
+	a := add.Coords[0]
+	r := remove.Coords[0]
+
+	assert.True(t, a.Equal(coord.NewCoord(1, 1)))
+	assert.True(t, r.Equal(coord.NewCoord(0, 0)))
+}
+
+func TestInvertNil(t *testing.T) {
+	var d *coord.Diff
+	assert.Zero(t, d.Invert())
+}
+
+func TestDiffNil(t *testing.T) {
+	var d *coord.Diff
+	assert.Zero(t, d.Copy())
 }
