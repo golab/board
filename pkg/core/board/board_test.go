@@ -75,26 +75,6 @@ func TestFindAreaNonempty(t *testing.T) {
 	assert.Equal(t, typ, board.NotCovered)
 }
 
-var oppTests = []struct {
-	input  color.Color
-	output color.Color
-}{
-	{color.Empty, color.Empty},
-	{color.Black, color.White},
-	{color.White, color.Black},
-}
-
-func TestOpposite(t *testing.T) {
-	for i, tt := range oppTests {
-		t.Run(fmt.Sprintf("opp%d", i), func(t *testing.T) {
-			opp := tt.input.Opposite()
-			if opp != tt.output {
-				t.Errorf("error in TestOpposite")
-			}
-		})
-	}
-}
-
 var coordTests = []struct {
 	input string
 	x     int
@@ -476,4 +456,47 @@ func TestScoreDame(t *testing.T) {
 	dame.Add(coord.NewCoord(2, 2))
 	sr := b.Score(dead, dame)
 	assert.Equal(t, len(sr.Dame), 5)
+}
+
+func TestClear(t *testing.T) {
+	b := board.NewBoard(5)
+	b.Set(coord.NewCoord(1, 0), color.Black)
+	b.Set(coord.NewCoord(1, 1), color.Black)
+	b.Set(coord.NewCoord(1, 2), color.Black)
+	b.Set(coord.NewCoord(1, 3), color.Black)
+	b.Set(coord.NewCoord(1, 4), color.Black)
+
+	b.Clear()
+	for i := 0; i < 5; i++ {
+		for j := 0; j < 5; j++ {
+			c := coord.NewCoord(i, j)
+			assert.Equal(t, b.Get(c), color.Empty)
+		}
+	}
+}
+
+func TestApplyDiff(t *testing.T) {
+	b := board.NewBoard(5)
+	b.Set(coord.NewCoord(1, 0), color.Black)
+	b.Set(coord.NewCoord(1, 1), color.Black)
+	b.Set(coord.NewCoord(1, 2), color.Black)
+	b.Set(coord.NewCoord(1, 3), color.White)
+	b.Set(coord.NewCoord(1, 4), color.White)
+
+	c := board.NewBoard(5)
+	c.ApplyDiff(nil)
+	for i := 0; i < 5; i++ {
+		for j := 0; j < 5; j++ {
+			crd := coord.NewCoord(i, j)
+			assert.Equal(t, c.Get(crd), color.Empty)
+		}
+	}
+
+	diff := b.CurrentDiff()
+	c.ApplyDiff(diff)
+	assert.Equal(t, c.Get(coord.NewCoord(1, 0)), color.Black)
+	assert.Equal(t, c.Get(coord.NewCoord(1, 1)), color.Black)
+	assert.Equal(t, c.Get(coord.NewCoord(1, 2)), color.Black)
+	assert.Equal(t, c.Get(coord.NewCoord(1, 3)), color.White)
+	assert.Equal(t, c.Get(coord.NewCoord(1, 4)), color.White)
 }

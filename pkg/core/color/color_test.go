@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package color_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
@@ -21,4 +22,67 @@ func TestColor(t *testing.T) {
 	assert.Equal(t, color.Black.String(), "B")
 	assert.Equal(t, color.White.String(), "W")
 	assert.Equal(t, color.Empty.String(), "+")
+}
+
+var oppTests = []struct {
+	input  color.Color
+	output color.Color
+}{
+	{color.Empty, color.Empty},
+	{color.Black, color.White},
+	{color.White, color.Black},
+}
+
+func TestOpposite(t *testing.T) {
+	for i, tt := range oppTests {
+		t.Run(fmt.Sprintf("opp%d", i), func(t *testing.T) {
+			opp := tt.input.Opposite()
+			assert.Equal(t, opp, tt.output)
+		})
+	}
+}
+
+func TestFill(t *testing.T) {
+	var fillTests = []struct {
+		input  color.Color
+		output color.Color
+	}{
+		{color.Empty, color.FillDame},
+		{color.Black, color.FillBlack},
+		{color.FillBlack, color.FillBlack},
+		{color.White, color.FillWhite},
+		{color.FillWhite, color.FillWhite},
+		{color.FillDame, color.FillDame},
+	}
+
+	for i, tt := range fillTests {
+		t.Run(fmt.Sprintf("fill%d", i), func(t *testing.T) {
+			fill := tt.input.Fill()
+			assert.Equal(t, fill, tt.output)
+		})
+	}
+}
+
+func TestEqual(t *testing.T) {
+	var equalTests = []struct {
+		col1   color.Color
+		col2   color.Color
+		output bool
+	}{
+		{color.Black, color.Black, true},
+		{color.White, color.White, true},
+		{color.Empty, color.Empty, true},
+		{color.Black, color.FillBlack, true},
+		{color.FillBlack, color.Black, true},
+		{color.FillWhite, color.White, true},
+		{color.White, color.FillWhite, true},
+		{color.Black, color.White, false},
+	}
+
+	for i, tt := range equalTests {
+		t.Run(fmt.Sprintf("fill%d", i), func(t *testing.T) {
+			e := tt.col1.Equal(tt.col2)
+			assert.Equal(t, e, tt.output)
+		})
+	}
 }
