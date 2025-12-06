@@ -13,6 +13,8 @@ package core
 
 import (
 	"sort"
+
+	"github.com/jarednogo/board/pkg/core/color"
 )
 
 type Field struct {
@@ -135,16 +137,16 @@ func (f *Fields) IsPass() bool {
 		(len(wvalues) == 1 && wvalues[0] == "")
 }
 
-func (f *Fields) Color() Color {
+func (f *Fields) Color() color.Color {
 	bvalues := f.GetField("B")
 	wvalues := f.GetField("W")
 	if len(bvalues) > 0 {
-		return Black
+		return color.Black
 	}
 	if len(wvalues) > 0 {
-		return White
+		return color.White
 	}
-	return Empty
+	return color.Empty
 }
 
 func (f *Fields) Coord() *Coord {

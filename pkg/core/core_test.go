@@ -17,20 +17,21 @@ import (
 
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
 )
 
 func TestDiff1(t *testing.T) {
 	b := core.NewBoard(19)
-	b.Move(core.NewCoord(10, 10), core.Black)
-	b.Move(core.NewCoord(11, 11), core.Black)
-	b.Move(core.NewCoord(9, 11), core.Black)
+	b.Move(core.NewCoord(10, 10), color.Black)
+	b.Move(core.NewCoord(11, 11), color.Black)
+	b.Move(core.NewCoord(9, 11), color.Black)
 
 	mv1 := core.NewCoord(10, 11)
-	b.Move(mv1, core.White)
+	b.Move(mv1, color.White)
 
 	// capture
 	mv2 := core.NewCoord(10, 12)
-	diff := b.Move(mv2, core.Black)
+	diff := b.Move(mv2, color.Black)
 
 	e := diff.Copy()
 
@@ -43,7 +44,7 @@ func TestDiff1(t *testing.T) {
 	}
 
 	add := e.Add[0]
-	if add.Color != core.Black {
+	if add.Color != color.Black {
 		t.Errorf("wrong color: %v", add.Color)
 	}
 	found := false
@@ -58,7 +59,7 @@ func TestDiff1(t *testing.T) {
 	}
 
 	remove := e.Remove[0]
-	if remove.Color != core.White {
+	if remove.Color != color.White {
 		t.Errorf("wrong color: %v", add.Color)
 	}
 	found = false
@@ -175,7 +176,7 @@ func TestUUID(t *testing.T) {
 }
 
 func TestColor(t *testing.T) {
-	assert.Equal(t, core.Black.String(), "B")
-	assert.Equal(t, core.White.String(), "W")
-	assert.Equal(t, core.Empty.String(), "+")
+	assert.Equal(t, color.Black.String(), "B")
+	assert.Equal(t, color.White.String(), "W")
+	assert.Equal(t, color.Empty.String(), "+")
 }

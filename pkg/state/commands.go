@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
 )
 
 type Command interface {
@@ -24,10 +25,10 @@ type Command interface {
 
 type addStoneCommand struct {
 	coord *core.Coord
-	color core.Color
+	color color.Color
 }
 
-func NewAddStoneCommand(coord *core.Coord, color core.Color) Command {
+func NewAddStoneCommand(coord *core.Coord, color color.Color) Command {
 	return &addStoneCommand{coord, color}
 }
 
@@ -52,7 +53,7 @@ func (cmd *addStoneCommand) Execute(s *State) (*Frame, error) {
 
 	fields := core.Fields{}
 	key := "B"
-	if cmd.color == core.White {
+	if cmd.color == color.White {
 		key = "W"
 	}
 	fields.AddField(key, cmd.coord.ToLetters())
@@ -74,17 +75,17 @@ func (cmd *addStoneCommand) Execute(s *State) (*Frame, error) {
 }
 
 type passCommand struct {
-	color core.Color
+	color color.Color
 }
 
-func NewPassCommand(color core.Color) Command {
+func NewPassCommand(color color.Color) Command {
 	return &passCommand{color}
 }
 
 func (cmd *passCommand) Execute(s *State) (*Frame, error) {
 	fields := core.Fields{}
 	key := "B"
-	if cmd.color == core.White {
+	if cmd.color == color.White {
 		key = "W"
 	}
 	fields.AddField(key, "")
@@ -528,8 +529,8 @@ func (cmd *graftCommand) Execute(s *State) (*Frame, error) {
 	// setup the moves array and initial color
 	moves := []*core.Stone{}
 	col := s.nodes[parentIndex].Color
-	if col == core.Empty {
-		col = core.White
+	if col == color.Empty {
+		col = color.White
 	}
 
 	// go through each token
@@ -542,7 +543,7 @@ func (cmd *graftCommand) Execute(s *State) (*Frame, error) {
 		}
 
 		// get new color
-		col = core.Opposite(col)
+		col = col.Opposite()
 
 		// create a new move
 		move := &core.Stone{Coord: coord, Color: col}
@@ -594,7 +595,7 @@ func (cmd *markDeadCommand) Execute(s *State) (*Frame, error) {
 		return nil, nil
 	}
 
-	if s.board.Get(cmd.coord) == core.Empty {
+	if s.board.Get(cmd.coord) == color.Empty {
 		dame, _ := s.board.FindArea(cmd.coord, core.NewCoordSet())
 		if s.markedDame.Has(cmd.coord) {
 			s.markedDame.RemoveAll(dame)

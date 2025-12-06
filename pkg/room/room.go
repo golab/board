@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/loader"
@@ -534,13 +535,13 @@ func (r *Room) AddStones(moves []*core.Stone) {
 	r.state.AddStones(moves)
 }
 
-func (r *Room) HeadColor() core.Color {
+func (r *Room) HeadColor() color.Color {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return r.state.HeadColor()
 }
 
-func (r *Room) PushHead(x, y int, col core.Color) {
+func (r *Room) PushHead(x, y int, col color.Color) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.state.PushHead(x, y, col)

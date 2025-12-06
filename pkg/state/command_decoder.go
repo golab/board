@@ -14,6 +14,7 @@ import (
 	"fmt"
 
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/event"
 )
 
@@ -25,10 +26,10 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 		if err != nil {
 			return nil, err
 		}
-		col := core.Color(val["color"].(float64))
+		col := color.Color(val["color"].(float64))
 		return NewAddStoneCommand(c, col), nil
 	case "pass":
-		col := core.Color(evt.Value().(float64))
+		col := color.Color(evt.Value().(float64))
 		return NewPassCommand(col), nil
 	case "remove_stone":
 		c, err := core.InterfaceToCoord(evt.Value())

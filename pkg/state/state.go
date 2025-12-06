@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
 )
 
 const Letters = "ABCDEFGHIJKLNMOPQRSTUVWXYZ"
@@ -35,7 +36,7 @@ type State struct {
 	markedDame core.CoordSet
 }
 
-func (s *State) HeadColor() core.Color {
+func (s *State) HeadColor() color.Color {
 	return s.head.Color
 }
 
@@ -230,7 +231,7 @@ func NewState(size int, initRoot bool) *State {
 	index := 0
 	if initRoot {
 		fields := core.Fields{}
-		root = core.NewTreeNode(nil, core.Empty, 0, nil, fields)
+		root = core.NewTreeNode(nil, color.Empty, 0, nil, fields)
 		root.AddField("GM", "1")
 		root.AddField("FF", "4")
 		root.AddField("CA", "UTF-8")

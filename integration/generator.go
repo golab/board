@@ -14,6 +14,7 @@ import (
 	"math/rand"
 
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/state"
 )
 
@@ -24,14 +25,14 @@ func GenerateRandomSGF(seed int, num int) string {
 
 	s := state.NewState(size, true)
 	numMoves := 0
-	col := core.Black
+	col := color.Black
 	for numMoves < num {
 		x := r.Intn(size)
 		y := r.Intn(size)
 		c := core.NewCoord(x, y)
 		if s.Board().Legal(c, col) {
 			s.AddNode(c, col)
-			col = core.Opposite(col)
+			col = col.Opposite()
 			numMoves++
 		}
 	}

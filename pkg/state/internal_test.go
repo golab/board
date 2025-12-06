@@ -16,6 +16,7 @@ import (
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
 )
 
 func TestState3(t *testing.T) {
@@ -52,14 +53,14 @@ func TestState4(t *testing.T) {
 	assert.Equal(t, s.Head().Index, 8)
 
 	// push a node to the head
-	s.PushHead(0, 0, core.Black)
+	s.PushHead(0, 0, color.Black)
 	assert.Equal(t, s.Current().Index, 0)
 
 	// go to the most recently pushed node
 	s.gotoIndex(9) //nolint:errcheck
 
 	// since we're at the head, we will "track" along
-	s.PushHead(0, 1, core.White)
+	s.PushHead(0, 1, color.White)
 	assert.Equal(t, s.Current().Index, 10)
 }
 
@@ -69,9 +70,9 @@ func TestAddStones(t *testing.T) {
 
 	// add three new moves
 	moves := []*core.Stone{
-		core.NewStone(9, 9, core.Black),
-		core.NewStone(10, 10, core.White),
-		core.NewStone(11, 11, core.Black),
+		core.NewStone(9, 9, color.Black),
+		core.NewStone(10, 10, color.White),
+		core.NewStone(11, 11, color.Black),
 	}
 
 	s.AddStones(moves)
@@ -97,10 +98,10 @@ func TestGraft(t *testing.T) {
 	assert.NoError(t, err)
 
 	moves := []*core.Stone{
-		core.NewStone(9, 9, core.Black),
-		core.NewStone(10, 10, core.White),
-		core.NewStone(11, 11, core.Black),
-		core.NewStone(12, 12, core.Black),
+		core.NewStone(9, 9, color.Black),
+		core.NewStone(10, 10, color.White),
+		core.NewStone(11, 11, color.Black),
+		core.NewStone(12, 12, color.Black),
 	}
 
 	// dumb graft

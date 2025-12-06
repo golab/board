@@ -17,14 +17,15 @@ import (
 	"time"
 
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"golang.org/x/net/websocket"
 )
 
 type Room interface {
-	HeadColor() core.Color
-	PushHead(int, int, core.Color)
+	HeadColor() color.Color
+	PushHead(int, int, color.Color)
 	BroadcastFullFrame()
 	AddStones([]*core.Stone)
 	Broadcast(event.Event)
@@ -254,10 +255,10 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			x := int(move[0].(float64))
 			y := int(move[1].(float64))
 
-			col := core.Black
+			col := color.Black
 			curColor := o.Room.HeadColor()
-			if curColor == core.Black {
-				col = core.White
+			if curColor == color.Black {
+				col = color.White
 			}
 			o.Room.PushHead(x, y, col)
 
@@ -290,9 +291,9 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			moves := payload["m"].(string)
 
 			movesArr := []*core.Stone{}
-			currentColor := core.Black
+			currentColor := color.Black
 			if o.First == 1 {
-				currentColor = core.White
+				currentColor = color.White
 			}
 
 			for i := 0; i < len(moves); i += 2 {
@@ -302,18 +303,18 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 					switch coordStr {
 					case "!1":
 						//Force next move black
-						currentColor = core.Black
+						currentColor = color.Black
 					case "!2":
 						//Force next move white
-						currentColor = core.White
+						currentColor = color.White
 					case "..":
 						//Pass
 						movesArr = append(movesArr, &core.Stone{Coord: nil, Color: currentColor})
-						currentColor = core.Opposite(currentColor)
+						currentColor = currentColor.Opposite()
 					default:
 						coord := core.LettersToCoord(coordStr)
 						movesArr = append(movesArr, &core.Stone{Coord: coord, Color: currentColor})
-						currentColor = core.Opposite(currentColor)
+						currentColor = currentColor.Opposite()
 					}
 				}
 			}

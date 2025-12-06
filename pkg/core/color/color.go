@@ -9,7 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 // the core package provides basic functionality to all the major components of the code
-package core
+package color
 
 // Color is one of Empty, Black, or White
 type Color int
@@ -24,7 +24,7 @@ const (
 )
 
 // Opposite: Black -> White, White -> Black, Empty -> Empty
-func Opposite(c Color) Color {
+func (c Color) Opposite() Color {
 	if c == Black {
 		return White
 	}
@@ -34,7 +34,7 @@ func Opposite(c Color) Color {
 	return Empty
 }
 
-func Fill(c Color) Color {
+func (c Color) Fill() Color {
 	switch c {
 	case Empty:
 		return FillDame
@@ -52,7 +52,7 @@ func Fill(c Color) Color {
 	return FillDame
 }
 
-func ColorEqual(c, d Color) bool {
+func (c Color) Equal(d Color) bool {
 	if c == d {
 		return true
 	}

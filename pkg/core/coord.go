@@ -14,6 +14,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/jarednogo/board/pkg/core/color"
 )
 
 const maxBoardSize = 19
@@ -110,8 +112,8 @@ func NewCoordSet() CoordSet {
 
 // StoneSet is an array of Coords plus a Color
 type StoneSet struct {
-	Coords []*Coord `json:"coords"`
-	Color  `json:"color"`
+	Coords      []*Coord `json:"coords"`
+	color.Color `json:"color"`
 }
 
 // Copy copies the StoneSet
@@ -144,7 +146,7 @@ func (s *StoneSet) String() string {
 }
 
 // NewStoneSet takes a CoordSet and a Color and turns it into a StoneSet
-func NewStoneSet(s CoordSet, c Color) *StoneSet {
+func NewStoneSet(s CoordSet, c color.Color) *StoneSet {
 	return &StoneSet{s.List(), c}
 }
 
@@ -236,10 +238,10 @@ func InterfaceToCoord(ifc any) (*Coord, error) {
 // StoneSet is essentially an extension of Stone
 type Stone struct {
 	Coord *Coord // nil for passes
-	Color Color
+	Color color.Color
 }
 
-func NewStone(x, y int, c Color) *Stone {
+func NewStone(x, y int, c color.Color) *Stone {
 	coord := NewCoord(x, y)
 	return &Stone{
 		Coord: coord,

@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
 )
 
 // FrameType can be either DiffFrame or FullFrame
@@ -82,9 +83,9 @@ const (
 
 // NodeJSON is a key component of TreeJSON
 type NodeJSON struct {
-	Color core.Color `json:"color"`
-	Down  []int      `json:"down"`
-	Depth int        `json:"depth"`
+	Color color.Color `json:"color"`
+	Down  []int       `json:"down"`
+	Depth int         `json:"depth"`
 }
 
 // TreeJSON is the basic struct to encode information about the explorer

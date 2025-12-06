@@ -10,6 +10,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 package core
 
+import (
+	"github.com/jarednogo/board/pkg/core/color"
+)
+
 // Fmap applies a function f to every node under (and including) root
 // even thought State contains Nodes and we can range over all the nodes,
 // Fmap is useful for two reasons:
@@ -36,7 +40,7 @@ func Fmap(f func(*TreeNode), root *TreeNode) {
 
 type TreeNode struct {
 	XY             *Coord
-	Color          Color
+	Color          color.Color
 	Down           []*TreeNode
 	Up             *TreeNode
 	Index          int
@@ -48,7 +52,7 @@ type TreeNode struct {
 	WhiteCaps int
 }
 
-func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields Fields) *TreeNode {
+func NewTreeNode(coord *Coord, col color.Color, index int, up *TreeNode, fields Fields) *TreeNode {
 	down := []*TreeNode{}
 	node := &TreeNode{
 		XY:             coord,
@@ -85,9 +89,9 @@ func (n *TreeNode) SetDiff(diff *Diff) {
 	if diff != nil {
 		for _, ss := range diff.Remove {
 			switch ss.Color {
-			case White:
+			case color.White:
 				b += len(ss.Coords)
-			case Black:
+			case color.Black:
 				w += len(ss.Coords)
 			}
 		}
@@ -131,7 +135,7 @@ func (n *TreeNode) RecomputeDepth() {
 	}, n)
 }
 
-func (n *TreeNode) HasChild(coord *Coord, col Color) (int, bool) {
+func (n *TreeNode) HasChild(coord *Coord, col color.Color) (int, bool) {
 	for _, node := range n.Down {
 		if node.XY.Equal(coord) && node.Color == col {
 			return node.Index, true

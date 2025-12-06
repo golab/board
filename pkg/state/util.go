@@ -14,6 +14,7 @@ import (
 	"fmt"
 
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
 )
 
 func (s *State) prefs() map[string]int {
@@ -139,7 +140,7 @@ func (s *State) computeDiffSetup(i int) *core.Diff {
 		for _, v := range val {
 			add.Add(core.LettersToCoord(v))
 		}
-		stoneSet := core.NewStoneSet(add, core.Black)
+		stoneSet := core.NewStoneSet(add, color.Black)
 		diffAdd = append(diffAdd, stoneSet)
 	}
 
@@ -149,7 +150,7 @@ func (s *State) computeDiffSetup(i int) *core.Diff {
 		for _, v := range val {
 			add.Add(core.LettersToCoord(v))
 		}
-		stoneSet := core.NewStoneSet(add, core.White)
+		stoneSet := core.NewStoneSet(add, color.White)
 		diffAdd = append(diffAdd, stoneSet)
 	}
 
@@ -162,14 +163,14 @@ func (s *State) computeDiffSetup(i int) *core.Diff {
 			coord := core.LettersToCoord(v)
 			col := s.board.Get(coord)
 			switch col {
-			case core.Black:
+			case color.Black:
 				csBlack.Add(coord)
-			case core.White:
+			case color.White:
 				csWhite.Add(coord)
 			}
 		}
-		removeBlack := core.NewStoneSet(csBlack, core.Black)
-		removeWhite := core.NewStoneSet(csWhite, core.White)
+		removeBlack := core.NewStoneSet(csBlack, color.Black)
+		removeWhite := core.NewStoneSet(csWhite, color.White)
 		diffRemove = append(diffRemove, removeBlack)
 		diffRemove = append(diffRemove, removeWhite)
 	}

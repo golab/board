@@ -20,6 +20,7 @@ import (
 	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/state"
 )
@@ -453,8 +454,8 @@ func TestCutClipboard(t *testing.T) {
 	assert.NoError(t, err)
 	room, err := sim.Hub.GetRoom("room123")
 	assert.NoError(t, err)
-	assert.Equal(t, room.Board().Get(core.NewCoord(16.0, 14.0)), core.Black)
-	assert.Equal(t, room.Board().Get(core.NewCoord(17.0, 14.0)), core.White)
+	assert.Equal(t, room.Board().Get(core.NewCoord(16.0, 14.0)), color.Black)
+	assert.Equal(t, room.Board().Get(core.NewCoord(17.0, 14.0)), color.White)
 }
 
 func TestDraw(t *testing.T) {
@@ -513,10 +514,10 @@ func TestGraft(t *testing.T) {
 	room, err := sim.Hub.GetRoom("room123")
 	assert.NoError(t, err)
 	board := room.Board()
-	assert.Equal(t, board.Get(core.NewCoord(9.0, 9.0)), core.Black)
-	assert.Equal(t, board.Get(core.NewCoord(9.0, 8.0)), core.White)
-	assert.Equal(t, board.Get(core.NewCoord(9.0, 7.0)), core.Black)
-	assert.Equal(t, board.Get(core.NewCoord(9.0, 6.0)), core.White)
+	assert.Equal(t, board.Get(core.NewCoord(9.0, 9.0)), color.Black)
+	assert.Equal(t, board.Get(core.NewCoord(9.0, 8.0)), color.White)
+	assert.Equal(t, board.Get(core.NewCoord(9.0, 7.0)), color.Black)
+	assert.Equal(t, board.Get(core.NewCoord(9.0, 6.0)), color.White)
 }
 
 func TestTrash(t *testing.T) {
@@ -712,11 +713,11 @@ func TestPushHead(t *testing.T) {
 	assert.NoError(t, err)
 
 	// before Pushhead, there should be black stones at (2, 11) and (2, 10)
-	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 11.0)), core.Black)
-	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 10.0)), core.Black)
+	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 11.0)), color.Black)
+	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 10.0)), color.Black)
 
 	// this white stone captures two black stones
-	room.PushHead(1, 11, core.White)
-	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 11.0)), core.Empty)
-	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 10.0)), core.Empty)
+	room.PushHead(1, 11, color.White)
+	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 11.0)), color.Empty)
+	assert.Equal(t, room.Board().Get(core.NewCoord(2.0, 10.0)), color.Empty)
 }

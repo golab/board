@@ -17,6 +17,7 @@ import (
 	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/state"
 )
 
@@ -27,11 +28,11 @@ func TestFmap(t *testing.T) {
 	}
 
 	core.Fmap(func(n *core.TreeNode) {
-		n.Color = core.Opposite(n.Color)
+		n.Color = n.Color.Opposite()
 	}, s.Root())
 
 	node := s.Nodes()[1]
-	if node.Color != core.White {
+	if node.Color != color.White {
 		t.Errorf("fmap failed")
 	}
 }
@@ -83,7 +84,7 @@ func TestChild(t *testing.T) {
 		t.Error(err)
 	}
 	coord := core.NewCoord(3, 3)
-	ind, has := s.Root().HasChild(coord, core.Black)
+	ind, has := s.Root().HasChild(coord, color.Black)
 	if !has {
 		t.Errorf("failed to find child")
 	}
