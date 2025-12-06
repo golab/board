@@ -19,9 +19,9 @@ import (
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/jarednogo/board/pkg/core/parser"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/state"
 )
@@ -88,7 +88,7 @@ func TestSim2(t *testing.T) {
 	assert.NoError(t, err)
 	room.DisableBuffers()
 
-	p := core.NewParser(sgfsamples.Scoring2)
+	p := parser.NewParser(sgfsamples.Scoring2)
 	root, err := p.Parse()
 	assert.NoError(t, err)
 	require.True(t, root.NumChildren() > 0)

@@ -15,7 +15,7 @@ import (
 
 	"github.com/jarednogo/board/integration"
 	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/parser"
 	"github.com/jarednogo/board/pkg/state"
 )
 
@@ -26,7 +26,7 @@ func TestGenerate(t *testing.T) {
 	maxLength := 300
 	sgfs := integration.GenerateNRandomSGF(seed, num, minLength, maxLength)
 
-	sgf := core.Merge(sgfs)
+	sgf := parser.Merge(sgfs)
 	s, err := state.FromSGF(sgf)
 	assert.NoError(t, err)
 	//assert.True(t, duration < 2*time.Second)
@@ -81,7 +81,7 @@ func BenchmarkMerge(b *testing.B) {
 	i := 0
 	for b.Loop() {
 		sgfs := mergeList[i%len(mergeList)]
-		core.Merge(sgfs)
+		parser.Merge(sgfs)
 		i++
 	}
 }
@@ -91,7 +91,7 @@ func BenchmarkMergeFromSGF(b *testing.B) {
 	mergedSGFs := []string{}
 	for i := 0; i < 10; i++ {
 		sgfs := sgfsForBenchmark(i, 100)
-		sgf := core.Merge(sgfs)
+		sgf := parser.Merge(sgfs)
 		mergedSGFs = append(mergedSGFs, sgf)
 	}
 	i := 0
@@ -107,7 +107,7 @@ func BenchmarkMergeToSGF(b *testing.B) {
 	states := []*state.State{}
 	for i := 0; i < 10; i++ {
 		sgfs := sgfsForBenchmark(i, 100)
-		sgf := core.Merge(sgfs)
+		sgf := parser.Merge(sgfs)
 		s, err := state.FromSGF(sgf)
 		if err != nil {
 			b.Error(err)
@@ -127,13 +127,13 @@ func BenchmarkParse(b *testing.B) {
 	mergedSGFs := []string{}
 	for i := 0; i < 10; i++ {
 		sgfs := sgfsForBenchmark(i, 100)
-		sgf := core.Merge(sgfs)
+		sgf := parser.Merge(sgfs)
 		mergedSGFs = append(mergedSGFs, sgf)
 	}
 	i := 0
 	for b.Loop() {
 		sgf := mergedSGFs[i%len(mergedSGFs)]
-		p := core.NewParser(sgf)
+		p := parser.NewParser(sgf)
 		p.Parse() //nolint:errcheck
 		i++
 	}

@@ -19,6 +19,7 @@ import (
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/core/fields"
+	"github.com/jarednogo/board/pkg/core/parser"
 )
 
 const Letters = "ABCDEFGHIJKLNMOPQRSTUVWXYZ"
@@ -162,7 +163,7 @@ func (s *State) toSGF(indexes bool) string {
 }
 
 func FromSGF(data string) (*State, error) {
-	p := core.NewParser(data)
+	p := parser.NewParser(data)
 	root, err := p.Parse()
 	if err != nil {
 		return nil, err
@@ -189,7 +190,7 @@ func FromSGF(data string) (*State, error) {
 		if _, ok := cur.(string); ok {
 			state.left()
 		} else {
-			node := cur.(*core.SGFNode)
+			node := cur.(*parser.SGFNode)
 
 			index := -1
 			indexes := node.GetField("IX")

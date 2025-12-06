@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package core_test
+package parser_test
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ import (
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/parser"
 )
 
 var fieldTests = []struct {
@@ -39,7 +39,7 @@ var fieldTests = []struct {
 func TestParser(t *testing.T) {
 	for _, tt := range fieldTests {
 		t.Run(tt.input, func(t *testing.T) {
-			p := core.NewParser(tt.input)
+			p := parser.NewParser(tt.input)
 			root, err := p.Parse()
 			if err != nil {
 				t.Error(err)
@@ -67,8 +67,8 @@ var mergeTests = []struct {
 func TestMerge(t *testing.T) {
 	for i, tt := range mergeTests {
 		t.Run(fmt.Sprintf("merge%d", i), func(t *testing.T) {
-			merged := core.Merge(tt.input)
-			p := core.NewParser(merged)
+			merged := parser.Merge(tt.input)
+			p := parser.NewParser(merged)
 			root, err := p.Parse()
 			if err != nil {
 				t.Error(err)
@@ -85,8 +85,8 @@ func TestMerge(t *testing.T) {
 func TestMerge2(t *testing.T) {
 	sgf1 := sgfsamples.SimpleFourMoves
 	sgf2 := sgfsamples.SimpleEightMoves
-	sgf := core.Merge([]string{sgf1, sgf2})
-	p := core.NewParser(sgf)
+	sgf := parser.Merge([]string{sgf1, sgf2})
+	p := parser.NewParser(sgf)
 	root, err := p.Parse()
 	assert.NoError(t, err)
 	require.Equal(t, root.NumChildren(), 2)
@@ -99,7 +99,7 @@ func TestMerge2(t *testing.T) {
 
 func TestEmpty(t *testing.T) {
 	sgf := "()"
-	p := core.NewParser(sgf)
+	p := parser.NewParser(sgf)
 	_, err := p.Parse()
 	if err != nil {
 		t.Error(err)
@@ -122,7 +122,7 @@ var oddTests = []struct {
 func TestOdd(t *testing.T) {
 	for _, tt := range oddTests {
 		t.Run(tt.input, func(t *testing.T) {
-			p := core.NewParser(tt.input)
+			p := parser.NewParser(tt.input)
 			_, err := p.Parse()
 			assert.Equal(t, err != nil, tt.err)
 		})
@@ -130,7 +130,7 @@ func TestOdd(t *testing.T) {
 }
 
 func TestChineseNames(t *testing.T) {
-	p := core.NewParser(sgfsamples.ChineseNames)
+	p := parser.NewParser(sgfsamples.ChineseNames)
 	root, err := p.Parse()
 	assert.NoError(t, err)
 	pb := root.GetField("PB")
@@ -144,7 +144,7 @@ func TestChineseNames(t *testing.T) {
 }
 
 func TestMixedCaseField(t *testing.T) {
-	p := core.NewParser(sgfsamples.MixedCaseField)
+	p := parser.NewParser(sgfsamples.MixedCaseField)
 	root, err := p.Parse()
 	assert.NoError(t, err)
 	c := root.GetField("COPYRIGHT")
@@ -153,14 +153,14 @@ func TestMixedCaseField(t *testing.T) {
 }
 
 func TestSGFNodeAddField(t *testing.T) {
-	n := &core.SGFNode{}
+	n := &parser.SGFNode{}
 	n.AddField("foo", "bar")
 	n.AddField("baz", "bot")
 	assert.Equal(t, len(n.AllFields()), 2)
 }
 
 func TestMultifield(t *testing.T) {
-	p := core.NewParser("(;GM[1]ZZ[foo][bar][baz])")
+	p := parser.NewParser("(;GM[1]ZZ[foo][bar][baz])")
 	root, err := p.Parse()
 	assert.NoError(t, err)
 	zz := root.GetField("ZZ")
@@ -178,7 +178,7 @@ func FuzzParser(f *testing.F) {
 	}
 
 	f.Fuzz(func(t *testing.T, orig string) {
-		p := core.NewParser(orig)
+		p := parser.NewParser(orig)
 		// looking for crashes or panics
 		_, _ = p.Parse()
 	})

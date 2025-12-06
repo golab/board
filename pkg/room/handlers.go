@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/parser"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/room/plugin"
@@ -146,7 +147,7 @@ func (r *Room) handleUploadSGF(evt event.Event) event.Event {
 				for _, file := range filesBytes {
 					files = append(files, string(file))
 				}
-				merged := core.Merge(files)
+				merged := parser.Merge(files)
 				bcast = r.UploadSGF(merged)
 			}
 		} else {
@@ -165,7 +166,7 @@ func (r *Room) handleUploadSGF(evt event.Event) event.Event {
 			}
 			sgfs = append(sgfs, string(d))
 		}
-		sgf := core.Merge(sgfs)
+		sgf := parser.Merge(sgfs)
 		bcast = r.UploadSGF(sgf)
 	} else {
 		bcast = event.ErrorEvent("unreachable")
