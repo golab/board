@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 
 	"github.com/jarednogo/board/pkg/core/color"
@@ -64,6 +65,7 @@ type OGSConnector struct {
 	First   int
 	Exit    bool
 	fetcher fetch.Fetcher
+	mu      sync.Mutex
 }
 
 func NewOGSConnector(room Room, f fetch.Fetcher) (*OGSConnector, error) {
@@ -187,11 +189,19 @@ func (o *OGSConnector) Start(args map[string]any) {
 }
 
 func (o *OGSConnector) End() {
+	o.mu.Lock()
+	defer o.mu.Unlock()
 	o.Exit = true
 }
 
+func (o *OGSConnector) isExited() bool {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	return o.Exit
+}
+
 func (o *OGSConnector) ping() {
-	for !o.Exit {
+	for !o.isExited() {
 		//30 seconds seemed just a little too long was causing connection issues
 		time.Sleep(25 * time.Second)
 		payload := make(map[string]any)
