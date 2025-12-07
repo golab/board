@@ -299,3 +299,11 @@ func TestParseBranch4(t *testing.T) {
 	require.NoError(t, err)
 	_ = root
 }
+
+func TestParseBranch5(t *testing.T) {
+	text := "(;[1])"
+	p := New(text)
+	_, err := p.parseBranch()
+	assert.NotNil(t, err)
+	t.Logf("%v", err)
+}

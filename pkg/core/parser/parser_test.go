@@ -94,6 +94,33 @@ func TestMerge2(t *testing.T) {
 	require.Equal(t, len(child2.GetField("C")), 3)
 }
 
+func TestMerge3(t *testing.T) {
+	sgf := parser.Merge([]string{})
+	assert.Equal(t, sgf, "")
+}
+
+func TestMerge4(t *testing.T) {
+	sgf1 := sgfsamples.SimpleFourMoves
+	sgf := parser.Merge([]string{sgf1})
+	assert.Equal(t, sgf1, sgf)
+}
+
+func TestMerge5(t *testing.T) {
+	sgf1 := sgfsamples.SimpleFourMoves
+	sgf2 := sgfsamples.SimpleEightMoves
+	sgf3 := "foobar"
+	sgfMerged1 := parser.Merge([]string{sgf1, sgf2, sgf3})
+	sgfMerged2 := parser.Merge([]string{sgf1, sgf2})
+	assert.Equal(t, sgfMerged1, sgfMerged2)
+}
+
+func TestMerge6(t *testing.T) {
+	sgf1 := sgfsamples.SimpleFourMoves
+	sgf2 := "(;GM[1]SZ[9];B[cc]W[dd])"
+	sgf := parser.Merge([]string{sgf1, sgf2})
+	assert.Equal(t, sgf, sgf1)
+}
+
 func TestEmpty(t *testing.T) {
 	sgf := "()"
 	p := parser.New(sgf)
