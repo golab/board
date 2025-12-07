@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package plugin
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -31,21 +32,6 @@ type Room interface {
 	Broadcast(event.Event)
 	UploadSGF(string) event.Event
 }
-
-/*
-func GetUser(f fetch.Fetcher, id int) (string, error) {
-	data, err := f.Fetch(fmt.Sprintf("http://online-go.com/api/v1/players/%d/", id))
-	if err != nil {
-		return "", err
-	}
-	user := &User{}
-	err = json.Unmarshal([]byte(data), user)
-	if err != nil {
-		return "", err
-	}
-	return user.Username, nil
-}
-*/
 
 type User struct {
 	ID       int    `json:"id"`
@@ -81,27 +67,36 @@ type OGSConnector struct {
 }
 
 func NewOGSConnector(room Room, f fetch.Fetcher) (*OGSConnector, error) {
+	ws, err := websocket.Dial("wss://online-go.com/socket", "", "http://localhost")
+	if err != nil {
+		return nil, err
+	}
+
+	return NewOGSConnectorWithReadWriter(room, f, ws)
+}
+
+func NewMockOGSConnector(room Room, f fetch.Fetcher) (*OGSConnector, error) {
+	rw := &bytes.Buffer{}
+	return NewOGSConnectorWithReadWriter(room, f, rw)
+}
+
+func NewOGSConnectorWithReadWriter(room Room, f fetch.Fetcher, rw io.ReadWriter) (*OGSConnector, error) {
 	creds, err := GetCreds(f)
 	_ = creds
 	if err != nil {
 		return nil, err
 	}
 
-	ws, err := websocket.Dial("wss://online-go.com/socket", "", "http://localhost")
-	if err != nil {
-		return nil, err
-	}
-
 	return &OGSConnector{
 		Creds:   creds,
-		Socket:  ws,
+		Socket:  rw,
 		Room:    room,
 		Exit:    false,
 		fetcher: f,
 	}, nil
 }
 
-func (o *OGSConnector) Send(topic string, payload map[string]any) error {
+func (o *OGSConnector) send(topic string, payload map[string]any) error {
 	arr := []any{topic, payload}
 	data, err := json.Marshal(arr)
 	if err != nil {
@@ -111,27 +106,27 @@ func (o *OGSConnector) Send(topic string, payload map[string]any) error {
 	return err
 }
 
-func (o *OGSConnector) Connect(gameID int, ogsType string) error {
+func (o *OGSConnector) connect(gameID int, ogsType string) error {
 	payload := make(map[string]any)
 	payload["player_id"] = o.Creds.User.ID
 	payload["chat"] = false
 	if ogsType == "game" {
 		payload["game_id"] = gameID
-		return o.Send("game/connect", payload)
+		return o.send("game/connect", payload)
 	}
 	payload["review_id"] = gameID
-	return o.Send("review/connect", payload)
+	return o.send("review/connect", payload)
 }
 
-func (o *OGSConnector) ChatConnect() error {
+func (o *OGSConnector) chatConnect() error {
 	payload := make(map[string]any)
 	payload["player_id"] = o.Creds.User.ID
 	payload["username"] = o.Creds.User.Username
 	payload["auth"] = o.Creds.JWT
-	return o.Send("chat/connect", payload)
+	return o.send("chat/connect", payload)
 }
 
-func ReadFrame(socketchan chan byte) ([]byte, error) {
+func readFrameFromChan(socketchan chan byte) ([]byte, error) {
 	data := []byte{}
 	started := false
 	depth := 0
@@ -164,14 +159,14 @@ func ReadFrame(socketchan chan byte) ([]byte, error) {
 	}
 }
 
-func (o *OGSConnector) ReadSocketToChan(socketchan chan byte) error {
+func (o *OGSConnector) readSocketToChan(socketchan chan byte) error {
 	defer close(socketchan)
 	for {
 		data := make([]byte, 256)
 		n, err := o.Socket.Read(data)
 		if err != nil {
 			// this will cause the websocket to close
-			// therefore ReadFrame will naturally come to an end
+			// therefore readFrame will naturally come to an end
 			return err
 		}
 		for _, b := range data[:n] {
@@ -188,45 +183,45 @@ func (o *OGSConnector) Start(args map[string]any) {
 	id := args["id"].(int)
 	ogsType := args["ogsType"].(string)
 
-	go o.Loop(id, ogsType) //nolint:errcheck
+	go o.loop(id, ogsType) //nolint:errcheck
 }
 
 func (o *OGSConnector) End() {
 	o.Exit = true
 }
 
-func (o *OGSConnector) Ping() {
+func (o *OGSConnector) ping() {
 	for !o.Exit {
 		//30 seconds seemed just a little too long was causing connection issues
 		time.Sleep(25 * time.Second)
 		payload := make(map[string]any)
 		payload["client"] = time.Now().UnixMilli()
-		if err := o.Send("net/ping", payload); err != nil {
+		if err := o.send("net/ping", payload); err != nil {
 			o.End()
 			return
 		}
 	}
 }
 
-func (o *OGSConnector) Loop(gameID int, ogsType string) error {
-	err := o.ChatConnect()
+func (o *OGSConnector) loop(gameID int, ogsType string) error {
+	err := o.chatConnect()
 	if err != nil {
 		return err
 	}
-	err = o.Connect(gameID, ogsType)
+	err = o.connect(gameID, ogsType)
 	if err != nil {
 		return err
 	}
 
 	socketchan := make(chan byte)
 
-	go o.Ping()
-	go o.ReadSocketToChan(socketchan) //nolint: errcheck
+	go o.ping()
+	go o.readSocketToChan(socketchan) //nolint: errcheck
 
 	defer o.End()
 
 	for !o.Exit {
-		data, err := ReadFrame(socketchan)
+		data, err := readFrameFromChan(socketchan)
 
 		// break on error
 		if err != nil {
@@ -270,7 +265,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 				// the game is over
 				break
 			}
-			sgf := o.GamedataToSGF(payload)
+			sgf := o.gamedataToSGF(payload)
 			evt := o.Room.UploadSGF(sgf)
 			o.Room.Broadcast(evt)
 		} else if topic == fmt.Sprintf("review/%d/full_state", gameID) {
@@ -327,8 +322,8 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 	return nil
 }
 
-func (o *OGSConnector) GamedataToSGF(gamedata map[string]any) string {
-	sgf := o.GameInfoToSGF(gamedata)
+func (o *OGSConnector) gamedataToSGF(gamedata map[string]any) string {
+	sgf := o.gameInfoToSGF(gamedata)
 	sgf += o.initStateToSGF(gamedata)
 
 	for index, m := range gamedata["moves"].([]any) {
@@ -348,7 +343,7 @@ func (o *OGSConnector) GamedataToSGF(gamedata map[string]any) string {
 	return sgf
 }
 
-func MakeRank(r float64) string {
+func makeRank(r float64) string {
 	if r < 30 {
 		return fmt.Sprintf("%dk", int(30-r+1))
 	} else {
@@ -356,7 +351,7 @@ func MakeRank(r float64) string {
 	}
 }
 
-func (o *OGSConnector) GameInfoToSGF(gamedata map[string]any) string {
+func (o *OGSConnector) gameInfoToSGF(gamedata map[string]any) string {
 	sgf := ""
 
 	size := int(gamedata["width"].(float64))
@@ -369,8 +364,8 @@ func (o *OGSConnector) GameInfoToSGF(gamedata map[string]any) string {
 	whitePlayer := players["white"].(map[string]any)
 	black := blackPlayer["username"].(string)
 	white := whitePlayer["username"].(string)
-	blackRank := MakeRank(blackPlayer["rank"].(float64))
-	whiteRank := MakeRank(whitePlayer["rank"].(float64))
+	blackRank := makeRank(blackPlayer["rank"].(float64))
+	whiteRank := makeRank(whitePlayer["rank"].(float64))
 	sgf = fmt.Sprintf(
 		"(;GM[1]FF[4]CA[UTF-8]SZ[%d]PB[%s]PW[%s]BR[%s]WR[%s]RU[%s]KM[%f]GN[%s]",
 		size, black, white, blackRank, whiteRank, rules, komi, name)
