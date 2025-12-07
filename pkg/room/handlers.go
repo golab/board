@@ -138,6 +138,11 @@ func (r *Room) handleUploadSGF(evt event.Event) event.Event {
 			bcast = event.ErrorEvent(err.Error())
 			return bcast
 		}
+		// 1MB maximum
+		if len(decoded) > 1<<20 {
+			bcast = event.ErrorEvent("file exceeds the 1MB maximum")
+			return bcast
+		}
 		if zip.IsZipFile(decoded) {
 			filesBytes, err := zip.Decompress(decoded)
 			if err != nil {
