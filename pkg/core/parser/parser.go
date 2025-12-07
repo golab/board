@@ -21,6 +21,14 @@ func isWhitespace(c rune) bool {
 	return c == '\n' || c == ' ' || c == '\t' || c == '\r'
 }
 
+func isUpper(c rune) bool {
+	return c >= 'A' && c <= 'Z'
+}
+
+func isLower(c rune) bool {
+	return c >= 'a' && c <= 'z'
+}
+
 type SGFNode struct {
 	fields.Fields
 	down []*SGFNode
@@ -89,15 +97,12 @@ func (p *Parser) Parse() (*SGFNode, error) {
 	if err != nil {
 		return nil, err
 	}
-	c := p.peek(0)
-	if c == '(' {
-		root, err := p.parseBranch()
-		if err != nil {
-			return nil, err
-		}
-		return root, nil
+	// the next character is guaranteed to be '('
+	root, err := p.parseBranch()
+	if err != nil {
+		return nil, err
 	}
-	return nil, fmt.Errorf("unexpected %c", c)
+	return root, nil
 }
 
 func (p *Parser) skipWhitespace() {
@@ -130,16 +135,18 @@ func (p *Parser) parseKey() (string, error) {
 	sb := strings.Builder{}
 	for {
 		c := p.peek(0)
-		if c == 0 {
-			return "", fmt.Errorf("bad key")
-		} else if c >= 'a' && c <= 'z' {
+		if isLower(c) {
 			r := p.read()
 			r -= 32
 			sb.WriteRune(r)
-		} else if c < 'A' || c > 'Z' {
-			break
-		} else {
+		} else if isUpper(c) {
 			sb.WriteRune(p.read())
+		} else if c == '[' {
+			break
+		} else if isWhitespace(c) {
+			p.skipWhitespace()
+		} else {
+			return "", fmt.Errorf("bad key %c", c)
 		}
 	}
 	return sb.String(), nil
@@ -171,7 +178,7 @@ type parseNodesResult struct {
 	cur  *SGFNode
 }
 
-func (p *Parser) parseNodes() (*parseNodesResult, error) {
+func (p *Parser) parseOneOrMoreNodes() (*parseNodesResult, error) {
 	n, err := p.parseNode()
 	if err != nil {
 		return nil, err
@@ -202,7 +209,7 @@ type property struct {
 func (p *Parser) parseProperty() (*property, error) {
 	prop := &property{}
 	c := p.peek(0)
-	if c < 'A' || c > 'Z' {
+	if !isLower(c) && !isUpper(c) {
 		return nil, fmt.Errorf("bad property (expected key) %c", c)
 	}
 	key, err := p.parseKey()
@@ -213,10 +220,6 @@ func (p *Parser) parseProperty() (*property, error) {
 	prop.key = key
 
 	p.skipWhitespace()
-	c = p.peek(0)
-	if c != '[' {
-		return nil, fmt.Errorf("bad property (expected field) %c", c)
-	}
 
 	flds, err := p.parseOneOrMoreFields(key)
 	if err != nil {
@@ -307,19 +310,12 @@ func (p *Parser) parseBranch() (*SGFNode, error) {
 		if c == 0 {
 			return nil, fmt.Errorf("unfinished branch, expected ')'")
 		} else if c == ';' {
-			result, err := p.parseNodes()
+			result, err := p.parseOneOrMoreNodes()
 			if err != nil {
 				return nil, err
 			}
-			node := result.root
-			cur := result.cur
-			if root == nil {
-				root = node
-				current = cur
-			} else {
-				current.down = append(current.down, node)
-				current = cur
-			}
+			root = result.root
+			current = result.cur
 		} else if c == '(' {
 			newBranch, err := p.parseBranch()
 			if err != nil {

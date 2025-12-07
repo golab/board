@@ -71,6 +71,13 @@ func TestParseKey3(t *testing.T) {
 	assert.Equal(t, key, "ABC")
 }
 
+func TestParseKey4(t *testing.T) {
+	text := "FOO"
+	p := New(text)
+	_, err := p.parseKey()
+	assert.NotNil(t, err)
+}
+
 func TestParseField1(t *testing.T) {
 	text := "[123]"
 	p := New(text)
@@ -92,6 +99,13 @@ func TestParseField3(t *testing.T) {
 	field, err := p.parseField()
 	require.NoError(t, err)
 	assert.Equal(t, field, "123]abc")
+}
+
+func TestParseField4(t *testing.T) {
+	text := "[abc"
+	p := New(text)
+	_, err := p.parseField()
+	assert.NotNil(t, err)
 }
 
 func TestSkipUntil(t *testing.T) {
@@ -144,4 +158,144 @@ func TestParseNode2(t *testing.T) {
 	h := node.GetField("QUX")
 	require.Equal(t, len(h), 1)
 	assert.Equal(t, h[0], "quz")
+}
+
+func TestParseNode3(t *testing.T) {
+	text := "FOO[bb];"
+	p := New(text)
+	_, err := p.parseNode()
+	assert.NotNil(t, err)
+}
+
+func TestParseNode4(t *testing.T) {
+	text := ";FOO[bb]BAR;"
+	p := New(text)
+	_, err := p.parseNode()
+	assert.NotNil(t, err)
+}
+
+func TestParseNodes1(t *testing.T) {
+	text := ";FOO[bar"
+	p := New(text)
+	_, err := p.parseOneOrMoreNodes()
+	assert.NotNil(t, err)
+}
+
+func TestParseNodes2(t *testing.T) {
+	text := ";FOO[bar];BAZ[bot"
+	p := New(text)
+	_, err := p.parseOneOrMoreNodes()
+	assert.NotNil(t, err)
+}
+
+func TestParseProperty1(t *testing.T) {
+	text := "789[abc]"
+	p := New(text)
+	_, err := p.parseProperty()
+	assert.NotNil(t, err)
+}
+
+func TestParseProperty2(t *testing.T) {
+	// the SGF spec says keys should be all uppercase
+	// so our parser is a bit permissive
+	text := "foo[abc]"
+	p := New(text)
+	prop, err := p.parseProperty()
+	require.NoError(t, err)
+	assert.Equal(t, prop.key, "FOO")
+	require.Equal(t, len(prop.values), 1)
+	assert.Equal(t, prop.values[0], "abc")
+}
+
+func TestParseProperty3(t *testing.T) {
+	// perhaps the parser is TOO permissive
+	text := "F O O  [abc]"
+	p := New(text)
+	prop, err := p.parseProperty()
+	require.NoError(t, err)
+	assert.Equal(t, prop.key, "FOO")
+	require.Equal(t, len(prop.values), 1)
+	assert.Equal(t, prop.values[0], "abc")
+}
+
+func TestParseProperty4(t *testing.T) {
+	text := "FOO"
+	p := New(text)
+	_, err := p.parseProperty()
+	assert.NotNil(t, err)
+}
+
+func TestParseProperty5(t *testing.T) {
+	text := "FOO[bar][baz"
+	p := New(text)
+	_, err := p.parseProperty()
+	assert.NotNil(t, err)
+}
+
+func TestOneOrMoreFields1(t *testing.T) {
+	text := "abc"
+	p := New(text)
+	_, err := p.parseOneOrMoreFields("FOO")
+	assert.NotNil(t, err)
+}
+
+func TestOneOrMoreFields2(t *testing.T) {
+	text := "[abc][def"
+	p := New(text)
+	_, err := p.parseOneOrMoreFields("FOO")
+	assert.NotNil(t, err)
+}
+
+func TestParseOneField1(t *testing.T) {
+	text := "[abc"
+	p := New(text)
+	_, err := p.parseOneField("FOO")
+	assert.NotNil(t, err)
+}
+
+func TestParseOneField2(t *testing.T) {
+	text := "[tt]"
+	p := New(text)
+	s, err := p.parseOneField("B")
+	require.NoError(t, err)
+	assert.Equal(t, s, "")
+}
+
+func TestParseOneField3(t *testing.T) {
+	text := "[bb]"
+	p := New(text)
+	s, err := p.parseOneField("B")
+	require.NoError(t, err)
+	assert.Equal(t, s, "bb")
+}
+
+func TestParseBranch1(t *testing.T) {
+	text := "abc"
+	p := New(text)
+	_, err := p.parseBranch()
+	assert.NotNil(t, err)
+}
+
+func TestParseBranch2(t *testing.T) {
+	text := "("
+	p := New(text)
+	_, err := p.parseBranch()
+	assert.NotNil(t, err)
+	t.Logf("%v", err)
+}
+
+func TestParseBranch3(t *testing.T) {
+	text := "(;GM[1](B[aa])(;B[bb]))"
+	p := New(text)
+	_, err := p.parseBranch()
+	assert.NotNil(t, err)
+	t.Logf("%v", err)
+}
+
+func TestParseBranch4(t *testing.T) {
+	text := "((;GM[1](;B[aa])(;B[bb])))"
+	p := New(text)
+	root, err := p.parseBranch()
+	require.NoError(t, err)
+	_ = root
 }

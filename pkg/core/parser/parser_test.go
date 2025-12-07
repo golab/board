@@ -41,10 +41,7 @@ func TestParser(t *testing.T) {
 		t.Run(tt.input, func(t *testing.T) {
 			p := parser.New(tt.input)
 			root, err := p.Parse()
-			if err != nil {
-				t.Error(err)
-				return
-			}
+			require.NoError(t, err)
 			if val := root.GetField(tt.key); len(val) == 0 {
 				t.Errorf("key not present: %s", tt.key)
 			} else if len(val) != 1 {
