@@ -85,8 +85,11 @@ func New(text string) *Parser {
 
 func (p *Parser) Parse() (*SGFNode, error) {
 	p.skipWhitespace()
-	p.skipIfNot('(')
-	c := p.read()
+	_, err := p.skipUntil('(')
+	if err != nil {
+		return nil, err
+	}
+	c := p.peek(0)
 	if c == '(' {
 		root, err := p.parseBranch()
 		if err != nil {
@@ -107,17 +110,20 @@ func (p *Parser) skipWhitespace() {
 	}
 }
 
-func (p *Parser) skipIfNot(r rune) {
+func (p *Parser) skipUntil(r rune) (string, error) {
+	sb := strings.Builder{}
 	for {
 		c := p.peek(0)
 		if c == rune(0) {
-			return
+			return "", fmt.Errorf("no %c found", r)
 		} else if c != r {
+			sb.WriteRune(c)
 			p.read()
 		} else {
 			break
 		}
 	}
+	return sb.String(), nil
 }
 
 func (p *Parser) parseKey() (string, error) {
@@ -140,6 +146,11 @@ func (p *Parser) parseKey() (string, error) {
 }
 
 func (p *Parser) parseField() (string, error) {
+	// read '['
+	err := p.consume('[')
+	if err != nil {
+		return "", err
+	}
 	sb := strings.Builder{}
 	for {
 		t := p.read()
@@ -170,7 +181,6 @@ func (p *Parser) parseNodes() (*parseNodesResult, error) {
 	for {
 		c := p.peek(0)
 		if c == ';' {
-			p.read()
 			next, err := p.parseNode()
 			if err != nil {
 				return nil, err
@@ -203,7 +213,8 @@ func (p *Parser) parseProperty() (*property, error) {
 	prop.key = key
 
 	p.skipWhitespace()
-	if p.read() != '[' {
+	c = p.peek(0)
+	if c != '[' {
 		return nil, fmt.Errorf("bad property (expected field) %c", c)
 	}
 
@@ -231,7 +242,6 @@ func (p *Parser) parseOneOrMoreFields(key string) ([]string, error) {
 	for {
 		p.skipWhitespace()
 		if p.peek(0) == '[' {
-			p.read()
 			field, err := p.parseOneField(key)
 			if err != nil {
 				return nil, err
@@ -257,6 +267,11 @@ func (p *Parser) parseOneField(key string) (string, error) {
 }
 
 func (p *Parser) parseNode() (*SGFNode, error) {
+	// read ';'
+	err := p.consume(';')
+	if err != nil {
+		return nil, err
+	}
 	n := &SGFNode{}
 	for {
 		p.skipWhitespace()
@@ -279,11 +294,16 @@ func (p *Parser) parseNode() (*SGFNode, error) {
 }
 
 func (p *Parser) parseBranch() (*SGFNode, error) {
+	// read '('
+	err := p.consume('(')
+	if err != nil {
+		return nil, err
+	}
 	var root *SGFNode
 	var current *SGFNode
 	for {
 		p.skipWhitespace()
-		c := p.read()
+		c := p.peek(0)
 		if c == 0 {
 			return nil, fmt.Errorf("unfinished branch, expected ')'")
 		} else if c == ';' {
@@ -313,12 +333,22 @@ func (p *Parser) parseBranch() (*SGFNode, error) {
 				current.down = append(current.down, newBranch)
 			}
 		} else if c == ')' {
+			// consume ')'
+			p.read()
 			break
 		} else {
-			return nil, fmt.Errorf("improperly formatted branch")
+			return nil, fmt.Errorf("improperly formatted branch %c", c)
 		}
 	}
 	return root, nil
+}
+
+func (p *Parser) consume(r rune) error {
+	c := p.read()
+	if c != r {
+		return fmt.Errorf("expected %c, got %c", r, c)
+	}
+	return nil
 }
 
 func (p *Parser) read() rune {

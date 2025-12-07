@@ -30,7 +30,7 @@ func TestToSGF(t *testing.T) {
 		t.Run(input, func(t *testing.T) {
 			p := New(input)
 			root, err := p.Parse()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			output := root.toSGF(true)
 			assert.Equal(t, output, input)
 		})
@@ -41,9 +41,7 @@ func TestPass(t *testing.T) {
 	sgf := "(;GM[1];B[aa];W[bb];B[tt];W[ss])"
 	p := New(sgf)
 	root, err := p.Parse()
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err)
 	output := root.toSGF(true)
 	if output != "(;GM[1];B[aa];W[bb];B[];W[ss])" {
 		t.Errorf("error in reading [tt] pass")
@@ -74,7 +72,7 @@ func TestParseKey3(t *testing.T) {
 }
 
 func TestParseField1(t *testing.T) {
-	text := "123]"
+	text := "[123]"
 	p := New(text)
 	field, err := p.parseField()
 	require.NoError(t, err)
@@ -89,12 +87,61 @@ func TestParseField2(t *testing.T) {
 }
 
 func TestParseField3(t *testing.T) {
-	text := "123\\]abc]"
+	text := "[123\\]abc]"
 	p := New(text)
 	field, err := p.parseField()
 	require.NoError(t, err)
 	assert.Equal(t, field, "123]abc")
 }
 
-func TestParseNodes(t *testing.T) {
+func TestSkipUntil(t *testing.T) {
+	var skipTests = []struct {
+		input    string
+		output   string
+		hasError bool
+	}{
+		{"garbagedata()", "garbagedata", false},
+		{"garbage", "", true},
+	}
+
+	for _, tt := range skipTests {
+		t.Run(tt.input, func(t *testing.T) {
+			p := New(tt.input)
+			s, err := p.skipUntil('(')
+			if tt.hasError {
+				assert.NotNil(t, err)
+			} else {
+				assert.Equal(t, s, tt.output)
+			}
+		})
+	}
+}
+
+func TestParseNode1(t *testing.T) {
+	text := ";FOO[bar][baz][bot];"
+	p := New(text)
+	node, err := p.parseNode()
+	require.NoError(t, err)
+	require.Equal(t, len(node.AllFields()), 1)
+	g := node.GetField("FOO")
+	require.Equal(t, len(g), 3)
+	assert.Equal(t, g[0], "bar")
+	assert.Equal(t, g[1], "baz")
+	assert.Equal(t, g[2], "bot")
+}
+
+func TestParseNode2(t *testing.T) {
+	text := ";FOO[bar][baz][bot]QUX[quz];"
+	p := New(text)
+	node, err := p.parseNode()
+	require.NoError(t, err)
+	require.Equal(t, len(node.AllFields()), 2)
+	g := node.GetField("FOO")
+	require.Equal(t, len(g), 3)
+	assert.Equal(t, g[0], "bar")
+	assert.Equal(t, g[1], "baz")
+	assert.Equal(t, g[2], "bot")
+	h := node.GetField("QUX")
+	require.Equal(t, len(h), 1)
+	assert.Equal(t, h[0], "quz")
 }

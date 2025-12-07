@@ -88,7 +88,7 @@ func TestMerge2(t *testing.T) {
 	sgf := parser.Merge([]string{sgf1, sgf2})
 	p := parser.New(sgf)
 	root, err := p.Parse()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	require.Equal(t, root.NumChildren(), 2)
 	child1 := root.GetChild(0)
 	child2 := root.GetChild(1)
@@ -132,7 +132,7 @@ func TestOdd(t *testing.T) {
 func TestChineseNames(t *testing.T) {
 	p := parser.New(sgfsamples.ChineseNames)
 	root, err := p.Parse()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	pb := root.GetField("PB")
 	pw := root.GetField("PW")
 
@@ -146,7 +146,7 @@ func TestChineseNames(t *testing.T) {
 func TestMixedCaseField(t *testing.T) {
 	p := parser.New(sgfsamples.MixedCaseField)
 	root, err := p.Parse()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	c := root.GetField("COPYRIGHT")
 	require.Equal(t, len(c), 1)
 	assert.Equal(t, c[0], "SomeCopyright")
@@ -162,7 +162,7 @@ func TestSGFNodeAddField(t *testing.T) {
 func TestMultifield(t *testing.T) {
 	p := parser.New("(;GM[1]ZZ[foo][bar][baz])")
 	root, err := p.Parse()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	zz := root.GetField("ZZ")
 	require.Equal(t, len(zz), 3)
 	assert.Equal(t, zz[0], "foo")
