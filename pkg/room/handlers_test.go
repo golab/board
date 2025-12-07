@@ -79,6 +79,28 @@ func TestHandleUploadSGF3(t *testing.T) {
 	assert.Equal(t, len(r.ToSGF()), 213)
 }
 
+func TestHandleUploadSGF4(t *testing.T) {
+	r := room.NewRoom("")
+	data := make([]byte, 1<<20)
+	data = append([]byte("(;GM[1]SZ[19];B[aa])"), data...)
+	sgf := base64.StdEncoding.EncodeToString(data)
+
+	evt := event.NewEvent("upload_sgf", sgf)
+	r.HandleAny(evt)
+	assert.Equal(t, len(r.ToSGF()), 65)
+}
+
+func TestHandleUploadSGF5(t *testing.T) {
+	r := room.NewRoom("")
+	data := make([]byte, 1<<19)
+	data = append([]byte("(;GM[1]SZ[19];B[aa])"), data...)
+	sgf := base64.StdEncoding.EncodeToString(data)
+
+	evt := event.NewEvent("upload_sgf", sgf)
+	r.HandleAny(evt)
+	assert.Equal(t, len(r.ToSGF()), 20)
+}
+
 func TestHandleTrash(t *testing.T) {
 	r := room.NewRoom("")
 	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.SimpleEightMoves))
