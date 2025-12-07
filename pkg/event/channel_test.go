@@ -95,3 +95,9 @@ func TestEventChannelBig(t *testing.T) {
 	err = ch.SendEvent(evt)
 	assert.NoError(t, err)
 }
+
+func TestID(t *testing.T) {
+	c := NewMockReadWriteCloser([][]byte{})
+	ch := event.NewDefaultEventChannel(c)
+	assert.Equal(t, len(ch.ID()), 36)
+}
