@@ -281,7 +281,6 @@ func TestParseBranch2(t *testing.T) {
 	p := New(text)
 	_, err := p.parseBranch()
 	assert.NotNil(t, err)
-	t.Logf("%v", err)
 }
 
 func TestParseBranch3(t *testing.T) {
@@ -289,15 +288,13 @@ func TestParseBranch3(t *testing.T) {
 	p := New(text)
 	_, err := p.parseBranch()
 	assert.NotNil(t, err)
-	t.Logf("%v", err)
 }
 
 func TestParseBranch4(t *testing.T) {
 	text := "((;GM[1](;B[aa])(;B[bb])))"
 	p := New(text)
-	root, err := p.parseBranch()
+	_, err := p.parseBranch()
 	require.NoError(t, err)
-	_ = root
 }
 
 func TestParseBranch5(t *testing.T) {
@@ -305,5 +302,4 @@ func TestParseBranch5(t *testing.T) {
 	p := New(text)
 	_, err := p.parseBranch()
 	assert.NotNil(t, err)
-	t.Logf("%v", err)
 }
