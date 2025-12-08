@@ -122,6 +122,7 @@ func integrationsDisabled(w http.ResponseWriter, r *http.Request) {
 
 func board(w http.ResponseWriter, r *http.Request) {
 	boardID := chi.URLParam(r, "boardID")
+	boardID = strings.ToLower(boardID)
 	if boardID != core.Sanitize(boardID) {
 		page400(w, r)
 		return

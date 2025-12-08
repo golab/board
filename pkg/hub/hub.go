@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/jarednogo/board/pkg/config"
+	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/loader"
@@ -275,6 +276,7 @@ func (h *Hub) HandlerWrapper(ws *websocket.Conn) {
 
 	// currently not using the prefix, but i may someday
 	_, roomID, _ := ParseURL(url)
+	roomID = core.Sanitize(roomID)
 
 	// wrap the socket
 	ec := event.NewDefaultEventChannel(ws)
