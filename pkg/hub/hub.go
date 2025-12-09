@@ -276,7 +276,6 @@ func (h *Hub) HandlerWrapper(ws *websocket.Conn) {
 
 	// currently not using the prefix, but i may someday
 	_, roomID, _ := ParseURL(url)
-	roomID = core.Sanitize(roomID)
 
 	// wrap the socket
 	ec := event.NewDefaultEventChannel(ws)
@@ -285,6 +284,9 @@ func (h *Hub) HandlerWrapper(ws *websocket.Conn) {
 
 func (h *Hub) Handler(ec event.EventChannel, roomID string) {
 	// new connection
+
+	// to lower case, remove anything that isn't alphanumeric and hyphen
+	roomID = core.Sanitize(roomID)
 
 	// get or create the room
 	r := h.GetOrCreateRoom(roomID)

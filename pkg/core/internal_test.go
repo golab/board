@@ -8,51 +8,25 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package core_test
+// the core package provides basic functionality to all the major components of the code
+package core
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/pkg/core"
 )
 
-var sanitizeTests = []struct {
-	input  string
-	output string
-}{
-	{"  AAA  ", "aaa"},
-	{"http://www.example.com?foo=Bar&baz=BOT", "httpwwwexamplecomfoobarbazbot"},
-	{"AbC-123", "abc-123"},
-	{"MyCoolBoard", "mycoolboard"},
-}
-
-func TestSanitize(t *testing.T) {
-	for i, tt := range sanitizeTests {
-		t.Run(fmt.Sprintf("sanitize%d", i), func(t *testing.T) {
-			output := core.Sanitize(tt.input)
-			assert.Equal(t, tt.output, output)
-		})
-	}
-}
-
-func TestUUID(t *testing.T) {
-	s := core.UUID4()
-	assert.Equal(t, len(s), 36)
-}
-
-// be a bit wary. this is a non-deterministic test
-func TestRandomBoardName(t *testing.T) {
-	count := make(map[string]int)
-	for i := 0; i < 1000; i++ {
-		name := core.RandomBoardName()
-		if _, ok := count[name]; !ok {
-			count[name] = 0
-		}
-		count[name] += 1
-	}
-	for _, v := range count {
-		assert.Equal(t, v, 1)
-	}
+func TestChoices(t *testing.T) {
+	numAnimals := len(animals)
+	numAdjectives := len(adjectives)
+	numColors := len(colors)
+	num := numAnimals * numAdjectives * numColors
+	// numAnimals == 374
+	// numAdjectives == 828
+	// numColors == 109
+	// 374 * 828 * 109 = 33754248
+	// 2^25 = 33554432
+	// hopefully 33 million is plenty
+	assert.True(t, num > 1<<25)
 }

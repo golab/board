@@ -26,6 +26,7 @@ import (
 // stateful
 
 func (h *Hub) HandleOp(op, roomID string) string {
+	roomID = strings.ToLower(roomID)
 	data := ""
 	r, err := h.GetRoom(roomID)
 	if err != nil {
@@ -134,7 +135,8 @@ func newBoard(w http.ResponseWriter, r *http.Request) {
 	boardID := r.FormValue("board_id")
 	boardID = core.Sanitize(boardID)
 	if len(strings.TrimSpace(boardID)) == 0 {
-		boardID = core.UUID4()
+		//boardID = core.UUID4()
+		boardID = core.RandomBoardName()
 	}
 	redirect := fmt.Sprintf("/b/%s", boardID)
 	http.Redirect(w, r, redirect, http.StatusFound)

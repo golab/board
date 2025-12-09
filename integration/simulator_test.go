@@ -722,3 +722,26 @@ func TestPushHead(t *testing.T) {
 	assert.Equal(t, room.Board().Get(coord.NewCoord(2.0, 11.0)), color.Empty)
 	assert.Equal(t, room.Board().Get(coord.NewCoord(2.0, 10.0)), color.Empty)
 }
+
+func TestRoomCaseInsensitive(t *testing.T) {
+	sim, err := integration.NewSim()
+	assert.NoError(t, err)
+
+	sim.AddClient("room123")
+	sim.AddClient("ROOM123")
+	sim.AddClient("rOoM123")
+
+	// connect all the clients
+	sim.ConnectAll()
+
+	// disconnect all the clients
+	sim.DisconnectAll()
+
+	_, err = sim.Hub.GetRoom("room123")
+	assert.NoError(t, err)
+	_, err = sim.Hub.GetRoom("ROOM123")
+	assert.NotNil(t, err)
+	_, err = sim.Hub.GetRoom("rOoM123")
+	assert.NotNil(t, err)
+
+}
