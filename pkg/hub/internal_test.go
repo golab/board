@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/pkg/config"
@@ -128,4 +129,27 @@ func TestTwitchCallbackPost2(t *testing.T) {
 	assert.NoError(t, err)
 	save := room.SaveState()
 	assert.Equal(t, len(save.SGF), 152)
+}
+
+func TestHeartbeat(t *testing.T) {
+	// not terribly important, but log level is DEBUG to see
+	// the heartbeat logs
+	logger := logx.NewRecorder(logx.LogLevelDebug)
+	h, err := NewHubWithDB(loader.NewMemoryLoader(), config.Default(), logger)
+	assert.NoError(t, err)
+
+	// heartbeat every 0.01 seconds
+	h.heartbeatInterval = 0.01
+	roomID := "room123"
+	r := h.GetOrCreateRoom(roomID)
+
+	// room times out after 0.02 seconds
+	r.SetTimeout(0.02)
+
+	// sleep for 0.03 seconds
+	time.Sleep(time.Duration(0.03 * float64(time.Second)))
+
+	// room shouldn't exist
+	_, err = h.GetRoom(roomID)
+	assert.NotNil(t, err)
 }

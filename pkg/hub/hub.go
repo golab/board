@@ -45,14 +45,16 @@ func ParseURL(url string) (string, string, string) {
 }
 
 type Hub struct {
-	rooms    map[string]*room.Room
-	messages []*message.Message
-	db       loader.Loader
-	tc       twitch.TwitchClient
-	mu       sync.Mutex
-	cfg      *config.Config
-	logger   logx.Logger
-	wg       sync.WaitGroup
+	rooms             map[string]*room.Room
+	messages          []*message.Message
+	db                loader.Loader
+	tc                twitch.TwitchClient
+	mu                sync.Mutex
+	cfg               *config.Config
+	logger            logx.Logger
+	wg                sync.WaitGroup
+	heartbeatInterval float64
+	messageInterval   float64
 }
 
 func NewHub(cfg *config.Config, logger logx.Logger) (*Hub, error) {
@@ -84,12 +86,14 @@ func NewHubWithDB(db loader.Loader, cfg *config.Config, logger logx.Logger) (*Hu
 		cfg.Server.URL,
 	)
 	s := &Hub{
-		rooms:    make(map[string]*room.Room),
-		messages: []*message.Message{},
-		db:       db,
-		tc:       tc,
-		cfg:      cfg,
-		logger:   logger,
+		rooms:             make(map[string]*room.Room),
+		messages:          []*message.Message{},
+		db:                db,
+		tc:                tc,
+		cfg:               cfg,
+		logger:            logger,
+		heartbeatInterval: 3600.0,
+		messageInterval:   5.0,
 	}
 
 	// start message loop
@@ -174,7 +178,7 @@ func (h *Hub) Heartbeat(roomID string) {
 		return
 	}
 	for {
-		time.Sleep(3600 * time.Second)
+		time.Sleep(time.Duration(h.heartbeatInterval * float64(time.Second)))
 		now := time.Now()
 		diff := now.Sub(r.GetLastActive())
 		if diff.Seconds() > r.GetTimeout() {
@@ -245,7 +249,7 @@ func (h *Hub) SendMessages() {
 func (h *Hub) MessageLoop() {
 	for {
 		// wait 5 seconds
-		time.Sleep(5 * time.Second)
+		time.Sleep(time.Duration(h.messageInterval * float64(time.Second)))
 
 		h.ReadMessages()
 		h.SendMessages()
