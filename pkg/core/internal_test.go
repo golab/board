@@ -12,6 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package core
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
@@ -29,4 +30,40 @@ func TestChoices(t *testing.T) {
 	// 2^25 = 33554432
 	// hopefully 33 million is plenty
 	assert.True(t, num > 1<<25)
+}
+
+func TestAnimalsLower(t *testing.T) {
+	for _, animal := range animals {
+		assert.Equal(t, animal, strings.ToLower(animal))
+	}
+}
+
+func TestAnimalsSplit(t *testing.T) {
+	for _, animal := range animals {
+		assert.Equal(t, len(strings.Split(animal, " ")), 1)
+	}
+}
+
+func TestAdjectivesLower(t *testing.T) {
+	for _, adjective := range adjectives {
+		assert.Equal(t, adjective, strings.ToLower(adjective))
+	}
+}
+
+func TestAdjectivesSplit(t *testing.T) {
+	for _, adjective := range adjectives {
+		assert.Equal(t, len(strings.Split(adjective, " ")), 1)
+	}
+}
+
+func TestColorsLower(t *testing.T) {
+	for _, color := range colors {
+		assert.Equal(t, color, strings.ToLower(color))
+	}
+}
+
+func TestColorsSplit(t *testing.T) {
+	for _, color := range colors {
+		assert.Equal(t, len(strings.Split(color, " ")), 1)
+	}
 }
