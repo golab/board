@@ -15,7 +15,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/board"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
@@ -205,14 +204,14 @@ func FromSGF(data string) (*State, error) {
 			}
 
 			// refuse to process sgfs with a suicide move
-			if core.Coord(node) != nil && !state.board.Legal(core.Coord(node), core.Color(node)) {
+			if Coord(node) != nil && !state.board.Legal(Coord(node), Color(node)) {
 				return nil, fmt.Errorf("suicide moves are not currently supported")
 			}
 
-			if core.IsPass(node) {
-				state.addPassNode(core.Color(node), node.Fields, index)
-			} else if core.IsMove(node) {
-				state.addNode(core.Coord(node), core.Color(node), node.Fields, index, true)
+			if IsPass(node) {
+				state.addPassNode(Color(node), node.Fields, index)
+			} else if IsMove(node) {
+				state.addNode(Coord(node), Color(node), node.Fields, index, true)
 			} else {
 				state.addFieldNode(node.Fields, index)
 			}

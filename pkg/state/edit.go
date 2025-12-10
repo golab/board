@@ -11,7 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package state
 
 import (
-	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/core/fields"
@@ -413,7 +412,7 @@ func (s *State) paste() {
 
 	// recompute diffs
 	tree.Fmap(func(n *tree.TreeNode) {
-		if core.IsMove(n) {
+		if IsMove(n) {
 			n.SetDiff(s.computeDiffMove(n.Index))
 		} else {
 			n.SetDiff(s.computeDiffSetup(n.Index))
