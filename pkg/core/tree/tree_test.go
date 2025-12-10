@@ -121,23 +121,6 @@ func TestNodeCopy(t *testing.T) {
 		t.Errorf("error copying: %v %v", root, c)
 	}
 }
-
-func TestIsMove(t *testing.T) {
-	s, err := state.FromSGF(sgfsamples.Resignation1)
-	assert.NoError(t, err)
-
-	root := s.Root()
-	assert.False(t, root.IsMove())
-
-	assert.True(t, len(root.Down) > 0)
-	current := root.Down[0]
-	assert.True(t, current.IsMove())
-
-	assert.True(t, len(current.Down) > 0)
-	current = current.Down[0]
-	assert.True(t, current.IsMove())
-}
-
 func TestRecomputeDepth(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleFourMoves)
 	assert.NoError(t, err)

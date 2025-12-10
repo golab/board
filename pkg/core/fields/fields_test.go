@@ -15,8 +15,6 @@ import (
 
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/internal/require"
-	"github.com/jarednogo/board/pkg/core/color"
-	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/core/fields"
 )
 
@@ -166,77 +164,4 @@ func TestSetField2(t *testing.T) {
 	assert.Equal(t, g[0], "bar")
 	assert.Equal(t, g[1], "baz")
 	assert.Equal(t, g[2], "bot")
-}
-
-func TestIsMove1(t *testing.T) {
-	f := &fields.Fields{}
-	f.AddField("B", "aa")
-	assert.True(t, f.IsMove())
-}
-
-func TestIsMove2(t *testing.T) {
-	f := &fields.Fields{}
-	f.AddField("W", "aa")
-	assert.True(t, f.IsMove())
-}
-
-func TestIsMove3(t *testing.T) {
-	f := &fields.Fields{}
-	f.AddField("b", "aa")
-	assert.False(t, f.IsMove())
-}
-
-func TestIsMove4(t *testing.T) {
-	f := &fields.Fields{}
-	f.AddField("w", "aa")
-	assert.False(t, f.IsMove())
-}
-
-func TestIsPass1(t *testing.T) {
-	f := &fields.Fields{}
-	f.AddField("B", "")
-	assert.True(t, f.IsPass())
-}
-
-func TestIsPass2(t *testing.T) {
-	f := &fields.Fields{}
-	f.AddField("W", "")
-	assert.True(t, f.IsPass())
-}
-
-func TestColor1(t *testing.T) {
-	f := &fields.Fields{}
-	f.AddField("B", "aa")
-	assert.Equal(t, f.Color(), color.Black)
-}
-
-func TestColor2(t *testing.T) {
-	f := &fields.Fields{}
-	f.AddField("W", "aa")
-	assert.Equal(t, f.Color(), color.White)
-}
-
-func TestColor3(t *testing.T) {
-	f := &fields.Fields{}
-	assert.Equal(t, f.Color(), color.Empty)
-}
-
-func TestCoord1(t *testing.T) {
-	f := &fields.Fields{}
-	f.AddField("B", "aa")
-	crd := f.Coord()
-	assert.True(t, crd.Equal(coord.NewCoord(0, 0)))
-}
-
-func TestCoord2(t *testing.T) {
-	f := &fields.Fields{}
-	f.AddField("W", "bb")
-	crd := f.Coord()
-	assert.True(t, crd.Equal(coord.NewCoord(1, 1)))
-}
-
-func TestCoordNil(t *testing.T) {
-	f := &fields.Fields{}
-	crd := f.Coord()
-	assert.Zero(t, crd)
 }

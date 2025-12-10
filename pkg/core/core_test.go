@@ -15,7 +15,12 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/jarednogo/board/pkg/core/fields"
+	"github.com/jarednogo/board/pkg/state"
 )
 
 var sanitizeTests = []struct {
@@ -55,4 +60,93 @@ func TestRandomBoardName(t *testing.T) {
 	for _, v := range count {
 		assert.Equal(t, v, 1)
 	}
+}
+
+func TestIsMove1(t *testing.T) {
+	f := &fields.Fields{}
+	f.AddField("B", "aa")
+	assert.True(t, core.IsMove(f))
+}
+
+func TestIsMove2(t *testing.T) {
+	f := &fields.Fields{}
+	f.AddField("W", "aa")
+	assert.True(t, core.IsMove(f))
+}
+
+func TestIsMove3(t *testing.T) {
+	f := &fields.Fields{}
+	f.AddField("b", "aa")
+	assert.False(t, core.IsMove(f))
+}
+
+func TestIsMove4(t *testing.T) {
+	f := &fields.Fields{}
+	f.AddField("w", "aa")
+	assert.False(t, core.IsMove(f))
+}
+
+func TestIsPass1(t *testing.T) {
+	f := &fields.Fields{}
+	f.AddField("B", "")
+	assert.True(t, core.IsPass(f))
+}
+
+func TestIsPass2(t *testing.T) {
+	f := &fields.Fields{}
+	f.AddField("W", "")
+	assert.True(t, core.IsPass(f))
+}
+
+func TestColor1(t *testing.T) {
+	f := &fields.Fields{}
+	f.AddField("B", "aa")
+	assert.Equal(t, core.Color(f), color.Black)
+}
+
+func TestColor2(t *testing.T) {
+	f := &fields.Fields{}
+	f.AddField("W", "aa")
+	assert.Equal(t, core.Color(f), color.White)
+}
+
+func TestColor3(t *testing.T) {
+	f := &fields.Fields{}
+	assert.Equal(t, core.Color(f), color.Empty)
+}
+
+func TestCoord1(t *testing.T) {
+	f := &fields.Fields{}
+	f.AddField("B", "aa")
+	crd := core.Coord(f)
+	assert.True(t, crd.Equal(coord.NewCoord(0, 0)))
+}
+
+func TestCoord2(t *testing.T) {
+	f := &fields.Fields{}
+	f.AddField("W", "bb")
+	crd := core.Coord(f)
+	assert.True(t, crd.Equal(coord.NewCoord(1, 1)))
+}
+
+func TestCoordNil(t *testing.T) {
+	f := &fields.Fields{}
+	crd := core.Coord(f)
+	assert.Zero(t, crd)
+}
+
+func TestTreeNodeIsMove(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.Resignation1)
+	assert.NoError(t, err)
+
+	root := s.Root()
+	assert.False(t, core.IsMove(root))
+
+	assert.True(t, len(root.Down) > 0)
+	current := root.Down[0]
+	assert.True(t, core.IsMove(current))
+
+	assert.True(t, len(current.Down) > 0)
+	current = current.Down[0]
+	assert.True(t, core.IsMove(current))
 }

@@ -19,7 +19,50 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
+
+type FieldProvider interface {
+	GetField(string) []string
+}
+
+func IsMove(f FieldProvider) bool {
+	bvalues := f.GetField("B")
+	wvalues := f.GetField("W")
+	return len(bvalues) > 0 || len(wvalues) > 0
+}
+
+func IsPass(f FieldProvider) bool {
+	bvalues := f.GetField("B")
+	wvalues := f.GetField("W")
+	return (len(bvalues) == 1 && bvalues[0] == "") ||
+		(len(wvalues) == 1 && wvalues[0] == "")
+}
+
+func Color(f FieldProvider) color.Color {
+	bvalues := f.GetField("B")
+	wvalues := f.GetField("W")
+	if len(bvalues) > 0 {
+		return color.Black
+	}
+	if len(wvalues) > 0 {
+		return color.White
+	}
+	return color.Empty
+}
+
+func Coord(f FieldProvider) *coord.Coord {
+	bvalues := f.GetField("B")
+	wvalues := f.GetField("W")
+	if len(bvalues) == 1 {
+		return coord.FromLetters(bvalues[0])
+	}
+	if len(wvalues) == 1 {
+		return coord.FromLetters(wvalues[0])
+	}
+	return nil
+}
 
 // Sanitize ensures strings only contain letters and numbers
 func Sanitize(s string) string {

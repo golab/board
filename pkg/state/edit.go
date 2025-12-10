@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package state
 
 import (
+	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/core/fields"
@@ -193,7 +194,6 @@ func (s *State) AddStones(moves []*coord.Stone) {
 
 		if !found {
 			s.gotoIndex(node.Index) //nolint: errcheck
-
 			flds := fields.Fields{}
 			key := "B"
 			if move.Color == color.White {
@@ -413,7 +413,7 @@ func (s *State) paste() {
 
 	// recompute diffs
 	tree.Fmap(func(n *tree.TreeNode) {
-		if n.IsMove() {
+		if core.IsMove(n) {
 			n.SetDiff(s.computeDiffMove(n.Index))
 		} else {
 			n.SetDiff(s.computeDiffSetup(n.Index))
