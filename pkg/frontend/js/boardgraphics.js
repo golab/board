@@ -120,7 +120,6 @@ class BoardGraphics {
         this.new_svg("ghost-marks", 1000);
         this.new_svg("pen", 1050);
 
-
         this.used_letters = new Array(26).fill(0);
         this.letter_map = new Map();
         this.used_numbers = new Map();
@@ -262,12 +261,14 @@ class BoardGraphics {
                 //let letter_index = parseInt(spl[1]);
                 //let letter = letters[letter_index%26];
                 this.draw_backdrop(x,y);
-                this.draw_letter(x, y, letter, hexcolor, svg_id);
+                let l = this.draw_letter(x, y, letter, hexcolor, svg_id);
+                l.id = "mark-" + x.toString() + "-" + y.toString();
             } else if (value.startsWith("number")) {
                 spl = value.split(":");
                 let number = parseInt(spl[1]);
                 this.draw_backdrop(x,y);
-                this.draw_number(x, y, number, hexcolor, svg_id);
+                let n = this.draw_number(x, y, number, hexcolor, svg_id);
+                n.id = "mark-" + x.toString() + "-" + y.toString();
             } else if (value == "score-black") {
                 this.draw_black_area(x, y);
             } else if (value == "score-white") {
@@ -275,7 +276,6 @@ class BoardGraphics {
             } else if (value.startsWith("label")) {
                 let i = value.indexOf(":");
                 let label = value.slice(i+1);
-                this.draw_backdrop(x,y);
                 this.draw_custom_label(x, y, label);
             }
         }
@@ -350,7 +350,6 @@ class BoardGraphics {
         }
         let path = this.svg_draw_polyline(coord_pairs, "#000000", "lines");
         path.setAttribute("mask", "url(#lineMask)");
-        this.add_def("lines", make_mask(this.width + this.side*2, this.svgns));
     }
 
     svg_draw_polyline(coord_pairs, hexColor, id, stroke=this.minstroke) {
@@ -1114,6 +1113,7 @@ class BoardGraphics {
     clear_board() {
         this.clear_svg("board");
         this.clear_svg("lines");
+        this.add_def("lines", make_mask(this.width + this.side*2, this.svgns));
         this.clear_svg("coords");
     }
 
