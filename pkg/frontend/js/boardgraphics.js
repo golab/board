@@ -75,6 +75,21 @@ function make_shadow_gradient(svgns) {
     return grad;
 }
 
+function make_mask(w, svgns) {
+    let mask = document.createElementNS(svgns, "mask");
+    mask.id = "lineMask";
+    mask.setAttribute("maskUnits", "userSpaceOnUse");
+    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
+    let rect = document.createElementNS(svgns, "rect");
+    rect.setAttribute("x", 0);
+    rect.setAttribute("y", 0);
+    rect.setAttribute("width", w);
+    rect.setAttribute("height", w);
+    rect.setAttribute("fill", "white");
+    mask.appendChild(rect);
+    return mask;
+}
+
 class BoardGraphics {
     constructor(state) {
         this.state = state;
@@ -103,8 +118,8 @@ class BoardGraphics {
         this.new_svg("current", 950);
         this.new_svg("marks", 1000);
         this.new_svg("ghost-marks", 1000);
-
         this.new_svg("pen", 1050);
+
 
         this.used_letters = new Array(26).fill(0);
         this.letter_map = new Map();
@@ -221,7 +236,8 @@ class BoardGraphics {
 
     draw_marks() {
         this.clear_svg("marks");
-        this.clear_svg("backdrop");
+        //this.clear_svg("backdrop");
+        this.clear_all_backdrop();
         for (let [key, value] of this.state.marks) {
             let spl = key.split("-");
             if (spl.length != 2) {
@@ -256,6 +272,11 @@ class BoardGraphics {
                 this.draw_black_area(x, y);
             } else if (value == "score-white") {
                 this.draw_white_area(x, y);
+            } else if (value.startsWith("label")) {
+                let i = value.indexOf(":");
+                let label = value.slice(i+1);
+                this.draw_backdrop(x,y);
+                this.draw_custom_label(x, y, label);
             }
         }
 
@@ -327,7 +348,9 @@ class BoardGraphics {
             coord_pairs.push([[x0, y0], [x1, y1]]);
             coord_pairs.push([[y0, x0], [y1, x1]]);
         }
-        this.svg_draw_polyline(coord_pairs, "#000000", "lines");
+        let path = this.svg_draw_polyline(coord_pairs, "#000000", "lines");
+        path.setAttribute("mask", "url(#lineMask)");
+        this.add_def("lines", make_mask(this.width + this.side*2, this.svgns));
     }
 
     svg_draw_polyline(coord_pairs, hexColor, id, stroke=this.minstroke) {
@@ -351,6 +374,30 @@ class BoardGraphics {
         
         svg.appendChild(path);
         return path;
+    }
+
+   svg_draw_centered_text(x, y, txt, color, id, font_size, bold=true) {
+        //let font_size = this.width/36;
+        let text = document.createElementNS(this.svgns, "text");
+        let svg = this.svgs.get(id);
+
+        text.setAttribute("x", x);
+        text.setAttribute("y", y);
+        text.setAttribute("font-family", "Arial");
+        if (bold) {
+            text.setAttribute("font-weight", "bold");
+        }
+        text.style.fontSize = font_size + "px";
+        text.style.fill = color;
+        text.innerHTML = txt;
+        //text.setAttributeNS(null, "id", text_id);
+        text.style.cursor = "default";
+        text.style.userSelect = "none";
+
+        // center
+        text.setAttribute("text-anchor", "middle");
+        svg.appendChild(text);
+        return text;
     }
 
     svg_draw_text(x, y, txt, color, id, font_size, bold=true) {
@@ -603,7 +650,8 @@ class BoardGraphics {
 
     draw_star(x, y) {
         let radius = this.side/12;
-        this.draw_circle(x, y, radius, "#000000", "lines", true, 0);
+        let star = this.draw_circle(x, y, radius, "#000000", "lines", true, 0);
+        star.setAttribute("mask", "url(#lineMask)");
     }
 
     draw_stars() {
@@ -806,14 +854,22 @@ class BoardGraphics {
 
         let font_size = this.width/36;
 
-        let x_offset = font_size/3;
-        if (letter == "I") {
-            x_offset = font_size/8;
-        }
         let y_offset = font_size/3;
 
-        return this.svg_draw_text(
-            real_x-x_offset, real_y+y_offset, letter, color, id, font_size);
+        return this.svg_draw_centered_text(
+            real_x, real_y+y_offset, letter, color, id, font_size);
+    }
+
+    draw_centered_text(x, y, text, color, id) {
+        let real_x = x*this.side + this.pad;
+        let real_y = y*this.side + this.pad;
+
+        let font_size = this.width/36;
+
+        let y_offset = font_size/3;
+
+        return this.svg_draw_centered_text(
+            real_x, real_y+y_offset, text, color, id, font_size);
     }
 
     draw_ghost_letter(x, y, color) {
@@ -825,13 +881,19 @@ class BoardGraphics {
         if (this.state.board.points[x][y] == 1) {
             hexcolor = "#FFFFFF";
         }
-        let letter = this.state.next_letter();
+        let text = "";
+        if (this.state.custom_label != "") {
+            text = this.state.custom_label;
+        } else {
+            let letter = this.state.next_letter();
 
-        if (letter == null) {
-            return;
+            if (letter == null) {
+                return;
+            }
+            text = letter;
         }
 
-        this.draw_letter(x, y, letter, hexcolor, "ghost-marks");
+        this.draw_letter(x, y, text, hexcolor, "ghost-marks");
     }
 
     draw_number(x, y, number, color, id) {
@@ -917,6 +979,22 @@ class BoardGraphics {
         l.id = _id;
     }
 
+    draw_custom_label(x, y, label) {
+        let coord = new Coord(x, y);
+        let color = opposite(this.state.board.get(coord));
+        let hexcolor = "#000000";
+        if (color == 2) {
+            hexcolor = "#FFFFFF";
+        }
+        let svg_id = "marks";
+
+        this.draw_backdrop(x, y);
+
+        let l = this.draw_centered_text(x, y, label, hexcolor, svg_id);
+        let _id = "mark-" + x.toString() + "-" + y.toString();
+        l.id = _id;
+    }
+
     _draw_manual_number(x, y, number) {
         let coord = new Coord(x, y);
         let color = opposite(this.state.board.get(coord));
@@ -946,8 +1024,14 @@ class BoardGraphics {
 
     draw_backdrop(x, y) {
         let id = "backdrop";
-        let backdrop = this.draw_circle(x, y, this.side/3, this.bgcolor, id, true, 0);
+        let backdrop = this.draw_circle(x, y, this.side/2, "black", id, true, 0);
         backdrop.id = "backdrop-" + x.toString() + "-" + y.toString();
+
+        let mask = document.getElementById("lineMask");
+        let p = mask.parentNode;
+        let clone = mask.cloneNode(true);
+        clone.appendChild(backdrop);
+        p.replaceChild(clone, mask);
     }
 
     clear_backdrop(x, y) {
@@ -1024,6 +1108,7 @@ class BoardGraphics {
 
         this.clear_svg("shadows");
         this.add_def("shadows", make_shadow_gradient(this.svgns));
+
     }
 
     clear_board() {
@@ -1048,8 +1133,22 @@ class BoardGraphics {
 
     clear_marks() {
         this.clear_svg("marks");
-        this.clear_svg("backdrop");
+        //this.clear_svg("backdrop");
+        this.clear_all_backdrop();
         this.clear_pen();
+    }
+
+    clear_all_backdrop() {
+        let mask = document.getElementById("lineMask");
+        if (mask == null) {
+            return;
+        }
+        for (let child of mask.querySelectorAll("circle")) {
+            child.remove();
+        }
+        let p = mask.parentNode;
+        let clone = mask.cloneNode(true);
+        p.replaceChild(clone, mask);
     }
 
     clear_ghosts() {

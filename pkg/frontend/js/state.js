@@ -95,6 +95,7 @@ class State {
 
         this.resize();
         this.gameinfo = new Map();
+        this.custom_label = "";
     }
 
     set_network_handler(handler) {
@@ -564,6 +565,7 @@ class State {
 
     set_letter() {
         this.mark = "letter";
+        this.custom_label = "";
         this.board_graphics.clear_ghosts();
     }
 
@@ -984,6 +986,13 @@ class State {
             this.letters[letter_index] = 1;
             this.board_graphics._draw_manual_letter(coord.x, coord.y, lb.text);
         }
+    }
+
+    place_label_string(label) {
+        let coord = label.coord;
+        let id = coordtoid(coord);
+        this.marks.set(id, "label:" + label.text);
+        this.board_graphics.draw_custom_label(coord.x, coord.y, label.text);
     }
 
     remove_mark(x, y) {

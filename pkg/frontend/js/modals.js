@@ -130,6 +130,12 @@ export function create_modals(_state) {
         return bar.value;
     }
 
+    function clear_prompt_bar() {
+        let id = "prompt-modal-input";
+        let bar = document.getElementById(id);
+        bar.value = "";
+    }
+
     function cancel_password() {
         let id = "settings-modal";
         let password_bar = document.getElementById(id + "-password-bar");
@@ -1030,6 +1036,7 @@ export function create_modals(_state) {
 
     return {
         get_prompt_bar,
+        clear_prompt_bar,
         update_modals,
         modals_up,
         show_modal,

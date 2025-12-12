@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
@@ -46,6 +47,20 @@ func TestCommandRemoveStone(t *testing.T) {
 	coord := coord.NewCoord(9, 9)
 	_, err = state.NewRemoveStoneCommand(coord).Execute(s)
 	assert.NoError(t, err)
+}
+
+func TestCommandAddLabel(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
+	assert.NoError(t, err)
+
+	coord := coord.NewCoord(9, 9)
+	_, err = state.NewAddLabelCommand(coord, "O_o").Execute(s)
+	assert.NoError(t, err)
+
+	root := s.Root()
+	lbs := root.GetField("LB")
+	require.Equal(t, len(lbs), 1)
+	assert.Equal(t, lbs[0], "jj:O_o")
 }
 
 func TestCommandRemoveMark(t *testing.T) {

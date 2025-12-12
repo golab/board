@@ -79,6 +79,16 @@ func TestDecodeNumber(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestDecodeLabel(t *testing.T) {
+	val := make(map[string]any)
+	val["coords"] = []any{9.0, 9.0}
+	val["label"] = "O_o"
+	e := event.NewEvent("label", val)
+
+	_, err := state.DecodeToCommand(e)
+	assert.NoError(t, err)
+}
+
 func TestDecodeRemoveMark(t *testing.T) {
 	val := []any{9.0, 9.0}
 	e := event.NewEvent("remove_mark", val)

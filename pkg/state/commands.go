@@ -217,6 +217,28 @@ func (cmd *addNumberCommand) Execute(s *State) (*Frame, error) {
 	return nil, nil
 }
 
+type addLabelCommand struct {
+	crd   *coord.Coord
+	label string
+}
+
+func NewAddLabelCommand(crd *coord.Coord, label string) Command {
+	return &addLabelCommand{crd, label}
+}
+
+func (cmd *addLabelCommand) Execute(s *State) (*Frame, error) {
+	x := cmd.crd.X
+	y := cmd.crd.Y
+	if x >= s.size || y >= s.size || x < 0 || y < 0 {
+		return nil, nil
+	}
+
+	l := cmd.crd.ToLetters()
+	lb := fmt.Sprintf("%s:%s", l, cmd.label)
+	s.current.AddField("LB", lb)
+	return nil, nil
+}
+
 type removeMarkCommand struct {
 	crd *coord.Coord
 }

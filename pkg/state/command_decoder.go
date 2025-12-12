@@ -65,6 +65,14 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 		}
 		number := int(val["number"].(float64))
 		return NewAddNumberCommand(c, number), nil
+	case "label":
+		val := evt.Value().(map[string]any)
+		c, err := coord.FromInterface(val["coords"])
+		if err != nil {
+			return nil, err
+		}
+		label := val["label"].(string)
+		return NewAddLabelCommand(c, label), nil
 	case "remove_mark":
 		c, err := coord.FromInterface(evt.Value())
 		if err != nil {

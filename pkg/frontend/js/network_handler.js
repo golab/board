@@ -193,6 +193,13 @@ class NetworkHandler {
 
                 //this.state.place_number(coords[0], coords[1], payload["value"]["number"]);
                 break;
+            case "label":
+                coords = new Coord(payload["value"]["coords"][0], payload["value"]["coords"][1]);
+                label = new Object();
+                label.coord = coords;
+                label.text = payload["value"]["label"];
+                this.state.place_label_string(label);
+                break;
             case "remove_mark":
                 coords = payload["value"];
                 this.state.remove_mark(coords[0], coords[1]);
@@ -386,6 +393,7 @@ class NetworkHandler {
         let evt = payload["event"];
 
         // if a modal is up, then the events we allow are:
+        // "label"
         // "trash"
         // "update_settings"
         // "scissors"
@@ -397,6 +405,7 @@ class NetworkHandler {
         // "update_nickname"
         if (
             this.state.modals.modals_up.size > 0 &&
+            evt != "label" &&
             evt != "trash" &&
             evt != "update_settings" &&
             evt != "cut" &&
@@ -679,12 +688,35 @@ class NetworkHandler {
                         payload["value"] = coords;
                         break;
                     case "letter":
-                        let letter = this.state.next_letter();
-                        if (letter == null) {
-                            return;
-                        }
+                        let label = "";
+                        if (flip || this.state.custom_label != "") {
+                            if (flip) {
+                                let handler = () => {
+                                    label = this.state.modals.get_prompt_bar();
+                                    this.state.modals.clear_prompt_bar();
+                                    this.state.custom_label = label;
+                                    payload = {"event": "label"};
+                                    payload["value"] = {"coords": coords, "label": label};
+                                    this.prepare(payload);
+                                }
+                                this.state.modals.show_prompt_modal(
+                                    "Enter up to three characters:",
+                                    handler
+                                );
+                                return;
+                            } else {
+                                payload = {"event": "label"};
+                                payload["value"] = {"coords": coords, "label": this.state.custom_label};
+                            }
+                        } else {
+                            let letter = this.state.next_letter();
+                            if (letter == null) {
+                                return;
+                            }
+                            label = letter;
     
-                        payload["value"] = {"coords": coords, "letter": letter};
+                            payload["value"] = {"coords": coords, "letter": label};
+                        }
                         break;
                     case "number":
                         let number = this.state.next_number();
