@@ -1023,7 +1023,7 @@ class BoardGraphics {
 
     draw_backdrop(x, y) {
         let id = "backdrop";
-        let backdrop = this.draw_circle(x, y, this.side/2, "black", id, true, 0);
+        let backdrop = this.draw_circle(x, y, this.side/2, "#222222", id, true, 0);
         backdrop.id = "backdrop-" + x.toString() + "-" + y.toString();
 
         let mask = document.getElementById("lineMask");
