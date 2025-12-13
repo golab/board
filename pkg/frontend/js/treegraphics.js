@@ -953,7 +953,11 @@ class TreeGraphics {
                 bg.setAttributeNS(null, "cy", pos_y);
                 bg.setAttributeNS(null, "r", this.r*1.2);
                 bg.style.fill = "#00000000";
-                bg.style.stroke = "#00FF44";
+                if (preferred) {
+                    bg.style.stroke = "#00FF44";
+                } else {
+                    bg.style.stroke = "#00FF4444";
+                }
                 bg.style.strokeWidth = 3;
             }
 
@@ -977,7 +981,7 @@ class TreeGraphics {
         this.shape_pools.set(id, pool);
 
         // also for the bg pool
-        for (let i = bg_pool_i+1; i < bg_pool.length; i++) {
+        for (let i = bg_pool_i; i < bg_pool.length; i++) {
             bg_pool[i].setAttribute("display", "none");
         }
 
