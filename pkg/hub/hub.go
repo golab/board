@@ -17,12 +17,14 @@ import (
 	"time"
 
 	"github.com/jarednogo/board/pkg/config"
+	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/loader"
 	"github.com/jarednogo/board/pkg/logx"
 	"github.com/jarednogo/board/pkg/message"
 	"github.com/jarednogo/board/pkg/room"
+	"github.com/jarednogo/board/pkg/twitch"
 	"golang.org/x/net/websocket"
 )
 
@@ -43,36 +45,55 @@ func ParseURL(url string) (string, string, string) {
 }
 
 type Hub struct {
-	rooms    map[string]*room.Room
-	messages []*message.Message
-	db       loader.Loader
-	mu       sync.Mutex
-	cfg      *config.Config
-	logger   logx.Logger
+	rooms             map[string]*room.Room
+	messages          []*message.Message
+	db                loader.Loader
+	tc                twitch.TwitchClient
+	mu                sync.Mutex
+	cfg               *config.Config
+	logger            logx.Logger
+	wg                sync.WaitGroup
+	heartbeatInterval float64
+	messageInterval   float64
 }
 
-func NewHub(cfg *config.Config) (*Hub, error) {
+func NewHub(cfg *config.Config, logger logx.Logger) (*Hub, error) {
 	// get database setup
 	var db loader.Loader
-	if cfg.DB.Type == config.DBConfigTypeMemory {
+	var err error
+	switch cfg.DB.Type {
+	case config.DBConfigTypeMemory:
 		db = loader.NewMemoryLoader()
-	} else {
-		db = loader.NewDefaultLoader(cfg.DB.Path)
+	case config.DBConfigTypePostgres:
+		db, err = loader.NewPostgresLoader(cfg.DB.Path)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		db, err = loader.NewDefaultLoader(cfg.DB.Path)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return NewHubWithDB(db, cfg)
+	return NewHubWithDB(db, cfg, logger)
 }
 
-func NewHubWithDB(db loader.Loader, cfg *config.Config) (*Hub, error) {
-	err := db.Setup()
-	if err != nil {
-		return nil, err
-	}
+func NewHubWithDB(db loader.Loader, cfg *config.Config, logger logx.Logger) (*Hub, error) {
+	tc := twitch.NewDefaultTwitchClient(
+		cfg.Twitch.ClientID,
+		cfg.Twitch.Secret,
+		cfg.Twitch.BotID,
+		cfg.Server.URL,
+	)
 	s := &Hub{
-		rooms:    make(map[string]*room.Room),
-		messages: []*message.Message{},
-		db:       db,
-		cfg:      cfg,
-		logger:   logx.NewDefaultLogger(),
+		rooms:             make(map[string]*room.Room),
+		messages:          []*message.Message{},
+		db:                db,
+		tc:                tc,
+		cfg:               cfg,
+		logger:            logger,
+		heartbeatInterval: 3600.0,
+		messageInterval:   5.0,
 	}
 
 	// start message loop
@@ -81,11 +102,25 @@ func NewHubWithDB(db loader.Loader, cfg *config.Config) (*Hub, error) {
 	return s, nil
 }
 
+func (h *Hub) DeleteRoom(id string) {
+	h.mu.Lock()
+	delete(h.rooms, id)
+	h.mu.Unlock()
+}
+
 func (h *Hub) GetRoom(id string) (*room.Room, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	if room, ok := h.rooms[id]; ok {
 		return room, nil
 	}
 	return nil, errors.New("room not found")
+}
+
+func (h *Hub) SetRoom(id string, r *room.Room) {
+	h.mu.Lock()
+	h.rooms[id] = r
+	h.mu.Unlock()
 }
 
 func (h *Hub) RoomCount() int {
@@ -127,46 +162,45 @@ func (h *Hub) Load() {
 			r.SetFetcher(fetch.NewEmptyFetcher())
 		}
 
+		r.SetLogger(h.logger.With("room_id", r.ID()))
+
 		id := r.ID()
 		h.logger.Info("loading", "room_id", id)
-		h.mu.Lock()
-		h.rooms[id] = r
-		h.mu.Unlock()
+		h.SetRoom(id, r)
 		go h.Heartbeat(id)
 	}
 }
 
 func (h *Hub) Heartbeat(roomID string) {
-	h.mu.Lock()
-	r, ok := h.rooms[roomID]
-	h.mu.Unlock()
-	if !ok {
+	r, err := h.GetRoom(roomID)
+	if err != nil {
+		h.logger.Info("room not found during heartbeat", "room_id", roomID)
 		return
 	}
 	for {
+		time.Sleep(time.Duration(h.heartbeatInterval * float64(time.Second)))
 		now := time.Now()
-		diff := now.Sub(*r.LastActive())
-		h.logger.Info("inactive", "room_id", roomID, "duration", diff.Seconds())
+		diff := now.Sub(r.GetLastActive())
 		if diff.Seconds() > r.GetTimeout() {
 			break
 		}
-		time.Sleep(3600 * time.Second)
+		h.logger.Debug("inactive", "room_id", roomID, "duration", diff.String())
 	}
 	h.logger.Info("clearing board", "room_id", roomID)
 
 	// close the room down
-	err := r.Close()
+	err = r.Close()
 	if err != nil {
-		h.logger.Error("failed to close room", "err", err)
+		h.logger.Error("failed to close room", "err", err, "room_id", roomID)
 	}
 
 	// delete the room from the server map
-	delete(h.rooms, roomID)
+	h.DeleteRoom(roomID)
 
 	// delete it from the database
 	err = h.db.DeleteRoom(roomID)
 	if err != nil {
-		h.logger.Error("failed to delete room", "err", err)
+		h.logger.Error("failed to delete room", "err", err, "room_id", roomID)
 	}
 }
 
@@ -178,6 +212,8 @@ func (h *Hub) ReadMessages() {
 	}
 	defer h.db.DeleteAllMessages() //nolint:errcheck
 
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	for _, msg := range messages {
 		m := message.New(msg.Text, msg.TTL)
 		h.messages = append(h.messages, m)
@@ -185,6 +221,8 @@ func (h *Hub) ReadMessages() {
 }
 
 func (h *Hub) SendMessages() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	// go through each server message
 	keep := []*message.Message{}
 	for _, m := range h.messages {
@@ -211,7 +249,7 @@ func (h *Hub) SendMessages() {
 func (h *Hub) MessageLoop() {
 	for {
 		// wait 5 seconds
-		time.Sleep(5 * time.Second)
+		time.Sleep(time.Duration(h.messageInterval * float64(time.Second)))
 
 		h.ReadMessages()
 		h.SendMessages()
@@ -228,6 +266,7 @@ func (h *Hub) GetOrCreateRoom(roomID string) *room.Room {
 		if h.cfg.Mode == config.ModeTest {
 			r.SetFetcher(fetch.NewEmptyFetcher())
 		}
+		r.SetLogger(h.logger.With("room_id", roomID))
 		h.rooms[roomID] = r
 		go h.Heartbeat(roomID)
 	}
@@ -250,8 +289,13 @@ func (h *Hub) HandlerWrapper(ws *websocket.Conn) {
 func (h *Hub) Handler(ec event.EventChannel, roomID string) {
 	// new connection
 
+	// to lower case, remove anything that isn't alphanumeric and hyphen
+	roomID = core.Sanitize(roomID)
+
 	// get or create the room
 	r := h.GetOrCreateRoom(roomID)
+	h.wg.Add(1)
+	defer h.wg.Done()
 
 	// send to the room for handling
 	h.logger.Info(
@@ -265,4 +309,9 @@ func (h *Hub) Handler(ec event.EventChannel, roomID string) {
 		"room_id", r.ID(),
 		"reason", r.Handle(ec),
 	)
+}
+
+// this is purely for testing (see simulator.go)
+func (h *Hub) Close() {
+	h.wg.Wait()
 }

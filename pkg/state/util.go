@@ -13,7 +13,8 @@ package state
 import (
 	"fmt"
 
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 )
 
 func (s *State) prefs() map[string]int {
@@ -92,7 +93,7 @@ func (s *State) locate() string {
 	return result
 }
 
-func (s *State) computeDiffMove(i int) *core.Diff {
+func (s *State) computeDiffMove(i int) *coord.Diff {
 	save := s.current.Index
 	n, ok := s.nodes[i]
 	if !ok {
@@ -115,7 +116,7 @@ func (s *State) computeDiffMove(i int) *core.Diff {
 	return diff
 }
 
-func (s *State) computeDiffSetup(i int) *core.Diff {
+func (s *State) computeDiffSetup(i int) *coord.Diff {
 	save := s.current.Index
 	n, ok := s.nodes[i]
 	if !ok {
@@ -133,46 +134,46 @@ func (s *State) computeDiffSetup(i int) *core.Diff {
 	defer s.gotoIndex(save) //nolint: errcheck
 
 	// find the black stones to add
-	diffAdd := []*core.StoneSet{}
-	if val, ok := n.Fields["AB"]; ok {
-		add := core.NewCoordSet()
+	diffAdd := []*coord.StoneSet{}
+	if val := n.GetField("AB"); len(val) > 0 {
+		add := coord.NewCoordSet()
 		for _, v := range val {
-			add.Add(core.LettersToCoord(v))
+			add.Add(coord.FromLetters(v))
 		}
-		stoneSet := core.NewStoneSet(add, core.Black)
+		stoneSet := coord.NewStoneSet(add, color.Black)
 		diffAdd = append(diffAdd, stoneSet)
 	}
 
 	// find the white stones to add
-	if val, ok := n.Fields["AW"]; ok {
-		add := core.NewCoordSet()
+	if val := n.GetField("AW"); len(val) > 0 {
+		add := coord.NewCoordSet()
 		for _, v := range val {
-			add.Add(core.LettersToCoord(v))
+			add.Add(coord.FromLetters(v))
 		}
-		stoneSet := core.NewStoneSet(add, core.White)
+		stoneSet := coord.NewStoneSet(add, color.White)
 		diffAdd = append(diffAdd, stoneSet)
 	}
 
 	// find the stones to remove
-	diffRemove := []*core.StoneSet{}
-	if val, ok := n.Fields["AE"]; ok {
-		csBlack := core.NewCoordSet()
-		csWhite := core.NewCoordSet()
+	diffRemove := []*coord.StoneSet{}
+	if val := n.GetField("AE"); len(val) > 0 {
+		csBlack := coord.NewCoordSet()
+		csWhite := coord.NewCoordSet()
 		for _, v := range val {
-			coord := core.LettersToCoord(v)
+			coord := coord.FromLetters(v)
 			col := s.board.Get(coord)
 			switch col {
-			case core.Black:
+			case color.Black:
 				csBlack.Add(coord)
-			case core.White:
+			case color.White:
 				csWhite.Add(coord)
 			}
 		}
-		removeBlack := core.NewStoneSet(csBlack, core.Black)
-		removeWhite := core.NewStoneSet(csWhite, core.White)
+		removeBlack := coord.NewStoneSet(csBlack, color.Black)
+		removeWhite := coord.NewStoneSet(csWhite, color.White)
 		diffRemove = append(diffRemove, removeBlack)
 		diffRemove = append(diffRemove, removeWhite)
 	}
-	diff := core.NewDiff(diffAdd, diffRemove)
+	diff := coord.NewDiff(diffAdd, diffRemove)
 	return diff
 }

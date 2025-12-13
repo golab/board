@@ -26,9 +26,10 @@ import (
 // stateful
 
 func (h *Hub) HandleOp(op, roomID string) string {
+	roomID = strings.ToLower(roomID)
 	data := ""
-	r, ok := h.rooms[roomID]
-	if !ok {
+	r, err := h.GetRoom(roomID)
+	if err != nil {
 		return ""
 	}
 	switch op {
@@ -116,8 +117,13 @@ func integrations(w http.ResponseWriter, r *http.Request) {
 	includeCommon(w, "integrations.html")
 }
 
+func integrationsDisabled(w http.ResponseWriter, r *http.Request) {
+	includeCommon(w, "integrations_disabled.html")
+}
+
 func board(w http.ResponseWriter, r *http.Request) {
 	boardID := chi.URLParam(r, "boardID")
+	boardID = strings.ToLower(boardID)
 	if boardID != core.Sanitize(boardID) {
 		page400(w, r)
 		return
@@ -129,7 +135,8 @@ func newBoard(w http.ResponseWriter, r *http.Request) {
 	boardID := r.FormValue("board_id")
 	boardID = core.Sanitize(boardID)
 	if len(strings.TrimSpace(boardID)) == 0 {
-		boardID = core.UUID4()
+		//boardID = core.UUID4()
+		boardID = core.RandomBoardName()
 	}
 	redirect := fmt.Sprintf("/b/%s", boardID)
 	http.Redirect(w, r, redirect, http.StatusFound)
@@ -178,7 +185,11 @@ func (h *Hub) WebRouter() http.Handler {
 	// pure web endpoints
 	r.Get("/", index)
 	r.Get("/about", about)
-	r.Get("/integrations", integrations)
+	if h.cfg.TwitchEnabled() {
+		r.Get("/integrations", integrations)
+	} else {
+		r.Get("/integrations", integrationsDisabled)
+	}
 	r.Get("/favicon.ico", favicon)
 	r.Post("/new", newBoard)
 

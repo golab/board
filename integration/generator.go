@@ -8,48 +8,44 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package main
+package integration
 
 import (
-	"net/http"
+	"math/rand"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jarednogo/board/pkg/config"
-	"github.com/jarednogo/board/pkg/hub"
+	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/jarednogo/board/pkg/state"
 )
 
-var version = "dev"
+func GenerateRandomSGF(seed int, num int) string {
+	r := rand.New(rand.NewSource(int64(seed)))
 
-func Setup(cfg *config.Config) (*hub.Hub, http.Handler, error) {
-	// make a new hub
-	h, err := hub.NewHub(cfg)
-	if err != nil {
-		return nil, nil, err
+	size := 19
+
+	s := state.NewState(size, true)
+	numMoves := 0
+	col := color.Black
+	for numMoves < num {
+		x := r.Intn(size)
+		y := r.Intn(size)
+		c := coord.NewCoord(x, y)
+		if s.Board().Legal(c, col) {
+			s.AddNode(c, col)
+			col = col.Opposite()
+			numMoves++
+		}
 	}
+	return s.ToSGF()
+}
 
-	// http server setup
-
-	// initialize router and middlewares
-	r := chi.NewRouter()
-	r.Use(middleware.StripSlashes)
-	r.Use(middleware.Logger)
-
-	// web router
-	r.Mount("/", h.WebRouter())
-
-	// extension router
-	r.Mount("/ext", h.ExtRouter())
-
-	// api routers
-	r.Mount("/api", hub.ApiRouter(version))
-	r.Mount("/api/v1", hub.ApiV1Router())
-
-	// see server package for routes
-	r.Mount("/apps/twitch", h.TwitchRouter())
-
-	// mount websocket
-	r.Mount("/socket", h.SocketRouter())
-
-	return h, r, nil
+func GenerateNRandomSGF(seed, num, minLength, maxLength int) []string {
+	r := rand.New(rand.NewSource(int64(seed)))
+	sgfs := []string{}
+	for i := 0; i < num; i++ {
+		randLength := r.Intn(maxLength-minLength) + minLength
+		sgf := GenerateRandomSGF(i, randLength)
+		sgfs = append(sgfs, sgf)
+	}
+	return sgfs
 }

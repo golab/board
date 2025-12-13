@@ -8,15 +8,16 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package core_test
+package parser_test
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/parser"
 )
 
 var fieldTests = []struct {
@@ -38,43 +39,15 @@ var fieldTests = []struct {
 func TestParser(t *testing.T) {
 	for _, tt := range fieldTests {
 		t.Run(tt.input, func(t *testing.T) {
-			p := core.NewParser(tt.input)
+			p := parser.New(tt.input)
 			root, err := p.Parse()
-			if err != nil {
-				t.Error(err)
-				return
-			}
-			if val, ok := root.Fields[tt.key]; !ok {
+			require.NoError(t, err)
+			if val := root.GetField(tt.key); len(val) == 0 {
 				t.Errorf("key not present: %s", tt.key)
 			} else if len(val) != 1 {
 				t.Errorf("expected length of multifield to be 1, got: %d", len(val))
 			} else if val[0] != tt.value {
 				t.Errorf("expected value %s, got: %s", tt.value, val[0])
-			}
-		})
-	}
-}
-
-var outputTests = []string{
-	"(;GM[1])",
-	"(;GM[1];B[aa];W[bb](;B[cc];W[dd])(;B[ee];W[ff]))",
-	"(;GM[1];C[some comment])",
-	"(;GM[1];C[comment \"with\" quotes])",
-	"(;GM[1];C[comment [with\\] brackets])",
-}
-
-func TestToSGF(t *testing.T) {
-	for _, input := range outputTests {
-		t.Run(input, func(t *testing.T) {
-			p := core.NewParser(input)
-			root, err := p.Parse()
-			if err != nil {
-				t.Error(err)
-				return
-			}
-			output := root.ToSGF(true)
-			if output != input {
-				t.Errorf("expected %s, got: %s", input, output)
 			}
 		})
 	}
@@ -91,37 +64,66 @@ var mergeTests = []struct {
 func TestMerge(t *testing.T) {
 	for i, tt := range mergeTests {
 		t.Run(fmt.Sprintf("merge%d", i), func(t *testing.T) {
-			merged := core.Merge(tt.input)
-			p := core.NewParser(merged)
+			merged := parser.Merge(tt.input)
+			p := parser.New(merged)
 			root, err := p.Parse()
 			if err != nil {
 				t.Error(err)
 				return
 			}
-			if len(root.Down) != tt.num {
-				t.Errorf("expected %d children, got: %d", tt.num, len(root.Down))
+			if root.NumChildren() != tt.num {
+				t.Errorf("expected %d children, got: %d", tt.num, root.NumChildren())
 				return
 			}
 		})
 	}
 }
 
-func TestPass(t *testing.T) {
-	sgf := "(;GM[1];B[aa];W[bb];B[tt];W[ss])"
-	p := core.NewParser(sgf)
+func TestMerge2(t *testing.T) {
+	sgf1 := sgfsamples.SimpleFourMoves
+	sgf2 := sgfsamples.SimpleEightMoves
+	sgf := parser.Merge([]string{sgf1, sgf2})
+	p := parser.New(sgf)
 	root, err := p.Parse()
-	if err != nil {
-		t.Error(err)
-	}
-	output := root.ToSGF(true)
-	if output != "(;GM[1];B[aa];W[bb];B[];W[ss])" {
-		t.Errorf("error in reading [tt] pass")
-	}
+	require.NoError(t, err)
+	require.Equal(t, root.NumChildren(), 2)
+	child1 := root.GetChild(0)
+	child2 := root.GetChild(1)
+	// both should have PB, PW, and KM as comments
+	require.Equal(t, len(child1.GetField("C")), 3)
+	require.Equal(t, len(child2.GetField("C")), 3)
+}
+
+func TestMerge3(t *testing.T) {
+	sgf := parser.Merge([]string{})
+	assert.Equal(t, sgf, "")
+}
+
+func TestMerge4(t *testing.T) {
+	sgf1 := sgfsamples.SimpleFourMoves
+	sgf := parser.Merge([]string{sgf1})
+	assert.Equal(t, sgf1, sgf)
+}
+
+func TestMerge5(t *testing.T) {
+	sgf1 := sgfsamples.SimpleFourMoves
+	sgf2 := sgfsamples.SimpleEightMoves
+	sgf3 := "foobar"
+	sgfMerged1 := parser.Merge([]string{sgf1, sgf2, sgf3})
+	sgfMerged2 := parser.Merge([]string{sgf1, sgf2})
+	assert.Equal(t, sgfMerged1, sgfMerged2)
+}
+
+func TestMerge6(t *testing.T) {
+	sgf1 := sgfsamples.SimpleFourMoves
+	sgf2 := "(;GM[1]SZ[9];B[cc]W[dd])"
+	sgf := parser.Merge([]string{sgf1, sgf2})
+	assert.Equal(t, sgf, sgf1)
 }
 
 func TestEmpty(t *testing.T) {
 	sgf := "()"
-	p := core.NewParser(sgf)
+	p := parser.New(sgf)
 	_, err := p.Parse()
 	if err != nil {
 		t.Error(err)
@@ -136,12 +138,15 @@ var oddTests = []struct {
 	{"(;)", false},
 	{"(;;;)", false},
 	{"garbage(;GM[1])", false},
+	{"totalgarbage", true},
+	{"( ; GM [1] )", false},
+	{"garbage (abc, def) stuff", true},
 }
 
 func TestOdd(t *testing.T) {
 	for _, tt := range oddTests {
 		t.Run(tt.input, func(t *testing.T) {
-			p := core.NewParser(tt.input)
+			p := parser.New(tt.input)
 			_, err := p.Parse()
 			assert.Equal(t, err != nil, tt.err)
 		})
@@ -149,29 +154,54 @@ func TestOdd(t *testing.T) {
 }
 
 func TestChineseNames(t *testing.T) {
-	p := core.NewParser(sgfsamples.ChineseNames)
+	p := parser.New(sgfsamples.ChineseNames)
 	root, err := p.Parse()
-	assert.NoError(t, err)
-	pb, ok := root.Fields["PB"]
-	assert.True(t, ok)
-	pw, ok := root.Fields["PW"]
-	assert.True(t, ok)
+	require.NoError(t, err)
+	pb := root.GetField("PB")
+	pw := root.GetField("PW")
 
-	assert.Equal(t, len(pb), 1)
-	assert.Equal(t, len(pw), 1)
+	require.Equal(t, len(pb), 1)
+	require.Equal(t, len(pw), 1)
 
 	assert.Equal(t, pw[0], "王思雅")
 	assert.Equal(t, pb[0], "李晨宇")
 }
 
 func TestMixedCaseField(t *testing.T) {
-	p := core.NewParser(sgfsamples.MixedCaseField)
+	p := parser.New(sgfsamples.MixedCaseField)
 	root, err := p.Parse()
-	assert.NoError(t, err)
-	c, ok := root.Fields["COPYRIGHT"]
-	assert.True(t, ok)
-	assert.Equal(t, len(c), 1)
+	require.NoError(t, err)
+	c := root.GetField("COPYRIGHT")
+	require.Equal(t, len(c), 1)
 	assert.Equal(t, c[0], "SomeCopyright")
+}
+
+func TestSGFNodeAddField(t *testing.T) {
+	n := &parser.SGFNode{}
+	n.AddField("foo", "bar")
+	n.AddField("baz", "bot")
+	assert.Equal(t, len(n.AllFields()), 2)
+}
+
+func TestMultifield(t *testing.T) {
+	p := parser.New("(;GM[1]ZZ[foo][bar][baz])")
+	root, err := p.Parse()
+	require.NoError(t, err)
+	zz := root.GetField("ZZ")
+	require.Equal(t, len(zz), 3)
+	assert.Equal(t, zz[0], "foo")
+	assert.Equal(t, zz[1], "bar")
+	assert.Equal(t, zz[2], "baz")
+}
+
+func TestGetChild(t *testing.T) {
+	p := parser.New("(;A[b](;C[d])(;E[f]))")
+	root, err := p.Parse()
+	require.NoError(t, err)
+	assert.NotNil(t, root.GetChild(0))
+	assert.NotNil(t, root.GetChild(1))
+	assert.Zero(t, root.GetChild(2))
+	assert.Zero(t, root.GetChild(-1))
 }
 
 func FuzzParser(f *testing.F) {
@@ -182,9 +212,8 @@ func FuzzParser(f *testing.F) {
 	}
 
 	f.Fuzz(func(t *testing.T, orig string) {
-		p := core.NewParser(orig)
+		p := parser.New(orig)
 		// looking for crashes or panics
 		_, _ = p.Parse()
-
 	})
 }

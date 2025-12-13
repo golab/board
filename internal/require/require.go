@@ -8,36 +8,56 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-// the core package provides basic functionality to all the major components of the code
-package core
+package require
 
-// Color is one of NoColor, Black, or White
-type Color int
-
-const (
-	NoColor Color = iota
-	Black
-	White
-)
-
-// Opposite: Black -> White, White -> Black, NoColor -> NoColor
-func Opposite(c Color) Color {
-	if c == Black {
-		return White
-	}
-	if c == White {
-		return Black
-	}
-	return NoColor
+type Tester interface {
+	Errorf(string, ...any)
+	Fatalf(string, ...any)
+	Helper()
 }
 
-// String is just for debugging purposes
-func (c Color) String() string {
-	if c == Black {
-		return "B"
+func Equal[V comparable](t Tester, got, expected V) {
+	t.Helper()
+	if got != expected {
+		t.Fatalf("expected %v, got %v", expected, got)
 	}
-	if c == White {
-		return "W"
+}
+
+func NotEqual[V comparable](t Tester, got, expectednot V) {
+	t.Helper()
+	if got == expectednot {
+		t.Fatalf("expected something else, got %v", got)
 	}
-	return "+"
+}
+
+func True(t Tester, got bool) {
+	Equal(t, got, true)
+}
+
+func False(t Tester, got bool) {
+	Equal(t, got, false)
+}
+
+func Zero[V comparable](t Tester, got V) {
+	var expected V
+	Equal(t, got, expected)
+}
+
+func NoError(t Tester, err error) {
+	t.Helper()
+	if err != nil {
+		t.Fatalf("expected nil error, got %v", err)
+	}
+}
+
+func ErrorIs(t Tester, got, expected error) {
+	if got == nil || expected == nil {
+		t.Fatalf("unexpected nil error")
+		return
+	}
+	Equal(t, got.Error(), expected.Error())
+}
+
+func NotNil(t Tester, got any) {
+	NotEqual(t, got, nil)
 }

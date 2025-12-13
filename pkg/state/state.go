@@ -12,11 +12,15 @@ package state
 
 import (
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/board"
+	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/jarednogo/board/pkg/core/fields"
+	"github.com/jarednogo/board/pkg/core/parser"
+	"github.com/jarednogo/board/pkg/core/tree"
 )
 
 const Letters = "ABCDEFGHIJKLNMOPQRSTUVWXYZ"
@@ -24,19 +28,19 @@ const Letters = "ABCDEFGHIJKLNMOPQRSTUVWXYZ"
 // as a rule, anything that would need to get sent to new connections
 // should be stored here
 type State struct {
-	root       *core.TreeNode
-	current    *core.TreeNode
-	head       *core.TreeNode
-	nodes      map[int]*core.TreeNode
+	root       *tree.TreeNode
+	current    *tree.TreeNode
+	head       *tree.TreeNode
+	nodes      map[int]*tree.TreeNode
 	nextIndex  int
 	size       int
-	board      *core.Board
-	clipboard  *core.TreeNode
-	markedDead core.CoordSet
-	markedDame core.CoordSet
+	board      *board.Board
+	clipboard  *tree.TreeNode
+	markedDead coord.CoordSet
+	markedDame coord.CoordSet
 }
 
-func (s *State) HeadColor() core.Color {
+func (s *State) HeadColor() color.Color {
 	return s.head.Color
 }
 
@@ -54,29 +58,41 @@ func (s *State) Size() int {
 	return s.size
 }
 
-func (s *State) Board() *core.Board {
+func (s *State) Board() *board.Board {
 	return s.board
 }
 
-func (s *State) Current() *core.TreeNode {
+func (s *State) Current() *tree.TreeNode {
 	return s.current
 }
 
-func (s *State) Root() *core.TreeNode {
+func (s *State) Root() *tree.TreeNode {
 	return s.root
 }
 
-func (s *State) Head() *core.TreeNode {
+func (s *State) EditPlayerBlack(value string) {
+	s.root.OverwriteField("PB", value)
+}
+
+func (s *State) EditPlayerWhite(value string) {
+	s.root.OverwriteField("PW", value)
+}
+
+func (s *State) EditKomi(value string) {
+	s.root.OverwriteField("KM", value)
+}
+
+func (s *State) Head() *tree.TreeNode {
 	return s.head
 }
 
-func (s *State) Nodes() map[int]*core.TreeNode {
+func (s *State) Nodes() map[int]*tree.TreeNode {
 	return s.nodes
 }
 
 func (s *State) AnyMove() {
-	s.markedDead = core.NewCoordSet()
-	s.markedDame = core.NewCoordSet()
+	s.markedDead = coord.NewCoordSet()
+	s.markedDame = coord.NewCoordSet()
 }
 
 func (s *State) ToSGF() string {
@@ -88,40 +104,46 @@ func (s *State) ToSGFIX() string {
 }
 
 func (s *State) toSGF(indexes bool) string {
-	result := "("
+	sb := strings.Builder{}
+	// approximate preallocation, each move being at least 6 characters
+	// i.e. ;B[aa]
+	sb.Grow(6 * len(s.Nodes()))
+	sb.WriteByte('(')
 	stack := []any{s.root}
 	for len(stack) > 0 {
 		i := len(stack) - 1
 		cur := stack[i]
 		stack = stack[:i]
 		if str, ok := cur.(string); ok {
-			result += str
+			sb.WriteString(str)
 			continue
 		}
-		node := cur.(*core.TreeNode)
-		result += ";"
-		// throw in other fields
-		fields := []string{}
-		for f := range node.Fields {
-			fields = append(fields, f)
-		}
-		sort.Strings(fields)
+		node := cur.(*tree.TreeNode)
+		sb.WriteByte(';')
 
-		for _, key := range fields {
-			multifield := node.Fields[key]
+		// throw in other fields
+		node.SortFields()
+
+		for _, field := range node.AllFields() {
+			key := field.Key
+			multifield := field.Values
 			if key == "IX" {
 				continue
 			}
-			result += key
+			sb.WriteString(key)
 			for _, fieldValue := range multifield {
 				m := strings.ReplaceAll(fieldValue, "]", "\\]")
-				result += fmt.Sprintf("[%s]", m)
+				sb.WriteByte('[')
+				sb.WriteString(m)
+				sb.WriteByte(']')
 			}
 
 		}
 
 		if indexes {
-			result += fmt.Sprintf("IX[%d]", node.Index)
+			sb.WriteString("IX[")
+			sb.WriteString(strconv.Itoa(node.Index))
+			sb.WriteByte(']')
 		}
 
 		if len(node.Down) == 1 {
@@ -137,23 +159,23 @@ func (s *State) toSGF(indexes bool) string {
 		}
 	}
 
-	result += ")"
-	return result
+	sb.WriteByte(')')
+	return sb.String()
 }
 
 func FromSGF(data string) (*State, error) {
-	p := core.NewParser(data)
+	p := parser.New(data)
 	root, err := p.Parse()
 	if err != nil {
 		return nil, err
 	}
 
 	var size int64 = 19
-	if _, ok := root.Fields["SZ"]; ok {
-		sizeField := root.Fields["SZ"]
-		if len(sizeField) != 1 {
-			return nil, fmt.Errorf("SZ cannot be a multifield")
-		}
+	sizeField := root.GetField("SZ")
+	if len(sizeField) > 1 {
+		return nil, fmt.Errorf("SZ cannot be a multifield")
+	}
+	if len(sizeField) == 1 {
 		size, err = strconv.ParseInt(sizeField[0], 10, 64)
 		if err != nil {
 			return nil, err
@@ -169,34 +191,33 @@ func FromSGF(data string) (*State, error) {
 		if _, ok := cur.(string); ok {
 			state.left()
 		} else {
-			node := cur.(*core.SGFNode)
+			node := cur.(*parser.SGFNode)
 
 			index := -1
-			if indexes, ok := node.Fields["IX"]; ok {
-				if len(indexes) > 0 {
-					_index, err := strconv.ParseInt(indexes[0], 10, 64)
-					index = int(_index)
-					if err != nil {
-						index = -1
-					}
+			indexes := node.GetField("IX")
+			if len(indexes) > 0 {
+				_index, err := strconv.ParseInt(indexes[0], 10, 64)
+				index = int(_index)
+				if err != nil {
+					index = -1
 				}
 			}
 
 			// refuse to process sgfs with a suicide move
-			if node.Coord() != nil && !state.board.Legal(node.Coord(), node.Color()) {
+			if Coord(node) != nil && !state.board.Legal(Coord(node), Color(node)) {
 				return nil, fmt.Errorf("suicide moves are not currently supported")
 			}
 
-			if node.IsPass() {
-				state.addPassNode(node.Color(), node.Fields, index)
-			} else if node.IsMove() {
-				state.addNode(node.Coord(), node.Color(), node.Fields, index, true)
+			if IsPass(node) {
+				state.addPassNode(Color(node), node.Fields, index)
+			} else if IsMove(node) {
+				state.addNode(Coord(node), Color(node), node.Fields, index, true)
 			} else {
 				state.addFieldNode(node.Fields, index)
 			}
-			for i := len(node.Down) - 1; i >= 0; i-- {
+			for i := node.NumChildren() - 1; i >= 0; i-- {
 				stack = append(stack, "<")
-				stack = append(stack, node.Down[i])
+				stack = append(stack, node.GetChild(i))
 			}
 			// TODO: this might be wrong in some cases
 			state.head = state.current
@@ -208,27 +229,27 @@ func FromSGF(data string) (*State, error) {
 }
 
 func NewState(size int, initRoot bool) *State {
-	nodes := make(map[int]*core.TreeNode)
-	var root *core.TreeNode
+	nodes := make(map[int]*tree.TreeNode)
+	var root *tree.TreeNode
 	root = nil
 	index := 0
 	if initRoot {
-		fields := map[string][]string{}
-		fields["GM"] = []string{"1"}
-		fields["FF"] = []string{"4"}
-		fields["CA"] = []string{"UTF-8"}
-		fields["SZ"] = []string{fmt.Sprintf("%d", size)}
-		fields["PB"] = []string{"Black"}
-		fields["PW"] = []string{"White"}
-		fields["RU"] = []string{"Japanese"}
-		fields["KM"] = []string{"6.5"}
+		flds := fields.Fields{}
+		root = tree.NewTreeNode(nil, color.Empty, 0, nil, flds)
+		root.AddField("GM", "1")
+		root.AddField("FF", "4")
+		root.AddField("CA", "UTF-8")
+		root.AddField("SZ", strconv.Itoa(size))
+		root.AddField("PB", "Black")
+		root.AddField("PW", "White")
+		root.AddField("RU", "Japanese")
+		root.AddField("KM", "6.5")
 
 		// coord, color, index, up, fields
-		root = core.NewTreeNode(nil, core.NoColor, 0, nil, fields)
 		nodes[0] = root
 		index = 1
 	}
-	board := core.NewBoard(size)
+	brd := board.NewBoard(size)
 	return &State{
 		root:       root,
 		current:    root,
@@ -236,8 +257,8 @@ func NewState(size int, initRoot bool) *State {
 		nodes:      nodes,
 		nextIndex:  index,
 		size:       size,
-		board:      board,
+		board:      brd,
 		clipboard:  nil,
-		markedDead: core.NewCoordSet(),
-		markedDame: core.NewCoordSet()}
+		markedDead: coord.NewCoordSet(),
+		markedDame: coord.NewCoordSet()}
 }

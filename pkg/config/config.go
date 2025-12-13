@@ -25,10 +25,21 @@ const (
 )
 
 type Config struct {
-	Mode   mode         `yaml:"mode"`
-	Server serverConfig `yaml:"server"`
-	Twitch twitchConfig `yaml:"twitch"`
-	DB     dbConfig     `yaml:"db"`
+	Mode    mode         `yaml:"mode"`
+	Server  serverConfig `yaml:"server"`
+	Twitch  twitchConfig `yaml:"twitch"`
+	DB      dbConfig     `yaml:"db"`
+	Version string       `yaml:"version"`
+}
+
+func (c *Config) Redact() {
+	c.Server.redact()
+	c.Twitch.redact()
+	c.DB.redact()
+}
+
+func (c *Config) TwitchEnabled() bool {
+	return c.Twitch.ClientID != "" && c.Twitch.Secret != "" && c.Twitch.BotID != ""
 }
 
 type serverConfig struct {
@@ -37,23 +48,40 @@ type serverConfig struct {
 	URL  string `yaml:"url"`
 }
 
+func (c *serverConfig) redact() {}
+
 type twitchConfig struct {
 	ClientID string `yaml:"client_id"`
 	Secret   string `yaml:"secret"`
 	BotID    string `yaml:"bot_id"`
 }
 
+func (c *twitchConfig) redact() {
+	if c.ClientID != "" {
+		c.ClientID = "***"
+	}
+	if c.Secret != "" {
+		c.Secret = "***"
+	}
+	if c.BotID != "" {
+		c.BotID = "***"
+	}
+}
+
 type dbConfigType string
 
 const (
-	DBConfigTypeSqlite dbConfigType = "sqlite"
-	DBConfigTypeMemory dbConfigType = "memory"
+	DBConfigTypeSqlite   dbConfigType = "sqlite"
+	DBConfigTypePostgres dbConfigType = "postgres"
+	DBConfigTypeMemory   dbConfigType = "memory"
 )
 
 type dbConfig struct {
 	Type dbConfigType `json:"type"`
 	Path string       `json:"path"`
 }
+
+func (c *dbConfig) redact() {}
 
 func New(fname string) (*Config, error) {
 	data, err := os.ReadFile(fname)
@@ -101,6 +129,7 @@ func Test() *Config {
 		Type: DBConfigTypeMemory,
 	}
 	c.DB = db
+	c.Version = "test"
 	return c
 }
 

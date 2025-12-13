@@ -1,0 +1,93 @@
+services:
+  board:
+    container_name: board
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        CONFIG_FILE: config-docker-compose.yaml
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    profiles: ["monitoring"]
+
+  loki-init:
+    image: alpine
+    container_name: loki-init
+    command: ["sh", "-c", "chown -R 10001:10001 /var/loki"]
+    volumes:
+      - loki_data:/var/loki
+    restart: "no"
+    profiles: ["monitoring", "prod"]
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    volumes:
+      - loki_data:/var/loki
+      - ./monitoring/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    restart: unless-stopped
+    profiles: ["monitoring", "prod"]
+    depends_on:
+      - loki-init
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    volumes:
+      - ${LOG_PATH:-./logs}:/var/log:ro
+      - ./monitoring/alloy:/etc/alloy
+    command: run /etc/alloy/config.alloy
+    depends_on:
+      - loki
+    profiles: ["monitoring", "prod"]
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      # change in real deployments
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      # these two lines are specific for a deployment
+      # where a proxy (like nginx) routes 127.0.0.1/grafana -> 127.0.0.1:3000
+      - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL:-}
+      - GF_SERVER_SERVE_FROM_SUB_PATH=${GRAFANA_SUB_PATH:-}
+
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      - loki
+    profiles: ["monitoring", "prod"]
+
+  postgres:
+    image: postgres
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=board
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d board"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    profiles: ["monitoring"]
+
+volumes:
+  loki_data:
+  grafana_data:
+  postgres_data:

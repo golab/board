@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/state"
 )
@@ -44,4 +45,30 @@ func TestParseTTPAss(t *testing.T) {
 	assert.NoError(t, err)
 	node := s.Nodes()[358]
 	assert.Equal(t, node.XY, nil)
+}
+
+func TestNewState(t *testing.T) {
+	s1 := state.NewState(19, true)
+	s2 := state.NewState(19, false)
+	assert.Equal(t, s1.GetNextIndex(), 1)
+	assert.Equal(t, s2.GetNextIndex(), 0)
+}
+
+func TestHandicap(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.Handicap1)
+	assert.NoError(t, err)
+	root := s.Root()
+	assert.Equal(t, len(root.GetField("AB")), 4)
+}
+
+func TestMissingSZ(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.MissingSZ)
+	assert.NoError(t, err)
+	sz := s.Size()
+	require.Equal(t, sz, 19)
+}
+
+func TestSuicide(t *testing.T) {
+	_, err := state.FromSGF(sgfsamples.Suicide1)
+	assert.NotNil(t, err)
 }

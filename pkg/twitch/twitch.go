@@ -88,6 +88,11 @@ type TwitchClient interface {
 	Unsubscribe(string, string) error
 	Subscribe(string, string) (string, error)
 	GetSubscription(string) (string, error)
+	SetHTTPClient(HTTPClient)
+}
+
+type HTTPClient interface {
+	Do(*http.Request) (*http.Response, error)
 }
 
 type DefaultTwitchClient struct {
@@ -95,6 +100,7 @@ type DefaultTwitchClient struct {
 	secret   string
 	botID    string
 	url      string
+	client   HTTPClient
 }
 
 func NewDefaultTwitchClient(clientID, secret, botID, url string) *DefaultTwitchClient {
@@ -103,7 +109,12 @@ func NewDefaultTwitchClient(clientID, secret, botID, url string) *DefaultTwitchC
 		secret:   secret,
 		botID:    botID,
 		url:      url,
+		client:   &http.Client{Timeout: 10 * time.Second},
 	}
+}
+
+func (t *DefaultTwitchClient) SetHTTPClient(client HTTPClient) {
+	t.client = client
 }
 
 // GetUserAccessToken is a prescribed pattern from twitch to get an access token
@@ -134,10 +145,8 @@ func (t *DefaultTwitchClient) GetUserAccessToken(code string) (string, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 10 * time.Second}
-
 	// Send the request
-	resp, err := client.Do(req)
+	resp, err := t.client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -173,10 +182,8 @@ func (t *DefaultTwitchClient) GetUsers(token string) (string, error) {
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Add("Client-Id", t.clientID)
 
-	client := &http.Client{Timeout: 10 * time.Second}
-
 	// Send the request
-	resp, err := client.Do(req)
+	resp, err := t.client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -233,10 +240,8 @@ func (t *DefaultTwitchClient) GetAppAccessToken() (string, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 10 * time.Second}
-
 	// Send the request
-	resp, err := client.Do(req)
+	resp, err := t.client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -289,10 +294,8 @@ func (t *DefaultTwitchClient) Unsubscribe(id, token string) error {
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Add("Client-Id", t.clientID)
 
-	client := &http.Client{Timeout: 10 * time.Second}
-
 	// Send the request
-	_, err = client.Do(req)
+	_, err = t.client.Do(req)
 	return err
 }
 
@@ -331,10 +334,8 @@ func (t *DefaultTwitchClient) Subscribe(user, token string) (string, error) {
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Add("Client-Id", t.clientID)
 
-	client := &http.Client{Timeout: 10 * time.Second}
-
 	// Send the request
-	resp, err := client.Do(req)
+	resp, err := t.client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -388,10 +389,8 @@ func (t *DefaultTwitchClient) subscriptions(token string) ([]*SubscriptionData, 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Add("Client-Id", t.clientID)
 
-	client := &http.Client{Timeout: 10 * time.Second}
-
 	// Send the request
-	resp, err := client.Do(req)
+	resp, err := t.client.Do(req)
 	if err != nil {
 		return nil, err
 	}

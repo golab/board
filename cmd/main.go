@@ -18,12 +18,18 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/jarednogo/board/pkg/app"
 	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/logx"
 )
 
+var version = "dev"
+
 func main() {
-	logger := logx.NewDefaultLogger()
+	// set up root logger
+	level := logx.LogLevelInfo
+	logger := logx.NewDefaultLogger(level)
+
 	// read in config
 	cfgFile := flag.String("f", "", "Path to config file")
 	flag.Parse()
@@ -39,18 +45,22 @@ func main() {
 		cfg = loadedCfg
 	}
 
-	logger.Info("running config", "config", fmt.Sprintf("%v", cfg))
+	cfg.Version = version
+
+	safe := *cfg
+	safe.Redact()
+	logger.Info("running config", "config", fmt.Sprintf("%v", safe))
 
 	// setup routes
-	h, r, err := Setup(cfg)
+	a, err := app.New(cfg, logger)
 	if err != nil {
 		logger.Error("error in setup", "err", err)
 		return
 	}
 
 	// start everything
-	h.Load()
-	defer h.Save()
+	a.Hub.Load()
+	defer a.Hub.Save()
 	host := cfg.Server.Host
 	port := cfg.Server.Port
 	url := fmt.Sprintf("%s:%d", host, port)
@@ -64,7 +74,7 @@ func main() {
 	// run server
 	go func() {
 		logger.Info("listening on", "url", url)
-		err = http.ListenAndServe(url, r)
+		err = http.ListenAndServe(url, a.Router)
 		logger.Error("error listening", "err", err)
 	}()
 

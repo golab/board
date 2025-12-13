@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package main_test
+package app_test
 
 import (
 	"bytes"
@@ -17,19 +17,21 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	main "github.com/jarednogo/board/cmd"
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
+	"github.com/jarednogo/board/pkg/app"
 	"github.com/jarednogo/board/pkg/config"
+	"github.com/jarednogo/board/pkg/logx"
 )
 
 func TestPing(t *testing.T) {
-	_, r, err := main.Setup(config.Test())
+	a, err := app.New(config.Test(), logx.NewRecorder(logx.LogLevelInfo))
 	assert.NoError(t, err)
 
 	req := httptest.NewRequest("GET", "/api/ping", nil)
 
 	rec := httptest.NewRecorder()
-	r.ServeHTTP(rec, req)
+	a.Router.ServeHTTP(rec, req)
 
 	body, err := io.ReadAll(rec.Body)
 	assert.NoError(t, err)
@@ -44,20 +46,20 @@ func TestPing(t *testing.T) {
 }
 
 func TestTwitch(t *testing.T) {
-	h, r, err := main.Setup(config.Test())
+	a, err := app.New(config.Test(), logx.NewRecorder(logx.LogLevelInfo))
 	assert.NoError(t, err)
 
 	rec := httptest.NewRecorder()
 
 	body := []byte(`{"event": {"message": {"text": "!setboard Board"}}}`)
 	req := httptest.NewRequest("POST", "/apps/twitch/callback", bytes.NewBuffer(body))
-	r.ServeHTTP(rec, req)
+	a.Router.ServeHTTP(rec, req)
 
 	body = []byte(`{"event": {"message": {"text": "!branch k10 k11"}}}`)
 	req = httptest.NewRequest("POST", "/apps/twitch/callback", bytes.NewBuffer(body))
-	r.ServeHTTP(rec, req)
+	a.Router.ServeHTTP(rec, req)
 
-	room, err := h.GetRoom("Board")
-	assert.NoError(t, err)
+	room, err := a.Hub.GetRoom("board")
+	require.NoError(t, err)
 	assert.Equal(t, len(room.ToSGF()), 77)
 }

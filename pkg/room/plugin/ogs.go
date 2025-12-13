@@ -11,39 +11,28 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package plugin
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"sync"
 	"time"
 
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"golang.org/x/net/websocket"
 )
 
 type Room interface {
-	HeadColor() core.Color
-	PushHead(int, int, core.Color)
-	GenerateFullFrame(core.TreeJSONType) *core.Frame
-	AddStones([]*core.Stone)
+	HeadColor() color.Color
+	PushHead(int, int, color.Color)
+	BroadcastFullFrame()
+	AddStones([]*coord.Stone)
 	Broadcast(event.Event)
 	UploadSGF(string) event.Event
 }
-
-/*
-func GetUser(f fetch.Fetcher, id int) (string, error) {
-	data, err := f.Fetch(fmt.Sprintf("http://online-go.com/api/v1/players/%d/", id))
-	if err != nil {
-		return "", err
-	}
-	user := &User{}
-	err = json.Unmarshal([]byte(data), user)
-	if err != nil {
-		return "", err
-	}
-	return user.Username, nil
-}
-*/
 
 type User struct {
 	ID       int    `json:"id"`
@@ -71,35 +60,45 @@ func GetCreds(f fetch.Fetcher) (*Creds, error) {
 
 type OGSConnector struct {
 	Creds   *Creds
-	Socket  *websocket.Conn
+	Socket  io.ReadWriter
 	Room    Room
 	First   int
 	Exit    bool
 	fetcher fetch.Fetcher
+	mu      sync.Mutex
 }
 
 func NewOGSConnector(room Room, f fetch.Fetcher) (*OGSConnector, error) {
+	ws, err := websocket.Dial("wss://online-go.com/socket", "", "http://localhost")
+	if err != nil {
+		return nil, err
+	}
+
+	return NewOGSConnectorWithReadWriter(room, f, ws)
+}
+
+func NewMockOGSConnector(room Room, f fetch.Fetcher) (*OGSConnector, error) {
+	rw := &bytes.Buffer{}
+	return NewOGSConnectorWithReadWriter(room, f, rw)
+}
+
+func NewOGSConnectorWithReadWriter(room Room, f fetch.Fetcher, rw io.ReadWriter) (*OGSConnector, error) {
 	creds, err := GetCreds(f)
 	_ = creds
 	if err != nil {
 		return nil, err
 	}
 
-	ws, err := websocket.Dial("wss://online-go.com/socket", "", "http://localhost")
-	if err != nil {
-		return nil, err
-	}
-
 	return &OGSConnector{
 		Creds:   creds,
-		Socket:  ws,
+		Socket:  rw,
 		Room:    room,
 		Exit:    false,
 		fetcher: f,
 	}, nil
 }
 
-func (o *OGSConnector) Send(topic string, payload map[string]any) error {
+func (o *OGSConnector) send(topic string, payload map[string]any) error {
 	arr := []any{topic, payload}
 	data, err := json.Marshal(arr)
 	if err != nil {
@@ -109,27 +108,27 @@ func (o *OGSConnector) Send(topic string, payload map[string]any) error {
 	return err
 }
 
-func (o *OGSConnector) Connect(gameID int, ogsType string) error {
+func (o *OGSConnector) connect(gameID int, ogsType string) error {
 	payload := make(map[string]any)
 	payload["player_id"] = o.Creds.User.ID
 	payload["chat"] = false
 	if ogsType == "game" {
 		payload["game_id"] = gameID
-		return o.Send("game/connect", payload)
+		return o.send("game/connect", payload)
 	}
 	payload["review_id"] = gameID
-	return o.Send("review/connect", payload)
+	return o.send("review/connect", payload)
 }
 
-func (o *OGSConnector) ChatConnect() error {
+func (o *OGSConnector) chatConnect() error {
 	payload := make(map[string]any)
 	payload["player_id"] = o.Creds.User.ID
 	payload["username"] = o.Creds.User.Username
 	payload["auth"] = o.Creds.JWT
-	return o.Send("chat/connect", payload)
+	return o.send("chat/connect", payload)
 }
 
-func ReadFrame(socketchan chan byte) ([]byte, error) {
+func readFrameFromChan(socketchan chan byte) ([]byte, error) {
 	data := []byte{}
 	started := false
 	depth := 0
@@ -162,14 +161,14 @@ func ReadFrame(socketchan chan byte) ([]byte, error) {
 	}
 }
 
-func (o *OGSConnector) ReadSocketToChan(socketchan chan byte) error {
+func (o *OGSConnector) readSocketToChan(socketchan chan byte) error {
 	defer close(socketchan)
 	for {
 		data := make([]byte, 256)
 		n, err := o.Socket.Read(data)
 		if err != nil {
 			// this will cause the websocket to close
-			// therefore ReadFrame will naturally come to an end
+			// therefore readFrame will naturally come to an end
 			return err
 		}
 		for _, b := range data[:n] {
@@ -186,45 +185,53 @@ func (o *OGSConnector) Start(args map[string]any) {
 	id := args["id"].(int)
 	ogsType := args["ogsType"].(string)
 
-	go o.Loop(id, ogsType) //nolint:errcheck
+	go o.loop(id, ogsType) //nolint:errcheck
 }
 
 func (o *OGSConnector) End() {
+	o.mu.Lock()
+	defer o.mu.Unlock()
 	o.Exit = true
 }
 
-func (o *OGSConnector) Ping() {
-	for !o.Exit {
+func (o *OGSConnector) isExited() bool {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	return o.Exit
+}
+
+func (o *OGSConnector) ping() {
+	for !o.isExited() {
 		//30 seconds seemed just a little too long was causing connection issues
 		time.Sleep(25 * time.Second)
 		payload := make(map[string]any)
 		payload["client"] = time.Now().UnixMilli()
-		if err := o.Send("net/ping", payload); err != nil {
+		if err := o.send("net/ping", payload); err != nil {
 			o.End()
 			return
 		}
 	}
 }
 
-func (o *OGSConnector) Loop(gameID int, ogsType string) error {
-	err := o.ChatConnect()
+func (o *OGSConnector) loop(gameID int, ogsType string) error {
+	err := o.chatConnect()
 	if err != nil {
 		return err
 	}
-	err = o.Connect(gameID, ogsType)
+	err = o.connect(gameID, ogsType)
 	if err != nil {
 		return err
 	}
 
 	socketchan := make(chan byte)
 
-	go o.Ping()
-	go o.ReadSocketToChan(socketchan) //nolint: errcheck
+	go o.ping()
+	go o.readSocketToChan(socketchan) //nolint: errcheck
 
 	defer o.End()
 
 	for !o.Exit {
-		data, err := ReadFrame(socketchan)
+		data, err := readFrameFromChan(socketchan)
 
 		// break on error
 		if err != nil {
@@ -253,19 +260,14 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			x := int(move[0].(float64))
 			y := int(move[1].(float64))
 
-			col := core.Black
-			//curColor := o.Room.State.Head.Color
+			col := color.Black
 			curColor := o.Room.HeadColor()
-			if curColor == core.Black {
-				col = core.White
+			if curColor == color.Black {
+				col = color.White
 			}
-			//o.Room.State.PushHead(x, y, col)
 			o.Room.PushHead(x, y, col)
 
-			//frame := o.Room.State.GenerateFullFrame(core.Full)
-			frame := o.Room.GenerateFullFrame(core.Full)
-			evt := event.FrameEvent(frame)
-			o.Room.Broadcast(evt)
+			o.Room.BroadcastFullFrame()
 
 		} else if topic == fmt.Sprintf("game/%d/gamedata", gameID) {
 			payload := arr[1].(map[string]any)
@@ -273,7 +275,7 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 				// the game is over
 				break
 			}
-			sgf := o.GamedataToSGF(payload)
+			sgf := o.gamedataToSGF(payload)
 			evt := o.Room.UploadSGF(sgf)
 			o.Room.Broadcast(evt)
 		} else if topic == fmt.Sprintf("review/%d/full_state", gameID) {
@@ -293,10 +295,10 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 			}
 			moves := payload["m"].(string)
 
-			movesArr := []*core.Stone{}
-			currentColor := core.Black
+			movesArr := []*coord.Stone{}
+			currentColor := color.Black
 			if o.First == 1 {
-				currentColor = core.White
+				currentColor = color.White
 			}
 
 			for i := 0; i < len(moves); i += 2 {
@@ -306,40 +308,37 @@ func (o *OGSConnector) Loop(gameID int, ogsType string) error {
 					switch coordStr {
 					case "!1":
 						//Force next move black
-						currentColor = core.Black
+						currentColor = color.Black
 					case "!2":
 						//Force next move white
-						currentColor = core.White
+						currentColor = color.White
 					case "..":
 						//Pass
-						movesArr = append(movesArr, &core.Stone{Coord: nil, Color: currentColor})
-						currentColor = core.Opposite(currentColor)
+						movesArr = append(movesArr, &coord.Stone{Coord: nil, Color: currentColor})
+						currentColor = currentColor.Opposite()
 					default:
-						coord := core.LettersToCoord(coordStr)
-						movesArr = append(movesArr, &core.Stone{Coord: coord, Color: currentColor})
-						currentColor = core.Opposite(currentColor)
+						crd := coord.FromLetters(coordStr)
+						movesArr = append(movesArr, &coord.Stone{Coord: crd, Color: currentColor})
+						currentColor = currentColor.Opposite()
 					}
 				}
 			}
 			o.Room.AddStones(movesArr)
 
 			// Send full board update after adding pattern
-			//frame := o.Room.State.GenerateFullFrame(core.Full)
-			frame := o.Room.GenerateFullFrame(core.Full)
-			evt := event.FrameEvent(frame)
-			o.Room.Broadcast(evt)
+			o.Room.BroadcastFullFrame()
 		}
 	}
 	return nil
 }
 
-func (o *OGSConnector) GamedataToSGF(gamedata map[string]any) string {
-	sgf := o.GameInfoToSGF(gamedata)
+func (o *OGSConnector) gamedataToSGF(gamedata map[string]any) string {
+	sgf := o.gameInfoToSGF(gamedata)
 	sgf += o.initStateToSGF(gamedata)
 
 	for index, m := range gamedata["moves"].([]any) {
 		arr := m.([]any)
-		c := &core.Coord{X: int(arr[0].(float64)), Y: int(arr[1].(float64))}
+		c := coord.NewCoord(int(arr[0].(float64)), int(arr[1].(float64)))
 
 		col := "B"
 
@@ -362,7 +361,7 @@ func makeRank(r float64) string {
 	}
 }
 
-func (o *OGSConnector) GameInfoToSGF(gamedata map[string]any) string {
+func (o *OGSConnector) gameInfoToSGF(gamedata map[string]any) string {
 	sgf := ""
 
 	size := int(gamedata["width"].(float64))

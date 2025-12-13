@@ -7,3 +7,4 @@ build/
 testdata/
 tmp/
 config.yaml
+logs/

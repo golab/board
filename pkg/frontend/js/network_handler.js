@@ -26,6 +26,29 @@ function pack_int(n) {
     return byte_array;
 }
 
+function wait_for_open(ws) {
+  if (ws.readyState === WebSocket.OPEN) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const onOpen = () => {
+      ws.removeEventListener("open", onOpen);
+      ws.removeEventListener("error", onError);
+      resolve();
+    };
+
+    const onError = (evt) => {
+      ws.removeEventListener("open", onOpen);
+      ws.removeEventListener("error", onError);
+      reject(evt);
+    };
+
+    ws.addEventListener("open", onOpen);
+    ws.addEventListener("error", onError);
+  });
+}
+
 // it's really both a network handler and event handler
 class NetworkHandler {
     constructor(url) {
@@ -35,7 +58,7 @@ class NetworkHandler {
         this.add_listeners();
 
         // in a var for now so we can do exponential backoff in the future
-        this.backoff = 500;
+        this.backoff = 0;
 
         // necessary because of cloudfront's auto-timeout max of 60sec
         setInterval(() => this.keep_warm(), 30000)
@@ -57,7 +80,8 @@ class NetworkHandler {
         console.log("connected!");
 
         // hide the info modal
-        this.state.modals.hide_modal("info-modal");
+        //this.state.modals.hide_modal("info-modal");
+        this.state.modals.hide_broken_connection_icon();
 
         // check to see if the room is protected by a password
         this.prepare_isprotected();
@@ -69,21 +93,27 @@ class NetworkHandler {
         }
 
         // reset backoff
-        this.backoff = 500;
+        this.backoff = 0;
     }
 
     reconnect(event) {
         this.state.reset();
+        this.state.modals.show_broken_connection_icon();
+        /*
         if (!this.state.modals.modals_up.has("info-modal")) {
             this.state.modals.show_info_modal("Reconnecting...");
         }
-        if (document.hasFocus()) {
-            this.backoff *= 2;
-            if (this.backoff > 120000) {
-                this.backoff = 500;
-            }
+        */
+        if (document.hasFocus() && this.socket.readyState == WebSocket.CLOSED) {
             console.log("reconnecting in", this.backoff, "ms");
             setTimeout(() => this.connect(), this.backoff);
+            this.backoff *= 2;
+            if (this.backoff == 0) {
+                this.backoff = 500;
+            } else if (this.backoff > 120000) {
+                this.backoff = 0;
+            }
+
         }
     }
 
@@ -94,7 +124,8 @@ class NetworkHandler {
 
         // hide info modal
         if (this.socket.readyState == WebSocket.OPEN) {
-            this.state.modals.hide_modal("info-modal");
+            this.state.modals.hide_broken_connection_icon();
+            //this.state.modals.hide_modal("info-modal");
         } else if (this.socket.readyState == WebSocket.CLOSED) {
             this.reconnect();
         }
@@ -162,6 +193,13 @@ class NetworkHandler {
 
                 //this.state.place_number(coords[0], coords[1], payload["value"]["number"]);
                 break;
+            case "label":
+                coords = new Coord(payload["value"]["coords"][0], payload["value"]["coords"][1]);
+                label = new Object();
+                label.coord = coords;
+                label.text = payload["value"]["label"];
+                this.state.place_label_string(label);
+                break;
             case "remove_mark":
                 coords = payload["value"];
                 this.state.remove_mark(coords[0], coords[1]);
@@ -186,23 +224,27 @@ class NetworkHandler {
                 break;
             case "comment":
                 this.state.comments.update(payload["value"]);
-                this.state.comments.store(payload["value"]);
+                //this.state.comments.store(payload["value"]);
                 break;
             case "error":
                 value = payload["value"];
                 this.state.modals.show_error_modal(value);
-                console.log(this.state.board.tree.to_sgf());
                 break;
             case "isprotected":
                 if (payload["value"]) {
-                    let handler = () => {
-                        let v = this.state.modals.get_prompt_bar();
-                        this.prepare_checkpassword(v);
+                    if (this.state.password != "") {
+                        // if we already have a password saved, send it
+                        this.prepare_checkpassword(this.state.password);
+                    } else {
+                        let handler = () => {
+                            let v = this.state.modals.get_prompt_bar();
+                            this.prepare_checkpassword(v);
+                        }
+                        this.state.modals.show_prompt_modal(
+                            "Enter password:",
+                            handler
+                        );
                     }
-                    this.state.modals.show_prompt_modal(
-                        "Enter password:",
-                        handler
-                    );
                 }
                 break;
             case "checkpassword":
@@ -260,8 +302,10 @@ class NetworkHandler {
         this.prepare(payload);
     }
 
-    prepare_upload(data) {
+    async prepare_upload(data) {
         let payload = {"event":"upload_sgf", "value": data};
+
+        await wait_for_open(this.socket);
         this.prepare(payload);
     }
 
@@ -349,6 +393,7 @@ class NetworkHandler {
         let evt = payload["event"];
 
         // if a modal is up, then the events we allow are:
+        // "label"
         // "trash"
         // "update_settings"
         // "scissors"
@@ -360,6 +405,7 @@ class NetworkHandler {
         // "update_nickname"
         if (
             this.state.modals.modals_up.size > 0 &&
+            evt != "label" &&
             evt != "trash" &&
             evt != "update_settings" &&
             evt != "cut" &&
@@ -393,8 +439,12 @@ class NetworkHandler {
         // first create the json payload
         let json_payload = JSON.stringify(payload);
 
+        // find the length in bytes
+        let encoder = new TextEncoder();
+        let payloadBytes = encoder.encode(json_payload);
+
         // then send the length to the socket
-        let length = pack_int(json_payload.length);
+        let length = pack_int(payloadBytes.length);
         this.socket.send(length);
 
         // then send the payload
@@ -642,12 +692,35 @@ class NetworkHandler {
                         payload["value"] = coords;
                         break;
                     case "letter":
-                        let letter = this.state.next_letter();
-                        if (letter == null) {
-                            return;
-                        }
+                        let label = "";
+                        if (flip || this.state.custom_label != "") {
+                            if (flip) {
+                                let handler = () => {
+                                    label = this.state.modals.get_prompt_bar();
+                                    this.state.modals.clear_prompt_bar();
+                                    this.state.custom_label = label;
+                                    payload = {"event": "label"};
+                                    payload["value"] = {"coords": coords, "label": label};
+                                    this.prepare(payload);
+                                }
+                                this.state.modals.show_prompt_modal(
+                                    "Enter up to three characters:",
+                                    handler
+                                );
+                                return;
+                            } else {
+                                payload = {"event": "label"};
+                                payload["value"] = {"coords": coords, "label": this.state.custom_label};
+                            }
+                        } else {
+                            let letter = this.state.next_letter();
+                            if (letter == null) {
+                                return;
+                            }
+                            label = letter;
     
-                        payload["value"] = {"coords": coords, "letter": letter};
+                            payload["value"] = {"coords": coords, "letter": label};
+                        }
                         break;
                     case "number":
                         let number = this.state.next_number();

@@ -16,7 +16,18 @@ function make_settings() {
     let size = parseInt(document.getElementById(id + "-size-select").value);
     let password = document.getElementById(id + "-password-bar").value;
     let nickname = document.getElementById(id + "-nickname-bar").value;
-    return {"buffer": buffer, "size": size, "password": password, "nickname": nickname};
+
+    let black = document.getElementById(id + "-blackplayer-bar").value;
+    let white = document.getElementById(id + "-whiteplayer-bar").value;
+    let komi = document.getElementById(id + "-komi-bar").value;
+    return {
+        "buffer": buffer,
+        "size": size,
+        "password": password,
+        "nickname": nickname,
+        "black": black,
+        "white": white,
+        "komi": komi};
 }
 
 function get_nickname() {
@@ -44,6 +55,32 @@ export function create_modals(_state) {
     add_users_modal();
     enable_tooltips();
     add_toast();
+    add_broken_connection_icon();
+
+    function add_broken_connection_icon() {
+        let icon = document.createElement("div");
+        let obj = document.createElement("i");
+        obj.setAttribute("class", "bi-wifi-off");
+        icon.appendChild(obj);
+        icon.id = "broken-connection-icon";
+        icon.style.position = "fixed";
+        icon.style.bottom = "12px";
+        icon.style.right = "12px";
+        icon.style.color = "red";
+        icon.style.fontSize = "30px";
+        icon.hidden = true;
+        document.body.appendChild(icon);
+    }
+
+    function show_broken_connection_icon() {
+        let icon = document.getElementById("broken-connection-icon");
+        icon.hidden = false;
+    }
+
+    function hide_broken_connection_icon() {
+        let icon = document.getElementById("broken-connection-icon");
+        icon.hidden = true;
+    }
 
     function add_toast() {
         let toast_div = document.createElement("div");
@@ -91,6 +128,12 @@ export function create_modals(_state) {
         let id = "prompt-modal-input";
         let bar = document.getElementById(id);
         return bar.value;
+    }
+
+    function clear_prompt_bar() {
+        let id = "prompt-modal-input";
+        let bar = document.getElementById(id);
+        bar.value = "";
     }
 
     function cancel_password() {
@@ -183,12 +226,16 @@ export function create_modals(_state) {
         let nickname_bar = document.createElement("input")
         nickname_bar.setAttribute("class", "form-control");
         nickname_bar.id = id + "-nickname-bar";
+
+        nickname_bar.value = localStorage.getItem("nickname") || "";
+
         nickname_bar.addEventListener(
             "keypress",
             (event) => {
                 if (event.key == "Enter") {
                     hide_modal(id);
                     let nickname = nickname_bar.value;
+                    localStorage.setItem("nickname", nickname);
                     state.network_handler.prepare_nickname(nickname);
                 }
             }
@@ -197,6 +244,42 @@ export function create_modals(_state) {
         nickname_div.appendChild(nickname_bar);
 
         body.appendChild(nickname_div);
+        body.appendChild(document.createElement("br"));
+
+        // black player
+        let black_player_div = document.createElement("div");
+        let black_player_label = document.createElement("div");
+        black_player_label.innerHTML = "Black";
+        let black_player_bar = document.createElement("input");
+        black_player_bar.setAttribute("class", "form-control");
+        black_player_bar.id = id + "-blackplayer-bar";
+        black_player_div.appendChild(black_player_label);
+        black_player_div.appendChild(black_player_bar);
+        body.appendChild(black_player_div)
+        body.appendChild(document.createElement("br"));
+
+        // white player
+        let white_player_div = document.createElement("div");
+        let white_player_label = document.createElement("div");
+        white_player_label.innerHTML = "White";
+        let white_player_bar = document.createElement("input");
+        white_player_bar.setAttribute("class", "form-control");
+        white_player_bar.id = id + "-whiteplayer-bar";
+        white_player_div.appendChild(white_player_label);
+        white_player_div.appendChild(white_player_bar);
+        body.appendChild(white_player_div)
+        body.appendChild(document.createElement("br"));
+
+        // komi
+        let komi_div = document.createElement("div");
+        let komi_label = document.createElement("div");
+        komi_label.innerHTML = "Komi";
+        let komi_bar = document.createElement("input");
+        komi_bar.setAttribute("class", "form-control");
+        komi_bar.id = id + "-komi-bar";
+        komi_div.appendChild(komi_label);
+        komi_div.appendChild(komi_bar);
+        body.appendChild(komi_div)
         body.appendChild(document.createElement("br"));
 
         // board size
@@ -953,6 +1036,7 @@ export function create_modals(_state) {
 
     return {
         get_prompt_bar,
+        clear_prompt_bar,
         update_modals,
         modals_up,
         show_modal,
@@ -965,6 +1049,8 @@ export function create_modals(_state) {
         hide_modal,
         show_toast,
         get_nickname,
+        show_broken_connection_icon,
+        hide_broken_connection_icon,
     };
 
 }

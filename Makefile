@@ -1,7 +1,7 @@
 # Base Makefile — default goal prints help (supports inline "##" and preceding "##" styles)
 .DEFAULT_GOAL := default
 
-.PHONY: default help build test fmt lint run setup clean fuzz coverage-int coverage-unit coverage-integration-html coverage-integration-total coverage-unit-html coverage-unit-total build-docker run-docker
+.PHONY: default help build test fmt lint run setup clean test-fuzz coverage-int coverage-unit coverage-integration-html coverage-integration-total coverage-unit-html coverage-unit-total build-docker run-docker test-bench test-race coverage-total coverage-html coverage monitoring-up monitoring-down gremlins
 
 VERSION := $(shell git describe --tags 2>/dev/null || echo dev)
 
@@ -27,6 +27,8 @@ setup: ## Setup environment
 	@echo "==> setup"
 	@[ -x ${PWD}/bin/golangci-lint ] || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b ${PWD}/bin v2.5.0
 	@[ -x ${PWD}/bin/air ] || curl -sSfL https://raw.githubusercontent.com/air-verse/air/master/install.sh | sh -s -- -b ${PWD}/bin
+	@[ -x ${PWD}/bin/gremlins ] || GOBIN=${PWD}/bin go install github.com/go-gremlins/gremlins/cmd/gremlins@v0.5.0
+
 
 fmt: ## Format code
 	@echo "==> format"
@@ -36,9 +38,16 @@ lint: setup ## Lint code
 	@echo "==> lint"
 	${PWD}/bin/golangci-lint run
 
-fuzz: ## Fuzz code
-	@echo "==> fuzz"
+test-fuzz: ## Fuzz code
+	@echo "==> test-fuzz"
 	go test ./pkg/core -fuzz=FuzzParser -fuzztime=60s
+	go test ./pkg/twitch/ -fuzz=FuzzParseChat -fuzztime=60s
+
+test-pprof:
+	@echo "==> test-pprof"
+	go test -bench=. -cpuprofile=cpu.prof -benchmem ./integration/
+	go tool pprof -top -nodecount=10 cpu.prof
+	rm cpu.prof integration.test
 
 coverage-unit-total:
 	@echo "==> coverage-unit-total"
@@ -72,6 +81,28 @@ coverage-integration-html:
 coverage-int: coverage-integration-total coverage-integration-html ## Coverage of integration tests
 	@echo "==> coverage-integration"
 
+coverage-html:
+	@echo "==> coverage-html"
+	@go test ./integration/ -coverprofile=integration.tmp.out -coverpkg=./pkg/hub,./pkg/room,./pkg/state,./pkg/core > /dev/null
+	@go list ./... | grep -v integration | xargs go test -coverprofile=main.tmp.out > /dev/null
+	@echo "mode: set" > cover.out
+	@grep -h -v mode *.tmp.out >> cover.out
+	@go tool cover -html=cover.out
+	@rm *.out
+
+coverage-total:
+	@echo "==> coverage-total"
+	@go test ./integration/ -coverprofile=integration.tmp.out -coverpkg=./pkg/hub,./pkg/room,./pkg/state,./pkg/core -covermode=count > /dev/null
+	@go list ./... | grep -v integration | xargs go test -coverprofile=main.tmp.out -covermode=count > /dev/null
+	@echo "mode: count" > cover.out
+	@grep -h -v mode *.tmp.out >> cover.out
+	@go tool cover -func=cover.out -o=cover.out
+	@tail -n1 cover.out | tr -s '\t'
+	@rm cover.out
+
+coverage: coverage-total coverage-html ## Total coverage
+	@echo "==> coverage"
+
 test-race: ## Test for data races
 	@echo "==> test-race"
 	go test -race ./...
@@ -102,9 +133,25 @@ clean: ## Remove build artifacts
 
 build-docker: ## Build docker container
 	@echo "==> build-docker"
-	docker build --build-arg VERSION=$(git describe --tags) -t board .
+	docker build --build-arg VERSION=$(VERSION) -t board .
 
 run-docker: build-docker ## Run docker container
 	@echo "==> run-docker"
 	docker run -p 8080:8080 board
 
+test-bench: ## Run benchmarks
+	@echo "==> test-bench"
+	go test -bench=. -benchmem ./integration/
+
+monitoring-up: ## Run app and monitoring
+	mkdir -p ./logs
+	docker compose build board
+	docker compose --profile monitoring -f docker-compose.yaml up -d
+	@docker logs -f board > ./logs/board.log &
+	@echo "Remember to shut everything down with 'make monitoring-down'"
+
+monitoring-down: ## Close app and monitoring
+	docker compose --profile monitoring -f docker-compose.yaml down
+
+gremlins: ## Unleash gremlins
+	./bin/gremlins unleash

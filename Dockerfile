@@ -1,8 +1,9 @@
-FROM golang:1.23.8-alpine
+FROM golang:1.24.0-alpine
 
 ADD pkg /root/pkg
 ADD cmd /root/cmd
-ADD config/config-docker.yaml /root/config.yaml
+ARG CONFIG_FILE=config-docker.yaml
+ADD config/${CONFIG_FILE} /root/config.yaml
 
 ADD go.mod /root/go.mod
 ADD go.sum /root/go.sum

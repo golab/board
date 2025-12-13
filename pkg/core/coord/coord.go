@@ -8,26 +8,40 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package core
+package coord
 
 import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/jarednogo/board/pkg/core/color"
 )
 
+const maxBoardSize = 19
+
+var allCoords [maxBoardSize][maxBoardSize]*Coord
+
+func init() {
+	for r := 0; r < maxBoardSize; r++ {
+		for c := 0; c < maxBoardSize; c++ {
+			allCoords[r][c] = &Coord{X: r, Y: c}
+		}
+	}
+}
+
 // CoordSet is used for quickly checking a set for existence of coords
-type CoordSet map[string]*Coord
+type CoordSet map[int]*Coord
 
 // Has: uses ToLetters as the key
 func (cs CoordSet) Has(c *Coord) bool {
-	_, ok := cs[c.ToLetters()]
+	_, ok := cs[c.Index()]
 	return ok
 }
 
 // Add adds a coord to the set
 func (cs CoordSet) Add(c *Coord) {
-	cs[c.ToLetters()] = c
+	cs[c.Index()] = c
 }
 
 func (cs CoordSet) AddAll(ds CoordSet) {
@@ -37,7 +51,7 @@ func (cs CoordSet) AddAll(ds CoordSet) {
 }
 
 func (cs CoordSet) Remove(c *Coord) {
-	delete(cs, c.ToLetters())
+	delete(cs, c.Index())
 }
 
 func (cs CoordSet) RemoveAll(ds CoordSet) {
@@ -46,11 +60,21 @@ func (cs CoordSet) RemoveAll(ds CoordSet) {
 	}
 }
 
+func (cs CoordSet) Intersect(ds CoordSet) CoordSet {
+	result := NewCoordSet()
+	for k, v := range ds {
+		if _, ok := cs[k]; ok {
+			result.Add(v)
+		}
+	}
+	return result
+}
+
 // String is for debugging
 func (cs CoordSet) String() string {
 	s := "["
 	for k := range cs {
-		s += k
+		s += indexToCoord(k).ToLetters()
 		s += " "
 	}
 	s += "]"
@@ -83,13 +107,13 @@ func (cs CoordSet) Equal(other CoordSet) bool {
 
 // NewCoordSet makes an empty CoordSet
 func NewCoordSet() CoordSet {
-	return CoordSet(make(map[string]*Coord))
+	return CoordSet(make(map[int]*Coord))
 }
 
 // StoneSet is an array of Coords plus a Color
 type StoneSet struct {
-	Coords []*Coord `json:"coords"`
-	Color  `json:"color"`
+	Coords      []*Coord `json:"coords"`
+	color.Color `json:"color"`
 }
 
 // Copy copies the StoneSet
@@ -122,7 +146,7 @@ func (s *StoneSet) String() string {
 }
 
 // NewStoneSet takes a CoordSet and a Color and turns it into a StoneSet
-func NewStoneSet(s CoordSet, c Color) *StoneSet {
+func NewStoneSet(s CoordSet, c color.Color) *StoneSet {
 	return &StoneSet{s.List(), c}
 }
 
@@ -130,6 +154,24 @@ func NewStoneSet(s CoordSet, c Color) *StoneSet {
 type Coord struct {
 	X int `json:"x"`
 	Y int `json:"y"`
+}
+
+func NewCoord(x, y int) *Coord {
+	if x < 0 || x >= len(allCoords) {
+		return nil
+	}
+	if y < 0 || y >= len(allCoords[x]) {
+		return nil
+	}
+	return allCoords[x][y]
+}
+
+func indexToCoord(i int) *Coord {
+	return NewCoord(i/maxBoardSize, i%maxBoardSize)
+}
+
+func (c *Coord) Index() int {
+	return c.X*maxBoardSize + c.Y
 }
 
 // String is for debugging
@@ -159,21 +201,21 @@ func (c *Coord) Copy() *Coord {
 	if c == nil {
 		return nil
 	}
-	return &Coord{c.X, c.Y}
+	return NewCoord(c.X, c.Y)
 }
 
-// LettersToCoord takes a pair of letters and turns it into a Coord
-func LettersToCoord(s string) *Coord {
+// FromLetters takes a pair of letters and turns it into a Coord
+func FromLetters(s string) *Coord {
 	if len(s) != 2 {
 		return nil
 	}
 	t := strings.ToLower(s)
-	return &Coord{int(t[0] - 97), int(t[1] - 97)}
+	return NewCoord(int(t[0]-97), int(t[1]-97))
 }
 
 // InterfaceToCoord essentially coerces the interface into a [2]int
 // then turns that into a Coord
-func InterfaceToCoord(ifc any) (*Coord, error) {
+func FromInterface(ifc any) (*Coord, error) {
 	coords := make([]int, 0)
 
 	// coerce the value to an array
@@ -189,26 +231,26 @@ func InterfaceToCoord(ifc any) (*Coord, error) {
 	}
 	x := coords[0]
 	y := coords[1]
-	return &Coord{x, y}, nil
+	return NewCoord(x, y), nil
 }
 
 // Stone is a Coord plus a Color
 // StoneSet is essentially an extension of Stone
 type Stone struct {
 	Coord *Coord // nil for passes
-	Color Color
+	Color color.Color
 }
 
-func NewStone(x, y int, c Color) *Stone {
-	coord := &Coord{x, y}
+func NewStone(x, y int, c color.Color) *Stone {
+	coord := NewCoord(x, y)
 	return &Stone{
 		Coord: coord,
 		Color: c,
 	}
 }
 
-// AlphanumericToCoord converts a string like "c17" to a Coord
-func AlphanumericToCoord(s string, size int) (*Coord, error) {
+// FromAlphanumeric converts a string like "c17" to a Coord
+func FromAlphanumeric(s string, size int) (*Coord, error) {
 	s = strings.ToLower(s)
 	if len(s) < 2 {
 		return nil, fmt.Errorf("failure to parse: %s", s)
@@ -234,5 +276,43 @@ func AlphanumericToCoord(s string, size int) (*Coord, error) {
 		x = int(letter - 'a' - 1)
 	}
 
-	return &Coord{x, y}, nil
+	return NewCoord(x, y), nil
+}
+
+// Diff contains two StoneSets (Add and Remove) and is a key component of a Frame
+type Diff struct {
+	Add    []*StoneSet `json:"add"`
+	Remove []*StoneSet `json:"remove"`
+}
+
+// NewDiff makes a Diff based on two StoneSets
+func NewDiff(add, remove []*StoneSet) *Diff {
+	return &Diff{
+		Add:    add,
+		Remove: remove,
+	}
+}
+
+// Copy makes a copy of the Diff
+func (d *Diff) Copy() *Diff {
+	if d == nil {
+		return nil
+	}
+	add := []*StoneSet{}
+	remove := []*StoneSet{}
+	for _, a := range d.Add {
+		add = append(add, a.Copy())
+	}
+	for _, r := range d.Remove {
+		remove = append(remove, r.Copy())
+	}
+	return NewDiff(add, remove)
+}
+
+// Invert simply exchanges Add and Remove
+func (d *Diff) Invert() *Diff {
+	if d == nil {
+		return nil
+	}
+	return NewDiff(d.Remove, d.Add)
 }

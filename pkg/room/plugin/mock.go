@@ -10,14 +10,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 package plugin
 
-type MockPlugin struct{}
+type MockPlugin struct {
+	IsStarted bool
+}
 
 func NewMockPlugin() *MockPlugin {
 	return &MockPlugin{}
 }
 
 func (mp *MockPlugin) Start(map[string]any) {
+	mp.IsStarted = true
 }
 
 func (mp *MockPlugin) End() {
+	mp.IsStarted = false
 }

@@ -9,8 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 
-import { merge } from './sgf.js';
-import { Board, from_sgf } from './board.js';
+import { Board } from './board.js';
 import { BoardGraphics } from './boardgraphics.js';
 import { TreeGraphics } from './treegraphics.js';
 
@@ -19,7 +18,7 @@ import { create_layout } from './layout.js';
 import { create_buttons } from './buttons.js';
 import { create_modals } from './modals.js';
 
-import { letterstocoord, coordtoid, opposite, Coord, prefer_dark_mode } from './common.js';
+import { htmlencode, letterstocoord, coordtoid, opposite, Coord, prefer_dark_mode } from './common.js';
 
 export {
     State
@@ -96,6 +95,7 @@ class State {
 
         this.resize();
         this.gameinfo = new Map();
+        this.custom_label = "";
     }
 
     set_network_handler(handler) {
@@ -241,10 +241,18 @@ class State {
     }
 
     set_gameinfo(fields_object) {
+        let fields = new Map();
+        for (let field of fields_object) {
+            let key = field["key"];
+            let values = field["values"];
+            fields.set(key, values);
+        }
+        /*
         let fields = new Map(Object.entries(fields_object));
         if (fields == null) {
             fields = new Map();
         }
+        */
         let gameinfo = {};
 
         // currently doesn't play very nice with chinese characters
@@ -259,7 +267,7 @@ class State {
             gameinfo["Black"] = "Black";
         }
 
-        document.getElementById("black-name").innerHTML = gameinfo["Black"];
+        document.getElementById("black-name").innerHTML = htmlencode(gameinfo["Black"]);
 
         if (fields.has("PW")) {
             let rank = "";
@@ -270,7 +278,7 @@ class State {
         } else {
             gameinfo["White"] = "White";
         }
-        document.getElementById("white-name").innerHTML = gameinfo["White"];
+        document.getElementById("white-name").innerHTML = htmlencode(gameinfo["White"]);
 
         if (fields.has("RE")) {
             gameinfo["Result"] = fields.get("RE");
@@ -352,7 +360,10 @@ class State {
     }
 
     dark_mode_toggle() {
-        let color = "#1A1A1A";
+        let dark = "#1A1A1A";
+        let light = "#F5F5F5";
+        let bg_color = dark;
+        let fg_color = light;
         let old_class = "btn-light";
         let new_class = "btn-dark";
         let new_setting = true;
@@ -361,7 +372,8 @@ class State {
         let old_black_stone = "bi-circle-fill";
         let new_black_stone = "bi-circle";
         if (this.dark_mode) {
-            color = "#F5F5F5";
+            bg_color = light;
+            fg_color = dark;
             old_class = "btn-dark";
             new_class = "btn-light";
             new_setting = false;
@@ -373,7 +385,7 @@ class State {
         this.dark_mode = new_setting;
 
         // change the background
-        document.body.style.background = color;
+        document.body.style.background = bg_color;
 
         // change the buttons
         let buttons = document.querySelectorAll("button");
@@ -383,16 +395,48 @@ class State {
             button.setAttribute("class", new_cls);
         }
 
-        // change the dark mode button
-        //let dark_mode_icon = document.getElementsByClassName(old_icon)[0];
-        //dark_mode_icon.setAttribute("class", new_icon);
-
         // change the black and white stone icons
         let black_stone_icon = document.getElementsByClassName(old_black_stone)[0];
         let white_stone_icon = document.getElementsByClassName(new_black_stone)[0];
         black_stone_icon.setAttribute("class", new_black_stone);
         white_stone_icon.setAttribute("class", old_black_stone);
 
+        // change modals
+        /*
+        for (let modal of document.getElementsByClassName("modal-content")) {
+            modal.style.background = bg_color;
+            modal.style.color = fg_color;
+        }
+        */
+
+        // change modal close labels
+        /*
+        for (let close of document.getElementsByClassName("btn-close")) {
+            if (this.dark_mode) {
+                close.classList.add("btn-close-white");
+            } else {
+                close.classList.remove("btn-close-white");
+            }
+        }
+        */
+
+        /*
+        for (let bar of document.querySelectorAll(".form-control, .form-select, #upload-textarea")) {
+            if (this.dark_mode) {
+                bar.style.backgroundColor = "#444444";
+                bar.style.color = "#FFFFFF";
+            } else {
+                bar.style.backgroundColor = "#FFFFFF";
+                bar.style.color = "#000000";
+            }
+        }
+        */
+
+        if (this.dark_mode) {
+            document.documentElement.setAttribute("data-bs-theme", "dark");
+        } else {
+            document.documentElement.setAttribute("data-bs-theme", "light");
+        }
     }
 
     comments_toggle() {
@@ -521,6 +565,7 @@ class State {
 
     set_letter() {
         this.mark = "letter";
+        this.custom_label = "";
         this.board_graphics.clear_ghosts();
     }
 
@@ -546,6 +591,10 @@ class State {
             } else if (inp.files.length == 1) {
                 // if 1 file, it's easy
                 let f = inp.files[0];
+
+                // want to maintain same behavior if user uploads file named the same
+                inp.value = "";
+
                 let reader = new FileReader();
                 //reader.readAsText(f);
                 reader.readAsArrayBuffer(f);
@@ -581,6 +630,8 @@ class State {
                         })
                     );
                 }
+                // want to maintain same behavior for the next pass
+                inp.value = "";
     
                 // turn list of promises into 1 promise
                 Promise.all(promises)
@@ -654,7 +705,6 @@ class State {
 
     download() {
         // stolen from stack overflow
-        //let text = this.board.to_sgf();
         var element = document.createElement('a');
         let href = window.location.href;
         element.setAttribute("href", href + "/sgf");
@@ -744,14 +794,6 @@ class State {
         if (frame.dame != null) {
             //console.log(frame.dame);
         }
-
-        ///////////////////
-
-        //if (frame.explorer != null) {
-            //this.tree_graphics._update(frame.explorer);
-            //this.set_move_number(frame.explorer.current.x);
-            //this.update_color(frame.explorer.current_color);
-        //}
 
         if (frame.tree != null) {
             // save it
@@ -856,7 +898,7 @@ class State {
             let col = a["color"];
             let coords = a["coords"];
             for (let coord of coords) {
-                this._place_stone(coord.x, coord.y, col);
+                this.place_stone(coord.x, coord.y, col);
             }
         }
     }
@@ -878,7 +920,7 @@ class State {
             let col = a["color"];
             let coords = a["coords"];
             for (let coord of coords) {
-                this._place_stone(coord.x, coord.y, col);
+                this.place_stone(coord.x, coord.y, col);
                 this.board.set(coord, col);
             }
         }
@@ -891,7 +933,7 @@ class State {
         }
     }
 
-    _place_stone(x, y, color) {
+    place_stone(x, y, color) {
         // if out of bounds, just return
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
@@ -944,7 +986,13 @@ class State {
             this.letters[letter_index] = 1;
             this.board_graphics._draw_manual_letter(coord.x, coord.y, lb.text);
         }
+    }
 
+    place_label_string(label) {
+        let coord = label.coord;
+        let id = coordtoid(coord);
+        this.marks.set(id, "label:" + label.text);
+        this.board_graphics.draw_custom_label(coord.x, coord.y, label.text);
     }
 
     remove_mark(x, y) {

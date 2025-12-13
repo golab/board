@@ -11,8 +11,21 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package logx
 
 import (
+	"bytes"
+	"io"
 	"log/slog"
+	"net/http"
 	"os"
+	"strings"
+)
+
+type LogLevel int
+
+const (
+	LogLevelDebug LogLevel = iota
+	LogLevelInfo
+	LogLevelWarn
+	LogLevelError
 )
 
 type Logger interface {
@@ -20,17 +33,44 @@ type Logger interface {
 	Info(string, ...any)
 	Warn(string, ...any)
 	Error(string, ...any)
+	With(string, string) Logger
+	AsMiddleware(http.Handler) http.Handler
 }
 
 type DefaultLogger struct {
 	s *slog.Logger
 }
 
-func NewDefaultLogger() *DefaultLogger {
-	handler := slog.NewJSONHandler(os.Stderr, nil)
+func NewDefaultLoggerWithWriter(lvl LogLevel, w io.Writer) *DefaultLogger {
+	level := new(slog.LevelVar)
+	switch lvl {
+	case LogLevelDebug:
+		level.Set(slog.LevelDebug)
+	case LogLevelInfo:
+		level.Set(slog.LevelInfo)
+	case LogLevelWarn:
+		level.Set(slog.LevelWarn)
+	case LogLevelError:
+		level.Set(slog.LevelError)
+	}
+
+	handler := slog.NewJSONHandler(
+		w,
+		&slog.HandlerOptions{
+			Level: level,
+		},
+	)
 	return &DefaultLogger{
 		slog.New(handler),
 	}
+}
+
+func NewDefaultLogger(lvl LogLevel) *DefaultLogger {
+	return NewDefaultLoggerWithWriter(lvl, os.Stdout)
+}
+
+func (l *DefaultLogger) With(key, value string) Logger {
+	return &DefaultLogger{l.s.With(slog.String(key, value))}
 }
 
 func (l *DefaultLogger) Debug(msg string, args ...any) {
@@ -47,4 +87,32 @@ func (l *DefaultLogger) Warn(msg string, args ...any) {
 
 func (l *DefaultLogger) Error(msg string, args ...any) {
 	l.s.Error(msg, args...)
+}
+
+func (l *DefaultLogger) AsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		l.Debug("http", "method", r.Method, "path", r.URL.Path)
+		next.ServeHTTP(w, r)
+	})
+}
+
+type Recorder struct {
+	*bytes.Buffer
+	*DefaultLogger
+}
+
+func NewRecorder(lvl LogLevel) *Recorder {
+	var buffer bytes.Buffer
+	l := NewDefaultLoggerWithWriter(lvl, &buffer)
+	return &Recorder{&buffer, l}
+}
+
+func (r *Recorder) Lines() []string {
+	s := strings.TrimSpace(r.String())
+	return strings.Split(s, "\n")
+}
+
+func (r *Recorder) With(key, value string) Logger {
+	l := &DefaultLogger{r.s.With(slog.String(key, value))}
+	return &Recorder{Buffer: nil, DefaultLogger: l}
 }

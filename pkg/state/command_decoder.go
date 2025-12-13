@@ -13,7 +13,8 @@ package state
 import (
 	"fmt"
 
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/event"
 )
 
@@ -21,36 +22,36 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 	switch evt.Type() {
 	case "add_stone":
 		val := evt.Value().(map[string]any)
-		c, err := core.InterfaceToCoord(val["coords"])
+		c, err := coord.FromInterface(val["coords"])
 		if err != nil {
 			return nil, err
 		}
-		col := core.Color(val["color"].(float64))
+		col := color.Color(val["color"].(float64))
 		return NewAddStoneCommand(c, col), nil
 	case "pass":
-		col := core.Color(evt.Value().(float64))
+		col := color.Color(evt.Value().(float64))
 		return NewPassCommand(col), nil
 	case "remove_stone":
-		c, err := core.InterfaceToCoord(evt.Value())
+		c, err := coord.FromInterface(evt.Value())
 		if err != nil {
 			return nil, err
 		}
 		return NewRemoveStoneCommand(c), nil
 	case "triangle":
-		c, err := core.InterfaceToCoord(evt.Value())
+		c, err := coord.FromInterface(evt.Value())
 		if err != nil {
 			return nil, err
 		}
 		return NewAddTriangleCommand(c), nil
 	case "square":
-		c, err := core.InterfaceToCoord(evt.Value())
+		c, err := coord.FromInterface(evt.Value())
 		if err != nil {
 			return nil, err
 		}
 		return NewAddSquareCommand(c), nil
 	case "letter":
 		val := evt.Value().(map[string]any)
-		c, err := core.InterfaceToCoord(val["coords"])
+		c, err := coord.FromInterface(val["coords"])
 		if err != nil {
 			return nil, err
 		}
@@ -58,14 +59,22 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 		return NewAddLetterCommand(c, letter), nil
 	case "number":
 		val := evt.Value().(map[string]any)
-		c, err := core.InterfaceToCoord(val["coords"])
+		c, err := coord.FromInterface(val["coords"])
 		if err != nil {
 			return nil, err
 		}
 		number := int(val["number"].(float64))
 		return NewAddNumberCommand(c, number), nil
+	case "label":
+		val := evt.Value().(map[string]any)
+		c, err := coord.FromInterface(val["coords"])
+		if err != nil {
+			return nil, err
+		}
+		label := val["label"].(string)
+		return NewAddLabelCommand(c, label), nil
 	case "remove_mark":
-		c, err := core.InterfaceToCoord(evt.Value())
+		c, err := coord.FromInterface(evt.Value())
 		if err != nil {
 			return nil, err
 		}
@@ -88,7 +97,7 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 		index := int(evt.Value().(float64))
 		return NewGotoGridCommand(index), nil
 	case "goto_coord":
-		c, err := core.InterfaceToCoord(evt.Value())
+		c, err := coord.FromInterface(evt.Value())
 		if err != nil {
 			return nil, err
 		}
@@ -129,7 +138,7 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 	case "score":
 		return NewScoreCommand(), nil
 	case "markdead":
-		c, err := core.InterfaceToCoord(evt.Value())
+		c, err := coord.FromInterface(evt.Value())
 		if err != nil {
 			return nil, err
 		}

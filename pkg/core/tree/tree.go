@@ -8,7 +8,13 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package core
+package tree
+
+import (
+	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/jarednogo/board/pkg/core/fields"
+)
 
 // Fmap applies a function f to every node under (and including) root
 // even thought State contains Nodes and we can range over all the nodes,
@@ -35,32 +41,29 @@ func Fmap(f func(*TreeNode), root *TreeNode) {
 }
 
 type TreeNode struct {
-	XY             *Coord
-	Color          Color
+	XY             *coord.Coord
+	Color          color.Color
 	Down           []*TreeNode
 	Up             *TreeNode
 	Index          int
 	PreferredChild int
-	Fields         map[string][]string
-	Diff           *Diff
-	Depth          int
-	BlackCaps      int
-	WhiteCaps      int
+	fields.Fields
+	Diff      *coord.Diff
+	Depth     int
+	BlackCaps int
+	WhiteCaps int
 }
 
-func NewTreeNode(coord *Coord, col Color, index int, up *TreeNode, fields map[string][]string) *TreeNode {
-	if fields == nil {
-		fields = make(map[string][]string)
-	}
+func NewTreeNode(crd *coord.Coord, col color.Color, index int, up *TreeNode, flds fields.Fields) *TreeNode {
 	down := []*TreeNode{}
 	node := &TreeNode{
-		XY:             coord,
+		XY:             crd,
 		Color:          col,
 		Down:           down,
 		Up:             nil,
 		Index:          index,
 		PreferredChild: 0,
-		Fields:         fields,
+		Fields:         flds,
 		Diff:           nil,
 		Depth:          0,
 		BlackCaps:      0,
@@ -81,16 +84,16 @@ func (n *TreeNode) ShallowEqual(m *TreeNode) bool {
 		n.Depth == m.Depth
 }
 
-func (n *TreeNode) SetDiff(diff *Diff) {
+func (n *TreeNode) SetDiff(diff *coord.Diff) {
 	n.Diff = diff
 	b := 0
 	w := 0
 	if diff != nil {
 		for _, ss := range diff.Remove {
 			switch ss.Color {
-			case White:
+			case color.White:
 				b += len(ss.Coords)
-			case Black:
+			case color.Black:
 				w += len(ss.Coords)
 			}
 		}
@@ -118,16 +121,6 @@ func (n *TreeNode) TrunkNum(i int) int {
 	return cur.Index
 }
 
-func (n *TreeNode) IsMove() bool {
-	if _, ok := n.Fields["B"]; ok {
-		return true
-	}
-	if _, ok := n.Fields["W"]; ok {
-		return true
-	}
-	return false
-}
-
 // SetParent exists to add the depth attribute
 func (n *TreeNode) SetParent(up *TreeNode) {
 	n.Up = up
@@ -144,9 +137,9 @@ func (n *TreeNode) RecomputeDepth() {
 	}, n)
 }
 
-func (n *TreeNode) HasChild(coord *Coord, col Color) (int, bool) {
+func (n *TreeNode) HasChild(crd *coord.Coord, col color.Color) (int, bool) {
 	for _, node := range n.Down {
-		if node.XY.Equal(coord) && node.Color == col {
+		if node.XY.Equal(crd) && node.Color == col {
 			return node.Index, true
 		}
 	}
@@ -154,21 +147,13 @@ func (n *TreeNode) HasChild(coord *Coord, col Color) (int, bool) {
 }
 
 func (n *TreeNode) Copy() *TreeNode {
-	// copy fields
-	fields := make(map[string][]string)
-	for key, value := range n.Fields {
-		newValue := make([]string, len(value))
-		copy(newValue, value)
-		fields[key] = newValue
-	}
-
 	// parent will get assigned later
 	m := NewTreeNode(
 		n.XY.Copy(),
 		n.Color,
 		0,
 		nil,
-		fields)
+		n.Fields)
 
 	// copy children
 	down := []*TreeNode{}
@@ -192,30 +177,4 @@ func (n *TreeNode) MaxDepth() int {
 		}
 	}, n)
 	return depth
-}
-
-func (n *TreeNode) AddField(key, value string) {
-	if _, ok := n.Fields[key]; !ok {
-		n.Fields[key] = []string{}
-	}
-	n.Fields[key] = append(n.Fields[key], value)
-}
-
-func (n *TreeNode) RemoveField(key, value string) {
-	if _, ok := n.Fields[key]; !ok {
-		return
-	}
-	index := -1
-	for i, v := range n.Fields[key] {
-		if v == value {
-			index = i
-		}
-	}
-	if index == -1 {
-		return
-	}
-	n.Fields[key] = append(n.Fields[key][:index], n.Fields[key][index+1:]...)
-	if len(n.Fields[key]) == 0 {
-		delete(n.Fields, key)
-	}
 }

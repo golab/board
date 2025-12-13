@@ -12,13 +12,16 @@ package room_test
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
+	"github.com/jarednogo/board/pkg/logx"
 	"github.com/jarednogo/board/pkg/room"
 )
 
@@ -76,6 +79,28 @@ func TestHandleUploadSGF3(t *testing.T) {
 	assert.Equal(t, len(r.ToSGF()), 213)
 }
 
+func TestHandleUploadSGF4(t *testing.T) {
+	r := room.NewRoom("")
+	data := make([]byte, 1<<20)
+	data = append([]byte("(;GM[1]SZ[19];B[aa])"), data...)
+	sgf := base64.StdEncoding.EncodeToString(data)
+
+	evt := event.NewEvent("upload_sgf", sgf)
+	r.HandleAny(evt)
+	assert.Equal(t, len(r.ToSGF()), 65)
+}
+
+func TestHandleUploadSGF5(t *testing.T) {
+	r := room.NewRoom("")
+	data := make([]byte, 1<<19)
+	data = append([]byte("(;GM[1]SZ[19];B[aa])"), data...)
+	sgf := base64.StdEncoding.EncodeToString(data)
+
+	evt := event.NewEvent("upload_sgf", sgf)
+	r.HandleAny(evt)
+	assert.Equal(t, len(r.ToSGF()), 20)
+}
+
 func TestHandleTrash(t *testing.T) {
 	r := room.NewRoom("")
 	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.SimpleEightMoves))
@@ -93,8 +118,7 @@ func TestHandleUpdateNickname(t *testing.T) {
 	evt := event.NewEvent("update_nickname", "mynick")
 	evt.SetUser("user_123")
 	r.HandleAny(evt)
-	nicks := r.Nicks()
-	n, ok := nicks["user_123"]
+	n, ok := r.GetNick("user_123")
 	assert.True(t, ok)
 	assert.Equal(t, n, "mynick")
 }
@@ -106,6 +130,9 @@ func TestHandleUpdateSettings(t *testing.T) {
 	value["size"] = 13.0
 	value["nickname"] = "mynick"
 	value["password"] = "somepassword"
+	value["black"] = "black123"
+	value["white"] = "white456"
+	value["komi"] = "10.5"
 
 	evt := event.NewEvent("update_settings", value)
 	evt.SetUser("user_123")
@@ -118,8 +145,7 @@ func TestHandleUpdateSettings(t *testing.T) {
 	assert.Equal(t, r.GetInputBuffer(), 500)
 	assert.Equal(t, r.Size(), 13)
 
-	nicks := r.Nicks()
-	n, ok := nicks["user_123"]
+	n, ok := r.GetNick("user_123")
 	assert.True(t, ok)
 	assert.Equal(t, n, "mynick")
 }
@@ -151,4 +177,60 @@ func TestHandleAddStone(t *testing.T) {
 	evt := event.NewEvent("add_stone", val)
 	r.HandleAny(evt)
 	assert.Equal(t, len(r.ToSGF()), 71)
+}
+
+func TestSlow(t *testing.T) {
+	r := room.NewRoom("")
+
+	val := make(map[string]any)
+	val["coords"] = []any{9.0, 9.0}
+	val["color"] = 1.0
+	evt := event.NewEvent("add_stone", val)
+	r.HandleAny(evt)
+	assert.Equal(t, len(r.ToSGF()), 71)
+
+	// adding a stone with the buffers in place shouldn't do anything
+	val["coords"] = []any{10.0, 10.0}
+	r.HandleAny(evt)
+	assert.Equal(t, len(r.ToSGF()), 71)
+
+	// disable the buffers then add a stone, and there should be a change
+	r.DisableBuffers()
+	r.HandleAny(evt)
+	assert.Equal(t, len(r.ToSGF()), 77)
+}
+
+func TestLogUploadSGF(t *testing.T) {
+	l := logx.NewRecorder(logx.LogLevelInfo)
+	r := room.NewRoom("")
+	r.SetLogger(l)
+
+	sgf := base64.StdEncoding.EncodeToString([]byte(sgfsamples.SimpleEightMoves))
+	evt := event.NewEvent("upload_sgf", sgf)
+	r.HandleAny(evt)
+
+	require.Equal(t, len(l.Lines()), 2)
+	log := struct {
+		EventType string `json:"event_type"`
+	}{}
+	err := json.Unmarshal([]byte(l.Lines()[0]), &log)
+	assert.NoError(t, err)
+	assert.Equal(t, log.EventType, "upload_sgf")
+}
+
+func TestLogRequestSGF(t *testing.T) {
+	l := logx.NewRecorder(logx.LogLevelInfo)
+	r := room.NewRoom("")
+	r.SetLogger(l)
+	r.SetFetcher(fetch.NewMockFetcher(sgfsamples.Empty))
+
+	evt := event.NewEvent("request_sgf", "http://www.gokifu.com/somefile.sgf")
+	r.HandleAny(evt)
+	require.Equal(t, len(l.Lines()), 3)
+	log := struct {
+		EventType string `json:"event_type"`
+	}{}
+	err := json.Unmarshal([]byte(l.Lines()[0]), &log)
+	assert.NoError(t, err)
+	assert.Equal(t, log.EventType, "request_sgf")
 }

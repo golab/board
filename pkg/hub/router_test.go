@@ -23,10 +23,12 @@ import (
 	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/hub"
+	"github.com/jarednogo/board/pkg/logx"
 )
 
 func TestApiRouter(t *testing.T) {
-	_, err := hub.NewHub(config.Test())
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	_, err := hub.NewHub(config.Test(), logger)
 	assert.NoError(t, err)
 	r := chi.NewRouter()
 	r.Mount("/api", hub.ApiRouter("version"))
@@ -49,7 +51,8 @@ func TestApiRouter(t *testing.T) {
 }
 
 func TestExtRouter(t *testing.T) {
-	h, err := hub.NewHub(config.Test())
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	h, err := hub.NewHub(config.Test(), logger)
 	assert.NoError(t, err)
 
 	room := h.GetOrCreateRoom("someboard")
@@ -71,7 +74,8 @@ func TestExtRouter(t *testing.T) {
 }
 
 func TestSocketRouter(t *testing.T) {
-	h, err := hub.NewHub(config.Test())
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	h, err := hub.NewHub(config.Test(), logger)
 	assert.NoError(t, err)
 
 	r := chi.NewRouter()

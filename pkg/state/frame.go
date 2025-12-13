@@ -14,44 +14,129 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/jarednogo/board/pkg/core/fields"
 )
 
-func (s *State) generateMarks() *core.Marks {
-	marks := &core.Marks{}
+// FrameType can be either DiffFrame or FullFrame
+type FrameType int
+
+const (
+	DiffFrame = iota
+	FullFrame
+)
+
+// Frame provides the data for when the board needs to be updated (not the explorer)
+type Frame struct {
+	Type      FrameType      `json:"type"`
+	Diff      *coord.Diff    `json:"diff"`
+	Marks     *Marks         `json:"marks"`
+	Comments  []string       `json:"comments"`
+	Metadata  *Metadata      `json:"metadata"`
+	TreeJSON  *TreeJSON      `json:"tree"`
+	BlackCaps int            `json:"black_caps"`
+	WhiteCaps int            `json:"white_caps"`
+	BlackArea []*coord.Coord `json:"black_area"`
+	WhiteArea []*coord.Coord `json:"white_area"`
+	Dame      []*coord.Coord `json:"dame"`
+}
+
+// Marks provides data for any marks on the board
+type Marks struct {
+	Current   *coord.Coord   `json:"current"`
+	Squares   []*coord.Coord `json:"squares"`
+	Triangles []*coord.Coord `json:"triangles"`
+	Labels    []*Label       `json:"labels"`
+	Pens      []*Pen         `json:"pens"`
+}
+
+// Label can be any text, but typically single digits or letters
+type Label struct {
+	Coord *coord.Coord `json:"coord"`
+	Text  string       `json:"text"`
+}
+
+// Pen contains a start and end coordinate plus a color
+type Pen struct {
+	X0    float64 `json:"x0"`
+	Y0    float64 `json:"y0"`
+	X1    float64 `json:"x1"`
+	Y1    float64 `json:"y1"`
+	Color string  `json:"color"`
+}
+
+// Metadata provides the size of the board plus any fields (usually from the root node)
+type Metadata struct {
+	Size   int            `json:"size"`
+	Fields []fields.Field `json:"fields"`
+}
+
+// TreeJSONType defines some options for how much data to send in a TreeJSON
+type TreeJSONType int
+
+const (
+	CurrentOnly TreeJSONType = iota
+	CurrentAndPreferred
+	PartialNodes
+	Full
+)
+
+// NodeJSON is a key component of TreeJSON
+type NodeJSON struct {
+	Color   color.Color `json:"color"`
+	Down    []int       `json:"down"`
+	Depth   int         `json:"depth"`
+	Comment bool        `json:"comment"`
+}
+
+// TreeJSON is the basic struct to encode information about the explorer
+// this makes up one part of a Frame
+type TreeJSON struct {
+	Nodes     map[int]*NodeJSON `json:"nodes"`
+	Current   int               `json:"current"`
+	Preferred []int             `json:"preferred"`
+	Depth     int               `json:"depth"`
+	Up        int               `json:"up"`
+	Root      int               `json:"root"`
+}
+
+func (s *State) generateMarks() *Marks {
+	marks := &Marks{}
 	if s.current.XY != nil {
 		marks.Current = s.current.XY
 	}
-	if trs, ok := s.current.Fields["TR"]; ok {
-		cs := core.NewCoordSet()
+	if trs := s.current.GetField("TR"); len(trs) > 0 {
+		cs := coord.NewCoordSet()
 		for _, tr := range trs {
-			c := core.LettersToCoord(tr)
+			c := coord.FromLetters(tr)
 			cs.Add(c)
 		}
 		marks.Triangles = cs.List()
 	}
-	if sqs, ok := s.current.Fields["SQ"]; ok {
-		cs := core.NewCoordSet()
+
+	if sqs := s.current.GetField("SQ"); len(sqs) > 0 {
+		cs := coord.NewCoordSet()
 		for _, sq := range sqs {
-			c := core.LettersToCoord(sq)
+			c := coord.FromLetters(sq)
 			cs.Add(c)
 		}
 		marks.Squares = cs.List()
 	}
-	if lbs, ok := s.current.Fields["LB"]; ok {
-		labels := []*core.Label{}
+	if lbs := s.current.GetField("LB"); len(lbs) > 0 {
+		labels := []*Label{}
 		for _, lb := range lbs {
 			spl := strings.Split(lb, ":")
-			c := core.LettersToCoord(spl[0])
+			c := coord.FromLetters(spl[0])
 			text := spl[1]
-			label := &core.Label{Coord: c, Text: text}
+			label := &Label{Coord: c, Text: text}
 			labels = append(labels, label)
 		}
 		marks.Labels = labels
 	}
 
-	if pxs, ok := s.current.Fields["PX"]; ok {
-		pens := []*core.Pen{}
+	if pxs := s.current.GetField("PX"); len(pxs) > 0 {
+		pens := []*Pen{}
 		for _, px := range pxs {
 			spl := strings.Split(px, ":")
 			if len(spl) != 5 {
@@ -65,7 +150,7 @@ func (s *State) generateMarks() *core.Marks {
 			if hasErr {
 				continue
 			}
-			pen := &core.Pen{X0: x0, Y0: y0, X1: x1, Y1: y1, Color: spl[4]}
+			pen := &Pen{X0: x0, Y0: y0, X1: x1, Y1: y1, Color: spl[4]}
 			pens = append(pens, pen)
 		}
 		marks.Pens = pens
@@ -73,25 +158,25 @@ func (s *State) generateMarks() *core.Marks {
 	return marks
 }
 
-func (s *State) generateMetadata() *core.Metadata {
-	m := &core.Metadata{
+func (s *State) generateMetadata() *Metadata {
+	m := &Metadata{
 		Size:   s.size,
-		Fields: s.root.Fields,
+		Fields: s.root.AllFields(),
 	}
 	return m
 }
 
 func (s *State) generateComments() []string {
 	cmts := []string{}
-	if c, ok := s.current.Fields["C"]; ok {
+	if c := s.current.GetField("C"); len(c) > 0 {
 		cmts = c
 	}
 	return cmts
 }
 
-func (s *State) GenerateFullFrame(t core.TreeJSONType) *core.Frame {
-	frame := &core.Frame{}
-	frame.Type = core.FullFrame
+func (s *State) GenerateFullFrame(t TreeJSONType) *Frame {
+	frame := &Frame{}
+	frame.Type = FullFrame
 	frame.Diff = s.board.CurrentDiff()
 	frame.Marks = s.generateMarks()
 	frame.Metadata = s.generateMetadata()

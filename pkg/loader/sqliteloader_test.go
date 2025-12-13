@@ -11,7 +11,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package loader_test
 
 import (
+	"fmt"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
@@ -24,8 +26,7 @@ func TestSqliteLoader(t *testing.T) {
 	path := filepath.Join(tmp, "board.db")
 
 	// test setup
-	ldr := loader.NewSqliteLoader(path)
-	err := ldr.Setup()
+	ldr, err := loader.NewSqliteLoader(path)
 	assert.NoError(t, err)
 
 	// test adding a twitch room
@@ -110,4 +111,39 @@ func TestSqliteLoader(t *testing.T) {
 	msgs, err = ldr.LoadAllMessages()
 	assert.NoError(t, err)
 	assert.Equal(t, len(msgs), 0)
+}
+
+func TestSqliteLoaderConcurrency(t *testing.T) {
+	// make a temporary dir to store the db
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "board.db")
+
+	// test setup
+	ldr, err := loader.NewSqliteLoader(path)
+	assert.NoError(t, err)
+
+	// create wait group
+	wg := sync.WaitGroup{}
+
+	for i := 0; i < 20; i++ {
+		wg.Add(1)
+		go func() {
+			// make a struct to save a room
+			l := &loader.LoadJSON{
+				SGF:       "test",
+				Location:  "test",
+				Buffer:    500,
+				NextIndex: 42,
+				Password:  "test",
+				ID:        fmt.Sprintf("%d", i),
+			}
+
+			// test saving a room
+			err := ldr.SaveRoom(l.ID, l)
+			assert.NoError(t, err)
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
 }
