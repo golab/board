@@ -951,14 +951,14 @@ class TreeGraphics {
                 bg.removeAttribute("display");
                 bg.setAttributeNS(null, "cx", pos_x);
                 bg.setAttributeNS(null, "cy", pos_y);
-                bg.setAttributeNS(null, "r", this.r*1.2);
+                bg.setAttributeNS(null, "r", this.r*1.15);
                 bg.style.fill = "#00000000";
                 if (preferred) {
-                    bg.style.stroke = "#00FF44";
+                    bg.style.stroke = "#e643e6";
                 } else {
-                    bg.style.stroke = "#00FF4444";
+                    bg.style.stroke = "#e643e655";
                 }
-                bg.style.strokeWidth = 3;
+                bg.style.strokeWidth = 2;
             }
 
             //let circle = document.createElementNS(this.svgns, "circle");
