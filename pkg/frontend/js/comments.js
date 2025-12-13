@@ -42,7 +42,7 @@ export function create_comments(_state) {
     }
 
     function store(text) {
-        state.board.tree.current.add_field("C", text);
+        //state.board.tree.current.add_field("C", text);
     }
 
     function clear() {

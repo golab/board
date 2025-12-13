@@ -417,7 +417,7 @@ func NewCommentCommand(text string) Command {
 
 func (cmd *commentCommand) Execute(s *State) (*Frame, error) {
 	s.current.AddField("C", cmd.text+"\n")
-	return nil, nil
+	return s.GenerateFullFrame(Full), nil
 }
 
 type drawCommand struct {

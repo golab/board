@@ -65,9 +65,10 @@ func (s *State) saveTree(t TreeJSONType) *TreeJSON {
 				down = append(down, c.Index)
 			}
 			nodes[n.Index] = &NodeJSON{
-				Color: n.Color,
-				Down:  down,
-				Depth: n.Depth,
+				Color:   n.Color,
+				Down:    down,
+				Depth:   n.Depth,
+				Comment: HasComment(n),
 			}
 
 		}, start)

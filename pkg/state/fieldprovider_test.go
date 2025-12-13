@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
@@ -108,4 +109,20 @@ func TestTreeNodeIsMove(t *testing.T) {
 	assert.True(t, len(current.Down) > 0)
 	current = current.Down[0]
 	assert.True(t, state.IsMove(current))
+}
+
+func TestTreeNodeHasComment1(t *testing.T) {
+	s, err := state.FromSGF("(;C[some comment])")
+	require.NoError(t, err)
+
+	root := s.Root()
+	assert.True(t, state.HasComment(root))
+}
+
+func TestTreeNodeHasComment2(t *testing.T) {
+	s, err := state.FromSGF("(;D[some comment])")
+	require.NoError(t, err)
+
+	root := s.Root()
+	assert.False(t, state.HasComment(root))
 }

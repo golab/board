@@ -259,6 +259,7 @@ class TreeGraphics {
                         node.coord = coord
                         node.color = entry.color;
                         node.index = entry.index;
+                        node.comment = entry.comment;
                         grid.get(y).set(x, node);
 
                         if (coord.x > max_x) {
@@ -915,11 +916,18 @@ class TreeGraphics {
             stroke_style += "44";
         }
         let svg = this.svgs.get(id);
+        let bg_id = id + "-bg";
+        let bg_svg = this.svgs.get(bg_id);
+        if (!bg_svg) {
+            this.new_svg(bg_id, 45);
+            bg_svg = this.svgs.get(bg_id);
+        }
 
         // new pool implementation, create or reuse shapes
         let pool = this.shape_pools.get(id) || [];
+        let bg_pool = this.shape_pools.get(bg_id) || [];
+        let bg_pool_i = 0;
         for (let i = 0; i < coords.length; i++) {
-        //for (let [x,y] of coords) {
 
             let [x,y] = coords[i];
             let circle = pool[i];
@@ -930,6 +938,24 @@ class TreeGraphics {
             }
 
             let [pos_x, pos_y] = this.get_xypos(x, y);
+
+            let node = this.grid.get(y).get(x);
+            if (node.comment) {
+                let bg = bg_pool[bg_pool_i];
+                if (!bg) {
+                    bg = document.createElementNS(this.svgns, "circle");
+                    this.svgs.get(bg_id).appendChild(bg);
+                    bg_pool[bg_pool_i] = bg;
+                }
+                bg_pool_i++;
+                bg.removeAttribute("display");
+                bg.setAttributeNS(null, "cx", pos_x);
+                bg.setAttributeNS(null, "cy", pos_y);
+                bg.setAttributeNS(null, "r", this.r*1.2);
+                bg.style.fill = "#00000000";
+                bg.style.stroke = "#00FF44";
+                bg.style.strokeWidth = 3;
+            }
 
             //let circle = document.createElementNS(this.svgns, "circle");
             circle.removeAttribute("display");
@@ -949,6 +975,13 @@ class TreeGraphics {
         }
 
         this.shape_pools.set(id, pool);
+
+        // also for the bg pool
+        for (let i = bg_pool_i+1; i < bg_pool.length; i++) {
+            bg_pool[i].setAttribute("display", "none");
+        }
+
+        this.shape_pools.set(bg_id, bg_pool);
     }
 
     svg_draw_dots(coords, preferred, id) {

@@ -55,3 +55,8 @@ func Coord(f FieldProvider) *coord.Coord {
 	}
 	return nil
 }
+
+func HasComment(f FieldProvider) bool {
+	comments := f.GetField("C")
+	return len(comments) > 0
+}

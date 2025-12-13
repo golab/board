@@ -224,7 +224,7 @@ class NetworkHandler {
                 break;
             case "comment":
                 this.state.comments.update(payload["value"]);
-                this.state.comments.store(payload["value"]);
+                //this.state.comments.store(payload["value"]);
                 break;
             case "error":
                 value = payload["value"];

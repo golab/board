@@ -84,9 +84,10 @@ const (
 
 // NodeJSON is a key component of TreeJSON
 type NodeJSON struct {
-	Color color.Color `json:"color"`
-	Down  []int       `json:"down"`
-	Depth int         `json:"depth"`
+	Color   color.Color `json:"color"`
+	Down    []int       `json:"down"`
+	Depth   int         `json:"depth"`
+	Comment bool        `json:"comment"`
 }
 
 // TreeJSON is the basic struct to encode information about the explorer
