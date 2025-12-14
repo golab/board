@@ -391,6 +391,35 @@ export function create_modals(_state) {
         body.appendChild(darkmode_element);
         body.appendChild(document.createElement("br"));
 
+        // board color
+        let board_color_element = document.createElement("div");
+
+        let board_color_label = document.createElement("label");
+        board_color_label.innerHTML = "Board color:&nbsp;";
+        board_color_label.setAttribute("for", id + "-board-color-select");
+        let board_color_select = document.createElement("select");
+        board_color_select.setAttribute("id", id + "-board-color-select");
+        board_color_select.setAttribute("class", "form-select");
+        for (let x of ["light", "medium", "dark"]) {
+            let opt = document.createElement("option");
+            opt.setAttribute("value", x);
+            opt.innerHTML = x;
+            board_color_select.appendChild(opt);
+        }
+        board_color_select.value = state.board_color;
+        board_color_select.addEventListener(
+            "change",
+            () => {
+                state.set_board_color(board_color_select.value);
+            }
+        );
+
+        board_color_element.appendChild(board_color_label);
+        board_color_element.appendChild(board_color_select);
+
+        body.appendChild(board_color_element);
+        body.appendChild(document.createElement("br"));
+
         // password
         let password_anchor = document.createElement("a");
         let password_bar = document.createElement("input");

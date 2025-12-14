@@ -364,7 +364,7 @@ class BoardGraphics {
         this.bgcolor = hex_color;
 
         let img = document.createElementNS(this.svgns, "image");
-        img.setAttributeNS(null, "href", "/static/board_light.png");
+        img.setAttributeNS(null, "href", "/static/board_" + this.state.board_color + ".png");
         img.setAttributeNS(null, "width", this.width+this.pad*2);
         img.setAttributeNS(null, "height", this.width+this.pad*2);
         img.setAttributeNS(null, "x", 0);

@@ -77,6 +77,7 @@ class State {
         this.numbers = new Map();
         this.letters = new Array(26).fill(0);
 
+        this.board_color = "light";
         this.board_graphics = new BoardGraphics(this);
         this.tree_graphics = new TreeGraphics();
 
@@ -100,6 +101,11 @@ class State {
 
     set_network_handler(handler) {
         this.network_handler = handler;
+    }
+
+    set_board_color(color) {
+        this.board_color = color;
+        this.board_graphics.draw_boardbg();
     }
 
     guest_nick(id) {
