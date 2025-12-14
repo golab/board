@@ -345,7 +345,7 @@ export function create_modals(_state) {
         };
 
         d.appendChild(inp);
-        d.appendChild(label)
+        d.appendChild(label);
         updown_element.append(d);
 
         body.appendChild(updown_element);
@@ -418,6 +418,42 @@ export function create_modals(_state) {
         board_color_element.appendChild(board_color_select);
 
         body.appendChild(board_color_element);
+        body.appendChild(document.createElement("br"));
+
+        // textured stones
+        let textured_stones_element = document.createElement("div");
+        textured_stones_element.innerHTML = "Textured stones "
+
+        let d_textured_stones = document.createElement("div");
+        d_textured_stones.setAttribute("class", "form-check form-switch");
+
+        let inp_textured_stones = document.createElement("input");
+        inp_textured_stones.setAttribute("class", "form-check-input");
+        inp_textured_stones.setAttribute("type", "checkbox");
+        inp_textured_stones.setAttribute("role", "switch");
+        inp_textured_stones.checked = true;
+        inp_textured_stones.setAttribute("id", "textured-stones-switch");
+
+        let label_textured_stones = document.createElement("label");
+        label_textured_stones.setAttribute("class", "form-check-label");
+        label_textured_stones.setAttribute("for", "textured-stones-switch");
+        label_textured_stones.innerHTML = "On";
+
+        inp_textured_stones.onchange = function() {
+            if (this.checked) {
+                label_textured_stones.innerHTML = "On";
+                state.set_textured_stones(true);
+            } else {
+                label_textured_stones.innerHTML = "Off";
+                state.set_textured_stones(false);
+            }
+        };
+
+        d_textured_stones.appendChild(inp_textured_stones);
+        d_textured_stones.appendChild(label_textured_stones);
+        textured_stones_element.append(d_textured_stones);
+
+        body.appendChild(textured_stones_element);
         body.appendChild(document.createElement("br"));
 
         // password

@@ -777,10 +777,12 @@ class BoardGraphics {
             //this.draw_circle(x, y, radius, hexcolor, svg_id);
 
             // gradient fill
-            //stone = this.draw_gradient_circle(x, y, radius, "white_grad", svg_id, stroke);
-
-            // texture
-            stone = this.draw_textured_stone(x, y);
+            if (!this.state.textured_stones) {
+                stone = this.draw_gradient_circle(x, y, radius, "white_grad", svg_id, stroke);
+            } else {
+                // texture
+                stone = this.draw_textured_stone(x, y);
+            }
 
         } else if (color == 1) {
             // regular fill
