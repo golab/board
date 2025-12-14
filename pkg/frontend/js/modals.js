@@ -406,6 +406,11 @@ export function create_modals(_state) {
             opt.innerHTML = x;
             board_color_select.appendChild(opt);
         }
+        let stored_board_color = localStorage.getItem("board_color") || "";
+        if (stored_board_color != "") {
+            state.board_color = stored_board_color;
+            board_color_select.value = "";
+        }
         board_color_select.value = state.board_color;
 
         let board_color_picker = document.createElement("input");
@@ -414,6 +419,7 @@ export function create_modals(_state) {
         board_color_picker.style.display = "none";
         board_color_picker.onchange = () => {
             state.set_board_color(board_color_picker.value);
+            localStorage.setItem("board_color", board_color_picker.value);
         };
 
         board_color_select.addEventListener(
@@ -424,6 +430,7 @@ export function create_modals(_state) {
                     board_color_select.value = "";
                 } else {
                     state.set_board_color(board_color_select.value);
+                    localStorage.setItem("board_color", board_color_select.value);
                 }
             }
         );
@@ -452,14 +459,25 @@ export function create_modals(_state) {
         label_textured_stones.setAttribute("class", "form-check-label");
         label_textured_stones.setAttribute("for", "textured-stones-switch");
         label_textured_stones.innerHTML = "On";
+        let stored_textured_stones = localStorage.getItem("textured_stones") || "";
+        if (stored_textured_stones == "true") {
+            inp_textured_stones.checked = true;
+            state.set_textured_stones(true);
+        } else if (stored_textured_stones == "false") {
+            inp_textured_stones.checked = false;
+            state.set_textured_stones(false);
+            label_textured_stones.innerHTML = "Off";
+        }
 
         inp_textured_stones.onchange = function() {
             if (this.checked) {
                 label_textured_stones.innerHTML = "On";
                 state.set_textured_stones(true);
+                localStorage.setItem("textured_stones", "true");
             } else {
                 label_textured_stones.innerHTML = "Off";
                 state.set_textured_stones(false);
+                localStorage.setItem("textured_stones", "false");
             }
         };
 
