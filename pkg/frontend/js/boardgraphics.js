@@ -17,6 +17,14 @@ import { opposite, Coord } from './common.js';
 
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+function random_shell() {
+    // random integer 1-16
+    let n = Math.floor(Math.random()*16) + 1;
+    // pad with 0
+    let s = String(n).padStart(2, "0");
+    return s;
+}
+
 function make_linear_gradient(svgns, color1, color2, id) {
     let grad = document.createElementNS(svgns, "linearGradient");
     grad.id = id;
@@ -40,6 +48,10 @@ function make_linear_gradient(svgns, color1, color2, id) {
 
 function make_white_gradient(svgns) {
     return make_linear_gradient(svgns, "#FFFFFF", "#BBBBBB", "white_grad");
+}
+
+function make_highlight_gradient(svgns) {
+    return make_linear_gradient(svgns, "#FFFFFF66", "#00000044", "highlight_grad");
 }
 
 function make_black_gradient(svgns) {
@@ -69,6 +81,35 @@ function make_shadow_gradient(svgns) {
     stop2.setAttributeNS(null, "offset", "100%");
     stop2.setAttributeNS(null, "stop-color", color2);
     stop2.setAttributeNS(null, "stop-opacity", "0");
+
+    grad.appendChild(stop1);
+    grad.appendChild(stop2);
+    return grad;
+}
+
+function make_shell_gradient(svgns) {
+    let color1 = "#FFFFFF";
+    let color2 = "#FFFFFF";
+    let cx = "30%";
+    let cy = "30%";
+    let r = "25%";
+    let id = "shell_grad";
+
+    let grad = document.createElementNS(svgns, "radialGradient");
+    grad.id = id;
+    grad.setAttributeNS(null, "cx", cx);
+    grad.setAttributeNS(null, "cy", cy);
+    grad.setAttributeNS(null, "r", r);
+
+    let stop1 = document.createElementNS(svgns, "stop");
+    stop1.setAttributeNS(null, "offset", "0%");
+    stop1.setAttributeNS(null, "stop-color", color1);
+    stop1.setAttributeNS(null, "stop-opacity", "0.8");
+
+    let stop2 = document.createElementNS(svgns, "stop");
+    stop2.setAttributeNS(null, "offset", "100%");
+    stop2.setAttributeNS(null, "stop-color", color2);
+    stop2.setAttributeNS(null, "stop-opacity", "0.2");
 
     grad.appendChild(stop1);
     grad.appendChild(stop2);
@@ -115,6 +156,7 @@ class BoardGraphics {
         this.new_svg("ghost", 50);
         this.new_svg("shadows", 800);
         this.new_svg("stones", 900);
+        this.new_svg("highlights", 925);
         this.new_svg("current", 950);
         this.new_svg("marks", 1000);
         this.new_svg("ghost-marks", 1000);
@@ -687,6 +729,9 @@ class BoardGraphics {
 
         // clear cast shadow
         this.clear_cast_shadow(x, y);
+
+        // clear highlight
+        this.clear_highlight(x, y);
     }
 
     draw_pen(x0, y0, x1, y1, pen_color) {
@@ -729,22 +774,72 @@ class BoardGraphics {
             //this.draw_circle(x, y, radius, hexcolor, svg_id);
 
             // gradient fill
-            stone = this.draw_gradient_circle(x, y, radius, "white_grad", svg_id, stroke);
-            
+            if (!this.state.textured_stones) {
+                stone = this.draw_gradient_circle(x, y, radius, "white_grad", svg_id, stroke);
+            } else {
+                // texture
+                stone = this.draw_textured_stone(x, y);
+            }
+
         } else if (color == 1) {
             // regular fill
             //this.draw_circle(x, y, radius, hexcolor, svg_id);
             
             // gradient fill
             stone = this.draw_gradient_circle(x, y, radius, "black_grad", svg_id, stroke);
-
         }
         stone.setAttribute("id", "stone-"+id);
 
         // cast shadow
         let shadow = this.draw_cast_shadow(x, y);
         shadow.setAttribute("id", "shadow-"+id);
+    }
 
+
+    draw_textured_stone(x, y) {
+        let radius = this.side/2 * 0.98;
+        let svg_id = "stones";
+        let svg = this.svgs.get(svg_id);
+        let stone = document.createElementNS(this.svgns, "image");
+        stone.setAttributeNS(null, "href", "/static/shell_" + random_shell() + ".png");
+        stone.setAttributeNS(null, "width", radius*2);
+        stone.setAttributeNS(null, "height", radius*2);
+
+        const px = this.side * x + radius;
+        const py = this.side * y + radius;
+        
+        // compute rotation center
+        const cx = px + radius;
+        const cy = py + radius;
+        
+        // random angle, e.g. between 0 and 360
+        const angle = Math.random() * 360;
+        
+        stone.setAttributeNS(null, "x", px);
+        stone.setAttributeNS(null, "y", py);
+
+        // apply rotation around center
+        stone.setAttributeNS(
+            null,
+            "transform",
+            `rotate(${angle} ${cx} ${cy})`
+        );
+
+        //stone.setAttributeNS(null, "x", this.side*x+radius);
+        //stone.setAttributeNS(null, "y", this.side*y+radius);
+        svg.appendChild(stone);
+        this.draw_highlights(x, y);
+        return stone;
+    }
+
+    draw_highlights(x, y) {
+        let radius = this.side/2 * 0.98;
+        let highlight1 = this.draw_gradient_circle(x, y, radius, "highlight_grad", "highlights", 0);
+        let highlight2 = this.draw_gradient_circle(x, y, radius, "shell_grad", "highlights", 0);
+        let cls = "highlight-" + x.toString() + "-" + y.toString();
+        highlight1.classList.add(cls);
+        highlight2.classList.add(cls);
+        //let highlights = this.svgs.get("highlights");
     }
 
     draw_cast_shadow(x, y) {
@@ -765,6 +860,14 @@ class BoardGraphics {
             return;
         }
         shadow.remove();
+    }
+
+    clear_highlight(x, y) {
+        let cls = "highlight-" + x.toString() + "-" + y.toString();
+        let highlights = Array.from(document.getElementsByClassName(cls));
+        for (let highlight of highlights) {
+            highlight.remove();
+        }
     }
 
     draw_ghost_stone(x, y, color) {
@@ -1105,6 +1208,9 @@ class BoardGraphics {
         this.clear_svg("shadows");
         this.add_def("shadows", make_shadow_gradient(this.svgns));
 
+        this.clear_svg("highlights");
+        this.add_def("highlights", make_highlight_gradient(this.svgns));
+        this.add_def("highlights", make_shell_gradient(this.svgns));
     }
 
     clear_board() {

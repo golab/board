@@ -78,6 +78,7 @@ class State {
         this.letters = new Array(26).fill(0);
 
         this.board_color = "light";
+        this.textured_stones = true;
         this.board_graphics = new BoardGraphics(this);
         this.tree_graphics = new TreeGraphics();
 
@@ -106,6 +107,11 @@ class State {
     set_board_color(color) {
         this.board_color = color;
         this.board_graphics.draw_boardbg();
+    }
+
+    set_textured_stones(toggle) {
+        this.textured_stones = toggle;
+        this.board_graphics.draw_stones();
     }
 
     guest_nick(id) {
