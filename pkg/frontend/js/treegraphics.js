@@ -22,13 +22,13 @@ class TreeGraphics {
     constructor() {
         let review = document.getElementById("review");
         let container = document.getElementById("explorer_container");
-        container.addEventListener("scroll", () => this.render());
+        container.addEventListener("scroll", () => this.schedule_render());
 
         // apparently this is idiomatic
         const resizeObserver = new ResizeObserver(entries => {
             for (let entry of entries) {
                 if (entry.target.id == "explorer_container") {
-                    this.render();
+                    this.schedule_render();
                 }
             }
         });
@@ -50,6 +50,7 @@ class TreeGraphics {
         container.style.background = this.bgcolor;
 
         this.width = container.offsetWidth;
+        this.render_pending = false;
 
         this.svgns = "http://www.w3.org/2000/svg";
         this.svgs = new Map();
@@ -153,7 +154,7 @@ class TreeGraphics {
         }
 
         this.container.style.width = new_width + "px";
-        this.render();
+        this.schedule_render();
     }
 
     capture_mouse(x, y) {
@@ -498,6 +499,17 @@ class TreeGraphics {
         }
 
         return [render_nodes, render_edges];
+    }
+
+    schedule_render() {
+        if (this.render_pending) {
+            return;
+        }
+        this.render_pending = true;
+        requestAnimationFrame(() => {
+            this.render_pending = false;
+            this.render();
+        })
     }
 
     render() {
