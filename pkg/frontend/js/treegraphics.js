@@ -972,14 +972,14 @@ class TreeGraphics {
                 bg.removeAttribute("display");
                 bg.setAttributeNS(null, "cx", pos_x);
                 bg.setAttributeNS(null, "cy", pos_y);
-                bg.setAttributeNS(null, "r", this.r*1.3);
+                bg.setAttributeNS(null, "r", this.r*1.2);
                 bg.style.fill = "#00000000";
                 if (preferred) {
                     bg.style.stroke = "#000000";
                 } else {
                     bg.style.stroke = "#00000055";
                 }
-                bg.style.strokeWidth = 2;
+                bg.style.strokeWidth = 1;
 
                 outline.removeAttribute("display");
                 outline.setAttributeNS(null, "cx", pos_x);
@@ -991,7 +991,7 @@ class TreeGraphics {
                 } else {
                     outline.style.stroke = "#b8ffcb55";
                 }
-                outline.style.strokeWidth = 4;
+                outline.style.strokeWidth = 2;
             }
 
             //let circle = document.createElementNS(this.svgns, "circle");
