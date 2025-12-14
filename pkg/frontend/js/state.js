@@ -829,8 +829,7 @@ class State {
         }
     
         this.tree_graphics.set_scroll();
-        this.tree_graphics.render();
-
+        this.tree_graphics.schedule_render();
     }
 
     handle_comments(comments) {
