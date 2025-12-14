@@ -948,17 +948,38 @@ class TreeGraphics {
                     bg_pool[bg_pool_i] = bg;
                 }
                 bg_pool_i++;
+
+                let outline = bg_pool[bg_pool_i];
+                if (!outline) {
+                    outline = document.createElementNS(this.svgns, "circle");
+                    this.svgs.get(bg_id).appendChild(outline);
+                    bg_pool[bg_pool_i] = outline;
+                }
+                bg_pool_i++;
+
                 bg.removeAttribute("display");
                 bg.setAttributeNS(null, "cx", pos_x);
                 bg.setAttributeNS(null, "cy", pos_y);
-                bg.setAttributeNS(null, "r", this.r*1.15);
+                bg.setAttributeNS(null, "r", this.r*1.3);
                 bg.style.fill = "#00000000";
                 if (preferred) {
-                    bg.style.stroke = "#e643e6";
+                    bg.style.stroke = "#000000";
                 } else {
-                    bg.style.stroke = "#e643e655";
+                    bg.style.stroke = "#00000055";
                 }
                 bg.style.strokeWidth = 2;
+
+                outline.removeAttribute("display");
+                outline.setAttributeNS(null, "cx", pos_x);
+                outline.setAttributeNS(null, "cy", pos_y);
+                outline.setAttributeNS(null, "r", this.r*1.1);
+                outline.style.fill = "#00000000";
+                if (preferred) {
+                    outline.style.stroke = "#b8ffcb";
+                } else {
+                    outline.style.stroke = "#b8ffcb55";
+                }
+                outline.style.strokeWidth = 4;
             }
 
             //let circle = document.createElementNS(this.svgns, "circle");
