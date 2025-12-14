@@ -400,17 +400,31 @@ export function create_modals(_state) {
         let board_color_select = document.createElement("select");
         board_color_select.setAttribute("id", id + "-board-color-select");
         board_color_select.setAttribute("class", "form-select");
-        for (let x of ["light", "medium", "dark"]) {
+        for (let x of ["light", "medium", "dark", "[custom]"]) {
             let opt = document.createElement("option");
             opt.setAttribute("value", x);
             opt.innerHTML = x;
             board_color_select.appendChild(opt);
         }
         board_color_select.value = state.board_color;
+
+        let board_color_picker = document.createElement("input");
+        board_color_picker.setAttribute("type", "color");
+        board_color_picker.setAttribute("id", "board-color-picker");
+        board_color_picker.style.display = "none";
+        board_color_picker.onchange = () => {
+            state.set_board_color(board_color_picker.value);
+        };
+
         board_color_select.addEventListener(
             "change",
             () => {
-                state.set_board_color(board_color_select.value);
+                if (board_color_select.value == "[custom]") {
+                    board_color_picker.click();
+                    board_color_select.value = "";
+                } else {
+                    state.set_board_color(board_color_select.value);
+                }
             }
         );
 
