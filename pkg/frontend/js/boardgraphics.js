@@ -370,7 +370,7 @@ class BoardGraphics {
         }
 
         // very low on the priority list for fixing some day
-        this.clear_marks();
+        //this.clear_marks();
     }
 
     draw_lines() {
