@@ -346,31 +346,28 @@ class BoardGraphics {
         //this.draw_current();
     }
 
-    draw_boardbg(hex_color="") {
-        if (hex_color == "") {
-            hex_color = this.bgcolor;
-        }
+    draw_boardbg() {
         let svg = this.svgs.get("board");
-        let rect = document.createElementNS(this.svgns, "rect");
-        rect.setAttributeNS(null, "width", this.width+this.pad*2);
-        rect.setAttributeNS(null, "height", this.width+this.pad*2);
-        rect.setAttributeNS(null, "x", 0);
-        rect.setAttributeNS(null, "y", 0);
-        rect.setAttributeNS(null, "rx", 0);
-        rect.setAttributeNS(null, "ry", 0);
-        rect.setAttributeNS(null, "fill", hex_color);
-        svg.appendChild(rect);
-
-        this.bgcolor = hex_color;
-
-        let img = document.createElementNS(this.svgns, "image");
-        img.setAttributeNS(null, "href", "/static/board_" + this.state.board_color + ".png");
-        img.setAttributeNS(null, "width", this.width+this.pad*2);
-        img.setAttributeNS(null, "height", this.width+this.pad*2);
-        img.setAttributeNS(null, "x", 0);
-        img.setAttributeNS(null, "y", 0);
-        svg.appendChild(img);
-
+        let color = this.state.board_color;
+        if (color == "light" || color == "medium" || color == "dark") {
+            let img = document.createElementNS(this.svgns, "image");
+            img.setAttributeNS(null, "href", "/static/board_" + this.state.board_color + ".png");
+            img.setAttributeNS(null, "width", this.width+this.pad*2);
+            img.setAttributeNS(null, "height", this.width+this.pad*2);
+            img.setAttributeNS(null, "x", 0);
+            img.setAttributeNS(null, "y", 0);
+            svg.appendChild(img);
+        } else {
+            let rect = document.createElementNS(this.svgns, "rect");
+            rect.setAttributeNS(null, "width", this.width+this.pad*2);
+            rect.setAttributeNS(null, "height", this.width+this.pad*2);
+            rect.setAttributeNS(null, "x", 0);
+            rect.setAttributeNS(null, "y", 0);
+            rect.setAttributeNS(null, "rx", 0);
+            rect.setAttributeNS(null, "ry", 0);
+            rect.setAttributeNS(null, "fill", color);
+            svg.appendChild(rect);
+        }
 
         // very low on the priority list for fixing some day
         this.clear_marks();
