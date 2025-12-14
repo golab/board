@@ -17,6 +17,14 @@ import { opposite, Coord } from './common.js';
 
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+function random_shell() {
+    // random integer 1-16
+    let n = Math.floor(Math.random()*16) + 1;
+    // pad with 0
+    let s = String(n).padStart(2, "0");
+    return s;
+}
+
 function make_linear_gradient(svgns, color1, color2, id) {
     let grad = document.createElementNS(svgns, "linearGradient");
     grad.id = id;
@@ -43,7 +51,7 @@ function make_white_gradient(svgns) {
 }
 
 function make_highlight_gradient(svgns) {
-    return make_linear_gradient(svgns, "#BBBBBB44", "#00000044", "highlight_grad");
+    return make_linear_gradient(svgns, "#FFFFFF66", "#00000044", "highlight_grad");
 }
 
 function make_black_gradient(svgns) {
@@ -96,12 +104,12 @@ function make_shell_gradient(svgns) {
     let stop1 = document.createElementNS(svgns, "stop");
     stop1.setAttributeNS(null, "offset", "0%");
     stop1.setAttributeNS(null, "stop-color", color1);
-    stop1.setAttributeNS(null, "stop-opacity", "1");
+    stop1.setAttributeNS(null, "stop-opacity", "0.8");
 
     let stop2 = document.createElementNS(svgns, "stop");
     stop2.setAttributeNS(null, "offset", "100%");
     stop2.setAttributeNS(null, "stop-color", color2);
-    stop2.setAttributeNS(null, "stop-opacity", "0.4");
+    stop2.setAttributeNS(null, "stop-opacity", "0.2");
 
     grad.appendChild(stop1);
     grad.appendChild(stop2);
@@ -788,12 +796,13 @@ class BoardGraphics {
         shadow.setAttribute("id", "shadow-"+id);
     }
 
+
     draw_textured_stone(x, y) {
         let radius = this.side/2 * 0.98;
         let svg_id = "stones";
         let svg = this.svgs.get(svg_id);
         let stone = document.createElementNS(this.svgns, "image");
-        stone.setAttributeNS(null, "href", "/static/white.svg");
+        stone.setAttributeNS(null, "href", "/static/shell_" + random_shell() + ".png");
         stone.setAttributeNS(null, "width", radius*2);
         stone.setAttributeNS(null, "height", radius*2);
 
@@ -831,7 +840,7 @@ class BoardGraphics {
         let cls = "highlight-" + x.toString() + "-" + y.toString();
         highlight1.classList.add(cls);
         highlight2.classList.add(cls);
-        let highlights = this.svgs.get("highlights");
+        //let highlights = this.svgs.get("highlights");
     }
 
     draw_cast_shadow(x, y) {
@@ -1200,12 +1209,9 @@ class BoardGraphics {
         this.clear_svg("shadows");
         this.add_def("shadows", make_shadow_gradient(this.svgns));
 
-<<<<<<< HEAD
         this.clear_svg("highlights");
         this.add_def("highlights", make_highlight_gradient(this.svgns));
         this.add_def("highlights", make_shell_gradient(this.svgns));
-=======
->>>>>>> test
     }
 
     clear_board() {

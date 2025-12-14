@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 353.35999 353.35998"
+   version="1.1"
+   id="svg12"
+   sodipodi:docname="White Stone Finals-08.svg"
+   width="353.35999"
+   height="353.35999"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview12"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="2.465069"
+     inkscape:cx="175.85715"
+     inkscape:cy="178.08832"
+     inkscape:window-width="1920"
+     inkscape:window-height="1142"
+     inkscape:window-x="0"
+     inkscape:window-y="26"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg12" />
+  <defs
+     id="defs4">
+    <style
+       id="style1">
+      .cls-1 {
+        filter: url(#AI_GaussianBlur_7);
+        opacity: .5;
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        fill: #f9f9f9;
+      }
+
+      .cls-4 {
+        fill: #f2f2f2;
+      }
+
+      .cls-5 {
+        filter: url(#AI_GaussianBlur_4);
+      }
+
+      .cls-6 {
+        filter: url(#AI_GaussianBlur_9-2);
+      }
+
+      .cls-7 {
+        filter: url(#AI_GaussianBlur_9);
+      }
+
+      .cls-8 {
+        fill: #f7f7f7;
+      }
+    </style>
+    <filter
+       id="AI_GaussianBlur_4"
+       x="-0.028927862"
+       y="-0.028927862"
+       width="1.0578557"
+       height="1.0578557">
+      <feGaussianBlur
+         stdDeviation="4"
+         id="feGaussianBlur1" />
+    </filter>
+    <filter
+       id="AI_GaussianBlur_7"
+       x="-0.052342972"
+       y="-0.052342972"
+       width="1.1046859"
+       height="1.1046859">
+      <feGaussianBlur
+         stdDeviation="7"
+         id="feGaussianBlur2" />
+    </filter>
+    <filter
+       id="AI_GaussianBlur_9"
+       x="-0.073175691"
+       y="-0.073175691"
+       width="1.1463514"
+       height="1.1463514">
+      <feGaussianBlur
+         stdDeviation="9"
+         id="feGaussianBlur3" />
+    </filter>
+    <filter
+       id="AI_GaussianBlur_9-2"
+       data-name="AI_GaussianBlur_9"
+       x="-0.079202112"
+       y="-0.079202112"
+       width="1.1584042"
+       height="1.1584042">
+      <feGaussianBlur
+         stdDeviation="9"
+         id="feGaussianBlur4" />
+    </filter>
+  </defs>
+  <g
+     id="Base_Layer"
+     data-name="Base Layer"
+     transform="translate(-5.1700134,-4.1000061)">
+    <circle
+       class="cls-2"
+       cx="181.85001"
+       cy="180.78"
+       r="176.67999"
+       id="circle4" />
+  </g>
+  <g
+     id="Second_Base"
+     data-name="Second Base"
+     transform="translate(-5.1700134,-4.1000061)">
+    <g
+       class="cls-5"
+       id="g5">
+      <circle
+         class="cls-8"
+         cx="181.85001"
+         cy="180.78"
+         r="165.92999"
+         id="circle5" />
+    </g>
+  </g>
+  <g
+     id="Darker"
+     transform="translate(-5.1700134,-4.1000061)">
+    <g
+       class="cls-1"
+       id="g6">
+      <circle
+         class="cls-4"
+         cx="181.85001"
+         cy="180.78"
+         r="160.48"
+         id="circle6" />
+    </g>
+  </g>
+  <g
+     id="Lighter"
+     transform="translate(-5.1700134,-4.1000061)">
+    <g
+       class="cls-7"
+       id="g7">
+      <circle
+         class="cls-3"
+         cx="181.85001"
+         cy="180.78"
+         r="147.59"
+         id="circle7" />
+    </g>
+  </g>
+  <g
+     id="Highlight"
+     transform="translate(-5.1700134,-4.1000061)">
+    <g
+       class="cls-6"
+       id="g8">
+      <circle
+         class="cls-2"
+         cx="181.85001"
+         cy="180.78"
+         r="136.36"
+         id="circle8" />
+    </g>
+  </g>
+  <g
+     id="Layer_9"
+     data-name="Layer 9"
+     transform="translate(-5.1700134,-4.1000061)">
+    <g
+       id="g12">
+      <path
+         class="cls-4"
+         d="M 62.77,287.14 C 68.5,274.2 72.05,260.29 73.23,246.19 75.24,222.13 70.39,198.08 65.57,174.42 60.68,150.44 55.8,126.47 50.91,102.49 49.66,96.37 48.35,90.09 44.99,84.82 43.18,81.99 40.64,79.5 37.24,78.1 c -1.61,2.26 -3.16,4.55 -4.66,6.88 7.07,10.6 10.67,23.52 12.35,36.28 2.1,16.01 1.54,32.26 3.24,48.32 3.58,33.68 17.01,68.09 6.82,100.39 -2.54,8.06 -6.53,15.8 -8.78,23.88 2.08,2.46 4.22,4.86 6.43,7.2 4.47,-3.2 7.82,-8.69 10.13,-13.9 z"
+         id="path8" />
+      <path
+         class="cls-4"
+         d="m 106.36,225.51 c -0.06,-18.32 -0.18,-36.68 -2.18,-54.9 C 100.23,134.56 89.01,99.75 77.86,65.24 76.98,62.51 76.09,59.77 75.01,57.1 73.25,52.75 70.76,48.41 66.99,45.73 c -3.82,3.24 -7.5,6.64 -11.03,10.18 13.49,17.91 19.34,41.07 24.11,63.31 11.81,55.02 20.55,111.93 11.17,167.42 -2.18,12.89 -5.68,26.21 -13.21,36.64 4.22,3.04 8.58,5.9 13.07,8.56 2.83,-2.85 5.01,-6.34 6.14,-10.19 9.11,-31 9.23,-63.83 9.11,-96.14 z"
+         id="path9" />
+      <path
+         class="cls-4"
+         d="M 124.11,208.74 C 124.17,170.19 112.87,132.63 101.68,95.75 95.47,75.3 89.24,54.79 80.76,35.18 c -1.15,0.8 -2.3,1.61 -3.43,2.43 1.84,4.76 4.41,9.23 6.42,13.93 4.49,10.46 6.17,21.87 8.75,32.96 6,25.85 17.03,50.46 21.24,76.67 8.47,52.78 7.1,107.13 -4.01,159.42 -1.32,6.22 -2.95,12.72 -6.7,17.73 1.77,0.87 3.56,1.72 5.36,2.53 1.3,-2.35 2.17,-5.1 2.83,-7.67 10.41,-40.5 12.82,-82.62 12.89,-124.43 z"
+         id="path10" />
+      <path
+         class="cls-4"
+         d="m 184.69,328.73 c 18.68,-60.9 17.01,-126.52 5.61,-189.2 -4.47,-24.56 -11.5,-48.57 -19.12,-72.34 -5.17,-16.14 -10.79,-32.52 -21.03,-46.03 -3.61,-4.76 -7.93,-9.22 -13.41,-11.59 -5.07,1.31 -10.05,2.84 -14.93,4.57 5.06,3.6 9.67,7.83 13.68,12.57 3.45,4.08 6.45,8.53 9.24,13.08 5.49,8.96 10.24,18.44 13.23,28.52 2.31,7.78 3.54,15.83 4.77,23.86 1.42,9.27 2.84,18.53 4.25,27.8 3.73,24.37 5.66,48.98 6.75,73.61 0.79,17.77 1.14,35.55 1.49,53.33 0.12,6.31 0.25,12.63 -0.47,18.9 -3.12,27.31 -12.41,53.89 -26.96,77.2 -1.86,2.98 -3.84,6.01 -5.47,9.15 9.35,2.09 18.99,3.43 28.84,3.97 0.22,-0.24 0.43,-0.49 0.65,-0.74 6.45,-7.57 9.98,-17.16 12.89,-26.66 z"
+         id="path11" />
+      <path
+         class="cls-4"
+         d="m 277.96,298.57 c 15.35,-51.83 14.89,-106.95 11.46,-160.9 -1.3,-20.51 -3.07,-41.26 -9.83,-60.67 -5.26,-15.09 -13.42,-29.02 -22.45,-42.2 -4.88,-7.12 -10.88,-14.5 -17.67,-20.81 -2.96,-1.04 -5.96,-2.01 -8.99,-2.9 4.32,4.67 8.57,9.41 12.72,14.23 8.54,9.9 16.81,20.25 22.33,32.1 7.81,16.76 9.75,35.58 11.18,54.01 1.9,24.46 3.12,48.98 3.65,73.51 0.37,16.85 0.4,33.81 -2.38,50.43 -0.82,4.9 -1.88,9.76 -2.94,14.62 -4.7,21.5 -9.4,43 -14.09,64.49 -2.02,9.26 -4.47,19.14 -9.29,27.09 4.68,-2.06 9.25,-4.31 13.7,-6.75 0.18,-0.48 0.36,-0.96 0.53,-1.44 4.28,-11.52 8.57,-23.04 12.06,-34.83 z"
+         id="path12" />
+    </g>
+  </g>
+</svg>
