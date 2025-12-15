@@ -80,7 +80,7 @@ class State {
         this.board_color = "light";
         this.textured_stones = true;
         this.board_graphics = new BoardGraphics(this);
-        this.tree_graphics = new TreeGraphics();
+        this.tree_graphics = new TreeGraphics(this);
 
         this.comments = create_comments(this);
         this.connected_users = {};
@@ -454,8 +454,10 @@ class State {
     comments_toggle() {
         if (this.comments.hidden()) {
             this.comments.show();
+            this.tree_graphics.schedule_render();
         } else {
             this.comments.hide();
+            this.tree_graphics.schedule_render();
         }
     }
 

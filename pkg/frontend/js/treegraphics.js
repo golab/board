@@ -19,7 +19,8 @@ const BLACK = 1;
 const WHITE = 2;
 
 class TreeGraphics {
-    constructor() {
+    constructor(state) {
+        this.state = state;
         let review = document.getElementById("review");
         let container = document.getElementById("explorer_container");
         container.addEventListener("scroll", () => this.schedule_render());
@@ -952,7 +953,7 @@ class TreeGraphics {
             let [pos_x, pos_y] = this.get_xypos(x, y);
 
             let node = this.grid.get(y).get(x);
-            if (node.comment) {
+            if (node.comment && !this.state.comments.hidden()) {
                 let bg = bg_pool[bg_pool_i];
                 if (!bg) {
                     bg = document.createElementNS(this.svgns, "circle");
