@@ -513,6 +513,12 @@ func (r *Room) GenerateFullFrame(t state.TreeJSONType) *state.Frame {
 	return r.state.GenerateFullFrame(t)
 }
 
+func (r *Room) GenerateTreeOnly(t state.TreeJSONType) *state.Frame {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.state.GenerateTreeOnly(t)
+}
+
 func (r *Room) EditPlayerBlack(s string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -543,10 +549,10 @@ func (r *Room) HeadColor() color.Color {
 	return r.state.HeadColor()
 }
 
-func (r *Room) PushHead(x, y int, col color.Color) {
+func (r *Room) PushHead(x, y int, col color.Color) bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.state.PushHead(x, y, col)
+	return r.state.PushHead(x, y, col)
 }
 
 func (r *Room) ToSGF() string {
@@ -576,6 +582,12 @@ func (r *Room) Board() *board.Board {
 
 func (r *Room) BroadcastFullFrame() {
 	frame := r.GenerateFullFrame(state.Full)
+	evt := event.FrameEvent(frame)
+	r.Broadcast(evt)
+}
+
+func (r *Room) BroadcastTreeOnly() {
+	frame := r.GenerateTreeOnly(state.Full)
 	evt := event.FrameEvent(frame)
 	r.Broadcast(evt)
 }

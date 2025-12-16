@@ -186,3 +186,16 @@ func (s *State) GenerateFullFrame(t TreeJSONType) *Frame {
 	frame.WhiteCaps = s.current.WhiteCaps
 	return frame
 }
+
+func (s *State) GenerateTreeOnly(t TreeJSONType) *Frame {
+	frame := &Frame{}
+	frame.Type = DiffFrame
+	frame.Diff = nil
+	frame.Marks = s.generateMarks()
+	frame.Comments = nil
+	frame.Metadata = nil
+	frame.TreeJSON = s.saveTree(t)
+	frame.BlackCaps = s.current.BlackCaps
+	frame.WhiteCaps = s.current.WhiteCaps
+	return frame
+}

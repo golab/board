@@ -27,8 +27,9 @@ import (
 
 type Room interface {
 	HeadColor() color.Color
-	PushHead(int, int, color.Color)
+	PushHead(int, int, color.Color) bool
 	BroadcastFullFrame()
+	BroadcastTreeOnly()
 	AddStones([]*coord.Stone)
 	Broadcast(event.Event)
 	UploadSGF(string) event.Event
@@ -265,9 +266,13 @@ func (o *OGSConnector) loop(gameID int, ogsType string) error {
 			if curColor == color.Black {
 				col = color.White
 			}
-			o.Room.PushHead(x, y, col)
+			tracking := o.Room.PushHead(x, y, col)
 
-			o.Room.BroadcastFullFrame()
+			if tracking {
+				o.Room.BroadcastFullFrame()
+			} else {
+				o.Room.BroadcastTreeOnly()
+			}
 
 		} else if topic == fmt.Sprintf("game/%d/gamedata", gameID) {
 			payload := arr[1].(map[string]any)

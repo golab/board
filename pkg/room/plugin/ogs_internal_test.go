@@ -78,12 +78,17 @@ func (r *MockRoom) HeadColor() color.Color {
 	return color.Black
 }
 
-func (r *MockRoom) PushHead(x, y int, c color.Color) {
+func (r *MockRoom) PushHead(x, y int, c color.Color) bool {
 	r.calls = append(r.calls, &call{name: "PushHead", args: []any{x, y, c}})
+	return true
 }
 
 func (r *MockRoom) BroadcastFullFrame() {
 	r.calls = append(r.calls, &call{name: "BroadcastFullFrame"})
+}
+
+func (r *MockRoom) BroadcastTreeOnly() {
+	r.calls = append(r.calls, &call{name: "BroadcastTreeOnly"})
 }
 
 func (r *MockRoom) AddStones(s []*coord.Stone) {

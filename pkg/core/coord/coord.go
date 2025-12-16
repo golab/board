@@ -181,6 +181,9 @@ func (c *Coord) String() string {
 
 // ToLetters is sgf-specific (notice the inclusion of 'i')
 func (c *Coord) ToLetters() string {
+	if c == nil {
+		return ""
+	}
 	alphabet := "abcdefghijklmnopqrs"
 	return string([]byte{alphabet[c.X], alphabet[c.Y]})
 }

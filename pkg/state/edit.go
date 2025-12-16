@@ -60,7 +60,7 @@ func (s *State) addPassNode(col color.Color, flds fields.Fields, index int) {
 	s.current.SetDiff(nil)
 }
 
-func (s *State) PushHead(x, y int, col color.Color) {
+func (s *State) PushHead(x, y int, col color.Color) bool {
 	crd := coord.NewCoord(x, y)
 	if x == -1 || y == -1 {
 		crd = nil
@@ -122,6 +122,8 @@ func (s *State) PushHead(x, y int, col color.Color) {
 
 	// set diff
 	s.head.SetDiff(diff)
+
+	return tracking
 }
 
 func (s *State) AddNode(crd *coord.Coord, col color.Color) *coord.Diff {
