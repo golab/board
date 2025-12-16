@@ -543,6 +543,18 @@ func (r *Room) AddStones(moves []*coord.Stone) {
 	r.state.AddStones(moves)
 }
 
+func (r *Room) AddStonesToTrunk(t int, moves []*coord.Stone) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.state.AddStonesToTrunk(t, moves)
+}
+
+func (r *Room) GetColorAt(t int) color.Color {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.state.GetColorAt(t)
+}
+
 func (r *Room) HeadColor() color.Color {
 	r.mu.Lock()
 	defer r.mu.Unlock()

@@ -91,8 +91,16 @@ func (r *MockRoom) BroadcastTreeOnly() {
 	r.calls = append(r.calls, &call{name: "BroadcastTreeOnly"})
 }
 
-func (r *MockRoom) AddStones(s []*coord.Stone) {
-	r.calls = append(r.calls, &call{name: "AddStones", args: []any{s}})
+func (r *MockRoom) AddStonesToTrunk(t int, s []*coord.Stone) {
+	r.calls = append(r.calls, &call{name: "AddStonesToTrunk", args: []any{t, s}})
+}
+
+func (r *MockRoom) GetColorAt(t int) color.Color {
+	r.calls = append(r.calls, &call{name: "GetColorAt", args: []any{t}})
+	if t%2 == 0 {
+		return color.White
+	}
+	return color.Black
 }
 
 func (r *MockRoom) Broadcast(e event.Event) {
@@ -250,7 +258,7 @@ func TestOGSConnectorLoop3(t *testing.T) {
 	assert.NoError(t, err)
 
 	// setup
-	s := `["review/123456789/r", {"m": "aabbccdd"}]`
+	s := `["review/123456789/r", {"f": 2, "m": "aabbccdd"}]`
 	_, err = o.Socket.Write([]byte(s))
 	assert.NoError(t, err)
 
@@ -259,10 +267,12 @@ func TestOGSConnectorLoop3(t *testing.T) {
 	assert.NoError(t, err)
 
 	// check effects
-	require.Equal(t, len(r.calls), 2)
-	assert.Equal(t, r.calls[0].name, "AddStones")
-	require.Equal(t, len(r.calls[0].args), 1)
-	stones, ok := r.calls[0].args[0].([]*coord.Stone)
+	require.Equal(t, len(r.calls), 3)
+	assert.Equal(t, r.calls[0].name, "GetColorAt")
+
+	assert.Equal(t, r.calls[1].name, "AddStonesToTrunk")
+	require.Equal(t, len(r.calls[1].args), 2)
+	stones, ok := r.calls[1].args[1].([]*coord.Stone)
 	require.True(t, ok)
 
 	require.Equal(t, len(stones), 4)
@@ -279,5 +289,5 @@ func TestOGSConnectorLoop3(t *testing.T) {
 	assert.Equal(t, stones[3].Color, color.White)
 	assert.True(t, stones[3].Coord.Equal(coord.NewCoord(3, 3)))
 
-	assert.Equal(t, r.calls[1].name, "BroadcastFullFrame")
+	assert.Equal(t, r.calls[2].name, "BroadcastFullFrame")
 }

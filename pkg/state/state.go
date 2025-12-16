@@ -44,6 +44,15 @@ func (s *State) HeadColor() color.Color {
 	return s.head.Color
 }
 
+func (s *State) GetColorAt(t int) color.Color {
+	p := s.root.TrunkNum(t)
+	if p == -1 {
+		return color.Empty
+	}
+	node := s.nodes[p]
+	return Color(node)
+}
+
 func (s *State) SetNextIndex(i int) {
 	s.nextIndex = i
 }

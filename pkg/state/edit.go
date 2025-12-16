@@ -175,6 +175,14 @@ func (s *State) addNode(crd *coord.Coord, col color.Color, flds fields.Fields, i
 	return diff
 }
 
+func (s *State) AddStonesToTrunk(t int, moves []*coord.Stone) {
+	parentIndex := s.root.TrunkNum(t)
+	if parentIndex == -1 {
+		return
+	}
+	s.smartGraft(parentIndex, moves)
+}
+
 func (s *State) AddStones(moves []*coord.Stone) {
 	node := s.root
 	locationSave := s.current.Index

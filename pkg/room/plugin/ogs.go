@@ -30,7 +30,8 @@ type Room interface {
 	PushHead(int, int, color.Color) bool
 	BroadcastFullFrame()
 	BroadcastTreeOnly()
-	AddStones([]*coord.Stone)
+	AddStonesToTrunk(int, []*coord.Stone)
+	GetColorAt(int) color.Color
 	Broadcast(event.Event)
 	UploadSGF(string) event.Event
 }
@@ -299,12 +300,17 @@ func (o *OGSConnector) loop(gameID int, ogsType string) error {
 				continue
 			}
 			moves := payload["m"].(string)
+			if len(moves) == 0 {
+				continue
+			}
+
+			if _, ok := payload["f"]; !ok {
+				continue
+			}
+			f := int(payload["f"].(float64))
 
 			movesArr := []*coord.Stone{}
-			currentColor := color.Black
-			if o.First == 1 {
-				currentColor = color.White
-			}
+			currentColor := o.Room.GetColorAt(f).Opposite()
 
 			for i := 0; i < len(moves); i += 2 {
 				if i+1 < len(moves) {
@@ -328,7 +334,7 @@ func (o *OGSConnector) loop(gameID int, ogsType string) error {
 					}
 				}
 			}
-			o.Room.AddStones(movesArr)
+			o.Room.AddStonesToTrunk(f, movesArr)
 
 			// Send full board update after adding pattern
 			o.Room.BroadcastFullFrame()
