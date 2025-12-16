@@ -18,7 +18,7 @@ A free and open-source multi-user go board.
 - Sync with live OGS games
 - Integrate with Twitch
 - Free and open source
-- Open license [asset pack](assets/assets.zip) (board and white stones)
+- Open license [asset pack](https://github.com/jarednogo/board/raw/refs/heads/test/assets/assets.zip) (board and white stones)
 
 ## Contributing
 - Report bugs or suggest features on [Discord](https://discord.gg/y4wGZyed3e), or open [an issue](https://github.com/jarednogo/board/issues/new) on GitHub.
