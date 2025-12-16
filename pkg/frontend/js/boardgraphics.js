@@ -798,10 +798,18 @@ class BoardGraphics {
 
     draw_textured_stone(x, y) {
         let radius = this.side/2 * 0.98;
+        let dim = 0;
+        if (radius < 60) {
+            dim = 60;
+        } else {
+            dim = 120;
+        }
+        let dims = "_" + dim + "x" + dim;
+
         let svg_id = "stones";
         let svg = this.svgs.get(svg_id);
         let stone = document.createElementNS(this.svgns, "image");
-        stone.setAttributeNS(null, "href", "/static/shell_" + random_shell() + ".png");
+        stone.setAttributeNS(null, "href", "/static/shell_" + random_shell() + dims + ".png");
         stone.setAttributeNS(null, "width", radius*2);
         stone.setAttributeNS(null, "height", radius*2);
 
