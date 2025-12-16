@@ -138,6 +138,7 @@ var oddTests = []struct {
 	{"(;)", false},
 	{"(;;;)", false},
 	{"garbage(;GM[1])", false},
+	{"(;GM[1])garbageafter", false},
 	{"totalgarbage", true},
 	{"( ; GM [1] )", false},
 	{"garbage (abc, def) stuff", true},
