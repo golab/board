@@ -12,6 +12,7 @@ A free and open-source multi-user go board.
 ## Features
 - Shared control of the go board
 - User-specified URLs
+- No sign-up or login
 - Password-protected rooms
 - Browser-based
 - Desktop and mobile compatible

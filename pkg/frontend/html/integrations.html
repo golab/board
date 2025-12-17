@@ -13,26 +13,41 @@
                     <p class="h5">Twitch</p>
 
                     <p class="h6 lh-lg" style="text-align:justify;">
-                    If you are a Twitch streamer, you can connect a board to your Twitch chat. As the channel owner, use the command "!setboard [board_id]" in chat to specify which board to connect to. Audience members can use the command "!branch [coordinates]" to add a branch to the tree. (For example, use "!branch e17 d17 e16 c14" to add a branch starting at the current node).
+                    If you are a Twitch streamer, you can connect a board to your Twitch chat.
                     </p>
+
                     <p class="h6 lh-lg" style="text-align:justify;">
-                    Click here <a href="/apps/twitch/subscribe"><btn class="btn btn-light"><i class="bi-send"></i></button></a> to authorize and subscribe the chatbot to your channel. You must be logged in to Twitch.
+                    <a href="/apps/twitch/subscribe"><btn class="btn btn-primary"><i class="bi-twitch"></i></button></a> Authorize and subscribe the chatbot to your channel. You must be logged in to Twitch.
                     </p>
+
                     <p class="h6 lh-lg" style="text-align:justify;">
-                    Click here <a href="/apps/twitch/unsubscribe"><btn class="btn btn-light"><i class="bi-send-x"></i></button></a> to unsubscribe the chatbot from your channel. You must be logged in to Twitch.
-
-
-
+                    <a href="/apps/twitch/unsubscribe"><btn class="btn btn-danger"><i class="bi-twitch"></i></button></a> Unsubscribe the chatbot from your channel. You must be logged in to Twitch.
                     </p>
 
+                    <p class="h6 lh-lg" style="text-align:justify;">
+                    As the channel owner, use the command</p>
+                    <pre><code>!setboard [board_id]</code></pre>
+                    <p class="h6 lh-lg" style="text-align:justify;">
+                    in chat to specify which board to connect to. Audience members can use the command</p>
+                    <pre><code>!branch [coordinates]</code></pre>
+                    <p class="h6 lh-lg" style="text-align:justify;">
+                    to add a branch to the tree. For example, use</p>
+                    <pre><code>!branch e17 d17 e16 c14</code></pre>
+                    <p class="h6 lh-lg" style="text-align:justify;">
+                    to add a branch starting at the current node.
+                    Audience members can also use
+                    </p>
+                    <pre><code>!branch [node] [coordinates]</code></pre>
+                    <p class="h6 lh-lg" style="text-align:justify;">
+                    to add branches starting at a given node. For example, use</p>
+                    <pre><code>!branch 15 e17 d17 e16 c14</code></pre>
+                    <p class="h6 lh-lg" style="text-align:justify;">
+                    to add a branch starting at node 15.
+                    </p>
                 </div>
                 <div class="col-lg-3"></div>
             </div>
         </div>
-
-
         {{ template "footer.html" }}
-
-
     </body>
 </html>
