@@ -47,6 +47,11 @@ function preload() {
             img.src = src;
         }
     }
+    for (let color of ["light", "medium", "dark"]) {
+        let src = "/static/board_" + color + ".png";
+        const img = new Image();
+        img.src = src;
+    }
 }
 
 preload();
