@@ -312,7 +312,7 @@ class BoardGraphics {
     black_or_white(hex, stone) {
         // if there's a black stone there
         if (stone == 1) {
-            if (this.state.black_stone_color == "gradient") {
+            if (!this.state.black_stone_color.startsWith("#")) {
                 return "#FFFFFF";
             }
             return hex_to_bw(this.state.black_stone_color);
@@ -320,7 +320,7 @@ class BoardGraphics {
 
         // if there's a white stone there
         if (stone == 2) {
-            if (this.state.white_stone_color == "gradient" || this.state.white_stone_color == "pattern") {
+            if (!this.state.white_stone_color.startsWith("#")) {
                 return "#000000";
             }
             return hex_to_bw(this.state.white_stone_color);
@@ -681,6 +681,9 @@ class BoardGraphics {
 
     draw_black_area(x, y) {
         let color = "#000000";
+        if (this.state.black_stone_color.startsWith("#")) {
+            color = this.state.black_stone_color;
+        }
         let id = "marks";
         return this.draw_filled_square(x, y, color, id);
     }
@@ -688,6 +691,9 @@ class BoardGraphics {
     draw_white_area(x, y) {
         let color = "#FFFFFF";
         let id = "marks";
+        if (this.state.white_stone_color.startsWith("#")) {
+            color = this.state.white_stone_color;
+        }
         return this.draw_filled_square(x, y, color, id);
     }
 
@@ -954,8 +960,14 @@ class BoardGraphics {
         }
         let radius = this.side/2.1;
         let hexcolor = "#00000077";
+        if (this.state.black_stone_color.startsWith("#")) {
+            hexcolor = this.state.black_stone_color + "77";
+        }
         if (color == 2) {
             hexcolor = "#FFFFFF77";
+            if (this.state.white_stone_color.startsWith("#")) {
+                hexcolor = this.state.white_stone_color + "77";
+            }
         }
         this.draw_circle(x, y, radius, hexcolor, "ghost", true, 0);
     }
