@@ -639,9 +639,11 @@ class BoardGraphics {
     }
 
     _draw_current(x, y, color) {
-        let hexcolor = "#FFFFFF";
+        let hexcolor = "";
         if (color == 1) {
-            hexcolor = "#000000";
+            hexcolor = this.black_or_white(this.state.white_stone_color, opposite(color));
+        } else {
+            hexcolor = this.black_or_white(this.state.black_stone_color, opposite(color));
         }
         this.draw_circle(x, y, this.side/4, hexcolor, "current", false);
     }
