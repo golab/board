@@ -77,7 +77,9 @@ class State {
         this.letters = new Array(26).fill(0);
 
         this.board_color = "light";
-        this.textured_stones = true;
+        this.black_stone_color = "#000000";
+        this.white_stone_color = "#FFFFFF";
+        this.shadow = true;
         this.board_graphics = new BoardGraphics(this);
         this.tree_graphics = new TreeGraphics(this);
 
@@ -110,8 +112,20 @@ class State {
         this.board_graphics.draw_marks();
     }
 
-    set_textured_stones(toggle) {
-        this.textured_stones = toggle;
+    set_black_stone_color(color) {
+        this.black_stone_color = color;
+        this.board_graphics.draw_stones();
+        this.board_graphics.draw_marks();
+    }
+
+    set_white_stone_color(color) {
+        this.white_stone_color = color;
+        this.board_graphics.draw_stones();
+        this.board_graphics.draw_marks();
+    }
+
+    set_shadow(sh) {
+        this.shadow = sh;
         this.board_graphics.draw_stones();
     }
 

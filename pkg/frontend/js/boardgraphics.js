@@ -27,20 +27,12 @@ function hex_to_value(hex) {
     return Math.round((y / 255) * 100);
 }
 
-function black_or_white(hex, stone) {
-    if (stone == 1) {
-        return "#FFFFFF";
-    }
-    if (stone == 2) {
-        return "#000000";
-    }
-    if (hex == "light" || hex == "medium") {
-        return "#000000";
-    } else if (hex == "dark") {
-        return "#FFFFFF";
-    }
+// https://ux.stackexchange.com/questions/107318/formula-for-color-contrast-between-text-and-background
+function hex_to_bw(hex) {
     let v = hex_to_value(hex);
-    if (v < 25) {
+    // picked 68 based on the stack overflow page:
+    // "If L >= 0.175, then black text is okay."
+    if (v < 68) {
         return "#FFFFFF";
     }
     return "#000000";
@@ -317,6 +309,31 @@ class BoardGraphics {
         this.draw_stones();
     }
 
+    black_or_white(hex, stone) {
+        // if there's a black stone there
+        if (stone == 1) {
+            if (this.state.black_stone_color == "gradient") {
+                return "#FFFFFF";
+            }
+            return hex_to_bw(this.state.black_stone_color);
+        }
+
+        // if there's a white stone there
+        if (stone == 2) {
+            if (this.state.white_stone_color == "gradient" || this.state.white_stone_color == "pattern") {
+                return "#000000";
+            }
+            return hex_to_bw(this.state.white_stone_color);
+        }
+
+        if (hex == "light" || hex == "medium") {
+            return "#000000";
+        } else if (hex == "dark") {
+            return "#FFFFFF";
+        }
+        return hex_to_bw(hex);
+    }
+
     draw_marks() {
         this.clear_svg("marks");
         //this.clear_svg("backdrop");
@@ -329,7 +346,7 @@ class BoardGraphics {
             let x = parseInt(spl[0]);
             let y = parseInt(spl[1]);
 
-            let hexcolor = black_or_white(
+            let hexcolor = this.black_or_white(
                 this.state.board_color,
                 this.state.board.get(new Coord(x, y)));
             let svg_id = "marks";
@@ -415,7 +432,7 @@ class BoardGraphics {
     }
 
     draw_lines() {
-        let color = black_or_white(this.state.board_color);
+        let color = this.black_or_white(this.state.board_color);
         var i;
 
         let coord_pairs = [];
@@ -502,7 +519,7 @@ class BoardGraphics {
     }
 
     draw_coords() {
-        let color = black_or_white(this.state.board_color);
+        let color = this.black_or_white(this.state.board_color);
         var i;
 
         let font_size = this.width/50;
@@ -656,7 +673,7 @@ class BoardGraphics {
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
         }
-        let hexcolor = black_or_white(
+        let hexcolor = this.black_or_white(
             this.state.board_color,
             this.state.board.get(new Coord(x, y)));
         this.draw_triangle(x, y, hexcolor, "ghost-marks");
@@ -721,14 +738,14 @@ class BoardGraphics {
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
         }
-        let hexcolor = black_or_white(
+        let hexcolor = this.black_or_white(
             this.state.board_color,
             this.state.board.get(new Coord(x, y)));
         this.draw_square(x, y, hexcolor, "ghost-marks");
     }
 
     draw_star(x, y) {
-        let color = black_or_white(this.state.board_color);
+        let color = this.black_or_white(this.state.board_color);
         let radius = this.side/12;
         let star = this.draw_circle(x, y, radius, color, "lines", true, 0);
         star.setAttribute("mask", "url(#lineMask)");
@@ -797,10 +814,6 @@ class BoardGraphics {
 
     draw_stone(x, y, color) {
         let radius = this.side/2 * 0.98;
-        let hexcolor = "#000000";
-        if (color == 2) {
-            hexcolor = "#F0F0F0";
-        }
         // this could be more idiomatic and universal
         let id = x.toString() + "-" + y.toString();
 
@@ -812,31 +825,42 @@ class BoardGraphics {
 
         let stone;
         if (color == 2) {
-            // regular fill
-            //this.draw_circle(x, y, radius, hexcolor, svg_id);
+            if (this.state.white_stone_color == "gradient") {
 
-            // gradient fill
-            if (!this.state.textured_stones) {
+                // gradient fill
                 stone = this.draw_gradient_circle(x, y, radius, "white_grad", svg_id, stroke);
-            } else {
-                // texture
+            } else if (this.state.white_stone_color == "pattern") {
+                // textured fill
                 stone = this.draw_textured_stone(x, y);
+            } else if (this.state.white_stone_color == "flat") {
+                // flat fill (with outline)
+                stone = this.draw_circle(x, y, radius, "#FFFFFF", svg_id, true, 1);
+            } else {
+                // custom fill
+                stone = this.draw_circle(x, y, radius, this.state.white_stone_color, svg_id, true, 0);
             }
 
         } else if (color == 1) {
-            // regular fill
-            //this.draw_circle(x, y, radius, hexcolor, svg_id);
             
-            // gradient fill
-            stone = this.draw_gradient_circle(x, y, radius, "black_grad", svg_id, stroke);
+            if (this.state.black_stone_color == "gradient") {
+                // gradient fill
+                stone = this.draw_gradient_circle(x, y, radius, "black_grad", svg_id, stroke);
+            } else if (this.state.black_stone_color == "flat") {
+                // flat fill
+                stone = this.draw_circle(x, y, radius, "#000000", svg_id, true, 0);
+            } else {
+                // custom fill
+                stone = this.draw_circle(x, y, radius, this.state.black_stone_color, svg_id, true, 0);
+            }
         }
         stone.setAttribute("id", "stone-"+id);
 
         // cast shadow
-        let shadow = this.draw_cast_shadow(x, y);
-        shadow.setAttribute("id", "shadow-"+id);
+        if (this.state.shadow) {
+            let shadow = this.draw_cast_shadow(x, y);
+            shadow.setAttribute("id", "shadow-"+id);
+        }
     }
-
 
     draw_textured_stone(x, y) {
         let radius = this.side/2 * 0.98;
@@ -1026,7 +1050,7 @@ class BoardGraphics {
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
         }
-        let hexcolor = black_or_white(
+        let hexcolor = this.black_or_white(
             this.state.board_color,
             this.state.board.get(new Coord(x, y)));
         let text = "";
@@ -1066,7 +1090,7 @@ class BoardGraphics {
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
         }
-        let hexcolor = black_or_white(
+        let hexcolor = this.black_or_white(
             this.state.board_color,
             this.state.board.get(new Coord(x, y)));
         let number = this.state.next_number();
@@ -1094,7 +1118,7 @@ class BoardGraphics {
 
     _draw_square(x, y) {
         let svg_id = "marks";
-        let hexcolor = black_or_white(
+        let hexcolor = this.black_or_white(
             this.state.board_color,
             this.state.board.get(new Coord(x, y)));
         this.draw_square(x, y, hexcolor, svg_id);
@@ -1102,7 +1126,7 @@ class BoardGraphics {
 
     _draw_triangle(x, y) {
         let svg_id = "marks";
-        let hexcolor = black_or_white(
+        let hexcolor = this.black_or_white(
             this.state.board_color,
             this.state.board.get(new Coord(x, y)));
         this.draw_triangle(x, y, hexcolor, svg_id);
@@ -1110,7 +1134,7 @@ class BoardGraphics {
 
     _draw_manual_letter(x, y, letter) {
         let coord = new Coord(x, y);
-        let hexcolor = black_or_white(
+        let hexcolor = this.black_or_white(
             this.state.board_color,
             this.state.board.get(coord));
         let svg_id = "marks";
@@ -1124,7 +1148,7 @@ class BoardGraphics {
 
     draw_custom_label(x, y, label) {
         let coord = new Coord(x, y);
-        let hexcolor = black_or_white(
+        let hexcolor = this.black_or_white(
             this.state.board_color,
             this.state.board.get(coord));
         let svg_id = "marks";
@@ -1138,7 +1162,7 @@ class BoardGraphics {
 
     _draw_manual_number(x, y, number) {
         let coord = new Coord(x, y);
-        let hexcolor = black_or_white(
+        let hexcolor = this.black_or_white(
             this.state.board_color,
             this.state.board.get(coord));
         let svg_id = "marks";

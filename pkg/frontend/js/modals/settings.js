@@ -312,51 +312,146 @@ function add_settings_modal(state) {
     body.appendChild(board_color_element);
     body.appendChild(document.createElement("br"));
 
-    // textured stones
-    let textured_stones_element = document.createElement("div");
-    textured_stones_element.innerHTML = "Textured stones "
+    // stone colors
+    // black stones
+    let black_stone_color = document.createElement("div");
+    let black_stone_color_label = document.createElement("div");
+    black_stone_color_label.innerHTML = "Black stones:";
 
-    let d_textured_stones = document.createElement("div");
-    d_textured_stones.setAttribute("class", "form-check form-switch");
-
-    let inp_textured_stones = document.createElement("input");
-    inp_textured_stones.setAttribute("class", "form-check-input");
-    inp_textured_stones.setAttribute("type", "checkbox");
-    inp_textured_stones.setAttribute("role", "switch");
-    inp_textured_stones.checked = true;
-    inp_textured_stones.setAttribute("id", "textured-stones-switch");
-
-    let label_textured_stones = document.createElement("label");
-    label_textured_stones.setAttribute("class", "form-check-label");
-    label_textured_stones.setAttribute("for", "textured-stones-switch");
-    label_textured_stones.innerHTML = "On";
-    let stored_textured_stones = localStorage.getItem("textured_stones") || "";
-    if (stored_textured_stones == "true") {
-        inp_textured_stones.checked = true;
-        state.set_textured_stones(true);
-    } else if (stored_textured_stones == "false") {
-        inp_textured_stones.checked = false;
-        state.set_textured_stones(false);
-        label_textured_stones.innerHTML = "Off";
+    let black_stone_color_select = document.createElement("select");
+    black_stone_color_select.setAttribute("id", id + "-black-stone-color-select");
+    black_stone_color_select.setAttribute("class", "form-select");
+    for (let x of ["gradient", "flat", "[custom]"]) {
+        let opt = document.createElement("option");
+        opt.setAttribute("value", x);
+        opt.innerHTML = x;
+        black_stone_color_select.appendChild(opt);
     }
 
-    inp_textured_stones.onchange = function() {
+    let b_color_picker = document.createElement("input");
+    b_color_picker.setAttribute("type", "color");
+    b_color_picker.setAttribute("id", "board-color-picker");
+    b_color_picker.style.display = "none";
+    b_color_picker.onchange = () => {
+        state.set_black_stone_color(b_color_picker.value);
+        localStorage.setItem("black_stone_color", b_color_picker.value);
+    };
+    let black_stored = localStorage.getItem("black_stone_color") || "gradient";
+    //b_color_picker.value = black_stored;
+    black_stone_color_select.value = black_stored;
+    state.set_black_stone_color(black_stored);
+    black_stone_color.appendChild(black_stone_color_label);
+    black_stone_color.appendChild(b_color_picker);
+
+    black_stone_color_select.addEventListener(
+        "change",
+        () => {
+            if (black_stone_color_select.value == "[custom]") {
+                b_color_picker.click();
+                black_stone_color_select.value = "";
+            } else {
+                state.set_black_stone_color(black_stone_color_select.value);
+                localStorage.setItem("black_stone_color", black_stone_color_select.value);
+            }
+        }
+    );
+
+    body.appendChild(black_stone_color);
+    body.appendChild(black_stone_color_select);
+    body.appendChild(document.createElement("br"));
+
+    // white stones
+    let white_stone_color = document.createElement("div");
+    let white_stone_color_label = document.createElement("div");
+    white_stone_color_label.innerHTML = "White stones:";
+
+    let white_stone_color_select = document.createElement("select");
+    white_stone_color_select.setAttribute("id", id + "-white-stone-color-select");
+    white_stone_color_select.setAttribute("class", "form-select");
+    for (let x of ["pattern", "gradient", "flat", "[custom]"]) {
+        let opt = document.createElement("option");
+        opt.setAttribute("value", x);
+        opt.innerHTML = x;
+        white_stone_color_select.appendChild(opt);
+    }
+
+    let w_color_picker = document.createElement("input");
+    w_color_picker.setAttribute("type", "color");
+    w_color_picker.setAttribute("id", "board-color-picker");
+    w_color_picker.style.display = "none";
+    w_color_picker.onchange = () => {
+        state.set_white_stone_color(w_color_picker.value);
+        localStorage.setItem("white_stone_color", w_color_picker.value);
+    };
+    let white_stored = localStorage.getItem("white_stone_color") || "pattern";
+    //w_color_picker.value = white_stored;
+    white_stone_color_select.value = white_stored;
+    state.set_white_stone_color(white_stored);
+    white_stone_color.appendChild(white_stone_color_label);
+    white_stone_color.appendChild(w_color_picker);
+
+    white_stone_color_select.addEventListener(
+        "change",
+        () => {
+            if (white_stone_color_select.value == "[custom]") {
+                w_color_picker.click();
+                white_stone_color_select.value = "";
+            } else {
+                state.set_white_stone_color(white_stone_color_select.value);
+                localStorage.setItem("white_stone_color", white_stone_color_select.value);
+            }
+        }
+    );
+
+    body.appendChild(white_stone_color);
+    body.appendChild(white_stone_color_select);
+    body.appendChild(document.createElement("br"));
+
+    // shadows
+    let shadow_element = document.createElement("div");
+    shadow_element.innerHTML = "Shadows "
+
+    let d_shadow = document.createElement("div");
+    d_shadow.setAttribute("class", "form-check form-switch");
+
+    let inp_shadow = document.createElement("input");
+    inp_shadow.setAttribute("class", "form-check-input");
+    inp_shadow.setAttribute("type", "checkbox");
+    inp_shadow.setAttribute("role", "switch");
+    inp_shadow.checked = true;
+    inp_shadow.setAttribute("id", "textured-stones-switch");
+
+    let label_shadow = document.createElement("label");
+    label_shadow.setAttribute("class", "form-check-label");
+    label_shadow.setAttribute("for", "textured-stones-switch");
+    label_shadow.innerHTML = "On";
+    let stored_shadow = localStorage.getItem("shadow") || "";
+    if (stored_shadow == "true") {
+        inp_shadow.checked = true;
+        state.set_shadow(true);
+    } else if (stored_shadow == "false") {
+        inp_shadow.checked = false;
+        state.set_shadow(false);
+        label_shadow.innerHTML = "Off";
+    }
+
+    inp_shadow.onchange = function() {
         if (this.checked) {
-            label_textured_stones.innerHTML = "On";
-            state.set_textured_stones(true);
-            localStorage.setItem("textured_stones", "true");
+            label_shadow.innerHTML = "On";
+            state.set_shadow(true);
+            localStorage.setItem("shadow", "true");
         } else {
-            label_textured_stones.innerHTML = "Off";
-            state.set_textured_stones(false);
-            localStorage.setItem("textured_stones", "false");
+            label_shadow.innerHTML = "Off";
+            state.set_shadow(false);
+            localStorage.setItem("shadow", "false");
         }
     };
 
-    d_textured_stones.appendChild(inp_textured_stones);
-    d_textured_stones.appendChild(label_textured_stones);
-    textured_stones_element.append(d_textured_stones);
+    d_shadow.appendChild(inp_shadow);
+    d_shadow.appendChild(label_shadow);
+    shadow_element.append(d_shadow);
 
-    body.appendChild(textured_stones_element);
+    body.appendChild(shadow_element);
     body.appendChild(document.createElement("br"));
 
     // password
