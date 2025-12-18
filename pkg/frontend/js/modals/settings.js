@@ -54,32 +54,6 @@ function set_password(password) {
 }
 
 function add_settings_modal(state) {
-    function enter_password(password) {
-        let id = "settings-modal";
-        let m = bootstrap.Modal.getInstance("#"+id);
-        m._element.focus();
-
-        if (password == "") {
-            cancel_password();
-        } else {
-            state.network_handler.prepare_settings(make_settings());
-        }
-    }
-
-    function cancel_password() {
-        let id = "settings-modal";
-        let password_bar = document.getElementById(id + "-password-bar");
-        let setcancel_div = document.getElementById(id + "-setcancel-div");
-        let password_anchor = document.getElementById(id + "-password-anchor");
-
-        password_bar.hidden = true;
-        setcancel_div.hidden = true;
-        password_anchor.hidden = false;
-
-        let m = bootstrap.Modal.getInstance("#"+id);
-        m._element.focus();
-    }
-
     let id = "settings-modal";
 
     let title = document.createElement("h5");
@@ -90,10 +64,17 @@ function add_settings_modal(state) {
     let gameinfo_toggle = document.createElement("a");
     gameinfo_toggle.setAttribute("data-bs-toggle", "collapse");
     gameinfo_toggle.setAttribute("href", "#gameinfo-collapse");
+    gameinfo_toggle.setAttribute("aria-expanded", "false");
     gameinfo_toggle.classList.add("text-decoration-none");
     gameinfo_toggle.classList.add("text-reset");
     gameinfo_toggle.classList.add("fw-bold");
-    gameinfo_toggle.innerHTML = "Game Info";
+    let gameinfo_label = document.createElement("span");
+    gameinfo_label.innerHTML = "Game Info ";
+    let gameinfo_chevron = document.createElement("i");
+    gameinfo_chevron.classList.add("bi");
+    gameinfo_chevron.classList.add("bi-chevron-right");
+    gameinfo_toggle.appendChild(gameinfo_label);
+    gameinfo_toggle.appendChild(gameinfo_chevron);
 
     body.appendChild(gameinfo_toggle);
     body.appendChild(gameinfo_settings(state));
@@ -102,10 +83,17 @@ function add_settings_modal(state) {
     let appearance_toggle = document.createElement("a");
     appearance_toggle.setAttribute("data-bs-toggle", "collapse");
     appearance_toggle.setAttribute("href", "#appearance-collapse");
+    appearance_toggle.setAttribute("aria-expanded", "false");
     appearance_toggle.classList.add("text-decoration-none");
     appearance_toggle.classList.add("text-reset");
     appearance_toggle.classList.add("fw-bold");
-    appearance_toggle.innerHTML = "Appearance";
+    let appearance_label = document.createElement("span");
+    appearance_label.innerHTML = "Appearance ";
+    let appearance_chevron = document.createElement("i");
+    appearance_chevron.classList.add("bi");
+    appearance_chevron.classList.add("bi-chevron-right");
+    appearance_toggle.appendChild(appearance_label);
+    appearance_toggle.appendChild(appearance_chevron);
 
     body.appendChild(appearance_toggle);
     body.appendChild(appearance_settings(state));
@@ -114,10 +102,17 @@ function add_settings_modal(state) {
     let behavior_toggle = document.createElement("a");
     behavior_toggle.setAttribute("data-bs-toggle", "collapse");
     behavior_toggle.setAttribute("href", "#behavior-collapse");
+    behavior_toggle.setAttribute("aria-expanded", "false");
     behavior_toggle.classList.add("text-decoration-none");
     behavior_toggle.classList.add("text-reset");
     behavior_toggle.classList.add("fw-bold");
-    behavior_toggle.innerHTML = "Behavior";
+    let behavior_label = document.createElement("span");
+    behavior_label.innerHTML = "Behavior ";
+    let behavior_chevron = document.createElement("i");
+    behavior_chevron.classList.add("bi");
+    behavior_chevron.classList.add("bi-chevron-right");
+    behavior_toggle.appendChild(behavior_label);
+    behavior_toggle.appendChild(behavior_chevron);
 
     body.appendChild(behavior_toggle);
     body.appendChild(behavior_settings(state));
@@ -133,6 +128,8 @@ function add_settings_modal(state) {
     settings_modal.addEventListener(
         'hidden.bs.modal',
         () => {
+            let stars = document.getElementById(id + "-stars");
+            let password_bar = document.getElementById(id + "-password-bar");
             stars.innerHTML = "Password: " + "*".repeat(password_bar.value.length);
         }
     );
@@ -497,6 +494,32 @@ function appearance_settings(state) {
 }
 
 function behavior_settings(state) {
+    function enter_password(password) {
+        let id = "settings-modal";
+        let m = bootstrap.Modal.getInstance("#"+id);
+        m._element.focus();
+
+        if (password == "") {
+            cancel_password();
+        } else {
+            state.network_handler.prepare_settings(make_settings());
+        }
+    }
+
+    function cancel_password() {
+        let id = "settings-modal";
+        let password_bar = document.getElementById(id + "-password-bar");
+        let setcancel_div = document.getElementById(id + "-setcancel-div");
+        let password_anchor = document.getElementById(id + "-password-anchor");
+
+        password_bar.hidden = true;
+        setcancel_div.hidden = true;
+        password_anchor.hidden = false;
+
+        let m = bootstrap.Modal.getInstance("#"+id);
+        m._element.focus();
+    }
+
     let id = "settings-modal";
     let behavior_collapse = document.createElement("div");
     behavior_collapse.classList.add("collapse");
@@ -504,7 +527,7 @@ function behavior_settings(state) {
 
     // up/down toggle
     let updown_element = document.createElement("div");
-    updown_element.innerHTML = "Up/Down "
+    updown_element.innerHTML = "Up/Down Keys "
 
     let updown_anchor = document.createElement("a");
     updown_anchor.setAttribute("href", "/about#updown");
@@ -596,7 +619,7 @@ function behavior_settings(state) {
 
     password_anchor.style.cursor = "pointer";
     password_anchor.id = id + "-password-anchor";
-    password_anchor.innerHTML = "Add password";
+    password_anchor.innerHTML = "Add Password";
     password_anchor.onclick = () => {
         password_bar.hidden = false;
         password_bar.focus();
@@ -660,7 +683,7 @@ function behavior_settings(state) {
     // input buffer
 
     let buffer_element = document.createElement("div");
-    buffer_element.innerHTML = "Input buffer "
+    buffer_element.innerHTML = "Input Buffer "
 
     let anchor = document.createElement("a");
     anchor.setAttribute("href", "/about#input-buffer");
