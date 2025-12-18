@@ -17,6 +17,48 @@ import { opposite, Coord } from './common.js';
 
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+// compute luminance
+function hex_to_value(hex) {
+    let r = parseInt(hex.slice(1,3), 16);
+    let g = parseInt(hex.slice(3,5), 16);
+    let b = parseInt(hex.slice(5,7), 16);
+
+    let y = 0.2126*r + 0.7152*g + 0.0722*b;
+    return Math.round((y / 255) * 100);
+}
+
+function black_or_white(hex, stone) {
+    if (stone == 1) {
+        return "#FFFFFF";
+    }
+    if (stone == 2) {
+        return "#000000";
+    }
+    if (hex == "light" || hex == "medium") {
+        return "#000000";
+    } else if (hex == "dark") {
+        return "#FFFFFF";
+    }
+    let v = hex_to_value(hex);
+    if (v < 25) {
+        return "#FFFFFF";
+    }
+    return "#000000";
+}
+
+function preload() {
+    for (let i = 1; i < 17; i++) {
+        let s = String(i).padStart(2, "0");
+        for (let dims of ["_60x60", "_120x120"]) {
+            let src = "/static/shell_" + s + dims + ".png";
+            const img = new Image();
+            img.src = src;
+        }
+    }
+}
+
+preload();
+
 function random_shell() {
     // random integer 1-16
     let n = Math.floor(Math.random()*16) + 1;
@@ -287,10 +329,9 @@ class BoardGraphics {
             let x = parseInt(spl[0]);
             let y = parseInt(spl[1]);
 
-            let hexcolor = "#000000";
-            if (this.state.board.points[x][y] == 1) {
-                hexcolor = "#FFFFFF";
-            }
+            let hexcolor = black_or_white(
+                this.state.board_color,
+                this.state.board.get(new Coord(x, y)));
             let svg_id = "marks";
 
             if (value == "square") {
@@ -374,6 +415,7 @@ class BoardGraphics {
     }
 
     draw_lines() {
+        let color = black_or_white(this.state.board_color);
         var i;
 
         let coord_pairs = [];
@@ -387,7 +429,7 @@ class BoardGraphics {
             coord_pairs.push([[x0, y0], [x1, y1]]);
             coord_pairs.push([[y0, x0], [y1, x1]]);
         }
-        let path = this.svg_draw_polyline(coord_pairs, "#000000", "lines");
+        let path = this.svg_draw_polyline(coord_pairs, color, "lines");
         path.setAttribute("mask", "url(#lineMask)");
     }
 
@@ -460,6 +502,7 @@ class BoardGraphics {
     }
 
     draw_coords() {
+        let color = black_or_white(this.state.board_color);
         var i;
 
         let font_size = this.width/50;
@@ -473,7 +516,7 @@ class BoardGraphics {
                 this.side*i+this.pad*7/8,
                 this.pad/2,
                 letters[i],
-                "#000000",
+                color,
                 "coords",
                 font_size,
                 false);
@@ -483,7 +526,7 @@ class BoardGraphics {
                 this.side*i+this.pad*7/8,
                 this.width+this.pad*7/4,
                 letters[i],
-                "#000000",
+                color,
                 "coords",
                 font_size,
                 false);
@@ -493,7 +536,7 @@ class BoardGraphics {
                 this.pad/8,
                 this.side*i+this.pad*9/8,
                 (this.size-i).toString(),
-                "#000000",
+                color,
                 "coords",
                 font_size,
                 false);
@@ -503,7 +546,7 @@ class BoardGraphics {
                 this.width + this.pad*12/8,
                 this.side*i+this.pad*9/8,
                 (this.size-i).toString(),
-                "#000000",
+                color,
                 "coords",
                 font_size,
                 false);
@@ -613,10 +656,9 @@ class BoardGraphics {
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
         }
-        let hexcolor = "#000000";
-        if (this.state.board.points[x][y] == 1) {
-            hexcolor = "#FFFFFF";
-        }
+        let hexcolor = black_or_white(
+            this.state.board_color,
+            this.state.board.get(new Coord(x, y)));
         this.draw_triangle(x, y, hexcolor, "ghost-marks");
     }
 
@@ -679,16 +721,16 @@ class BoardGraphics {
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
         }
-        let hexcolor = "#000000";
-        if (this.state.board.points[x][y] == 1) {
-            hexcolor = "#FFFFFF";
-        }
+        let hexcolor = black_or_white(
+            this.state.board_color,
+            this.state.board.get(new Coord(x, y)));
         this.draw_square(x, y, hexcolor, "ghost-marks");
     }
 
     draw_star(x, y) {
+        let color = black_or_white(this.state.board_color);
         let radius = this.side/12;
-        let star = this.draw_circle(x, y, radius, "#000000", "lines", true, 0);
+        let star = this.draw_circle(x, y, radius, color, "lines", true, 0);
         star.setAttribute("mask", "url(#lineMask)");
     }
 
@@ -984,10 +1026,9 @@ class BoardGraphics {
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
         }
-        let hexcolor = "#000000";
-        if (this.state.board.points[x][y] == 1) {
-            hexcolor = "#FFFFFF";
-        }
+        let hexcolor = black_or_white(
+            this.state.board_color,
+            this.state.board.get(new Coord(x, y)));
         let text = "";
         if (this.state.custom_label != "") {
             text = this.state.custom_label;
@@ -1025,10 +1066,9 @@ class BoardGraphics {
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
         }
-        let hexcolor = "#000000";
-        if (this.state.board.points[x][y] == 1) {
-            hexcolor = "#FFFFFF";
-        }
+        let hexcolor = black_or_white(
+            this.state.board_color,
+            this.state.board.get(new Coord(x, y)));
         let number = this.state.next_number();
         this.draw_number(x, y, number, hexcolor, "ghost-marks");
     }
@@ -1052,31 +1092,27 @@ class BoardGraphics {
         }
     }
 
-    _draw_square(x, y, color) {
+    _draw_square(x, y) {
         let svg_id = "marks";
-        let hexcolor = "#000000";
-        if (color == 2) {
-            hexcolor = "#FFFFFF";
-        }
+        let hexcolor = black_or_white(
+            this.state.board_color,
+            this.state.board.get(new Coord(x, y)));
         this.draw_square(x, y, hexcolor, svg_id);
     }
 
-    _draw_triangle(x, y, color) {
+    _draw_triangle(x, y) {
         let svg_id = "marks";
-        let hexcolor = "#000000";
-        if (color == 2) {
-            hexcolor = "#FFFFFF";
-        }
+        let hexcolor = black_or_white(
+            this.state.board_color,
+            this.state.board.get(new Coord(x, y)));
         this.draw_triangle(x, y, hexcolor, svg_id);
     }
 
     _draw_manual_letter(x, y, letter) {
         let coord = new Coord(x, y);
-        let color = opposite(this.state.board.get(coord));
-        let hexcolor = "#000000";
-        if (color == 2) {
-            hexcolor = "#FFFFFF";
-        }
+        let hexcolor = black_or_white(
+            this.state.board_color,
+            this.state.board.get(coord));
         let svg_id = "marks";
 
         this.draw_backdrop(x, y);
@@ -1088,11 +1124,9 @@ class BoardGraphics {
 
     draw_custom_label(x, y, label) {
         let coord = new Coord(x, y);
-        let color = opposite(this.state.board.get(coord));
-        let hexcolor = "#000000";
-        if (color == 2) {
-            hexcolor = "#FFFFFF";
-        }
+        let hexcolor = black_or_white(
+            this.state.board_color,
+            this.state.board.get(coord));
         let svg_id = "marks";
 
         this.draw_backdrop(x, y);
@@ -1104,12 +1138,9 @@ class BoardGraphics {
 
     _draw_manual_number(x, y, number) {
         let coord = new Coord(x, y);
-        let color = opposite(this.state.board.get(coord));
-
-        let hexcolor = "#000000";
-        if (color == 2) {
-            hexcolor = "#FFFFFF";
-        }
+        let hexcolor = black_or_white(
+            this.state.board_color,
+            this.state.board.get(coord));
         let svg_id = "marks";
 
         this.draw_backdrop(x, y);

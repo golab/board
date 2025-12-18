@@ -105,7 +105,9 @@ class State {
 
     set_board_color(color) {
         this.board_color = color;
-        this.board_graphics.draw_boardbg();
+        this.board_graphics.clear_board();
+        this.board_graphics.draw_board();
+        this.board_graphics.draw_marks();
     }
 
     set_textured_stones(toggle) {
@@ -959,26 +961,16 @@ class State {
     }
 
     place_triangle(coord) {
-        let color = 1;
-        if (this.board.get(coord) == 1) {
-            color = 2;
-        }
-        this.board_graphics._draw_triangle(coord.x, coord.y, color);
-
+        this.board_graphics._draw_triangle(coord.x, coord.y);
         let id = coordtoid(coord);
         this.marks.set(id, "triangle");
 
     }
 
     place_square(coord) {
-        let color = 1;
-        if (this.board.get(coord) == 1) {
-            color = 2;
-        }
-        this.board_graphics._draw_square(coord.x, coord.y, color);
+        this.board_graphics._draw_square(coord.x, coord.y);
         let id = coordtoid(coord);
         this.marks.set(id, "square");
-
     }
 
     place_label(lb) {
