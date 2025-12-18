@@ -87,6 +87,85 @@ function add_settings_modal(state) {
 
     let body = document.createElement("div");
 
+    let gameinfo_toggle = document.createElement("a");
+    gameinfo_toggle.setAttribute("data-bs-toggle", "collapse");
+    gameinfo_toggle.setAttribute("href", "#gameinfo-collapse");
+    gameinfo_toggle.classList.add("text-decoration-none");
+    gameinfo_toggle.classList.add("text-reset");
+    gameinfo_toggle.classList.add("fw-bold");
+    gameinfo_toggle.innerHTML = "Game Info";
+
+    body.appendChild(gameinfo_toggle);
+    body.appendChild(gameinfo_settings(state));
+    body.appendChild(document.createElement("br"));
+
+    let appearance_toggle = document.createElement("a");
+    appearance_toggle.setAttribute("data-bs-toggle", "collapse");
+    appearance_toggle.setAttribute("href", "#appearance-collapse");
+    appearance_toggle.classList.add("text-decoration-none");
+    appearance_toggle.classList.add("text-reset");
+    appearance_toggle.classList.add("fw-bold");
+    appearance_toggle.innerHTML = "Appearance";
+
+    body.appendChild(appearance_toggle);
+    body.appendChild(appearance_settings(state));
+    body.appendChild(document.createElement("br"));
+
+    let behavior_toggle = document.createElement("a");
+    behavior_toggle.setAttribute("data-bs-toggle", "collapse");
+    behavior_toggle.setAttribute("href", "#behavior-collapse");
+    behavior_toggle.classList.add("text-decoration-none");
+    behavior_toggle.classList.add("text-reset");
+    behavior_toggle.classList.add("fw-bold");
+    behavior_toggle.innerHTML = "Behavior";
+
+    body.appendChild(behavior_toggle);
+    body.appendChild(behavior_settings(state));
+    body.appendChild(document.createElement("br"));
+
+    let settings_modal = add_modal(
+        id,
+        title,
+        body,
+        true,
+        () => state.network_handler.prepare_settings(make_settings())
+    );
+    settings_modal.addEventListener(
+        'hidden.bs.modal',
+        () => {
+            stars.innerHTML = "Password: " + "*".repeat(password_bar.value.length);
+        }
+    );
+    let m = new bootstrap.Modal(settings_modal);
+    return settings_modal;
+}
+
+function make_settings() {
+    let id = "settings-modal";
+    let buffer = parseInt(document.getElementById(id + "-bufferrange").value);
+    let size = parseInt(document.getElementById(id + "-size-select").value);
+    let password = document.getElementById(id + "-password-bar").value;
+    let nickname = document.getElementById(id + "-nickname-bar").value;
+
+    let black = document.getElementById(id + "-blackplayer-bar").value;
+    let white = document.getElementById(id + "-whiteplayer-bar").value;
+    let komi = document.getElementById(id + "-komi-bar").value;
+    return {
+        "buffer": buffer,
+        "size": size,
+        "password": password,
+        "nickname": nickname,
+        "black": black,
+        "white": white,
+        "komi": komi};
+}
+
+function gameinfo_settings(state) {
+    let id = "settings-modal";
+    let gameinfo_collapse = document.createElement("div");
+    gameinfo_collapse.classList.add("collapse");
+    gameinfo_collapse.id = "gameinfo-collapse";
+
     // nickname
     let nickname_div = document.createElement("div");
     let nickname_label = document.createElement("div");
@@ -114,8 +193,8 @@ function add_settings_modal(state) {
     nickname_div.appendChild(nickname_label);
     nickname_div.appendChild(nickname_bar);
 
-    body.appendChild(nickname_div);
-    body.appendChild(document.createElement("br"));
+    gameinfo_collapse.appendChild(nickname_div);
+    gameinfo_collapse.appendChild(document.createElement("br"));
 
     // black player
     let black_player_div = document.createElement("div");
@@ -126,8 +205,8 @@ function add_settings_modal(state) {
     black_player_bar.id = id + "-blackplayer-bar";
     black_player_div.appendChild(black_player_label);
     black_player_div.appendChild(black_player_bar);
-    body.appendChild(black_player_div)
-    body.appendChild(document.createElement("br"));
+    gameinfo_collapse.appendChild(black_player_div)
+    gameinfo_collapse.appendChild(document.createElement("br"));
 
     // white player
     let white_player_div = document.createElement("div");
@@ -138,8 +217,8 @@ function add_settings_modal(state) {
     white_player_bar.id = id + "-whiteplayer-bar";
     white_player_div.appendChild(white_player_label);
     white_player_div.appendChild(white_player_bar);
-    body.appendChild(white_player_div)
-    body.appendChild(document.createElement("br"));
+    gameinfo_collapse.appendChild(white_player_div)
+    gameinfo_collapse.appendChild(document.createElement("br"));
 
     // komi
     let komi_div = document.createElement("div");
@@ -150,8 +229,8 @@ function add_settings_modal(state) {
     komi_bar.id = id + "-komi-bar";
     komi_div.appendChild(komi_label);
     komi_div.appendChild(komi_bar);
-    body.appendChild(komi_div)
-    body.appendChild(document.createElement("br"));
+    gameinfo_collapse.appendChild(komi_div)
+    gameinfo_collapse.appendChild(document.createElement("br"));
 
     // board size
     let size_element = document.createElement("div");
@@ -173,54 +252,16 @@ function add_settings_modal(state) {
     size_element.appendChild(size_label);
     size_element.appendChild(size_select);
 
-    body.appendChild(size_element);
-    body.appendChild(document.createElement("br"));
+    gameinfo_collapse.appendChild(size_element);
 
-    // up/down toggle
-    let updown_element = document.createElement("div");
-    updown_element.innerHTML = "Up/Down key behavior "
+    return gameinfo_collapse;
+}
 
-    let updown_anchor = document.createElement("a");
-    updown_anchor.setAttribute("href", "/about#updown");
-    updown_anchor.setAttribute("target", "_blank");
-
-    let updown_icon = document.createElement("i");
-    updown_icon.setAttribute("class", "bi-question-circle");
-    add_tooltip(updown_icon, "This controls whether up/down moves up branches (like OGS) or modifies which branch to follow (like KGS)");
-    updown_anchor.appendChild(updown_icon);
-    updown_element.appendChild(updown_anchor);
-
-    let d = document.createElement("div");
-    d.setAttribute("class", "form-check form-switch");
-
-    let inp = document.createElement("input");
-    inp.setAttribute("class", "form-check-input");
-    inp.setAttribute("type", "checkbox");
-    inp.setAttribute("role", "switch");
-    inp.checked = true;
-    inp.setAttribute("id", "updown-switch");
-
-    let label = document.createElement("label");
-    label.setAttribute("class", "form-check-label");
-    label.setAttribute("for", "updown-switch");
-    label.innerHTML = "OGS";
-
-    inp.onchange = function() {
-        if (this.checked) {
-            label.innerHTML = "OGS";
-            state.branch_jump = true;
-        } else {
-            label.innerHTML = "KGS";
-            state.branch_jump = false;
-        }
-    };
-
-    d.appendChild(inp);
-    d.appendChild(label);
-    updown_element.append(d);
-
-    body.appendChild(updown_element);
-    body.appendChild(document.createElement("br"));
+function appearance_settings(state) {
+    let id = "settings-modal";
+    let appearance_collapse = document.createElement("div");
+    appearance_collapse.classList.add("collapse");
+    appearance_collapse.id = "appearance-collapse";
 
     // lightmode/darkmode toggle
     let darkmode_element = document.createElement("div");
@@ -259,8 +300,8 @@ function add_settings_modal(state) {
     d2.appendChild(label2)
     darkmode_element.append(d2);
 
-    body.appendChild(darkmode_element);
-    body.appendChild(document.createElement("br"));
+    appearance_collapse.appendChild(darkmode_element);
+    appearance_collapse.appendChild(document.createElement("br"));
 
     // board color
     let board_color_element = document.createElement("div");
@@ -309,8 +350,8 @@ function add_settings_modal(state) {
     board_color_element.appendChild(board_color_label);
     board_color_element.appendChild(board_color_select);
 
-    body.appendChild(board_color_element);
-    body.appendChild(document.createElement("br"));
+    appearance_collapse.appendChild(board_color_element);
+    appearance_collapse.appendChild(document.createElement("br"));
 
     // stone colors
     // black stones
@@ -356,9 +397,9 @@ function add_settings_modal(state) {
         }
     );
 
-    body.appendChild(black_stone_color);
-    body.appendChild(black_stone_color_select);
-    body.appendChild(document.createElement("br"));
+    appearance_collapse.appendChild(black_stone_color);
+    appearance_collapse.appendChild(black_stone_color_select);
+    appearance_collapse.appendChild(document.createElement("br"));
 
     // white stones
     let white_stone_color = document.createElement("div");
@@ -403,9 +444,9 @@ function add_settings_modal(state) {
         }
     );
 
-    body.appendChild(white_stone_color);
-    body.appendChild(white_stone_color_select);
-    body.appendChild(document.createElement("br"));
+    appearance_collapse.appendChild(white_stone_color);
+    appearance_collapse.appendChild(white_stone_color_select);
+    appearance_collapse.appendChild(document.createElement("br"));
 
     // shadows
     let shadow_element = document.createElement("div");
@@ -451,8 +492,75 @@ function add_settings_modal(state) {
     d_shadow.appendChild(label_shadow);
     shadow_element.append(d_shadow);
 
-    body.appendChild(shadow_element);
-    body.appendChild(document.createElement("br"));
+    appearance_collapse.appendChild(shadow_element);
+    return appearance_collapse;
+}
+
+function behavior_settings(state) {
+    let id = "settings-modal";
+    let behavior_collapse = document.createElement("div");
+    behavior_collapse.classList.add("collapse");
+    behavior_collapse.id = "behavior-collapse";
+
+    // up/down toggle
+    let updown_element = document.createElement("div");
+    updown_element.innerHTML = "Up/Down "
+
+    let updown_anchor = document.createElement("a");
+    updown_anchor.setAttribute("href", "/about#updown");
+    updown_anchor.setAttribute("target", "_blank");
+
+    let updown_icon = document.createElement("i");
+    updown_icon.setAttribute("class", "bi-question-circle");
+    add_tooltip(updown_icon, "This controls whether up/down moves up branches (like OGS) or modifies which branch to follow (like KGS)");
+    updown_anchor.appendChild(updown_icon);
+    updown_element.appendChild(updown_anchor);
+
+    let d = document.createElement("div");
+    d.setAttribute("class", "form-check form-switch");
+
+    let inp = document.createElement("input");
+    inp.setAttribute("class", "form-check-input");
+    inp.setAttribute("type", "checkbox");
+    inp.setAttribute("role", "switch");
+    inp.checked = true;
+    inp.setAttribute("id", "updown-switch");
+
+    let label = document.createElement("label");
+    label.setAttribute("class", "form-check-label");
+    label.setAttribute("for", "updown-switch");
+    label.innerHTML = "OGS";
+
+    inp.onchange = function() {
+        if (this.checked) {
+            label.innerHTML = "OGS";
+            state.branch_jump = true;
+            localStorage.setItem("updown", "true");
+        } else {
+            label.innerHTML = "KGS";
+            state.branch_jump = false;
+            localStorage.setItem("updown", "false");
+        }
+    };
+
+    let stored_updown = localStorage.getItem("updown") || "";
+    if (stored_updown == "true") {
+        label.innerHTML = "OGS";
+        inp.checked = true;
+        state.branch_jump = true;
+    } else if (stored_updown == "false") {
+        label.innerHTML = "KGS";
+        inp.checked = false;
+        state.branch_jump = false;
+    }
+
+    d.appendChild(inp);
+    d.appendChild(label);
+    updown_element.append(d);
+
+    behavior_collapse.appendChild(updown_element);
+    behavior_collapse.appendChild(document.createElement("br"));
+
 
     // password
     let password_anchor = document.createElement("a");
@@ -537,17 +645,17 @@ function add_settings_modal(state) {
     showremove_div.appendChild(remove_button);
     showremove_div.hidden = true;
 
-    body.appendChild(password_anchor);
+    behavior_collapse.appendChild(password_anchor);
 
-    body.appendChild(password_bar);
-    body.appendChild(setcancel_div);
+    behavior_collapse.appendChild(password_bar);
+    behavior_collapse.appendChild(setcancel_div);
 
-    body.appendChild(stars);
+    behavior_collapse.appendChild(stars);
 
-    body.appendChild(showremove_div);
+    behavior_collapse.appendChild(showremove_div);
 
-    body.appendChild(document.createElement("br"));
-    body.appendChild(document.createElement("br"));
+    behavior_collapse.appendChild(document.createElement("br"));
+    behavior_collapse.appendChild(document.createElement("br"));
 
     // input buffer
 
@@ -582,41 +690,7 @@ function add_settings_modal(state) {
     buffer_element.appendChild(range);
     buffer_element.appendChild(output);
 
-    body.appendChild(buffer_element);
+    behavior_collapse.appendChild(buffer_element);
 
-    let settings_modal = add_modal(
-        id,
-        title,
-        body,
-        true,
-        () => state.network_handler.prepare_settings(make_settings())
-    );
-    settings_modal.addEventListener(
-        'hidden.bs.modal',
-        () => {
-            stars.innerHTML = "Password: " + "*".repeat(password_bar.value.length);
-        }
-    );
-    let m = new bootstrap.Modal(settings_modal);
-    return settings_modal;
-}
-
-function make_settings() {
-    let id = "settings-modal";
-    let buffer = parseInt(document.getElementById(id + "-bufferrange").value);
-    let size = parseInt(document.getElementById(id + "-size-select").value);
-    let password = document.getElementById(id + "-password-bar").value;
-    let nickname = document.getElementById(id + "-nickname-bar").value;
-
-    let black = document.getElementById(id + "-blackplayer-bar").value;
-    let white = document.getElementById(id + "-whiteplayer-bar").value;
-    let komi = document.getElementById(id + "-komi-bar").value;
-    return {
-        "buffer": buffer,
-        "size": size,
-        "password": password,
-        "nickname": nickname,
-        "black": black,
-        "white": white,
-        "komi": komi};
+    return behavior_collapse;
 }
