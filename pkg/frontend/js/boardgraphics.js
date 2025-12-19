@@ -832,6 +832,12 @@ class BoardGraphics {
 
         let svg_id = "stones";
 
+        // cast shadow
+        if (this.state.shadow) {
+            let shadow = this.draw_cast_shadow(x, y);
+            shadow.setAttribute("id", "shadow-"+id);
+        }
+
         // stone
         
         let stroke = 0.5*this.minstroke;
@@ -868,11 +874,6 @@ class BoardGraphics {
         }
         stone.setAttribute("id", "stone-"+id);
 
-        // cast shadow
-        if (this.state.shadow) {
-            let shadow = this.draw_cast_shadow(x, y);
-            shadow.setAttribute("id", "shadow-"+id);
-        }
     }
 
     draw_textured_stone(x, y) {
@@ -900,7 +901,7 @@ class BoardGraphics {
         const cy = py + radius;
         
         // random angle, e.g. between 0 and 360
-        const angle = Math.random() * 360;
+        const angle = Math.floor(Math.random() * 360);
         
         stone.setAttributeNS(null, "x", px);
         stone.setAttributeNS(null, "y", py);
