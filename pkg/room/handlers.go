@@ -16,11 +16,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jarednogo/board/internal/fetch"
 	"github.com/jarednogo/board/internal/zip"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/parser"
 	"github.com/jarednogo/board/pkg/event"
-	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/room/plugin"
 	"github.com/jarednogo/board/pkg/state"
 )

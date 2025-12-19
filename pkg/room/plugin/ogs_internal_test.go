@@ -16,11 +16,11 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/fetch"
 	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/event"
-	"github.com/jarednogo/board/pkg/fetch"
 )
 
 func TestMakeRank(t *testing.T) {

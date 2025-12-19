@@ -16,11 +16,11 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/fetch"
 	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/event"
-	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/logx"
 	"github.com/jarednogo/board/pkg/room"
 )

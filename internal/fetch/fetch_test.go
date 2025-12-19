@@ -14,8 +14,8 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/fetch"
 	"github.com/jarednogo/board/internal/sgfsamples"
-	"github.com/jarednogo/board/pkg/fetch"
 )
 
 var ogsTests = []struct {

@@ -18,10 +18,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jarednogo/board/internal/fetch"
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/event"
-	"github.com/jarednogo/board/pkg/fetch"
 	"golang.org/x/net/websocket"
 )
 

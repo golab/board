@@ -19,9 +19,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/fetch"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/config"
-	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/hub"
 	"github.com/jarednogo/board/pkg/logx"
 )

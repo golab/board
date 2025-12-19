@@ -15,8 +15,8 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/fetch"
 	"github.com/jarednogo/board/pkg/event"
-	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/message"
 	"github.com/jarednogo/board/pkg/room"
 	"github.com/jarednogo/board/pkg/room/plugin"
