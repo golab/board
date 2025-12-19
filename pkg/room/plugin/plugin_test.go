@@ -14,12 +14,16 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/pkg/logx"
 	"github.com/jarednogo/board/pkg/room"
 	"github.com/jarednogo/board/pkg/room/plugin"
 )
 
 func TestPlugin(t *testing.T) {
 	r := room.NewRoom("")
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	r.SetLogger(logger)
+
 	mp := plugin.NewMockPlugin()
 	args := make(map[string]any)
 	args["key"] = "mock"
