@@ -54,7 +54,10 @@ function preload() {
     }
 }
 
-preload();
+window.addEventListener("load", () => {
+    setTimeout(preload, 0);
+});
+
 
 function random_shell() {
     // random integer 1-16
