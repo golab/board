@@ -363,8 +363,6 @@ class BoardGraphics {
             } else if (value.startsWith("letter")) {
                 spl = value.split(":");
                 let letter = spl[1];
-                //let letter_index = parseInt(spl[1]);
-                //let letter = letters[letter_index%26];
                 this.draw_backdrop(x,y);
                 let l = this.draw_letter(x, y, letter, hexcolor, svg_id);
                 l.id = "mark-" + x.toString() + "-" + y.toString();
