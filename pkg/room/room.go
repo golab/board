@@ -465,6 +465,7 @@ func (r *Room) RegisterPlugin(p plugin.Plugin, args map[string]any) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	key := args["key"].(string)
+	r.logger.Info("registering plugin", "room_id", r.id, "plugin_key", key)
 	p.Start(args)
 	r.plugins[key] = p
 }
@@ -473,6 +474,7 @@ func (r *Room) DeregisterPlugin(key string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if p, ok := r.plugins[key]; ok {
+		r.logger.Info("deregistering plugin", "room_id", r.id, "plugin_key", key)
 		p.End()
 		delete(r.plugins, key)
 	}
