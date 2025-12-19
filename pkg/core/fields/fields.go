@@ -42,6 +42,15 @@ func (f *Fields) GetField(key string) []string {
 	return nil
 }
 
+func (f *Fields) HasField(key string) bool {
+	for i := range f.fields {
+		if f.fields[i].Key == key {
+			return true
+		}
+	}
+	return false
+}
+
 func (f *Fields) DeleteField(key string) {
 	i := -1
 	for j := range f.fields {

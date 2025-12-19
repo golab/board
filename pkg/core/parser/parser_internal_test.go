@@ -108,7 +108,7 @@ func TestParseField4(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestSkipUntil(t *testing.T) {
+func TestParseUntil(t *testing.T) {
 	var skipTests = []struct {
 		input    string
 		output   string
@@ -121,7 +121,7 @@ func TestSkipUntil(t *testing.T) {
 	for _, tt := range skipTests {
 		t.Run(tt.input, func(t *testing.T) {
 			p := New(tt.input)
-			s, err := p.skipUntil('(')
+			s, err := p.parseUntil('(')
 			if tt.hasError {
 				assert.NotNil(t, err)
 			} else {

@@ -165,3 +165,11 @@ func TestSetField2(t *testing.T) {
 	assert.Equal(t, g[1], "baz")
 	assert.Equal(t, g[2], "bot")
 }
+
+func TestHasField(t *testing.T) {
+	f := &fields.Fields{}
+	assert.False(t, f.HasField("foo"))
+	f.AddField("foo", "boo")
+	assert.True(t, f.HasField("foo"))
+	assert.False(t, f.HasField("boo"))
+}

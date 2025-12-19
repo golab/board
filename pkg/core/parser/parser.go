@@ -83,17 +83,25 @@ func (n *SGFNode) toSGF(root bool) string {
 }
 
 type Parser struct {
-	text  []rune
-	index int
+	*BaseParser
 }
 
 func New(text string) *Parser {
-	return &Parser{[]rune(text), 0}
+	return &Parser{&BaseParser{[]rune(text), 0}}
 }
 
 func (p *Parser) Parse() (*SGFNode, error) {
 	p.skipWhitespace()
-	_, err := p.skipUntil('(')
+	savedIndex := p.index
+	// perhaps gib?
+	if p.peek(0) == '\\' && p.peek(1) == 'H' && p.peek(2) == 'S' {
+		gibResult, err := NewGIBParser(string(p.text)).Parse()
+		if err == nil {
+			return gibResult.ToSGFNode()
+		}
+	}
+	p.index = savedIndex
+	_, err := p.parseUntil('(')
 	if err != nil {
 		return nil, err
 	}
@@ -103,32 +111,6 @@ func (p *Parser) Parse() (*SGFNode, error) {
 		return nil, err
 	}
 	return root, nil
-}
-
-func (p *Parser) skipWhitespace() {
-	for {
-		if isWhitespace(p.peek(0)) {
-			p.read()
-		} else {
-			break
-		}
-	}
-}
-
-func (p *Parser) skipUntil(r rune) (string, error) {
-	sb := strings.Builder{}
-	for {
-		c := p.peek(0)
-		if c == rune(0) {
-			return "", fmt.Errorf("no %c found", r)
-		} else if c != r {
-			sb.WriteRune(c)
-			p.read()
-		} else {
-			break
-		}
-	}
-	return sb.String(), nil
 }
 
 func (p *Parser) parseKey() (string, error) {
@@ -154,7 +136,7 @@ func (p *Parser) parseKey() (string, error) {
 
 func (p *Parser) parseField() (string, error) {
 	// read '['
-	err := p.consume('[')
+	err := p.requireRune('[')
 	if err != nil {
 		return "", err
 	}
@@ -271,7 +253,7 @@ func (p *Parser) parseOneField(key string) (string, error) {
 
 func (p *Parser) parseNode() (*SGFNode, error) {
 	// read ';'
-	err := p.consume(';')
+	err := p.requireRune(';')
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +280,7 @@ func (p *Parser) parseNode() (*SGFNode, error) {
 
 func (p *Parser) parseBranch() (*SGFNode, error) {
 	// read '('
-	err := p.consume('(')
+	err := p.requireRune('(')
 	if err != nil {
 		return nil, err
 	}
@@ -337,30 +319,6 @@ func (p *Parser) parseBranch() (*SGFNode, error) {
 		}
 	}
 	return root, nil
-}
-
-func (p *Parser) consume(r rune) error {
-	c := p.read()
-	if c != r {
-		return fmt.Errorf("expected %c, got %c", r, c)
-	}
-	return nil
-}
-
-func (p *Parser) read() rune {
-	if p.index >= len(p.text) {
-		return 0
-	}
-	result := p.text[p.index]
-	p.index++
-	return result
-}
-
-func (p *Parser) peek(n int) rune {
-	if p.index+n >= len(p.text) {
-		return 0
-	}
-	return p.text[p.index+n]
 }
 
 func Merge(sgfs []string) string {
