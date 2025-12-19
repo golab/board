@@ -16,13 +16,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jarednogo/board/internal/zip"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/parser"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/fetch"
 	"github.com/jarednogo/board/pkg/room/plugin"
 	"github.com/jarednogo/board/pkg/state"
-	"github.com/jarednogo/board/pkg/zip"
 )
 
 type EventHandler func(event.Event) event.Event

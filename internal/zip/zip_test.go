@@ -13,7 +13,7 @@ package zip_test
 import (
 	"testing"
 
-	"github.com/jarednogo/board/pkg/zip"
+	"github.com/jarednogo/board/internal/zip"
 )
 
 func TestZip(t *testing.T) {
