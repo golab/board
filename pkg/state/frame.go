@@ -126,7 +126,7 @@ func (s *State) generateMarks() *Marks {
 	if lbs := s.current.GetField("LB"); len(lbs) > 0 {
 		labels := []*Label{}
 		for _, lb := range lbs {
-			spl := strings.Split(lb, ":")
+			spl := strings.SplitN(lb, ":", 2)
 			c := coord.FromLetters(spl[0])
 			text := spl[1]
 			label := &Label{Coord: c, Text: text}
