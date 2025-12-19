@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jarednogo/board/internal/twitch"
 	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/event"
@@ -24,7 +25,6 @@ import (
 	"github.com/jarednogo/board/pkg/logx"
 	"github.com/jarednogo/board/pkg/message"
 	"github.com/jarednogo/board/pkg/room"
-	"github.com/jarednogo/board/pkg/twitch"
 	"golang.org/x/net/websocket"
 )
 

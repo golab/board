@@ -20,9 +20,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/jarednogo/board/internal/twitch"
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/event"
-	"github.com/jarednogo/board/pkg/twitch"
 )
 
 func (h *Hub) TwitchRouter() http.Handler {

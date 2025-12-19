@@ -15,7 +15,7 @@ import (
 	"testing"
 
 	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/pkg/twitch"
+	"github.com/jarednogo/board/internal/twitch"
 )
 
 func TestGetUserAccessToken(t *testing.T) {

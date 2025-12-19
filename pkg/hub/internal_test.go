@@ -18,10 +18,10 @@ import (
 	"time"
 
 	"github.com/jarednogo/board/internal/assert"
+	"github.com/jarednogo/board/internal/twitch"
 	"github.com/jarednogo/board/pkg/config"
 	"github.com/jarednogo/board/pkg/loader"
 	"github.com/jarednogo/board/pkg/logx"
-	"github.com/jarednogo/board/pkg/twitch"
 )
 
 func TestTwitchCallbackSubscribe(t *testing.T) {
