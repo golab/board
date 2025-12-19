@@ -13,7 +13,7 @@ export {
     letters,
 }
 
-import { opposite, Coord } from './common.js';
+import { opposite, Coord, is_touch_device } from './common.js';
 
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -853,7 +853,7 @@ class BoardGraphics {
                 stone = this.draw_textured_stone(x, y);
             } else if (this.state.white_stone_color == "flat") {
                 // flat fill (with outline)
-                stone = this.draw_circle(x, y, radius, "#FFFFFF", svg_id, true, 1);
+                stone = this.draw_circle(x, y, radius, "#FFFFFF", svg_id, true, 1*this.minstroke);
             } else {
                 // custom fill
                 stone = this.draw_circle(x, y, radius, this.state.white_stone_color, svg_id, true, 0);
@@ -936,9 +936,13 @@ class BoardGraphics {
         let real_y = y*this.side + this.pad;
         let offset = 6*this.minstroke;
         let id = "shadows";
-        return this.draw_raw_gradient_circle(real_x+offset, real_y+offset, radius, "shadow_grad", id, 0);
-
-        //return this.draw_raw_circle(real_x+offset, real_y+offset, radius, "#00000055", id, true, 0);
+        // the shadows are causing some kind of compositing issue on mobile
+        // if the "flickering" can be eliminated, this can done away with
+        if (is_touch_device()) {
+            return this.draw_raw_circle(real_x+offset/3, real_y+offset/3, radius, "#00000033", id, true, 0);
+        } else {
+            return this.draw_raw_gradient_circle(real_x+offset, real_y+offset, radius, "shadow_grad", id, 0);
+        }
     }
 
     clear_cast_shadow(x, y) {

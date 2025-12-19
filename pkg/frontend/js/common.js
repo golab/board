@@ -23,6 +23,7 @@ export {
     prefer_dark_mode,
     get_dims,
     htmlencode,
+    is_touch_device,
 }
 
 class Coord {
