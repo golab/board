@@ -183,3 +183,111 @@ func TestGIBToSGF(t *testing.T) {
 	require.NotNil(t, node)
 	assert.Equal(t, len(node.toSGF(true)), 85)
 }
+
+func TestAddHandicap2(t *testing.T) {
+	n := &SGFNode{}
+	addHandicap(n, 2)
+	assert.True(t, n.HasField("AB"))
+	ab := n.GetField("AB")
+	require.Equal(t, len(ab), 2)
+	assert.Equal(t, ab[0], "pd")
+	assert.Equal(t, ab[1], "dp")
+}
+
+func TestAddHandicap3(t *testing.T) {
+	n := &SGFNode{}
+	addHandicap(n, 3)
+	assert.True(t, n.HasField("AB"))
+	ab := n.GetField("AB")
+	require.Equal(t, len(ab), 3)
+	assert.Equal(t, ab[0], "pd")
+	assert.Equal(t, ab[1], "dp")
+	assert.Equal(t, ab[2], "pp")
+}
+
+func TestAddHandicap4(t *testing.T) {
+	n := &SGFNode{}
+	addHandicap(n, 4)
+	assert.True(t, n.HasField("AB"))
+	ab := n.GetField("AB")
+	require.Equal(t, len(ab), 4)
+	assert.Equal(t, ab[0], "pd")
+	assert.Equal(t, ab[1], "dp")
+	assert.Equal(t, ab[2], "pp")
+	assert.Equal(t, ab[3], "dd")
+}
+
+func TestAddHandicap5(t *testing.T) {
+	n := &SGFNode{}
+	addHandicap(n, 5)
+	assert.True(t, n.HasField("AB"))
+	ab := n.GetField("AB")
+	require.Equal(t, len(ab), 5)
+	assert.Equal(t, ab[0], "pd")
+	assert.Equal(t, ab[1], "dp")
+	assert.Equal(t, ab[2], "pp")
+	assert.Equal(t, ab[3], "jj")
+	assert.Equal(t, ab[4], "dd")
+}
+
+func TestAddHandicap6(t *testing.T) {
+	n := &SGFNode{}
+	addHandicap(n, 6)
+	assert.True(t, n.HasField("AB"))
+	ab := n.GetField("AB")
+	require.Equal(t, len(ab), 6)
+	assert.Equal(t, ab[0], "pd")
+	assert.Equal(t, ab[1], "dp")
+	assert.Equal(t, ab[2], "pp")
+	assert.Equal(t, ab[3], "dd")
+	assert.Equal(t, ab[4], "dj")
+	assert.Equal(t, ab[5], "pj")
+}
+
+func TestAddHandicap7(t *testing.T) {
+	n := &SGFNode{}
+	addHandicap(n, 7)
+	assert.True(t, n.HasField("AB"))
+	ab := n.GetField("AB")
+	require.Equal(t, len(ab), 7)
+	assert.Equal(t, ab[0], "pd")
+	assert.Equal(t, ab[1], "dp")
+	assert.Equal(t, ab[2], "pp")
+	assert.Equal(t, ab[3], "jj")
+	assert.Equal(t, ab[4], "dd")
+	assert.Equal(t, ab[5], "dj")
+	assert.Equal(t, ab[6], "pj")
+}
+
+func TestAddHandicap8(t *testing.T) {
+	n := &SGFNode{}
+	addHandicap(n, 8)
+	assert.True(t, n.HasField("AB"))
+	ab := n.GetField("AB")
+	require.Equal(t, len(ab), 8)
+	assert.Equal(t, ab[0], "pd")
+	assert.Equal(t, ab[1], "dp")
+	assert.Equal(t, ab[2], "pp")
+	assert.Equal(t, ab[3], "dd")
+	assert.Equal(t, ab[4], "dj")
+	assert.Equal(t, ab[5], "pj")
+	assert.Equal(t, ab[6], "jd")
+	assert.Equal(t, ab[7], "jp")
+}
+
+func TestAddHandicap9(t *testing.T) {
+	n := &SGFNode{}
+	addHandicap(n, 9)
+	assert.True(t, n.HasField("AB"))
+	ab := n.GetField("AB")
+	require.Equal(t, len(ab), 9)
+	assert.Equal(t, ab[0], "pd")
+	assert.Equal(t, ab[1], "dp")
+	assert.Equal(t, ab[2], "pp")
+	assert.Equal(t, ab[3], "jj")
+	assert.Equal(t, ab[4], "dd")
+	assert.Equal(t, ab[5], "dj")
+	assert.Equal(t, ab[6], "pj")
+	assert.Equal(t, ab[7], "jd")
+	assert.Equal(t, ab[8], "jp")
+}

@@ -88,6 +88,40 @@ type GIBResult struct {
 
 var alphabet = "abcdefghijklmnopqrs"
 
+func addHandicap(node *SGFNode, n int) {
+	if n < 2 {
+		return
+	}
+	node.AddField("AB", "pd")
+	node.AddField("AB", "dp")
+	if n > 2 {
+		node.AddField("AB", "pp")
+	}
+	if n > 3 && n%2 == 1 {
+		node.AddField("AB", "jj")
+	}
+	if n > 3 {
+		node.AddField("AB", "dd")
+	}
+	if n > 5 {
+		node.AddField("AB", "dj")
+		node.AddField("AB", "pj")
+	}
+	if n > 7 {
+		node.AddField("AB", "jd")
+		node.AddField("AB", "jp")
+	}
+}
+
+const (
+	GLRTBlackByCounting = 0
+	GLRTWhiteByCounting = 1
+	GLRTBlackByResign   = 3
+	GLRTWhiteByResign   = 4
+	GLRTBlackByTime     = 7
+	GLRTWhiteByTime     = 8
+)
+
 func (g *GIBResult) ToSGFNode() (*SGFNode, error) {
 	root := &SGFNode{}
 	for _, h := range g.header {
@@ -98,15 +132,57 @@ func (g *GIBResult) ToSGFNode() (*SGFNode, error) {
 				return nil, err
 			}
 
+			var glrt int
 			for _, prop := range props {
-				if prop.key == "LINE" {
+				switch prop.key {
+				case "GRLT":
+					n, err := strconv.Atoi(prop.value)
+					if err != nil {
+						continue
+					}
+					switch n {
+					case GLRTBlackByCounting:
+						glrt = n
+					case GLRTWhiteByCounting:
+						glrt = n
+					case GLRTBlackByResign:
+						root.AddField("RE", "B+R")
+					case GLRTWhiteByResign:
+						root.AddField("RE", "W+R")
+					case GLRTBlackByTime:
+						root.AddField("RE", "B+T")
+					case GLRTWhiteByTime:
+						root.AddField("RE", "W+T")
+					}
+				case "ZIPSU":
+					zipsu, err := strconv.Atoi(prop.value)
+					if err != nil {
+						continue
+					}
+					if zipsu == 0 {
+						continue
+					}
+					f := float64(zipsu) / 10
+					switch glrt {
+					case GLRTBlackByCounting:
+						root.AddField("RE", fmt.Sprintf("B+%f", f))
+					case GLRTWhiteByCounting:
+						root.AddField("RE", fmt.Sprintf("W+%f", f))
+					}
+				case "LINE":
 					root.AddField("SZ", prop.value)
-				} else if prop.key == "GONGJE" {
+				case "GONGJE":
 					n, err := strconv.Atoi(prop.value)
 					if err != nil || n == 0 {
 						continue
 					}
 					root.AddField("KM", fmt.Sprintf("%f", float64(n)/10))
+				case "DUM":
+					n, err := strconv.Atoi(prop.value)
+					if err != nil || n == 0 {
+						continue
+					}
+					root.AddField("KM", fmt.Sprintf("-%d", n))
 				}
 			}
 		case "WUSERINFO", "BUSERINFO":
@@ -131,7 +207,20 @@ func (g *GIBResult) ToSGFNode() (*SGFNode, error) {
 		if len(tokens) < 1 {
 			continue
 		}
-		if tokens[0] == "SKI" {
+		switch tokens[0] {
+		case "INI":
+			// handicap stones
+			if len(tokens) < 4 {
+				continue
+			}
+			num, err := strconv.Atoi(tokens[3])
+			if err != nil {
+				return nil, err
+			}
+			addHandicap(root, num)
+
+		case "SKI":
+			// pass
 			key := ""
 			if cur.HasField("B") {
 				key = "W"
@@ -144,7 +233,8 @@ func (g *GIBResult) ToSGFNode() (*SGFNode, error) {
 			node.AddField(key, "")
 			cur.down = append(cur.down, node)
 			cur = node
-		} else if tokens[0] == "STO" {
+		case "STO":
+			// stone
 			if len(tokens) != 6 {
 				continue
 			}
