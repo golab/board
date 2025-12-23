@@ -184,6 +184,23 @@ func TestGIBToSGF(t *testing.T) {
 	assert.Equal(t, len(node.toSGF(true)), 85)
 }
 
+func TestGIBToSGFRanks(t *testing.T) {
+	data := "\\HS\n\\[GAMEINFOMAIN=LINE:19,GONGJE:65\\]\n\\[WUSERINFO=WNICK:player_white\\]\n\\[BUSERINFO=BNICK:player_black\\]\n\\[GAMEBLACKLEVEL=25\\]\n\\[GAMEWHITELEVEL=17\\]\\HE\n\\GS\nSTO 0 2 1 15 15\nSTO 0 3 2 3 15\nSTO 0 4 1 15 3\nSTO 0 5 2 3 3\nSKI 0 6\nSKI 0 7\n\\GE"
+	p := NewGIBParser(data)
+	gibResult, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, gibResult)
+	node, err := gibResult.ToSGFNode()
+	require.NoError(t, err)
+	require.NotNil(t, node)
+	br := node.GetField("BR")
+	wr := node.GetField("WR")
+	require.Equal(t, len(br), 1)
+	require.Equal(t, len(wr), 1)
+	assert.Equal(t, br[0], "8d")
+	assert.Equal(t, wr[0], "1k")
+}
+
 func TestGIBToSGFDum(t *testing.T) {
 	data := "\\HS\n\\[GAMEINFOMAIN=LINE:19,GONGJE:0,DUM:10\\]\n\\[WUSERINFO=WNICK:player_white\\]\n\\[BUSERINFO=BNICK:player_black\\]\n\\HE\n\\GS\nSTO 0 2 1 15 15\nSTO 0 3 2 3 15\nSTO 0 4 1 15 3\nSTO 0 5 2 3 3\nSKI 0 6\nSKI 0 7\n\\GE"
 	p := NewGIBParser(data)
@@ -400,4 +417,14 @@ func TestAddHandicap9(t *testing.T) {
 	assert.Equal(t, ab[6], "pj")
 	assert.Equal(t, ab[7], "jd")
 	assert.Equal(t, ab[8], "jp")
+}
+
+func TestMakeRank(t *testing.T) {
+	assert.Equal(t, makeRank(35), "9p")
+	assert.Equal(t, makeRank(27), "1p")
+	assert.Equal(t, makeRank(26), "9d")
+	assert.Equal(t, makeRank(18), "1d")
+	assert.Equal(t, makeRank(17), "1k")
+	assert.Equal(t, makeRank(1), "17k")
+	assert.Equal(t, makeRank(0), "18k")
 }

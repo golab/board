@@ -88,6 +88,16 @@ type GIBResult struct {
 
 var alphabet = "abcdefghijklmnopqrs"
 
+func makeRank(n int) string {
+	if n > 26 {
+		return fmt.Sprintf("%dp", n-26)
+	}
+	if n > 17 {
+		return fmt.Sprintf("%dd", n-17)
+	}
+	return fmt.Sprintf("%dk", 18-n)
+}
+
 func addHandicap(node *SGFNode, n int) {
 	if n < 2 {
 		return
@@ -198,7 +208,18 @@ func (g *GIBResult) ToSGFNode() (*SGFNode, error) {
 					root.AddField("PW", prop.value)
 				}
 			}
-
+		case "GAMEBLACKLEVEL":
+			n, err := strconv.Atoi(h.value)
+			if err != nil {
+				continue
+			}
+			root.AddField("BR", makeRank(n))
+		case "GAMEWHITELEVEL":
+			n, err := strconv.Atoi(h.value)
+			if err != nil {
+				continue
+			}
+			root.AddField("WR", makeRank(n))
 		}
 	}
 	cur := root
