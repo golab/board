@@ -371,6 +371,14 @@ func Merge(sgfs []string) string {
 
 		if hasB || hasW || hasAB || hasAW {
 			// strip fields and save the node
+			for _, key := range []string{"PB", "PW", "RE", "KM", "DT"} {
+				values := root.GetField(key)
+				if len(values) == 0 {
+					continue
+				}
+				v := fmt.Sprintf("%s: %s", key, values[0])
+				root.AddField("C", v)
+			}
 			for _, key := range []string{"RU", "SZ", "KM", "TM", "OT"} {
 				root.DeleteField(key)
 			}
