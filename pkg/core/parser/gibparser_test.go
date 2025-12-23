@@ -184,6 +184,116 @@ func TestGIBToSGF(t *testing.T) {
 	assert.Equal(t, len(node.toSGF(true)), 85)
 }
 
+func TestGIBToSGFDum(t *testing.T) {
+	data := "\\HS\n\\[GAMEINFOMAIN=LINE:19,GONGJE:0,DUM:10\\]\n\\[WUSERINFO=WNICK:player_white\\]\n\\[BUSERINFO=BNICK:player_black\\]\n\\HE\n\\GS\nSTO 0 2 1 15 15\nSTO 0 3 2 3 15\nSTO 0 4 1 15 3\nSTO 0 5 2 3 3\nSKI 0 6\nSKI 0 7\n\\GE"
+	p := NewGIBParser(data)
+	gibResult, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, gibResult)
+	node, err := gibResult.ToSGFNode()
+	require.NoError(t, err)
+	require.NotNil(t, node)
+	km := node.GetField("KM")
+	require.Equal(t, len(km), 1)
+	assert.Equal(t, km[0], "-10")
+}
+
+func TestGIBToSGFHandicap(t *testing.T) {
+	data := "\\HS\n\\[GAMEINFOMAIN=LINE:19,GONGJE:65\\]\n\\[WUSERINFO=WNICK:player_white\\]\n\\[BUSERINFO=BNICK:player_black\\]\n\\HE\n\\GS\nINI 0 1 2 &4\nSTO 0 2 1 15 15\nSTO 0 3 2 3 15\nSTO 0 4 1 15 3\nSTO 0 5 2 3 3\nSKI 0 6\nSKI 0 7\n\\GE"
+	p := NewGIBParser(data)
+	gibResult, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, gibResult)
+	node, err := gibResult.ToSGFNode()
+	require.NoError(t, err)
+	require.NotNil(t, node)
+	require.Equal(t, len(node.GetField("AB")), 2)
+}
+
+func TestGRLT0(t *testing.T) {
+	data := "\\HS\n\\[GAMEINFOMAIN=LINE:19,GONGJE:65,GRLT:0,ZIPSU:90\\]\n\\[WUSERINFO=WNICK:player_white\\]\n\\[BUSERINFO=BNICK:player_black\\]\n\\HE\n\\GS\nSTO 0 2 1 15 15\nSTO 0 3 2 3 15\nSTO 0 4 1 15 3\nSTO 0 5 2 3 3\nSKI 0 6\nSKI 0 7\n\\GE"
+	p := NewGIBParser(data)
+	gibResult, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, gibResult)
+	node, err := gibResult.ToSGFNode()
+	require.NoError(t, err)
+	require.NotNil(t, node)
+	re := node.GetField("RE")
+	require.Equal(t, len(re), 1)
+	assert.Equal(t, re[0], "B+9.000000")
+}
+
+func TestGRLT1(t *testing.T) {
+	data := "\\HS\n\\[GAMEINFOMAIN=LINE:19,GONGJE:65,GRLT:1,ZIPSU:90\\]\n\\[WUSERINFO=WNICK:player_white\\]\n\\[BUSERINFO=BNICK:player_black\\]\n\\HE\n\\GS\nSTO 0 2 1 15 15\nSTO 0 3 2 3 15\nSTO 0 4 1 15 3\nSTO 0 5 2 3 3\nSKI 0 6\nSKI 0 7\n\\GE"
+	p := NewGIBParser(data)
+	gibResult, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, gibResult)
+	node, err := gibResult.ToSGFNode()
+	require.NoError(t, err)
+	require.NotNil(t, node)
+	re := node.GetField("RE")
+	require.Equal(t, len(re), 1)
+	assert.Equal(t, re[0], "W+9.000000")
+}
+
+func TestGRLT3(t *testing.T) {
+	data := "\\HS\n\\[GAMEINFOMAIN=LINE:19,GONGJE:65,GRLT:3,ZIPSU:0\\]\n\\[WUSERINFO=WNICK:player_white\\]\n\\[BUSERINFO=BNICK:player_black\\]\n\\HE\n\\GS\nSTO 0 2 1 15 15\nSTO 0 3 2 3 15\nSTO 0 4 1 15 3\nSTO 0 5 2 3 3\nSKI 0 6\nSKI 0 7\n\\GE"
+	p := NewGIBParser(data)
+	gibResult, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, gibResult)
+	node, err := gibResult.ToSGFNode()
+	require.NoError(t, err)
+	require.NotNil(t, node)
+	re := node.GetField("RE")
+	require.Equal(t, len(re), 1)
+	assert.Equal(t, re[0], "B+R")
+}
+
+func TestGRLT4(t *testing.T) {
+	data := "\\HS\n\\[GAMEINFOMAIN=LINE:19,GONGJE:65,GRLT:4,ZIPSU:0\\]\n\\[WUSERINFO=WNICK:player_white\\]\n\\[BUSERINFO=BNICK:player_black\\]\n\\HE\n\\GS\nSTO 0 2 1 15 15\nSTO 0 3 2 3 15\nSTO 0 4 1 15 3\nSTO 0 5 2 3 3\nSKI 0 6\nSKI 0 7\n\\GE"
+	p := NewGIBParser(data)
+	gibResult, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, gibResult)
+	node, err := gibResult.ToSGFNode()
+	require.NoError(t, err)
+	require.NotNil(t, node)
+	re := node.GetField("RE")
+	require.Equal(t, len(re), 1)
+	assert.Equal(t, re[0], "W+R")
+}
+
+func TestGRLT7(t *testing.T) {
+	data := "\\HS\n\\[GAMEINFOMAIN=LINE:19,GONGJE:65,GRLT:7,ZIPSU:0\\]\n\\[WUSERINFO=WNICK:player_white\\]\n\\[BUSERINFO=BNICK:player_black\\]\n\\HE\n\\GS\nSTO 0 2 1 15 15\nSTO 0 3 2 3 15\nSTO 0 4 1 15 3\nSTO 0 5 2 3 3\nSKI 0 6\nSKI 0 7\n\\GE"
+	p := NewGIBParser(data)
+	gibResult, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, gibResult)
+	node, err := gibResult.ToSGFNode()
+	require.NoError(t, err)
+	require.NotNil(t, node)
+	re := node.GetField("RE")
+	require.Equal(t, len(re), 1)
+	assert.Equal(t, re[0], "B+T")
+}
+
+func TestGRLT8(t *testing.T) {
+	data := "\\HS\n\\[GAMEINFOMAIN=LINE:19,GONGJE:65,GRLT:8,ZIPSU:0\\]\n\\[WUSERINFO=WNICK:player_white\\]\n\\[BUSERINFO=BNICK:player_black\\]\n\\HE\n\\GS\nSTO 0 2 1 15 15\nSTO 0 3 2 3 15\nSTO 0 4 1 15 3\nSTO 0 5 2 3 3\nSKI 0 6\nSKI 0 7\n\\GE"
+	p := NewGIBParser(data)
+	gibResult, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, gibResult)
+	node, err := gibResult.ToSGFNode()
+	require.NoError(t, err)
+	require.NotNil(t, node)
+	re := node.GetField("RE")
+	require.Equal(t, len(re), 1)
+	assert.Equal(t, re[0], "W+T")
+}
+
 func TestAddHandicap2(t *testing.T) {
 	n := &SGFNode{}
 	addHandicap(n, 2)

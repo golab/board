@@ -114,12 +114,12 @@ func addHandicap(node *SGFNode, n int) {
 }
 
 const (
-	GLRTBlackByCounting = 0
-	GLRTWhiteByCounting = 1
-	GLRTBlackByResign   = 3
-	GLRTWhiteByResign   = 4
-	GLRTBlackByTime     = 7
-	GLRTWhiteByTime     = 8
+	GRLTBlackByCounting = 0
+	GRLTWhiteByCounting = 1
+	GRLTBlackByResign   = 3
+	GRLTWhiteByResign   = 4
+	GRLTBlackByTime     = 7
+	GRLTWhiteByTime     = 8
 )
 
 func (g *GIBResult) ToSGFNode() (*SGFNode, error) {
@@ -132,7 +132,7 @@ func (g *GIBResult) ToSGFNode() (*SGFNode, error) {
 				return nil, err
 			}
 
-			var glrt int
+			var grlt int
 			for _, prop := range props {
 				switch prop.key {
 				case "GRLT":
@@ -141,17 +141,17 @@ func (g *GIBResult) ToSGFNode() (*SGFNode, error) {
 						continue
 					}
 					switch n {
-					case GLRTBlackByCounting:
-						glrt = n
-					case GLRTWhiteByCounting:
-						glrt = n
-					case GLRTBlackByResign:
+					case GRLTBlackByCounting:
+						grlt = n
+					case GRLTWhiteByCounting:
+						grlt = n
+					case GRLTBlackByResign:
 						root.AddField("RE", "B+R")
-					case GLRTWhiteByResign:
+					case GRLTWhiteByResign:
 						root.AddField("RE", "W+R")
-					case GLRTBlackByTime:
+					case GRLTBlackByTime:
 						root.AddField("RE", "B+T")
-					case GLRTWhiteByTime:
+					case GRLTWhiteByTime:
 						root.AddField("RE", "W+T")
 					}
 				case "ZIPSU":
@@ -163,10 +163,10 @@ func (g *GIBResult) ToSGFNode() (*SGFNode, error) {
 						continue
 					}
 					f := float64(zipsu) / 10
-					switch glrt {
-					case GLRTBlackByCounting:
+					switch grlt {
+					case GRLTBlackByCounting:
 						root.AddField("RE", fmt.Sprintf("B+%f", f))
-					case GLRTWhiteByCounting:
+					case GRLTWhiteByCounting:
 						root.AddField("RE", fmt.Sprintf("W+%f", f))
 					}
 				case "LINE":
