@@ -130,7 +130,7 @@ func TestScore3(t *testing.T) {
 	assert.Equal(t, current.BlackCaps, 0)
 	assert.Equal(t, current.WhiteCaps, 0)
 
-	assert.Equal(t, len(dame), 2)
+	assert.Equal(t, len(dame), 4)
 }
 
 func TestScore4(t *testing.T) {
@@ -168,7 +168,7 @@ func TestScore4(t *testing.T) {
 	assert.Equal(t, current.BlackCaps, 0)
 	assert.Equal(t, current.WhiteCaps, 0)
 
-	assert.Equal(t, len(dame), 1)
+	assert.Equal(t, len(dame), 2)
 }
 
 func TestScore5(t *testing.T) {
@@ -195,7 +195,7 @@ func TestScore5(t *testing.T) {
 	assert.Equal(t, current.BlackCaps, 0)
 	assert.Equal(t, current.WhiteCaps, 0)
 
-	assert.Equal(t, len(dame), 1)
+	assert.Equal(t, len(dame), 3)
 }
 
 func TestScore6(t *testing.T) {
@@ -222,7 +222,7 @@ func TestScore6(t *testing.T) {
 	assert.Equal(t, current.BlackCaps, 0)
 	assert.Equal(t, current.WhiteCaps, 0)
 
-	assert.Equal(t, len(dame), 2)
+	assert.Equal(t, len(dame), 3)
 }
 
 func TestScore7(t *testing.T) {
@@ -249,7 +249,7 @@ func TestScore7(t *testing.T) {
 	assert.Equal(t, current.BlackCaps, 0)
 	assert.Equal(t, current.WhiteCaps, 0)
 
-	assert.Equal(t, len(dame), 1)
+	assert.Equal(t, len(dame), 2)
 }
 
 func TestScore8(t *testing.T) {

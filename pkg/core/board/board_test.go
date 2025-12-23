@@ -344,7 +344,7 @@ func TestScore2(t *testing.T) {
 	assert.Equal(t, len(whiteArea), 27)
 	assert.Equal(t, len(blackDead), 0)
 	assert.Equal(t, len(whiteDead), 0)
-	assert.Equal(t, len(dame), 1)
+	assert.Equal(t, len(dame), 2)
 }
 
 func TestBoardCopy(t *testing.T) {
@@ -499,4 +499,29 @@ func TestApplyDiff(t *testing.T) {
 	assert.Equal(t, c.Get(coord.NewCoord(1, 2)), color.Black)
 	assert.Equal(t, c.Get(coord.NewCoord(1, 3)), color.White)
 	assert.Equal(t, c.Get(coord.NewCoord(1, 4)), color.White)
+}
+
+func TestSnapback(t *testing.T) {
+	b, err := board.FromString(`
+.........
+BB.......
+WB.BB....
+WWB.WB...
+.WWBWB...
+...WBBBBB
+...WBWBWB
+..W.WWWWW
+.........`)
+	require.NoError(t, err)
+
+	dead := coord.NewCoordSet()
+	dame := coord.NewCoordSet()
+	dead.Add(coord.NewCoord(4, 4))
+	dead.Add(coord.NewCoord(4, 3))
+
+	sr := b.Score(dead, dame)
+
+	assert.Equal(t, len(sr.BlackArea), 30)
+	assert.Equal(t, len(sr.WhiteDead), 2)
+	assert.Equal(t, len(sr.Dame), 0)
 }

@@ -23,6 +23,7 @@ AB, AE, and AW are setup properties
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/jarednogo/board/pkg/core/color"
 	"github.com/jarednogo/board/pkg/core/coord"
@@ -67,6 +68,31 @@ func NewBoard(size int) *Board {
 		Size:   size,
 		Points: points,
 	}
+}
+
+func FromString(s string) (*Board, error) {
+	lines := strings.Split(strings.TrimSpace(s), "\n")
+	if len(lines) == 0 {
+		return nil, fmt.Errorf("no lines")
+	}
+	sz := len(lines[0])
+	if len(lines) < sz {
+		return nil, fmt.Errorf("not enough lines (size derived from first line)")
+	}
+	b := NewBoard(sz)
+	for i := 0; i < sz; i++ {
+		line := lines[i]
+		for j, ch := range line {
+			c := coord.NewCoord(j, i)
+			switch ch {
+			case 'B', 'b':
+				b.Set(c, color.Black)
+			case 'W', 'w':
+				b.Set(c, color.White)
+			}
+		}
+	}
+	return b, nil
 }
 
 func (b *Board) String() string {
@@ -429,6 +455,33 @@ func (b *Board) DetectAtariDame(dead, dame coord.CoordSet) coord.CoordSet {
 	return bDame.Intersect(wDame)
 }
 
+func (b *Board) isSnapback(c *coord.Coord, col color.Color) bool {
+	// two conditions for a snapback (of color col)
+	// - placing a stone of color col at coord c captures a stone
+	// - the group has one liberty after the stone is placed
+
+	// so, first copy the board
+	b2 := b.Copy()
+	diff := b2.Move(c, col)
+	if diff == nil {
+		return false
+	}
+
+	// ensure we captured exactly one stone
+	if len(diff.Remove) != 1 {
+		return false
+	}
+	if len(diff.Remove[0].Coords) != 1 {
+		return false
+	}
+
+	// find the group
+	g := b2.FindGroup(c)
+
+	// ensure the group has one liberty
+	return len(g.Libs) == 1
+}
+
 type ScoreResult struct {
 	BlackArea []*coord.Coord
 	WhiteArea []*coord.Coord
@@ -505,6 +558,18 @@ func (b *Board) Score(dead coord.CoordSet, markedDame coord.CoordSet) *ScoreResu
 	for _, a := range fillAtari.List() {
 		blackArea.Remove(a)
 		whiteArea.Remove(a)
+		dame.Add(a)
+	}
+
+	// detect snapback points
+	for _, c := range dame.List() {
+		if b.isSnapback(c, color.White) {
+			dame.Remove(c)
+			blackArea.Add(c)
+		} else if b.isSnapback(c, color.Black) {
+			dame.Remove(c)
+			whiteArea.Add(c)
+		}
 	}
 
 	return &ScoreResult{
