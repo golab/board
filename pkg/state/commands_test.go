@@ -203,11 +203,21 @@ func TestCommandPaste(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestCommandGraft(t *testing.T) {
+func TestCommandGraft1(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err)
 
 	text := "a1 b2 c3 d4"
+
+	_, err = state.NewGraftCommand(text).Execute(s)
+	assert.NoError(t, err)
+}
+
+func TestCommandGraft2(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
+	assert.NoError(t, err)
+
+	text := "4 a1 b2 c3 d4"
 
 	_, err = state.NewGraftCommand(text).Execute(s)
 	assert.NoError(t, err)
