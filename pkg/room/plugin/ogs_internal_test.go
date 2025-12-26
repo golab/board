@@ -64,54 +64,6 @@ func TestGamedata(t *testing.T) {
 	assert.Equal(t, sgf, "(;GM[1]FF[4]CA[UTF-8]SZ[19]PB[player_black]PW[player_white]BR[1d]WR[2k]RU[chinese]KM[0.500000]GN[game];B[pp];W[dp];B[dd];W[pd])")
 }
 
-type call struct {
-	name string
-	args []any
-}
-
-type MockRoom struct {
-	calls []*call
-}
-
-func (r *MockRoom) HeadColor() color.Color {
-	r.calls = append(r.calls, &call{name: "HeadColor"})
-	return color.Black
-}
-
-func (r *MockRoom) PushHead(x, y int, c color.Color) bool {
-	r.calls = append(r.calls, &call{name: "PushHead", args: []any{x, y, c}})
-	return true
-}
-
-func (r *MockRoom) BroadcastFullFrame() {
-	r.calls = append(r.calls, &call{name: "BroadcastFullFrame"})
-}
-
-func (r *MockRoom) BroadcastTreeOnly() {
-	r.calls = append(r.calls, &call{name: "BroadcastTreeOnly"})
-}
-
-func (r *MockRoom) AddStonesToTrunk(t int, s []*coord.Stone) {
-	r.calls = append(r.calls, &call{name: "AddStonesToTrunk", args: []any{t, s}})
-}
-
-func (r *MockRoom) GetColorAt(t int) color.Color {
-	r.calls = append(r.calls, &call{name: "GetColorAt", args: []any{t}})
-	if t%2 == 0 {
-		return color.White
-	}
-	return color.Black
-}
-
-func (r *MockRoom) Broadcast(e event.Event) {
-	r.calls = append(r.calls, &call{name: "Broadcast", args: []any{e}})
-}
-
-func (r *MockRoom) UploadSGF(s string) event.Event {
-	r.calls = append(r.calls, &call{name: "UploadSGF", args: []any{s}})
-	return event.NewEvent("testevent", nil)
-}
-
 func TestOGSConnector1(t *testing.T) {
 	f := fetch.NewMockFetcher(`{"user": {"id": 123456, "username": "someuser"}, "user_jwt": "jwt123"}`)
 	r := &MockRoom{}

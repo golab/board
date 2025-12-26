@@ -19,10 +19,16 @@ import (
 
 // regression
 func TestLabel(t *testing.T) {
-	s := NewState(19, true)
+	s := NewState(19)
 	s.current.AddField("LB", "dd:>:D")
 
 	marks := s.generateMarks()
 	require.Equal(t, len(marks.Labels), 1)
 	assert.Equal(t, marks.Labels[0].Text, ">:D")
+}
+
+func TestGenerateTreeOnly(t *testing.T) {
+	s := NewState(19)
+	f := s.GenerateTreeOnly(Full)
+	assert.Equal(t, f.Type, DiffFrame)
 }

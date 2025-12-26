@@ -10,6 +10,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 package plugin
 
+import (
+	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/jarednogo/board/pkg/event"
+)
+
 type MockPlugin struct {
 	IsStarted bool
 }
@@ -24,4 +30,52 @@ func (mp *MockPlugin) Start(map[string]any) {
 
 func (mp *MockPlugin) End() {
 	mp.IsStarted = false
+}
+
+type call struct {
+	name string
+	args []any
+}
+
+type MockRoom struct {
+	calls []*call
+}
+
+func (r *MockRoom) HeadColor() color.Color {
+	r.calls = append(r.calls, &call{name: "HeadColor"})
+	return color.Black
+}
+
+func (r *MockRoom) PushHead(x, y int, c color.Color) bool {
+	r.calls = append(r.calls, &call{name: "PushHead", args: []any{x, y, c}})
+	return true
+}
+
+func (r *MockRoom) BroadcastFullFrame() {
+	r.calls = append(r.calls, &call{name: "BroadcastFullFrame"})
+}
+
+func (r *MockRoom) BroadcastTreeOnly() {
+	r.calls = append(r.calls, &call{name: "BroadcastTreeOnly"})
+}
+
+func (r *MockRoom) AddStonesToTrunk(t int, s []*coord.Stone) {
+	r.calls = append(r.calls, &call{name: "AddStonesToTrunk", args: []any{t, s}})
+}
+
+func (r *MockRoom) GetColorAt(t int) color.Color {
+	r.calls = append(r.calls, &call{name: "GetColorAt", args: []any{t}})
+	if t%2 == 0 {
+		return color.White
+	}
+	return color.Black
+}
+
+func (r *MockRoom) Broadcast(e event.Event) {
+	r.calls = append(r.calls, &call{name: "Broadcast", args: []any{e}})
+}
+
+func (r *MockRoom) UploadSGF(s string) event.Event {
+	r.calls = append(r.calls, &call{name: "UploadSGF", args: []any{s}})
+	return event.NewEvent("testevent", nil)
 }

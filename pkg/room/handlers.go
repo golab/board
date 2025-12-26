@@ -21,7 +21,6 @@ import (
 	"github.com/jarednogo/board/pkg/core"
 	"github.com/jarednogo/board/pkg/core/parser"
 	"github.com/jarednogo/board/pkg/event"
-	"github.com/jarednogo/board/pkg/room/plugin"
 	"github.com/jarednogo/board/pkg/state"
 )
 
@@ -218,7 +217,6 @@ func (r *Room) handleRequestSGF(evt event.Event) event.Event {
 		}
 
 		if connectToOGS {
-
 			idStr := spl[len(spl)-1]
 			id64, err := strconv.ParseInt(idStr, 10, 64)
 			if err != nil {
@@ -227,7 +225,8 @@ func (r *Room) handleRequestSGF(evt event.Event) event.Event {
 			}
 			id := int(id64)
 
-			o, err := plugin.NewOGSConnector(r, r.GetFetcher())
+			ogsConnector := r.GetConnector("ogs")
+			o, err := ogsConnector(r, r.GetFetcher())
 			if err != nil {
 				bcast = event.ErrorEvent("ogs connector error")
 				return bcast
@@ -262,7 +261,7 @@ func (r *Room) handleRequestSGF(evt event.Event) event.Event {
 func (r *Room) handleTrash(evt event.Event) event.Event {
 	// reset room
 	oldBuffer := r.GetInputBuffer()
-	r.SetState(state.NewState(r.Size(), true))
+	r.SetState(state.NewState(r.Size()))
 
 	// reuse old inputbuffer
 	r.SetInputBuffer(oldBuffer)
@@ -319,7 +318,7 @@ func (r *Room) handleUpdateSettings(evt event.Event) event.Event {
 	r.SetInputBuffer(settings.Buffer)
 	if settings.Size != r.Size() {
 		// essentially trashing
-		r.SetState(state.NewState(settings.Size, true))
+		r.SetState(state.NewState(settings.Size))
 		r.SetInputBuffer(buffer)
 	}
 

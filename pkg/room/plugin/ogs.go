@@ -70,6 +70,14 @@ type OGSConnector struct {
 	mu      sync.Mutex
 }
 
+func NewOGSPlugin(room Room, f fetch.Fetcher) (Plugin, error) {
+	return NewOGSConnector(room, f)
+}
+
+func NewMockOGSPlugin(room Room, f fetch.Fetcher) (Plugin, error) {
+	return NewMockOGSConnector(room, f)
+}
+
 func NewOGSConnector(room Room, f fetch.Fetcher) (*OGSConnector, error) {
 	ws, err := websocket.Dial("wss://online-go.com/socket", "", "http://localhost")
 	if err != nil {

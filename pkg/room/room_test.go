@@ -13,14 +13,19 @@ package room_test
 import (
 	"io"
 	"testing"
+	"time"
 
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/internal/fetch"
+	"github.com/jarednogo/board/internal/require"
+	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/logx"
 	"github.com/jarednogo/board/pkg/message"
 	"github.com/jarednogo/board/pkg/room"
 	"github.com/jarednogo/board/pkg/room/plugin"
+	"github.com/jarednogo/board/pkg/state"
 )
 
 func TestBroadcast(t *testing.T) {
@@ -54,6 +59,39 @@ func TestBroadcastMessage(t *testing.T) {
 
 	assert.Equal(t, len(mock1.SavedEvents), 2)
 	assert.Equal(t, len(mock2.SavedEvents), 2)
+}
+
+func TestBroadcastFullFrame(t *testing.T) {
+	r := room.NewRoom("")
+	mock1 := event.NewMockEventChannel()
+	r.RegisterConnection(mock1)
+
+	r.BroadcastFullFrame()
+
+	require.Equal(t, len(mock1.SavedEvents), 2)
+	assert.Equal(t, mock1.SavedEvents[1].Type(), "frame")
+}
+
+func TestBroadcastTreeOnly(t *testing.T) {
+	r := room.NewRoom("")
+	mock1 := event.NewMockEventChannel()
+	r.RegisterConnection(mock1)
+
+	r.BroadcastTreeOnly()
+
+	require.Equal(t, len(mock1.SavedEvents), 2)
+	assert.Equal(t, mock1.SavedEvents[1].Type(), "frame")
+}
+
+func TestBroadcastNop(t *testing.T) {
+	r := room.NewRoom("")
+	mock1 := event.NewMockEventChannel()
+	r.RegisterConnection(mock1)
+
+	evt := event.NopEvent()
+	r.Broadcast(evt)
+
+	assert.Equal(t, len(mock1.SavedEvents), 1)
 }
 
 func TestPlugin(t *testing.T) {
@@ -149,4 +187,102 @@ func TestHandle(t *testing.T) {
 	mock := event.NewMockEventChannel()
 	err := r.Handle(mock)
 	assert.ErrorIs(t, err, io.EOF)
+}
+
+func TestID(t *testing.T) {
+	r := room.NewRoom("abc")
+	id := r.ID()
+	assert.Equal(t, id, "abc")
+}
+
+func TestGetLastActive(t *testing.T) {
+	r := room.NewRoom("")
+	tm := r.GetLastActive()
+	s := time.Since(tm)
+	assert.True(t, s > 0)
+}
+
+func TestSaveState(t *testing.T) {
+	r := room.NewRoom("")
+	s := r.SaveState()
+	assert.Equal(t, len(s.SGF), 96)
+}
+
+func TestTimeout(t *testing.T) {
+	r := room.NewRoom("")
+	r.SetTimeout(3.14)
+	assert.Equal(t, r.GetTimeout(), 3.14)
+}
+
+func TestGenerateTreeOnly(t *testing.T) {
+	r := room.NewRoom("")
+	f := r.GenerateTreeOnly(state.Full)
+	assert.Equal(t, f.Type, state.DiffFrame)
+}
+
+func TestAddStones(t *testing.T) {
+	r := room.NewRoom("")
+	stones := []*coord.Stone{}
+	stones = append(stones, coord.NewStone(2, 3, color.Black))
+	stones = append(stones, coord.NewStone(14, 3, color.White))
+	r.AddStones(stones)
+	s := r.GetState()
+	assert.Equal(t, s.GetNextIndex(), 3)
+}
+
+func TestAddStonesToTrunk(t *testing.T) {
+	r := room.NewRoom("")
+	stones := []*coord.Stone{}
+	stones = append(stones, coord.NewStone(2, 3, color.Black))
+	stones = append(stones, coord.NewStone(14, 3, color.White))
+	stones = append(stones, coord.NewStone(3, 14, color.Black))
+	stones = append(stones, coord.NewStone(14, 14, color.White))
+	r.AddStones(stones)
+
+	tstones := []*coord.Stone{}
+	tstones = append(tstones, coord.NewStone(4, 14, color.Black))
+	tstones = append(tstones, coord.NewStone(15, 14, color.White))
+	r.AddStonesToTrunk(2, tstones)
+
+	s := r.GetState()
+	assert.Equal(t, s.GetNextIndex(), 7)
+}
+
+func TestGetColorAt(t *testing.T) {
+	r := room.NewRoom("")
+	r.PushHead(2, 3, color.Black)
+	r.PushHead(14, 3, color.White)
+	assert.Equal(t, r.GetColorAt(2), color.White)
+}
+
+func TestHeadColor(t *testing.T) {
+	r := room.NewRoom("")
+	assert.Equal(t, r.HeadColor(), color.Empty)
+	r.PushHead(2, 3, color.Black)
+	assert.Equal(t, r.HeadColor(), color.Black)
+	r.PushHead(14, 3, color.White)
+	assert.Equal(t, r.HeadColor(), color.White)
+}
+
+func TestToSGFIX(t *testing.T) {
+	r := room.NewRoom("")
+	r.PushHead(2, 3, color.Black)
+	r.PushHead(14, 3, color.White)
+	r.PushHead(3, 14, color.Black)
+	r.PushHead(14, 14, color.White)
+	assert.Equal(t, len(r.ToSGF()), 89)
+	assert.Equal(t, len(r.ToSGFIX()), 114)
+}
+
+func TestBoard(t *testing.T) {
+	r := room.NewRoom("")
+	r.PushHead(2, 3, color.Black)
+	r.PushHead(14, 3, color.White)
+	r.PushHead(3, 14, color.Black)
+	r.PushHead(14, 14, color.White)
+	b := r.Board()
+	assert.Equal(t, b.Get(coord.NewCoord(2, 3)), color.Black)
+	assert.Equal(t, b.Get(coord.NewCoord(14, 3)), color.White)
+	assert.Equal(t, b.Get(coord.NewCoord(3, 14)), color.Black)
+	assert.Equal(t, b.Get(coord.NewCoord(14, 14)), color.White)
 }

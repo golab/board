@@ -35,7 +35,7 @@ func NewMockClient(sgf string) *MockClient {
 }
 
 func (mc *MockClient) Get(s string) (*http.Response, error) {
-	u, err := url.Parse(s)
+	u, err := url.ParseRequestURI(s)
 	if err != nil {
 		return nil, err
 	}

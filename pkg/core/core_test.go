@@ -43,10 +43,9 @@ func TestUUID(t *testing.T) {
 }
 
 // be a bit wary. this is a non-deterministic test
-/*
 func TestRandomBoardName(t *testing.T) {
 	count := make(map[string]int)
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 100; i++ {
 		name := core.RandomBoardName()
 		if _, ok := count[name]; !ok {
 			count[name] = 0
@@ -57,4 +56,3 @@ func TestRandomBoardName(t *testing.T) {
 		assert.Equal(t, v, 1)
 	}
 }
-*/

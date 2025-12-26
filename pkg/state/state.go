@@ -191,7 +191,7 @@ func FromSGF(data string) (*State, error) {
 		}
 	}
 
-	state := NewState(int(size), false)
+	state := NewEmptyState(int(size))
 	stack := []any{root}
 	for len(stack) > 0 {
 		i := len(stack) - 1
@@ -237,7 +237,15 @@ func FromSGF(data string) (*State, error) {
 	return state, nil
 }
 
-func NewState(size int, initRoot bool) *State {
+func NewState(size int) *State {
+	return newState(size, true)
+}
+
+func NewEmptyState(size int) *State {
+	return newState(size, false)
+}
+
+func newState(size int, initRoot bool) *State {
 	nodes := make(map[int]*tree.TreeNode)
 	var root *tree.TreeNode
 	root = nil

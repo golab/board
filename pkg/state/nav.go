@@ -24,7 +24,6 @@ func (s *State) SetLocation(loc string) {
 			s.right()
 		}
 	}
-
 }
 
 func (s *State) left() *coord.Diff {

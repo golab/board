@@ -29,6 +29,8 @@ import (
 	"github.com/jarednogo/board/pkg/state"
 )
 
+type Connector func(plugin.Room, fetch.Fetcher) (plugin.Plugin, error)
+
 type Room struct {
 	conns        map[string]event.EventChannel
 	state        *state.State
@@ -36,6 +38,7 @@ type Room struct {
 	lastUser     string
 	lastMessages map[string]*time.Time
 	plugins      map[string]plugin.Plugin
+	connectors   map[string]Connector
 	password     string
 	auth         map[string]bool
 	nicks        map[string]string
@@ -51,12 +54,13 @@ type Room struct {
 
 func NewRoom(id string) *Room {
 	conns := make(map[string]event.EventChannel)
-	s := state.NewState(19, true)
+	s := state.NewState(19)
 	now := time.Now()
 	msgs := make(map[string]*time.Time)
 	auth := make(map[string]bool)
 	nicks := make(map[string]string)
 	plugins := make(map[string]plugin.Plugin)
+	connectors := make(map[string]Connector)
 	// default input buffer of 250
 	// default timeout of 86400
 
@@ -67,6 +71,7 @@ func NewRoom(id string) *Room {
 		lastUser:     "",
 		lastMessages: msgs,
 		plugins:      plugins,
+		connectors:   connectors,
 		password:     "",
 		auth:         auth,
 		nicks:        nicks,
@@ -76,6 +81,7 @@ func NewRoom(id string) *Room {
 		userBuffer:   100,
 		timeout:      86400,
 	}
+	r.initDefaultConnectors()
 	r.initHandlers()
 
 	return r
@@ -106,6 +112,10 @@ func Load(load *loader.LoadJSON) (*Room, error) {
 	r.SetState(st)
 
 	return r, nil
+}
+
+func (r *Room) initDefaultConnectors() {
+	r.SetConnector("ogs", plugin.NewOGSPlugin)
 }
 
 func (r *Room) ID() string {
@@ -274,10 +284,28 @@ func (r *Room) Close() error {
 	return fmt.Errorf("%v", errs)
 }
 
+func (r *Room) GetState() *state.State {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.state
+}
+
 func (r *Room) SetState(s *state.State) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.state = s
+}
+
+func (r *Room) SetConnector(key string, c Connector) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.connectors[key] = c
+}
+
+func (r *Room) GetConnector(key string) Connector {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.connectors[key]
 }
 
 func (r *Room) SetFetcher(f fetch.Fetcher) {

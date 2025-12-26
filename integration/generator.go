@@ -23,7 +23,7 @@ func GenerateRandomSGF(seed int, num int) string {
 
 	size := 19
 
-	s := state.NewState(size, true)
+	s := state.NewState(size)
 	numMoves := 0
 	col := color.Black
 	for numMoves < num {

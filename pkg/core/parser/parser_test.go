@@ -205,6 +205,14 @@ func TestGetChild(t *testing.T) {
 	assert.Zero(t, root.GetChild(-1))
 }
 
+func TestAnyParse(t *testing.T) {
+	data := "\\HS\n\\[GAMEINFOMAIN=LINE:19,GONGJE:65\\]\n\\[WUSERINFO=WNICK:player_white\\]\n\\[BUSERINFO=BNICK:player_black\\]\n\\HE\n\\GS\nSTO 0 2 1 15 15\nSTO 0 3 2 3 15\nSTO 0 4 1 15 3\nSTO 0 5 2 3 3\nSKI 0 6\nSKI 0 7\n\\GE"
+	p := parser.New(data)
+	root, err := p.Parse()
+	require.NoError(t, err)
+	assert.NotNil(t, root)
+}
+
 func FuzzParser(f *testing.F) {
 	testcases := []string{"(;)", "(;GM[1];B[aa];W[bb];B[];W[ss])", "(;GM[1];C[comment \"with\" quotes])", sgfsamples.Empty, sgfsamples.SimpleTwoBranches, sgfsamples.SimpleWithComment, sgfsamples.SimpleFourMoves, sgfsamples.SimpleEightMoves, sgfsamples.Scoring1, sgfsamples.PassWithTT, sgfsamples.ChineseNames}
 	for _, tc := range testcases {

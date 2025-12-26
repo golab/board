@@ -23,6 +23,7 @@ import (
 	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/logx"
 	"github.com/jarednogo/board/pkg/room"
+	"github.com/jarednogo/board/pkg/room/plugin"
 )
 
 func TestHandleIsProtected(t *testing.T) {
@@ -233,4 +234,20 @@ func TestLogRequestSGF(t *testing.T) {
 	err := json.Unmarshal([]byte(l.Lines()[0]), &log)
 	assert.NoError(t, err)
 	assert.Equal(t, log.EventType, "request_sgf")
+}
+
+func TestLogRequestOGS(t *testing.T) {
+	l := logx.NewRecorder(logx.LogLevelInfo)
+	r := room.NewRoom("")
+	r.SetLogger(l)
+	f := fetch.NewMockFetcher(`{"user": {"id": 123456, "username": "someuser"}, "user_jwt": "jwt123"}`)
+	r.SetFetcher(f)
+
+	r.SetConnector("ogs", plugin.NewMockOGSPlugin)
+
+	evt := event.NewEvent("request_sgf", "http://online-go.com/review/42")
+	r.HandleAny(evt)
+
+	p := r.GetPlugin("ogs")
+	require.NotNil(t, p)
 }

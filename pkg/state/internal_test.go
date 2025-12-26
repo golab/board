@@ -197,3 +197,15 @@ func TestGenerateMarks(t *testing.T) {
 	assert.Equal(t, len(marks.Pens), 1)
 	assert.Equal(t, marks.Pens[0].Color, "#AAAAAA")
 }
+
+func TestSetLocation(t *testing.T) {
+	s := NewState(19)
+	s.PushHead(10, 10, color.Black)
+	s.PushHead(11, 11, color.White)
+	s.PushHead(12, 12, color.Black)
+	s.PushHead(13, 13, color.White)
+	s.rewind()
+	assert.Equal(t, s.Current().Index, 0)
+	s.SetLocation("0,0,0,0")
+	assert.Equal(t, s.Current().Index, 4)
+}

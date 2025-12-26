@@ -127,14 +127,13 @@ func (s *State) PushHead(x, y int, col color.Color) bool {
 }
 
 func (s *State) AddNode(crd *coord.Coord, col color.Color) *coord.Diff {
-	index := s.GetNextIndex()
 	flds := fields.Fields{}
 	if col == color.Black {
 		flds.AddField("B", crd.ToLetters())
 	} else {
 		flds.AddField("W", crd.ToLetters())
 	}
-	return s.addNode(crd, col, flds, index, false)
+	return s.addNode(crd, col, flds, -1, false)
 }
 
 func (s *State) addNode(crd *coord.Coord, col color.Color, flds fields.Fields, index int, force bool) *coord.Diff {

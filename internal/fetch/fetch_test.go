@@ -69,6 +69,14 @@ func TestApprovedOGSFetch(t *testing.T) {
 	assert.Equal(t, len(sgf), len(sgfsamples.Resignation1))
 }
 
+func TestApprovedFetch(t *testing.T) {
+	mc := fetch.NewMockClient(sgfsamples.Resignation1)
+	f := fetch.NewDefaultFetcher(mc)
+	sgf, err := f.ApprovedFetch("https://files.gokgs.com/foo.sgf")
+	assert.NoError(t, err)
+	assert.Equal(t, len(sgf), len(sgfsamples.Resignation1))
+}
+
 func TestFetchOther(t *testing.T) {
 	mc := fetch.NewMockClient(sgfsamples.Resignation1)
 	f := fetch.NewDefaultFetcher(mc)
@@ -81,5 +89,19 @@ func TestFetchForbidden(t *testing.T) {
 	mc := fetch.NewMockClient(sgfsamples.Resignation1)
 	f := fetch.NewDefaultFetcher(mc)
 	_, err := f.ApprovedFetch("https://thesgfdatabase.com/somesgf")
+	assert.NotNil(t, err)
+}
+
+func TestParseError(t *testing.T) {
+	mc := fetch.NewMockClient(sgfsamples.Resignation1)
+	f := fetch.NewDefaultFetcher(mc)
+	_, err := f.Fetch("---abc")
+	assert.NotNil(t, err)
+}
+
+func TestBadOGS(t *testing.T) {
+	mc := fetch.NewMockClient("")
+	f := fetch.NewDefaultFetcher(mc)
+	_, err := f.ApprovedFetch("https://online-go.com/foo/bar/baz")
 	assert.NotNil(t, err)
 }

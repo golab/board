@@ -81,3 +81,87 @@ func TestSocketRouter(t *testing.T) {
 	r := chi.NewRouter()
 	r.Mount("/socket", h.SocketRouter())
 }
+
+func TestWebRouterDebug(t *testing.T) {
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	h, err := hub.NewHub(config.Test(), logger)
+	assert.NoError(t, err)
+	r := chi.NewRouter()
+	r.Mount("/", h.WebRouter())
+
+	// send a request to /debug (should be empty)
+	req := httptest.NewRequest("GET", "/b/someboard/debug", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	body, err := io.ReadAll(rec.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, len(body), 0)
+
+	// now create the room
+	h.GetOrCreateRoom("someboard")
+
+	// resend the request (shouldn't be empty)
+	req = httptest.NewRequest("GET", "/b/someboard/debug", nil)
+	r.ServeHTTP(rec, req)
+
+	body, err = io.ReadAll(rec.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, len(body), 146)
+}
+
+func TestWebRouterSGF(t *testing.T) {
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	h, err := hub.NewHub(config.Test(), logger)
+	assert.NoError(t, err)
+	r := chi.NewRouter()
+	r.Mount("/", h.WebRouter())
+
+	// send a request to /sgf (should be empty)
+	req := httptest.NewRequest("GET", "/b/someboard/sgf", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	body, err := io.ReadAll(rec.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, len(body), 0)
+
+	// now create the room
+	h.GetOrCreateRoom("someboard")
+
+	// resend the request (shouldn't be empty)
+	req = httptest.NewRequest("GET", "/b/someboard/sgf", nil)
+	r.ServeHTTP(rec, req)
+
+	body, err = io.ReadAll(rec.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, len(body), 65)
+}
+
+func TestWebRouterSGFIX(t *testing.T) {
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	h, err := hub.NewHub(config.Test(), logger)
+	assert.NoError(t, err)
+	r := chi.NewRouter()
+	r.Mount("/", h.WebRouter())
+
+	// send a request to /sgfix (should be empty)
+	req := httptest.NewRequest("GET", "/b/someboard/sgfix", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	body, err := io.ReadAll(rec.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, len(body), 0)
+
+	// now create the room
+	h.GetOrCreateRoom("someboard")
+
+	// resend the request (shouldn't be empty)
+	req = httptest.NewRequest("GET", "/b/someboard/sgfix", nil)
+	r.ServeHTTP(rec, req)
+
+	body, err = io.ReadAll(rec.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, len(body), 70)
+}

@@ -16,6 +16,8 @@ import (
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
+	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/jarednogo/board/pkg/core/coord"
 	"github.com/jarednogo/board/pkg/state"
 )
 
@@ -35,8 +37,29 @@ func TestState2(t *testing.T) {
 	sgfix := s.ToSGFIX()
 
 	assert.Equal(t, len(sgf), len(input))
-
 	assert.Equal(t, len(sgfix), 132)
+}
+
+func TestState3(t *testing.T) {
+	input := sgfsamples.SimpleTwoBranches
+	s, err := state.FromSGF(input)
+	assert.NoError(t, err)
+
+	sgf := s.ToSGF()
+	assert.Equal(t, len(sgf), len(input))
+}
+
+func TestMultifieldSZ(t *testing.T) {
+	input := sgfsamples.MultifieldSZ
+	_, err := state.FromSGF(input)
+	assert.NotNil(t, err)
+}
+
+func TestSGFIX(t *testing.T) {
+	input := sgfsamples.SGFIX
+	s, err := state.FromSGF(input)
+	assert.NoError(t, err)
+	assert.Equal(t, s.Root().Index, 100)
 }
 
 func TestParseTTPAss(t *testing.T) {
@@ -48,8 +71,8 @@ func TestParseTTPAss(t *testing.T) {
 }
 
 func TestNewState(t *testing.T) {
-	s1 := state.NewState(19, true)
-	s2 := state.NewState(19, false)
+	s1 := state.NewState(19)
+	s2 := state.NewEmptyState(19)
 	assert.Equal(t, s1.GetNextIndex(), 1)
 	assert.Equal(t, s2.GetNextIndex(), 0)
 }
@@ -71,4 +94,89 @@ func TestMissingSZ(t *testing.T) {
 func TestSuicide(t *testing.T) {
 	_, err := state.FromSGF(sgfsamples.Suicide1)
 	assert.NotNil(t, err)
+}
+
+func TestHeadColor(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
+	require.NoError(t, err)
+	assert.Equal(t, s.HeadColor(), color.White)
+}
+
+func TestGetColorAt1(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
+	require.NoError(t, err)
+	assert.Equal(t, s.GetColorAt(3), color.Black)
+}
+
+func TestGetColorAt2(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
+	require.NoError(t, err)
+	assert.Equal(t, s.GetColorAt(-1), color.Empty)
+}
+
+func TestSetNextIndex(t *testing.T) {
+	s := state.NewState(9)
+	s.SetNextIndex(100)
+	assert.Equal(t, s.GetNextIndex(), 100)
+	assert.Equal(t, s.GetNextIndex(), 101)
+}
+
+func TestEditPlayerBlack(t *testing.T) {
+	s := state.NewState(9)
+	s.EditPlayerBlack("pblack")
+	pb := s.Root().GetField("PB")
+	require.Equal(t, len(pb), 1)
+	assert.Equal(t, pb[0], "pblack")
+}
+
+func TestEditPlayerWhite(t *testing.T) {
+	s := state.NewState(9)
+	s.EditPlayerWhite("pwhite")
+	pw := s.Root().GetField("PW")
+	require.Equal(t, len(pw), 1)
+	assert.Equal(t, pw[0], "pwhite")
+}
+
+func TestEditKomi(t *testing.T) {
+	s := state.NewState(9)
+	s.EditKomi("100.5")
+	km := s.Root().GetField("KM")
+	require.Equal(t, len(km), 1)
+	assert.Equal(t, km[0], "100.5")
+}
+
+func TestAddNode(t *testing.T) {
+	s := state.NewState(19)
+	s.AddNode(coord.NewCoord(9, 9), color.Black)
+	assert.Equal(t, s.Current().Index, 1)
+	s.AddNode(coord.NewCoord(10, 10), color.White)
+	assert.Equal(t, s.Current().Index, 2)
+	s.AddNode(coord.NewCoord(11, 11), color.Black)
+	assert.Equal(t, s.Current().Index, 3)
+}
+
+func TestAddStonesToTrunk(t *testing.T) {
+	s := state.NewState(19)
+	s.PushHead(10, 10, color.Black)
+	s.PushHead(11, 11, color.White)
+	s.PushHead(12, 12, color.Black)
+	s.PushHead(13, 13, color.White)
+	stones := []*coord.Stone{}
+	stones = append(stones, coord.NewStone(2, 3, color.Black))
+	stones = append(stones, coord.NewStone(14, 3, color.White))
+	s.AddStonesToTrunk(2, stones)
+	assert.Equal(t, s.GetNextIndex(), 7)
+}
+
+func TestAddStonesNoChange(t *testing.T) {
+	s := state.NewState(19)
+	s.PushHead(10, 10, color.Black)
+	s.PushHead(11, 11, color.White)
+	s.PushHead(12, 12, color.Black)
+	s.PushHead(13, 13, color.White)
+	stones := []*coord.Stone{}
+	stones = append(stones, coord.NewStone(10, 10, color.Black))
+	stones = append(stones, coord.NewStone(11, 11, color.White))
+	s.AddStones(stones)
+	assert.Equal(t, s.GetNextIndex(), 5)
 }
