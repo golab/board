@@ -51,14 +51,14 @@ test-pprof:
 
 coverage-unit-total:
 	@echo "==> coverage-unit-total"
-	@go list ./... | grep -v -e integration -e loadtest | xargs go test -coverprofile=cover.out -covermode=count > /dev/null
+	@go list ./... | grep -v -e integration -e loadtest -e cmd | xargs go test -coverprofile=cover.out -covermode=count > /dev/null
 	@go tool cover -func=cover.out -o=cover.out
 	@tail -n1 cover.out | tr -s '\t'
 	@rm cover.out
 
 coverage-unit-html:
 	@echo "==> coverage-unit-html"
-	@go list ./... | grep -v -e integration -e loadtest | xargs go test -coverprofile=cover.out
+	@go list ./... | grep -v -e integration -e loadtest -e cmd | xargs go test -coverprofile=cover.out
 	@go tool cover -html=cover.out
 	@rm cover.out
 
@@ -84,7 +84,7 @@ coverage-int: coverage-integration-total coverage-integration-html ## Coverage o
 coverage-html:
 	@echo "==> coverage-html"
 	@go test ./integration/ -coverprofile=integration.tmp.out -coverpkg=./pkg/hub,./pkg/room,./pkg/state,./pkg/core > /dev/null
-	@go list ./... | grep -v integration | xargs go test -coverprofile=main.tmp.out > /dev/null
+	@go list ./... | grep -v -e integration -e loadtest -e cmd | xargs go test -coverprofile=main.tmp.out > /dev/null
 	@echo "mode: set" > cover.out
 	@grep -h -v mode *.tmp.out >> cover.out
 	@go tool cover -html=cover.out
@@ -93,7 +93,7 @@ coverage-html:
 coverage-total:
 	@echo "==> coverage-total"
 	@go test ./integration/ -coverprofile=integration.tmp.out -coverpkg=./pkg/hub,./pkg/room,./pkg/state,./pkg/core -covermode=count > /dev/null
-	@go list ./... | grep -v integration | xargs go test -coverprofile=main.tmp.out -covermode=count > /dev/null
+	@go list ./... | grep -v -e integration -e loadtest -e cmd | xargs go test -coverprofile=main.tmp.out -covermode=count > /dev/null
 	@echo "mode: count" > cover.out
 	@grep -h -v mode *.tmp.out >> cover.out
 	@go tool cover -func=cover.out -o=cover.out
