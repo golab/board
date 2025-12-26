@@ -11,13 +11,29 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package hub
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 )
 
-func ApiRouter(version string) http.Handler {
+func (h *Hub) stats(w http.ResponseWriter, r *http.Request) {
+	s := struct {
+		Rooms       int `json:"rooms"`
+		Connections int `json:"connections"`
+	}{
+		Rooms:       h.RoomCount(),
+		Connections: h.ConnCount(),
+	}
+	data, err := json.Marshal(s)
+	if err != nil {
+		return
+	}
+	w.Write(data) //nolint:errcheck
+}
+
+func (h *Hub) ApiRouter(version string) http.Handler {
 	r := chi.NewRouter()
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"message": "pong"}`)) //nolint:errcheck
@@ -26,5 +42,6 @@ func ApiRouter(version string) http.Handler {
 		msg := fmt.Sprintf(`{"message": "%s"}`, version)
 		w.Write([]byte(msg)) //nolint:errcheck
 	})
+	r.Get("/stats", h.stats)
 	return r
 }

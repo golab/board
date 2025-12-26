@@ -20,18 +20,20 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jarednogo/board/internal/assert"
 	"github.com/jarednogo/board/internal/fetch"
+	"github.com/jarednogo/board/internal/require"
 	"github.com/jarednogo/board/internal/sgfsamples"
 	"github.com/jarednogo/board/pkg/config"
+	"github.com/jarednogo/board/pkg/event"
 	"github.com/jarednogo/board/pkg/hub"
 	"github.com/jarednogo/board/pkg/logx"
 )
 
 func TestApiRouter(t *testing.T) {
 	logger := logx.NewRecorder(logx.LogLevelInfo)
-	_, err := hub.NewHub(config.Test(), logger)
+	h, err := hub.NewHub(config.Test(), logger)
 	assert.NoError(t, err)
 	r := chi.NewRouter()
-	r.Mount("/api", hub.ApiRouter("version"))
+	r.Mount("/api", h.ApiRouter("version123"))
 
 	req := httptest.NewRequest("GET", "/api/version", nil)
 	rec := httptest.NewRecorder()
@@ -47,7 +49,46 @@ func TestApiRouter(t *testing.T) {
 	err = json.Unmarshal(body, &msg)
 	assert.NoError(t, err)
 
-	assert.Equal(t, msg.Message, "version")
+	assert.Equal(t, msg.Message, "version123")
+}
+
+func TestApiRouterStats(t *testing.T) {
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	h, err := hub.NewHub(config.Test(), logger)
+	assert.NoError(t, err)
+
+	// populate rooms
+	r1 := h.GetOrCreateRoom("room1")
+	r2 := h.GetOrCreateRoom("room2")
+	mock1 := event.NewMockEventChannel()
+	mock2 := event.NewMockEventChannel()
+	mock3 := event.NewMockEventChannel()
+
+	r1.RegisterConnection(mock1)
+	r1.RegisterConnection(mock2)
+	r2.RegisterConnection(mock3)
+
+	// mount router
+	r := chi.NewRouter()
+	r.Mount("/api", h.ApiRouter("dev"))
+
+	req := httptest.NewRequest("GET", "/api/stats", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	body, err := io.ReadAll(rec.Body)
+	assert.NoError(t, err)
+
+	msg := struct {
+		Rooms       int `json:"rooms"`
+		Connections int `json:"connections"`
+	}{}
+
+	err = json.Unmarshal(body, &msg)
+	require.NoError(t, err)
+
+	assert.Equal(t, msg.Rooms, 2)
+	assert.Equal(t, msg.Connections, 3)
 }
 
 func TestExtRouter(t *testing.T) {

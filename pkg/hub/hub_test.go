@@ -150,3 +150,23 @@ func TestRoomLogger(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, log.RoomID, roomID)
 }
+
+func TestHubConnCount(t *testing.T) {
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	h, err := hub.NewHubWithDB(loader.NewMemoryLoader(), config.Default(), logger)
+	assert.NoError(t, err)
+
+	assert.Equal(t, h.ConnCount(), 0)
+
+	r1 := h.GetOrCreateRoom("room1")
+	r2 := h.GetOrCreateRoom("room2")
+	mock1 := event.NewMockEventChannel()
+	mock2 := event.NewMockEventChannel()
+	mock3 := event.NewMockEventChannel()
+
+	r1.RegisterConnection(mock1)
+	r1.RegisterConnection(mock2)
+	r2.RegisterConnection(mock3)
+
+	assert.Equal(t, h.ConnCount(), 3)
+}

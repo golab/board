@@ -28,6 +28,28 @@ import (
 	"github.com/jarednogo/board/pkg/state"
 )
 
+func TestNumConns(t *testing.T) {
+	r := room.NewRoom("")
+	mock1 := event.NewMockEventChannel()
+	mock2 := event.NewMockEventChannel()
+	mock3 := event.NewMockEventChannel()
+
+	assert.Equal(t, r.NumConns(), 0)
+	id1 := r.RegisterConnection(mock1)
+	assert.Equal(t, r.NumConns(), 1)
+	id2 := r.RegisterConnection(mock2)
+	assert.Equal(t, r.NumConns(), 2)
+	id3 := r.RegisterConnection(mock3)
+	assert.Equal(t, r.NumConns(), 3)
+
+	r.DeregisterConnection(id1)
+	assert.Equal(t, r.NumConns(), 2)
+	r.DeregisterConnection(id2)
+	assert.Equal(t, r.NumConns(), 1)
+	r.DeregisterConnection(id3)
+	assert.Equal(t, r.NumConns(), 0)
+}
+
 func TestBroadcast(t *testing.T) {
 	r := room.NewRoom("")
 	mock1 := event.NewMockEventChannel()

@@ -47,7 +47,7 @@ func New(cfg *config.Config, logger logx.Logger) (*App, error) {
 	r.Mount("/ext", h.ExtRouter())
 
 	// api routers
-	r.Mount("/api", hub.ApiRouter(cfg.Version))
+	r.Mount("/api", h.ApiRouter(cfg.Version))
 	r.Mount("/api/v1", hub.ApiV1Router())
 
 	// see server package for routes

@@ -124,14 +124,30 @@ func (h *Hub) SetRoom(id string, r *room.Room) {
 }
 
 func (h *Hub) RoomCount() int {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	return len(h.rooms)
 }
 
+func (h *Hub) ConnCount() int {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	c := 0
+	for _, r := range h.rooms {
+		c += r.NumConns()
+	}
+	return c
+}
+
 func (h *Hub) MessageCount() int {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	return len(h.messages)
 }
 
 func (h *Hub) Save() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	for id, r := range h.rooms {
 		h.logger.Info("saving", "room_id", id)
 

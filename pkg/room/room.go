@@ -216,6 +216,12 @@ func (r *Room) SetAuthAll() {
 	}
 }
 
+func (r *Room) NumConns() int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return len(r.conns)
+}
+
 func (r *Room) GetTimeout() float64 {
 	r.mu.Lock()
 	defer r.mu.Unlock()
