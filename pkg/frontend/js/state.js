@@ -16,6 +16,7 @@ import { create_comments } from './comments.js';
 import { create_layout } from './layout.js';
 import { create_buttons } from './buttons.js';
 import { create_modals } from './modals.js';
+import { create_dropzone, resize_dropzone } from './dropzone.js';
 
 import { htmlencode, letterstocoord, coordtoid, opposite, Coord, prefer_dark_mode } from './common.js';
 
@@ -50,6 +51,7 @@ class State {
     constructor() {
         window.addEventListener("resize", (event) => this.resize(event));
         create_layout();
+        create_dropzone((files) => this.upload_files(files));
         this.compute_consts();
         this.color = 1;
         this.toggling = true;
@@ -190,6 +192,7 @@ class State {
         this.tree_graphics.resize();
         this.comments.resize();
         this.apply_pen();
+        resize_dropzone();
         // it's a little hacky, but the buttons were being very annoying
         setTimeout(() => this.buttons.resize(), 100);
     }
@@ -622,75 +625,77 @@ class State {
         this.network_handler.prepare_score()
     }
 
+    upload_one_file(f) {
+        let reader = new FileReader();
+        reader.readAsArrayBuffer(f);
+    
+        reader.addEventListener(
+            "load",
+            () => {
+                // encode unicode, and encode with base64
+                this.network_handler.prepare_upload(b64_encode_arraybuffer(reader.result));
+            },
+            false,
+        );
+    }
+
+    upload_multiple_files(files) {
+        // max out at 10, just in case
+        let max = 10;
+        let i = 0;
+        // if multiple files, build promises
+        let promises = [];
+        for (let f of files) {
+            if (i >= max) {
+                break;
+            }
+            i++;
+            promises.push(
+                new Promise((resolve, reject) => {
+                    let reader = new FileReader();
+                    reader.readAsArrayBuffer(f);
+                    reader.addEventListener(
+                        "load",
+                        () => resolve(reader.result),
+                        false,
+                    );
+                })
+            );
+        }
+        
+        // turn list of promises into 1 promise
+        Promise.all(promises)
+            .then((values) => {
+                let payload = [];
+                for (let v of values) {
+                    payload.push(b64_encode_arraybuffer(v));
+                }
+        
+                // encode unicode, and encode with base64
+                this.network_handler.prepare_upload(payload);
+            });
+    }
+
+    upload_files(files) {
+        if (files.length == 0) {
+            // do nothing
+        } else if (files.length == 1) {
+            // if 1 file, it's easy
+            this.upload_one_file(files[0]);
+        } else {
+            this.upload_multiple_files(files);
+        }
+    }
+
     upload() {
         let inp = document.getElementById("upload-sgf");
         inp.onchange = () => {
             // hide the upload modal
             this.modals.hide_modal("upload-modal");
 
-            if (inp.files.length == 0) {
-                // i guess do nothing
-                return;
-            } else if (inp.files.length == 1) {
-                // if 1 file, it's easy
-                let f = inp.files[0];
-
-                // want to maintain same behavior if user uploads file named the same
-                inp.value = "";
-
-                let reader = new FileReader();
-                //reader.readAsText(f);
-                reader.readAsArrayBuffer(f);
-
-                reader.addEventListener(
-                    "load",
-                    () => {
-                        // encode unicode, and encode with base64
-                        this.network_handler.prepare_upload(b64_encode_arraybuffer(reader.result));
-                    },
-                    false,
-                );
-            } else {
-                // max out at 10, just in case
-                let max = 10;
-                let i = 0;
-                // if multiple files, build promises
-                let promises = [];
-                for (let f of inp.files) {
-                    if (i >= max) {
-                        break;
-                    }
-                    i++;
-                    promises.push(
-                        new Promise((resolve, reject) => {
-                            let reader = new FileReader();
-                            reader.readAsArrayBuffer(f);
-                            reader.addEventListener(
-                                "load",
-                                () => resolve(reader.result),
-                                false,
-                            );
-                        })
-                    );
-                }
-                // want to maintain same behavior for the next pass
-                inp.value = "";
-    
-                // turn list of promises into 1 promise
-                Promise.all(promises)
-                    .then((values) => {
-                        let payload = [];
-                        for (let v of values) {
-                            payload.push(b64_encode_arraybuffer(v));
-                        }
-
-                        // encode unicode, and encode with base64
-                        //this.network_handler.prepare_upload(b64_encode_unicode(sgf));
-                        this.network_handler.prepare_upload(payload);
-                    }
-                    );
-            }
-
+            this.upload_files(inp.files);
+            // want to maintain same behavior if user uploads file named the same
+            inp.value = "";
         }
     }
 
