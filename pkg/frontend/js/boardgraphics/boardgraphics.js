@@ -8,12 +8,14 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+import { shell } from './shell.js';
+
 export {
     BoardGraphics,
     letters,
 }
 
-import { opposite, Coord, is_touch_device } from './common.js';
+import { opposite, Coord, is_touch_device } from '../common.js';
 
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -37,27 +39,6 @@ function hex_to_bw(hex) {
     }
     return "#000000";
 }
-
-function preload() {
-    for (let i = 1; i < 17; i++) {
-        let s = String(i).padStart(2, "0");
-        for (let dims of ["_60x60", "_120x120"]) {
-            let src = "/static/shell_" + s + dims + ".png";
-            const img = new Image();
-            img.src = src;
-        }
-    }
-    for (let color of ["light", "medium", "dark"]) {
-        let src = "/static/board_" + color + ".png";
-        const img = new Image();
-        img.src = src;
-    }
-}
-
-window.addEventListener("load", () => {
-    setTimeout(preload, 0);
-});
-
 
 function random_shell() {
     // random integer 1-16
@@ -890,7 +871,10 @@ class BoardGraphics {
         let svg_id = "stones";
         let svg = this.svgs.get(svg_id);
         let stone = document.createElementNS(this.svgns, "image");
-        stone.setAttributeNS(null, "href", "/static/shell_" + random_shell() + dims + ".png");
+        let key = "shell_" + random_shell() + dims;
+        let href = shell[key];
+        //stone.setAttributeNS(null, "href", "/static/shell_" + random_shell() + dims + ".png");
+        stone.setAttributeNS(null, "href", href);
         stone.setAttributeNS(null, "width", radius*2);
         stone.setAttributeNS(null, "height", radius*2);
 

@@ -9,7 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 import { Board } from './board.js';
-import { BoardGraphics } from './boardgraphics.js';
+import { BoardGraphics } from './boardgraphics/boardgraphics.js';
 import { TreeGraphics } from './treegraphics.js';
 
 import { create_comments } from './comments.js';
