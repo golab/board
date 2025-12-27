@@ -40,6 +40,18 @@ function hex_to_bw(hex) {
     return "#000000";
 }
 
+function preload() {
+    for (let [key, value] of Object.entries(shell)) {
+        const img = new Image();
+        img.src = value;
+    }
+}
+
+window.addEventListener("load", () => {
+    setTimeout(preload, 0);
+});
+
+
 function random_shell() {
     // random integer 1-16
     let n = Math.floor(Math.random()*16) + 1;
