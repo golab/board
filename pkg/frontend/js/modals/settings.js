@@ -359,7 +359,7 @@ function appearance_settings(state) {
     let black_stone_color_select = document.createElement("select");
     black_stone_color_select.setAttribute("id", id + "-black-stone-color-select");
     black_stone_color_select.setAttribute("class", "form-select");
-    for (let x of ["gradient", "flat", "[custom]"]) {
+    for (let x of ["gradient", "[custom]"]) {
         let opt = document.createElement("option");
         opt.setAttribute("value", x);
         opt.innerHTML = x;
@@ -406,7 +406,7 @@ function appearance_settings(state) {
     let white_stone_color_select = document.createElement("select");
     white_stone_color_select.setAttribute("id", id + "-white-stone-color-select");
     white_stone_color_select.setAttribute("class", "form-select");
-    for (let x of ["pattern", "gradient", "flat", "[custom]"]) {
+    for (let x of ["pattern", "gradient", "[custom]"]) {
         let opt = document.createElement("option");
         opt.setAttribute("value", x);
         opt.innerHTML = x;
@@ -443,6 +443,99 @@ function appearance_settings(state) {
 
     appearance_collapse.appendChild(white_stone_color);
     appearance_collapse.appendChild(white_stone_color_select);
+    appearance_collapse.appendChild(document.createElement("br"));
+
+
+    // black stone outline
+    let black_outline_color = document.createElement("div");
+    let black_outline_color_label = document.createElement("div");
+    black_outline_color_label.innerHTML = "Black stone border:";
+
+    let black_outline_color_select = document.createElement("select");
+    black_outline_color_select.setAttribute("id", id + "-black-outline-color-select");
+    black_outline_color_select.setAttribute("class", "form-select");
+    for (let x of ["none", "[custom]"]) {
+        let opt = document.createElement("option");
+        opt.setAttribute("value", x);
+        opt.innerHTML = x;
+        black_outline_color_select.appendChild(opt);
+    }
+
+    let b_outline_color_picker = document.createElement("input");
+    b_outline_color_picker.setAttribute("type", "color");
+    b_outline_color_picker.setAttribute("id", "board-color-picker");
+    b_outline_color_picker.style.display = "none";
+    b_outline_color_picker.onchange = () => {
+        state.set_black_outline_color(b_outline_color_picker.value);
+        localStorage.setItem("black_outline_color", b_outline_color_picker.value);
+    };
+    let black_outline_stored = localStorage.getItem("black_outline_color") || "none";
+    black_outline_color_select.value = black_outline_stored;
+    state.set_black_outline_color(black_outline_stored);
+    black_outline_color.appendChild(black_outline_color_label);
+    black_outline_color.appendChild(b_outline_color_picker);
+
+    black_outline_color_select.addEventListener(
+        "change",
+        () => {
+            if (black_outline_color_select.value == "[custom]") {
+                b_outline_color_picker.click();
+                black_outline_color_select.value = "";
+            } else {
+                state.set_black_outline_color(black_outline_color_select.value);
+                localStorage.setItem("black_outline_color", black_outline_color_select.value);
+            }
+        }
+    );
+
+    appearance_collapse.appendChild(black_outline_color);
+    appearance_collapse.appendChild(black_outline_color_select);
+    appearance_collapse.appendChild(document.createElement("br"));
+
+    // white stone outline
+    let white_outline_color = document.createElement("div");
+    let white_outline_color_label = document.createElement("div");
+    white_outline_color_label.innerHTML = "White stone border:";
+
+    let white_outline_color_select = document.createElement("select");
+    white_outline_color_select.setAttribute("id", id + "-white-outline-color-select");
+    white_outline_color_select.setAttribute("class", "form-select");
+    for (let x of ["none", "[custom]"]) {
+        let opt = document.createElement("option");
+        opt.setAttribute("value", x);
+        opt.innerHTML = x;
+        white_outline_color_select.appendChild(opt);
+    }
+
+    let w_outline_color_picker = document.createElement("input");
+    w_outline_color_picker.setAttribute("type", "color");
+    w_outline_color_picker.setAttribute("id", "board-color-picker");
+    w_outline_color_picker.style.display = "none";
+    w_outline_color_picker.onchange = () => {
+        state.set_white_outline_color(w_outline_color_picker.value);
+        localStorage.setItem("white_outline_color", w_outline_color_picker.value);
+    };
+    let white_outline_stored = localStorage.getItem("white_outline_color") || "none";
+    white_outline_color_select.value = white_outline_stored;
+    state.set_white_outline_color(white_outline_stored);
+    white_outline_color.appendChild(white_outline_color_label);
+    white_outline_color.appendChild(w_outline_color_picker);
+
+    white_outline_color_select.addEventListener(
+        "change",
+        () => {
+            if (white_outline_color_select.value == "[custom]") {
+                w_outline_color_picker.click();
+                white_outline_color_select.value = "";
+            } else {
+                state.set_white_outline_color(white_outline_color_select.value);
+                localStorage.setItem("white_outline_color", white_outline_color_select.value);
+            }
+        }
+    );
+
+    appearance_collapse.appendChild(white_outline_color);
+    appearance_collapse.appendChild(white_outline_color_select);
     appearance_collapse.appendChild(document.createElement("br"));
 
     // shadows

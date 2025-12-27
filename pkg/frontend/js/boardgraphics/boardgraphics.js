@@ -570,10 +570,10 @@ class BoardGraphics {
     }
 
     // board graphics
-    draw_circle(x, y, r, hexColor, id, filled=true, stroke=3*this.minstroke) {
+    draw_circle(x, y, r, hexColor, id, filled=true, stroke=3*this.minstroke, strokecolor="#000000") {
         let real_x = x*this.side + this.pad;
         let real_y = y*this.side + this.pad;
-        return this.draw_raw_circle(real_x, real_y, r, hexColor, id, filled, stroke);
+        return this.draw_raw_circle(real_x, real_y, r, hexColor, id, filled, stroke, strokecolor);
     }
 
     // board graphics
@@ -584,7 +584,7 @@ class BoardGraphics {
     }
 
 
-    draw_raw_circle(x, y, r, hexColor, id, filled=true, stroke=3*this.minstroke) {
+    draw_raw_circle(x, y, r, hexColor, id, filled=true, stroke=3*this.minstroke, strokecolor="#000000") {
 
         // for kicks and giggles
         //r = 0.8*r;
@@ -595,7 +595,7 @@ class BoardGraphics {
         circle.setAttributeNS(null, 'cx', x);
         circle.setAttributeNS(null, 'cy', y);
         circle.setAttributeNS(null, 'r', r);
-        circle.style.stroke = "#000000";
+        circle.style.stroke = strokecolor;
         if (filled) {
             circle.style.fill = hexColor;
         } else {
@@ -845,25 +845,31 @@ class BoardGraphics {
             } else if (this.state.white_stone_color == "pattern") {
                 // textured fill
                 stone = this.draw_textured_stone(x, y);
-            } else if (this.state.white_stone_color == "flat") {
-                // flat fill (with outline)
-                stone = this.draw_circle(x, y, radius, "#FFFFFF", svg_id, true, 1*this.minstroke);
             } else {
                 // custom fill
-                stone = this.draw_circle(x, y, radius, this.state.white_stone_color, svg_id, true, 0);
+                let strokecolor = "#000000";
+                let stroke = 0;
+                if (this.state.white_outline_color != "none") {
+                    stroke = 1*this.minstroke;
+                    strokecolor = this.state.white_outline_color;
+                }
+
+                stone = this.draw_circle(x, y, radius, this.state.white_stone_color, svg_id, true, stroke, strokecolor);
             }
 
         } else if (color == 1) {
-            
             if (this.state.black_stone_color == "gradient") {
                 // gradient fill
                 stone = this.draw_gradient_circle(x, y, radius, "black_grad", svg_id, stroke);
-            } else if (this.state.black_stone_color == "flat") {
-                // flat fill
-                stone = this.draw_circle(x, y, radius, "#000000", svg_id, true, 0);
             } else {
                 // custom fill
-                stone = this.draw_circle(x, y, radius, this.state.black_stone_color, svg_id, true, 0);
+                let strokecolor = "#000000";
+                let stroke = 0;
+                if (this.state.black_outline_color != "none") {
+                    stroke = 1*this.minstroke;
+                    strokecolor = this.state.black_outline_color;
+                }
+                stone = this.draw_circle(x, y, radius, this.state.black_stone_color, svg_id, true, stroke, strokecolor);
             }
         }
         stone.setAttribute("id", "stone-"+id);

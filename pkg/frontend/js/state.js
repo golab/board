@@ -79,6 +79,8 @@ class State {
         this.board_color = "light";
         this.black_stone_color = "#000000";
         this.white_stone_color = "#FFFFFF";
+        this.black_outline_color = "none";
+        this.white_outline_color = "none";
         this.shadow = true;
         this.board_graphics = new BoardGraphics(this);
         this.tree_graphics = new TreeGraphics(this);
@@ -120,6 +122,18 @@ class State {
 
     set_white_stone_color(color) {
         this.white_stone_color = color;
+        this.board_graphics.draw_stones();
+        this.board_graphics.draw_marks();
+    }
+
+    set_black_outline_color(color) {
+        this.black_outline_color = color;
+        this.board_graphics.draw_stones();
+        this.board_graphics.draw_marks();
+    }
+
+    set_white_outline_color(color) {
+        this.white_outline_color = color;
         this.board_graphics.draw_stones();
         this.board_graphics.draw_marks();
     }
