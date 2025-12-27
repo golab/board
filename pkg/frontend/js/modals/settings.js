@@ -366,11 +366,14 @@ function appearance_settings(state) {
         black_stone_color_select.appendChild(opt);
     }
 
+    let saved_b_color_picker = "#000000";
     let b_color_picker = document.createElement("input");
+    b_color_picker.value = saved_b_color_picker;
     b_color_picker.setAttribute("type", "color");
     b_color_picker.setAttribute("id", "board-color-picker");
     b_color_picker.style.display = "none";
     b_color_picker.onchange = () => {
+        saved_b_color_picker = b_color_picker.value;
         state.set_black_stone_color(b_color_picker.value);
         localStorage.setItem("black_stone_color", b_color_picker.value);
     };
@@ -385,6 +388,7 @@ function appearance_settings(state) {
         "change",
         () => {
             if (black_stone_color_select.value == "[custom]") {
+                state.set_black_stone_color(saved_b_color_picker);
                 b_color_picker.click();
                 black_stone_color_select.value = "";
             } else {
@@ -413,11 +417,14 @@ function appearance_settings(state) {
         white_stone_color_select.appendChild(opt);
     }
 
+    let saved_w_color_picker = "#FFFFFF";
     let w_color_picker = document.createElement("input");
+    w_color_picker.value = saved_w_color_picker;
     w_color_picker.setAttribute("type", "color");
     w_color_picker.setAttribute("id", "board-color-picker");
     w_color_picker.style.display = "none";
     w_color_picker.onchange = () => {
+        saved_w_color_picker = w_color_picker.value;
         state.set_white_stone_color(w_color_picker.value);
         localStorage.setItem("white_stone_color", w_color_picker.value);
     };
@@ -432,6 +439,7 @@ function appearance_settings(state) {
         "change",
         () => {
             if (white_stone_color_select.value == "[custom]") {
+                state.set_white_stone_color(saved_w_color_picker);
                 w_color_picker.click();
                 white_stone_color_select.value = "";
             } else {
@@ -461,11 +469,14 @@ function appearance_settings(state) {
         black_outline_color_select.appendChild(opt);
     }
 
+    let saved_b_outline_color_picker = "#000000";
     let b_outline_color_picker = document.createElement("input");
+    b_outline_color_picker.value = saved_b_outline_color_picker;
     b_outline_color_picker.setAttribute("type", "color");
     b_outline_color_picker.setAttribute("id", "board-color-picker");
     b_outline_color_picker.style.display = "none";
     b_outline_color_picker.onchange = () => {
+        saved_b_outline_color_picker = b_outline_color_picker.value;
         state.set_black_outline_color(b_outline_color_picker.value);
         localStorage.setItem("black_outline_color", b_outline_color_picker.value);
     };
@@ -479,6 +490,7 @@ function appearance_settings(state) {
         "change",
         () => {
             if (black_outline_color_select.value == "[custom]") {
+                state.set_black_outline_color(saved_b_outline_color_picker);
                 b_outline_color_picker.click();
                 black_outline_color_select.value = "";
             } else {
@@ -507,11 +519,14 @@ function appearance_settings(state) {
         white_outline_color_select.appendChild(opt);
     }
 
+    let saved_w_outline_color_picker = "#000000";
     let w_outline_color_picker = document.createElement("input");
+    w_outline_color_picker.value = saved_w_outline_color_picker;
     w_outline_color_picker.setAttribute("type", "color");
     w_outline_color_picker.setAttribute("id", "board-color-picker");
     w_outline_color_picker.style.display = "none";
     w_outline_color_picker.onchange = () => {
+        saved_w_outline_color_picker = w_outline_color_picker.value;
         state.set_white_outline_color(w_outline_color_picker.value);
         localStorage.setItem("white_outline_color", w_outline_color_picker.value);
     };
@@ -525,6 +540,7 @@ function appearance_settings(state) {
         "change",
         () => {
             if (white_outline_color_select.value == "[custom]") {
+                state.set_white_outline_color(saved_w_outline_color_picker);
                 w_outline_color_picker.click();
                 white_outline_color_select.value = "";
             } else {
