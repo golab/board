@@ -14,6 +14,7 @@ function dropzone(fn) {
     let [width, height] = get_dims();
     let zone = document.createElement("div");
     zone.id = "drop-upload";
+    zone.classList.add("text-center");
     zone.style.position = "fixed";
     zone.style.width = width + "px";
     zone.style.height = height + "px";
@@ -32,16 +33,17 @@ function dropzone(fn) {
     let overlay = document.createElement("div");
     overlay.id = "drop-upload-overlay";
     overlay.hidden = true;
-    overlay.style.position = "absolute";
-    overlay.style.left = width/2 + "px";
-    overlay.style.top = height/2 + "px";
+    overlay.style.position = "relative";
+    overlay.style.top = "40%";
+    overlay.style.color = "#48BBFF";
 
     let icon = document.createElement("i");
     icon.classList.add("bi-cloud-arrow-up-fill");
-    icon.classList.add("fs-1");
+    icon.style.fontSize = "400%";
     overlay.appendChild(icon);
     let text = document.createElement("div");
     text.innerHTML = "Drag and drop to upload";
+    text.style.fontSize = "200%";
     overlay.appendChild(text);
     zone.appendChild(overlay);
 
@@ -98,7 +100,4 @@ export function resize_dropzone() {
     let [width, height] = get_dims();
     dropzone.style.width = width + "px";
     dropzone.style.height = height + "px";
-    let overlay = document.getElementById("drop-upload-overlay");
-    overlay.style.left = width/2 + "px";
-    overlay.style.top = height/2 + "px";
 }
