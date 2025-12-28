@@ -196,12 +196,12 @@ func (r *Room) handleRequestSGF(evt event.Event) event.Event {
 		connectToOGS := false
 
 		spl := strings.Split(url, "/")
-		if len(spl) < 2 {
+		if len(spl) < 4 {
 			bcast = event.ErrorEvent("url parsing error")
 			return bcast
 		}
 
-		ogsType := spl[len(spl)-2]
+		ogsType := spl[3]
 
 		switch ogsType {
 		case "game":

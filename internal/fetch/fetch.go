@@ -85,6 +85,7 @@ func (f *DefaultFetcher) FetchOGS(ogsURL string) (string, error) {
 		ogsURL = strings.Replace(ogsURL, ".com", ".com/api/v1", 1)
 		ogsURL = strings.Replace(ogsURL, "review", "reviews", 1)
 		ogsURL = strings.Replace(ogsURL, "demo", "reviews", 1)
+		ogsURL = strings.Replace(ogsURL, "/view", "", 1)
 		ogsURL += "/sgf"
 	}
 	return f.Fetch(ogsURL)
