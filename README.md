@@ -16,7 +16,7 @@ A free and open-source multi-user go board.
 - Password-protected rooms
 - Browser-based
 - Desktop and mobile compatible
-- Sync with live OGS games
+- Sync with live OGS games or reviews
 - Integrate with Twitch
 - Free and open source
 - Open license [asset pack](https://github.com/jarednogo/board/raw/refs/heads/test/assets/assets.zip) (board and white stones)
