@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import { Board } from './board.js';
+import { create_board } from './board.js';
 import { BoardGraphics } from './boardgraphics/boardgraphics.js';
 import { TreeGraphics } from './treegraphics.js';
 
@@ -71,7 +71,8 @@ class State {
         this.branch_jump = true;
 
         this.dark_mode = false;
-        this.board = new Board(this.size);
+        //this.board = new Board(this.size);
+        this.board = create_board(this.size);
         this.marks = new Map();
         this.pen = new Array();
         this.current = null;
@@ -269,7 +270,8 @@ class State {
         this.toggling = true;
         this.mark = "";
 
-        this.board = new Board(this.size);
+        //this.board = new Board(this.size);
+        this.board = create_board(this.size);
 
         // update move number
         this.set_move_number(0);

@@ -668,7 +668,7 @@ class NetworkHandler {
 
         // also don't need to share if there is already a stone there
         let has_child = false;
-        let stone_there = this.state.board.points[coords[0]][coords[1]] != 0;
+        let stone_there = this.state.board.get(new Coord(coords[0], coords[1])) != 0;
 
         let payload = {};
 

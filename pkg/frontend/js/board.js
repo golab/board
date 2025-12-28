@@ -10,64 +10,50 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 import { Coord } from './common.js';
 
-export {
-    Board,
-}
-
-class Group {
-    constructor(coords, rep, color, libs) {
-        this.coords = coords;
-        this.rep = rep;
-        this.color = color;
-        this.libs = libs;
-    }
-}
-
-class Board {
-    constructor(size, init_root=true) {
-
-        this.size = size;
-        this.points = [];
-        var i,j;
-        for (i=0; i<size; i++) {
-            let row = [];
-            for (j=0; j<size; j++) {
-                row.push(0);
-            }
-            this.points.push(row);
+export function create_board(size) {
+    let points = [];
+    var i,j;
+    for (i=0; i<size; i++) {
+        let row = [];
+        for (j=0; j<size; j++) {
+            row.push(0);
         }
+        points.push(row);
     }
 
-    clear() {
-        for (let i=0; i<this.size; i++) {
-            for (let j=0; j<this.size; j++) {
-                this.points[i][j] = 0;
+    function clear() {
+        for (let i=0; i<size; i++) {
+            for (let j=0; j<size; j++) {
+                points[i][j] = 0;
             }
         }
     }
 
-    set(start, color) {
-        this.points[start.x][start.y] = color;
+    function set(start, color) {
+        points[start.x][start.y] = color;
     }
 
-    get(start) {
-        return this.points[start.x][start.y];
+    function get(start) {
+        return points[start.x][start.y];
     }
 
-    remove(i, j) {
+    function remove(i, j) {
         // check to see if there's a stone there
-        if (this.points[i][j] == 0) {
+        if (points[i][j] == 0) {
             return false;
         }
 
-        // we need to remember what color it was
-        let color = this.points[i][j];
-        
         let point = new Coord(i, j);
 
         // remove the stone on the board
-        this.set(point, 0);
+        set(point, 0);
 
         return true;
     }
+    return {
+        clear,
+        set,
+        get,
+        remove,
+    };
 }

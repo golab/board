@@ -392,10 +392,10 @@ class BoardGraphics {
         this.clear_stones();
         for (let i=0; i<this.size; i++) {
             for (let j=0; j<this.size; j++) {
-                if (this.state.board.points[i][j] == 0) {
+                if (this.state.board.get(new Coord(i, j)) == 0) {
                     continue;
                 }
-                let color = this.state.board.points[i][j];
+                let color = this.state.board.get(new Coord(i, j));
                 this.draw_stone(i, j, color);
             }
         }
@@ -970,7 +970,7 @@ class BoardGraphics {
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
         }
-        if (this.state.board.points[x][y] != 0) {
+        if (this.state.board.get(new Coord(x, y)) != 0) {
             return;
         }
         let radius = this.side/2.1;
