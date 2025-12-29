@@ -322,11 +322,17 @@ function appearance_settings(state) {
     }
     board_color_select.value = state.board_color;
 
+    let saved_board_color_picker = "#f2bc74";
+    if (stored_board_color.startsWith("#")) {
+        saved_board_color_picker = stored_board_color;
+    }
     let board_color_picker = document.createElement("input");
+    board_color_picker.value = saved_board_color_picker;
     board_color_picker.setAttribute("type", "color");
     board_color_picker.setAttribute("id", "board-color-picker");
     board_color_picker.style.display = "none";
     board_color_picker.onchange = () => {
+        saved_board_color_picker = board_color_picker.value;
         state.set_board_color(board_color_picker.value);
         localStorage.setItem("board_color", board_color_picker.value);
     };
@@ -335,6 +341,8 @@ function appearance_settings(state) {
         "change",
         () => {
             if (board_color_select.value == "[custom]") {
+                state.set_board_color(saved_board_color_picker);
+                localStorage.setItem("board_color", saved_board_color_picker);
                 board_color_picker.click();
                 board_color_select.value = "";
             } else {
@@ -366,7 +374,11 @@ function appearance_settings(state) {
         black_stone_color_select.appendChild(opt);
     }
 
+    let black_stored = localStorage.getItem("black_stone_color") || "gradient";
     let saved_b_color_picker = "#000000";
+    if (black_stored.startsWith("#")) {
+        saved_b_color_picker = black_stored;
+    }
     let b_color_picker = document.createElement("input");
     b_color_picker.value = saved_b_color_picker;
     b_color_picker.setAttribute("type", "color");
@@ -377,7 +389,6 @@ function appearance_settings(state) {
         state.set_black_stone_color(b_color_picker.value);
         localStorage.setItem("black_stone_color", b_color_picker.value);
     };
-    let black_stored = localStorage.getItem("black_stone_color") || "gradient";
     //b_color_picker.value = black_stored;
     black_stone_color_select.value = black_stored;
     state.set_black_stone_color(black_stored);
@@ -389,6 +400,7 @@ function appearance_settings(state) {
         () => {
             if (black_stone_color_select.value == "[custom]") {
                 state.set_black_stone_color(saved_b_color_picker);
+                localStorage.setItem("black_stone_color", saved_b_color_picker);
                 b_color_picker.click();
                 black_stone_color_select.value = "";
             } else {
@@ -417,7 +429,11 @@ function appearance_settings(state) {
         white_stone_color_select.appendChild(opt);
     }
 
+    let white_stored = localStorage.getItem("white_stone_color") || "pattern";
     let saved_w_color_picker = "#FFFFFF";
+    if (white_stored.startsWith("#")) {
+        saved_w_color_picker = white_stored;
+    }
     let w_color_picker = document.createElement("input");
     w_color_picker.value = saved_w_color_picker;
     w_color_picker.setAttribute("type", "color");
@@ -428,7 +444,6 @@ function appearance_settings(state) {
         state.set_white_stone_color(w_color_picker.value);
         localStorage.setItem("white_stone_color", w_color_picker.value);
     };
-    let white_stored = localStorage.getItem("white_stone_color") || "pattern";
     //w_color_picker.value = white_stored;
     white_stone_color_select.value = white_stored;
     state.set_white_stone_color(white_stored);
@@ -440,6 +455,7 @@ function appearance_settings(state) {
         () => {
             if (white_stone_color_select.value == "[custom]") {
                 state.set_white_stone_color(saved_w_color_picker);
+                localStorage.setItem("white_stone_color", saved_w_color_picker);
                 w_color_picker.click();
                 white_stone_color_select.value = "";
             } else {
@@ -469,7 +485,11 @@ function appearance_settings(state) {
         black_outline_color_select.appendChild(opt);
     }
 
-    let saved_b_outline_color_picker = "#000000";
+    let black_outline_stored = localStorage.getItem("black_outline_color") || "none";
+    let saved_b_outline_color_picker = "#FFFFFF";
+    if (black_outline_stored.startsWith("#")) {
+        saved_b_outline_color_picker = black_outline_stored;
+    }
     let b_outline_color_picker = document.createElement("input");
     b_outline_color_picker.value = saved_b_outline_color_picker;
     b_outline_color_picker.setAttribute("type", "color");
@@ -480,7 +500,6 @@ function appearance_settings(state) {
         state.set_black_outline_color(b_outline_color_picker.value);
         localStorage.setItem("black_outline_color", b_outline_color_picker.value);
     };
-    let black_outline_stored = localStorage.getItem("black_outline_color") || "none";
     black_outline_color_select.value = black_outline_stored;
     state.set_black_outline_color(black_outline_stored);
     black_outline_color.appendChild(black_outline_color_label);
@@ -491,6 +510,7 @@ function appearance_settings(state) {
         () => {
             if (black_outline_color_select.value == "[custom]") {
                 state.set_black_outline_color(saved_b_outline_color_picker);
+                localStorage.setItem("black_outline_color", saved_b_outline_color_picker);
                 b_outline_color_picker.click();
                 black_outline_color_select.value = "";
             } else {
@@ -519,7 +539,11 @@ function appearance_settings(state) {
         white_outline_color_select.appendChild(opt);
     }
 
+    let white_outline_stored = localStorage.getItem("white_outline_color") || "none";
     let saved_w_outline_color_picker = "#000000";
+    if (white_outline_stored.startsWith("#")) {
+        saved_w_outline_color_picker = white_outline_stored;
+    }
     let w_outline_color_picker = document.createElement("input");
     w_outline_color_picker.value = saved_w_outline_color_picker;
     w_outline_color_picker.setAttribute("type", "color");
@@ -530,7 +554,6 @@ function appearance_settings(state) {
         state.set_white_outline_color(w_outline_color_picker.value);
         localStorage.setItem("white_outline_color", w_outline_color_picker.value);
     };
-    let white_outline_stored = localStorage.getItem("white_outline_color") || "none";
     white_outline_color_select.value = white_outline_stored;
     state.set_white_outline_color(white_outline_stored);
     white_outline_color.appendChild(white_outline_color_label);
@@ -541,6 +564,7 @@ function appearance_settings(state) {
         () => {
             if (white_outline_color_select.value == "[custom]") {
                 state.set_white_outline_color(saved_w_outline_color_picker);
+                localStorage.setItem("white_outline_color", saved_w_outline_color_picker);
                 w_outline_color_picker.click();
                 white_outline_color_select.value = "";
             } else {
