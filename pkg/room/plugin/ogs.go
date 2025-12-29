@@ -64,7 +64,7 @@ type OGSConnector struct {
 	Creds   *Creds
 	Socket  io.ReadWriter
 	Room    Room
-	First   int
+	First   color.Color
 	Exit    bool
 	fetcher fetch.Fetcher
 	mu      sync.Mutex
@@ -320,6 +320,10 @@ func (o *OGSConnector) loop(gameID int, ogsType string) error {
 			movesArr := []*coord.Stone{}
 			currentColor := o.Room.GetColorAt(f).Opposite()
 
+			if f == 0 {
+				currentColor = color.Black
+			}
+
 			for i := 0; i < len(moves); i += 2 {
 				if i+1 < len(moves) {
 					coordStr := moves[i : i+2]
@@ -361,7 +365,7 @@ func (o *OGSConnector) gamedataToSGF(gamedata map[string]any) string {
 
 		col := "B"
 
-		if (index%2 == 1 && o.First == 0) || (index%2 == 0 && o.First == 1) {
+		if (index%2 == 1 && o.First == color.Black) || (index%2 == 0 && o.First == color.White) {
 			col = "W"
 		}
 
@@ -407,9 +411,9 @@ func (o *OGSConnector) initStateToSGF(gamedata map[string]any) string {
 	ip := gamedata["initial_player"].(string)
 
 	if ip == "black" {
-		o.First = 0
+		o.First = color.Black
 	} else {
-		o.First = 1
+		o.First = color.White
 	}
 	initState := gamedata["initial_state"].(map[string]any)
 
