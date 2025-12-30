@@ -1,0 +1,54 @@
+@font-face {
+  font-family: 'icons';
+  src:  url('/static/icons.eot');
+  src:  url('/static/icons.eot#iefix') format('embedded-opentype'),
+    url('/static/icons.ttf') format('truetype'),
+    url('/static/icons.woff') format('woff'),
+    url('/static/icons.svg#icons') format('svg');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'icons' !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-circle:before {
+  content: "\e900";
+}
+.icon-circle-logo:before {
+  content: "\e901";
+}
+.icon-circle-outline:before {
+  content: "\e902";
+}
+.icon-favicon:before {
+  content: "\e903";
+}
+.icon-favicon-init:before {
+  content: "\e904";
+}
+.icon-square:before {
+  content: "\e905";
+}
+.icon-square-banner:before {
+  content: "\e906";
+}
+.icon-square-logo:before {
+  content: "\e907";
+}
+.icon-square-outline:before {
+  content: "\e908";
+}

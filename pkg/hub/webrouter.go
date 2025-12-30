@@ -169,9 +169,9 @@ func favicon(w http.ResponseWriter, r *http.Request) {
 	serveStatic(w, r, "favicon.svg")
 }
 
-func image(w http.ResponseWriter, r *http.Request) {
-	image := chi.URLParam(r, "image")
-	serveStatic(w, r, image)
+func static(w http.ResponseWriter, r *http.Request) {
+	static := chi.URLParam(r, "static")
+	serveStatic(w, r, static)
 }
 
 func (h *Hub) WebRouter() http.Handler {
@@ -193,7 +193,7 @@ func (h *Hub) WebRouter() http.Handler {
 	r.Get("/favicon.ico", favicon)
 	r.Post("/new", newBoard)
 
-	r.Get("/static/{image}", image)
+	r.Get("/static/{static}", static)
 
 	r.Get("/b/{boardID}", board)
 	jsFS, _ := fs.Sub(frontend.Content, "js")
