@@ -16,12 +16,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jarednogo/board/internal/fetch"
-	"github.com/jarednogo/board/internal/zip"
-	"github.com/jarednogo/board/pkg/core"
-	"github.com/jarednogo/board/pkg/core/parser"
-	"github.com/jarednogo/board/pkg/event"
-	"github.com/jarednogo/board/pkg/state"
+	"github.com/golab/board/internal/fetch"
+	"github.com/golab/board/internal/zip"
+	"github.com/golab/board/pkg/core"
+	"github.com/golab/board/pkg/core/parser"
+	"github.com/golab/board/pkg/event"
+	"github.com/golab/board/pkg/state"
 )
 
 type EventHandler func(event.Event) event.Event

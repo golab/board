@@ -13,7 +13,7 @@ package state
 import (
 	"encoding/base64"
 
-	"github.com/jarednogo/board/pkg/core/tree"
+	"github.com/golab/board/pkg/core/tree"
 )
 
 type StateJSON struct {

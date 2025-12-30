@@ -13,8 +13,8 @@ package state
 import (
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/require"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/require"
 )
 
 // regression

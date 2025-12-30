@@ -13,10 +13,10 @@ package plugin_test
 import (
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/pkg/logx"
-	"github.com/jarednogo/board/pkg/room"
-	"github.com/jarednogo/board/pkg/room/plugin"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/pkg/logx"
+	"github.com/golab/board/pkg/room"
+	"github.com/golab/board/pkg/room/plugin"
 )
 
 func TestPlugin(t *testing.T) {

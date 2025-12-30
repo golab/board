@@ -15,8 +15,8 @@ import (
 	"io"
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/pkg/event"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/pkg/event"
 )
 
 type MockReadWriteCloser struct {

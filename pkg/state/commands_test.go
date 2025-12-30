@@ -13,12 +13,12 @@ package state_test
 import (
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/require"
-	"github.com/jarednogo/board/internal/sgfsamples"
-	"github.com/jarednogo/board/pkg/core/color"
-	"github.com/jarednogo/board/pkg/core/coord"
-	"github.com/jarednogo/board/pkg/state"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/require"
+	"github.com/golab/board/internal/sgfsamples"
+	"github.com/golab/board/pkg/core/color"
+	"github.com/golab/board/pkg/core/coord"
+	"github.com/golab/board/pkg/state"
 )
 
 func TestCommandAddStone(t *testing.T) {

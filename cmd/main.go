@@ -18,9 +18,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/jarednogo/board/pkg/app"
-	"github.com/jarednogo/board/pkg/config"
-	"github.com/jarednogo/board/pkg/logx"
+	"github.com/golab/board/pkg/app"
+	"github.com/golab/board/pkg/config"
+	"github.com/golab/board/pkg/logx"
 )
 
 var version = "dev"

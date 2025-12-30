@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
+	"github.com/golab/board/internal/assert"
 )
 
 type MockTester struct {

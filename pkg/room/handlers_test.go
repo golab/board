@@ -15,15 +15,15 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/fetch"
-	"github.com/jarednogo/board/internal/require"
-	"github.com/jarednogo/board/internal/sgfsamples"
-	"github.com/jarednogo/board/pkg/core"
-	"github.com/jarednogo/board/pkg/event"
-	"github.com/jarednogo/board/pkg/logx"
-	"github.com/jarednogo/board/pkg/room"
-	"github.com/jarednogo/board/pkg/room/plugin"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/fetch"
+	"github.com/golab/board/internal/require"
+	"github.com/golab/board/internal/sgfsamples"
+	"github.com/golab/board/pkg/core"
+	"github.com/golab/board/pkg/event"
+	"github.com/golab/board/pkg/logx"
+	"github.com/golab/board/pkg/room"
+	"github.com/golab/board/pkg/room/plugin"
 )
 
 func TestHandleIsProtected(t *testing.T) {

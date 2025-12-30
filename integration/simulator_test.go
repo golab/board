@@ -15,15 +15,15 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/jarednogo/board/integration"
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/require"
-	"github.com/jarednogo/board/internal/sgfsamples"
-	"github.com/jarednogo/board/pkg/core/color"
-	"github.com/jarednogo/board/pkg/core/coord"
-	"github.com/jarednogo/board/pkg/core/parser"
-	"github.com/jarednogo/board/pkg/event"
-	"github.com/jarednogo/board/pkg/state"
+	"github.com/golab/board/integration"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/require"
+	"github.com/golab/board/internal/sgfsamples"
+	"github.com/golab/board/pkg/core/color"
+	"github.com/golab/board/pkg/core/coord"
+	"github.com/golab/board/pkg/core/parser"
+	"github.com/golab/board/pkg/event"
+	"github.com/golab/board/pkg/state"
 )
 
 func TestSim1(t *testing.T) {

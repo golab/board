@@ -11,9 +11,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package tree
 
 import (
-	"github.com/jarednogo/board/pkg/core/color"
-	"github.com/jarednogo/board/pkg/core/coord"
-	"github.com/jarednogo/board/pkg/core/fields"
+	"github.com/golab/board/pkg/core/color"
+	"github.com/golab/board/pkg/core/coord"
+	"github.com/golab/board/pkg/core/fields"
 )
 
 // Fmap applies a function f to every node under (and including) root

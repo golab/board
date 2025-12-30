@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jarednogo/board/pkg/core/fields"
+	"github.com/golab/board/pkg/core/fields"
 )
 
 func isWhitespace(c rune) bool {

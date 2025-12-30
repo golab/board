@@ -16,8 +16,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/pkg/logx"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/pkg/logx"
 )
 
 func TestLoggerDebug(t *testing.T) {

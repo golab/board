@@ -17,11 +17,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/twitch"
-	"github.com/jarednogo/board/pkg/config"
-	"github.com/jarednogo/board/pkg/loader"
-	"github.com/jarednogo/board/pkg/logx"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/twitch"
+	"github.com/golab/board/pkg/config"
+	"github.com/golab/board/pkg/loader"
+	"github.com/golab/board/pkg/logx"
 )
 
 func TestTwitchCallbackSubscribe(t *testing.T) {

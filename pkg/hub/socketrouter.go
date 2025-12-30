@@ -14,7 +14,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/jarednogo/board/pkg/config"
+	"github.com/golab/board/pkg/config"
 	"golang.org/x/net/websocket"
 )
 

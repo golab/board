@@ -16,17 +16,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jarednogo/board/internal/fetch"
-	"github.com/jarednogo/board/pkg/core/board"
-	"github.com/jarednogo/board/pkg/core/color"
-	"github.com/jarednogo/board/pkg/core/coord"
-	"github.com/jarednogo/board/pkg/core/tree"
-	"github.com/jarednogo/board/pkg/event"
-	"github.com/jarednogo/board/pkg/loader"
-	"github.com/jarednogo/board/pkg/logx"
-	"github.com/jarednogo/board/pkg/message"
-	"github.com/jarednogo/board/pkg/room/plugin"
-	"github.com/jarednogo/board/pkg/state"
+	"github.com/golab/board/internal/fetch"
+	"github.com/golab/board/pkg/core/board"
+	"github.com/golab/board/pkg/core/color"
+	"github.com/golab/board/pkg/core/coord"
+	"github.com/golab/board/pkg/core/tree"
+	"github.com/golab/board/pkg/event"
+	"github.com/golab/board/pkg/loader"
+	"github.com/golab/board/pkg/logx"
+	"github.com/golab/board/pkg/message"
+	"github.com/golab/board/pkg/room/plugin"
+	"github.com/golab/board/pkg/state"
 )
 
 type Connector func(plugin.Room, fetch.Fetcher) (plugin.Plugin, error)

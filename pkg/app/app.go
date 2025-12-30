@@ -15,9 +15,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jarednogo/board/pkg/config"
-	"github.com/jarednogo/board/pkg/hub"
-	"github.com/jarednogo/board/pkg/logx"
+	"github.com/golab/board/pkg/config"
+	"github.com/golab/board/pkg/hub"
+	"github.com/golab/board/pkg/logx"
 )
 
 type App struct {

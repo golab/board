@@ -19,8 +19,8 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/jarednogo/board/pkg/core"
-	"github.com/jarednogo/board/pkg/frontend"
+	"github.com/golab/board/pkg/core"
+	"github.com/golab/board/pkg/frontend"
 )
 
 // stateful

@@ -15,12 +15,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/fetch"
-	"github.com/jarednogo/board/internal/require"
-	"github.com/jarednogo/board/pkg/core/color"
-	"github.com/jarednogo/board/pkg/core/coord"
-	"github.com/jarednogo/board/pkg/event"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/fetch"
+	"github.com/golab/board/internal/require"
+	"github.com/golab/board/pkg/core/color"
+	"github.com/golab/board/pkg/core/coord"
+	"github.com/golab/board/pkg/event"
 )
 
 func TestMakeRank(t *testing.T) {

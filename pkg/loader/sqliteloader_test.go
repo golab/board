@@ -16,8 +16,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/pkg/loader"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/pkg/loader"
 )
 
 func TestSqliteLoader(t *testing.T) {

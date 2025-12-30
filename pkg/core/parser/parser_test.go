@@ -14,10 +14,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/require"
-	"github.com/jarednogo/board/internal/sgfsamples"
-	"github.com/jarednogo/board/pkg/core/parser"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/require"
+	"github.com/golab/board/internal/sgfsamples"
+	"github.com/golab/board/pkg/core/parser"
 )
 
 var fieldTests = []struct {

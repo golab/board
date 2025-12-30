@@ -13,9 +13,9 @@ package state_test
 import (
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/pkg/event"
-	"github.com/jarednogo/board/pkg/state"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/pkg/event"
+	"github.com/golab/board/pkg/state"
 )
 
 func TestDecodeAddStone(t *testing.T) {

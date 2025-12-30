@@ -16,14 +16,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/require"
-	"github.com/jarednogo/board/internal/sgfsamples"
-	"github.com/jarednogo/board/pkg/config"
-	"github.com/jarednogo/board/pkg/event"
-	"github.com/jarednogo/board/pkg/hub"
-	"github.com/jarednogo/board/pkg/loader"
-	"github.com/jarednogo/board/pkg/logx"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/require"
+	"github.com/golab/board/internal/sgfsamples"
+	"github.com/golab/board/pkg/config"
+	"github.com/golab/board/pkg/event"
+	"github.com/golab/board/pkg/hub"
+	"github.com/golab/board/pkg/loader"
+	"github.com/golab/board/pkg/logx"
 )
 
 func TestParseURL(t *testing.T) {

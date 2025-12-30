@@ -14,8 +14,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/pkg/core"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/pkg/core"
 )
 
 var sanitizeTests = []struct {

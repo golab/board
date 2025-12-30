@@ -16,8 +16,8 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/jarednogo/board/pkg/core"
-	"github.com/jarednogo/board/pkg/event"
+	"github.com/golab/board/pkg/core"
+	"github.com/golab/board/pkg/event"
 )
 
 func (h *Hub) Upload(w http.ResponseWriter, r *http.Request) {

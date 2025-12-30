@@ -13,7 +13,7 @@ package state
 import (
 	"strings"
 
-	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/golab/board/pkg/core/coord"
 )
 
 func (s *State) SetLocation(loc string) {

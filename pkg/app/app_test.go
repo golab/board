@@ -17,11 +17,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/require"
-	"github.com/jarednogo/board/pkg/app"
-	"github.com/jarednogo/board/pkg/config"
-	"github.com/jarednogo/board/pkg/logx"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/require"
+	"github.com/golab/board/pkg/app"
+	"github.com/golab/board/pkg/config"
+	"github.com/golab/board/pkg/logx"
 )
 
 func TestPing(t *testing.T) {

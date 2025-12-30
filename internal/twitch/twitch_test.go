@@ -14,8 +14,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/twitch"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/twitch"
 )
 
 func TestGetUserAccessToken(t *testing.T) {

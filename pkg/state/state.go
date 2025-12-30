@@ -15,12 +15,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jarednogo/board/pkg/core/board"
-	"github.com/jarednogo/board/pkg/core/color"
-	"github.com/jarednogo/board/pkg/core/coord"
-	"github.com/jarednogo/board/pkg/core/fields"
-	"github.com/jarednogo/board/pkg/core/parser"
-	"github.com/jarednogo/board/pkg/core/tree"
+	"github.com/golab/board/pkg/core/board"
+	"github.com/golab/board/pkg/core/color"
+	"github.com/golab/board/pkg/core/coord"
+	"github.com/golab/board/pkg/core/fields"
+	"github.com/golab/board/pkg/core/parser"
+	"github.com/golab/board/pkg/core/tree"
 )
 
 const Letters = "ABCDEFGHIJKLNMOPQRSTUVWXYZ"

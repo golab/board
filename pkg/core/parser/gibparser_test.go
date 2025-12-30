@@ -13,8 +13,8 @@ package parser
 import (
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/require"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/require"
 )
 
 func TestParseGameLine1(t *testing.T) {

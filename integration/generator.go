@@ -13,9 +13,9 @@ package integration
 import (
 	"math/rand"
 
-	"github.com/jarednogo/board/pkg/core/color"
-	"github.com/jarednogo/board/pkg/core/coord"
-	"github.com/jarednogo/board/pkg/state"
+	"github.com/golab/board/pkg/core/color"
+	"github.com/golab/board/pkg/core/coord"
+	"github.com/golab/board/pkg/state"
 )
 
 func GenerateRandomSGF(seed int, num int) string {

@@ -17,11 +17,11 @@ import (
 	"net/http/httptest"
 	"sync"
 
-	"github.com/jarednogo/board/pkg/app"
-	"github.com/jarednogo/board/pkg/config"
-	"github.com/jarednogo/board/pkg/event"
-	"github.com/jarednogo/board/pkg/hub"
-	"github.com/jarednogo/board/pkg/logx"
+	"github.com/golab/board/pkg/app"
+	"github.com/golab/board/pkg/config"
+	"github.com/golab/board/pkg/event"
+	"github.com/golab/board/pkg/hub"
+	"github.com/golab/board/pkg/logx"
 )
 
 type Sim struct {

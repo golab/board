@@ -19,10 +19,10 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/golab/board/internal/twitch"
+	"github.com/golab/board/pkg/core"
+	"github.com/golab/board/pkg/event"
 	"github.com/google/uuid"
-	"github.com/jarednogo/board/internal/twitch"
-	"github.com/jarednogo/board/pkg/core"
-	"github.com/jarednogo/board/pkg/event"
 )
 
 func (h *Hub) TwitchRouter() http.Handler {

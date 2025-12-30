@@ -14,8 +14,8 @@ package message_test
 import (
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/pkg/message"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/pkg/message"
 )
 
 func TestMessage(t *testing.T) {

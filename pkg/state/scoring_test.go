@@ -13,9 +13,9 @@ package state
 import (
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/sgfsamples"
-	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/sgfsamples"
+	"github.com/golab/board/pkg/core/coord"
 )
 
 func TestScore1(t *testing.T) {

@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jarednogo/board/pkg/core/color"
+	"github.com/golab/board/pkg/core/color"
 )
 
 const maxBoardSize = 19

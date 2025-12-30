@@ -13,8 +13,8 @@ package state
 import (
 	"fmt"
 
-	"github.com/jarednogo/board/pkg/core/color"
-	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/golab/board/pkg/core/color"
+	"github.com/golab/board/pkg/core/coord"
 )
 
 func (s *State) prefs() map[string]int {

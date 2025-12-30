@@ -13,10 +13,10 @@ package state
 import (
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/sgfsamples"
-	"github.com/jarednogo/board/pkg/core/color"
-	"github.com/jarednogo/board/pkg/core/coord"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/sgfsamples"
+	"github.com/golab/board/pkg/core/color"
+	"github.com/golab/board/pkg/core/coord"
 )
 
 func TestState3(t *testing.T) {

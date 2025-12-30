@@ -13,10 +13,10 @@ package integration_test
 import (
 	"testing"
 
-	"github.com/jarednogo/board/integration"
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/pkg/core/parser"
-	"github.com/jarednogo/board/pkg/state"
+	"github.com/golab/board/integration"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/pkg/core/parser"
+	"github.com/golab/board/pkg/state"
 )
 
 func TestGenerate(t *testing.T) {

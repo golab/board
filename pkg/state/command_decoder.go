@@ -13,9 +13,9 @@ package state
 import (
 	"fmt"
 
-	"github.com/jarednogo/board/pkg/core/color"
-	"github.com/jarednogo/board/pkg/core/coord"
-	"github.com/jarednogo/board/pkg/event"
+	"github.com/golab/board/pkg/core/color"
+	"github.com/golab/board/pkg/core/coord"
+	"github.com/golab/board/pkg/event"
 )
 
 func DecodeToCommand(evt event.Event) (Command, error) {

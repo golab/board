@@ -13,9 +13,9 @@ package fields_test
 import (
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/require"
-	"github.com/jarednogo/board/pkg/core/fields"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/require"
+	"github.com/golab/board/pkg/core/fields"
 )
 
 func TestAddField1(t *testing.T) {

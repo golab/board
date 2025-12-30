@@ -11,10 +11,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package state
 
 import (
-	"github.com/jarednogo/board/pkg/core/color"
-	"github.com/jarednogo/board/pkg/core/coord"
-	"github.com/jarednogo/board/pkg/core/fields"
-	"github.com/jarednogo/board/pkg/core/tree"
+	"github.com/golab/board/pkg/core/color"
+	"github.com/golab/board/pkg/core/coord"
+	"github.com/golab/board/pkg/core/fields"
+	"github.com/golab/board/pkg/core/tree"
 )
 
 func (s *State) addFieldNode(flds fields.Fields, index int) *coord.Diff {

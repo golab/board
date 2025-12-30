@@ -1,4 +1,4 @@
-module github.com/jarednogo/board
+module github.com/golab/board
 
 go 1.24.0
 
@@ -16,7 +16,7 @@ require github.com/lib/pq v1.10.9 // indirect
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	//github.com/jarednogo/board v0.0.0-20250901154230-ec9feb24204a // indirect
+	//github.com/golab/board v0.0.0-20250901154230-ec9feb24204a // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect

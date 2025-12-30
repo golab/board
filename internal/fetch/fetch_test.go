@@ -13,9 +13,9 @@ package fetch_test
 import (
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/internal/fetch"
-	"github.com/jarednogo/board/internal/sgfsamples"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/fetch"
+	"github.com/golab/board/internal/sgfsamples"
 )
 
 var ogsTests = []struct {

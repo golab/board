@@ -13,8 +13,8 @@ package room
 import (
 	"testing"
 
-	"github.com/jarednogo/board/internal/assert"
-	"github.com/jarednogo/board/pkg/logx"
+	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/pkg/logx"
 )
 
 func TestRoomLogger(t *testing.T) {
