@@ -27,6 +27,8 @@ var okList = map[string]bool{
 	"gokifu.com":                true,
 	"board.tripleko.com":        true,
 	"board-test.tripleko.com":   true,
+	"golab.gg":                  true,
+	"test.golab.gg":             true,
 	"raw.githubusercontent.com": true,
 }
 

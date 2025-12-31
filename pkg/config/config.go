@@ -139,6 +139,6 @@ func defaultSqlitePath() string {
 		home = "."
 	}
 
-	dbPath := filepath.Join(home, ".config", "tripleko", "board.db")
+	dbPath := filepath.Join(home, ".config", "golab", "board.db")
 	return dbPath
 }
