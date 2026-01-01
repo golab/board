@@ -1,5 +1,6 @@
 FROM golang:1.24.0-alpine
 
+ADD internal /root/internal
 ADD pkg /root/pkg
 ADD cmd /root/cmd
 ARG CONFIG_FILE=config-docker.yaml
