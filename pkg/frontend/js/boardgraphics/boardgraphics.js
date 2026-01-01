@@ -40,10 +40,14 @@ function hex_to_bw(hex) {
     return "#000000";
 }
 
+let preloaded = [];
+
 function preload() {
     for (let [key, value] of Object.entries(shell)) {
         const img = new Image();
         img.src = value;
+        img.decode();
+        preloaded.push(img);
     }
 }
 
