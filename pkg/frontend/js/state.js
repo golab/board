@@ -1015,13 +1015,17 @@ class State {
         let id = coordtoid(coord);
 
         let i = parseInt(lb.text);
-        let len = lb.text.length;
-        let c = lb.text.charCodeAt(0);
         if (Number.isInteger(i)) {
             this.marks.set(id, "number:" + lb.text);
             this.numbers.set(i, 1);
             this.board_graphics._draw_manual_number(coord.x, coord.y, lb.text);
-        } else if (len == 1 && c >= 65 && c <= 90) {
+            return;
+        }
+
+        let len = lb.text.length;
+        let c = lb.text.charCodeAt(0);
+
+        if (len == 1 && c >= 65 && c <= 90) {
             this.marks.set(id, "letter:" + lb.text);
             let letter_index = lb.text.charCodeAt(0)-65;
             this.letters[letter_index] = 1;
