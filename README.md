@@ -2,6 +2,7 @@
     <picture>
         <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/golab/board/refs/heads/test/docs/img/banner_dark.png">
         <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/golab/board/refs/heads/test/docs/img/banner_light.png">
+        <img alt="Go Lab" src="https://raw.githubusercontent.com/golab/board/refs/heads/test/docs/img/banner_light.png">
     </picture>
 
 </a>
