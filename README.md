@@ -1,4 +1,4 @@
-# [Go Lab](https://golab.gg)
+[![Go Lab](docs/img/banner.png)](https://golab.gg)
 
 [![Main](https://github.com/golab/board/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/golab/board/actions/workflows/main.yml)
 [![Test](https://github.com/golab/board/actions/workflows/test.yml/badge.svg)](https://github.com/golab/board/actions/workflows/test.yml)
