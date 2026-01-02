@@ -1,4 +1,10 @@
-[![Go Lab](docs/img/banner.png)](https://golab.gg)
+<a href="https://golab.gg">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/golab/board/refs/heads/test/docs/img/banner_dark.png">
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/golab/board/refs/heads/test/docs/img/banner_light.png">
+    </picture>
+
+</a>
 
 [![Main](https://github.com/golab/board/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/golab/board/actions/workflows/main.yml)
 [![Test](https://github.com/golab/board/actions/workflows/test.yml/badge.svg)](https://github.com/golab/board/actions/workflows/test.yml)
