@@ -14,7 +14,11 @@
 
 A free and open-source multi-user go board.
 
-![dark mode screenshot](docs/img/darkmode.png)
+<picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/golab/board/refs/heads/test/docs/img/darkmode.png">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/golab/board/refs/heads/test/docs/img/lightmode.png">
+    <img alt="Go Lab" src="https://raw.githubusercontent.com/golab/board/refs/heads/test/docs/img/lightmode.png">
+</picture>
 
 ## Features
 - Shared control of the go board
