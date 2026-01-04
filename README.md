@@ -27,6 +27,7 @@ A free and open-source multi-user go board.
 - Password-protected rooms
 - Browser-based
 - Desktop and mobile compatible
+- File formats accepted: SGF, GIB, NGF, ZIP
 - Sync with live OGS games or reviews
 - Integrate with Twitch
 - Free and open source
