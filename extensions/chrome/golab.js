@@ -17,14 +17,9 @@ observer.observe(document.body, {
 });
 
 function main() {
-    if (document.getElementById("tripleko") != null) {
+    if (document.getElementById("golab") != null) {
         return;
     }
-    let head = document.head;
-    let link = document.createElement("link");
-    link.setAttribute("rel", "stylesheet");
-    link.setAttribute("href", "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
-    head.appendChild(link);
     
     let dock = document.getElementsByClassName("Dock")[0];
     if (dock == null) {
@@ -33,7 +28,7 @@ function main() {
     
     let tooltip_container = document.createElement("div");
     tooltip_container.setAttribute("class", "TooltipContainer");
-    tooltip_container.id = "tripleko";
+    tooltip_container.id = "golab";
     
     let disabled = document.createElement("div");
     disabled.setAttribute("clasS", "Tooltip disabled");
@@ -42,22 +37,18 @@ function main() {
     
     let p = document.createElement("p");
     p.setAttribute("class", "title");
-    p.innerHTML = "Upload to Tripleko";
+    p.innerHTML = "Upload to Go Lab";
     
     let div = document.createElement("div");
     let anchor = document.createElement("a");
-    anchor.href = "https://board.tripleko.com/upload?url=" + window.location.href;
+    anchor.href = "https://golab.gg/ext/upload?url=" + window.location.href;
     anchor.target = "_blank";
     
     let icon = document.createElement("i");
-    icon.setAttribute("class", "bi bi-mask");
+    icon.setAttribute("class", "fa fa-upload");
     
-    anchor.innerHTML += "&nbsp;";
     anchor.appendChild(icon);
-    anchor.innerHTML += "&nbsp;";
-    anchor.innerHTML += "&nbsp;";
-    anchor.innerHTML += "&nbsp;";
-    anchor.innerHTML += "Upload to Tripleko";
+    anchor.innerHTML += "Upload to Go Lab";
     
     div.appendChild(anchor);
     tooltip_container.appendChild(div);

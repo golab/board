@@ -25,7 +25,7 @@ func (h *Hub) Upload(w http.ResponseWriter, r *http.Request) {
 	boardID := r.FormValue("board_id")
 	boardID = core.Sanitize(boardID)
 	if len(strings.TrimSpace(boardID)) == 0 {
-		boardID = core.UUID4()
+		boardID = core.RandomBoardName()
 	}
 	newroom := h.GetOrCreateRoom(boardID)
 

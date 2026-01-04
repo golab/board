@@ -1,14 +1,14 @@
 {
     "manifest_version": 3,
-    "name": "Tripleko",
-    "version": "1.0",
+    "name": "Go Lab",
+    "version": "1.1",
 
-    "description": "Adds direct link to tripleko to OGS.",
+    "description": "Adds direct link to Go Lab to OGS.",
 
     "content_scripts": [
         {
             "matches": ["*://*.online-go.com/*"],
-            "js": ["tripleko.js"],
+            "js": ["golab.js"],
             "run_at": "document_end"
         }
     ]
