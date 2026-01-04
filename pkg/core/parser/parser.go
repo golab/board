@@ -90,17 +90,44 @@ func New(text string) *Parser {
 	return &Parser{&BaseParser{[]rune(text), 0}}
 }
 
+func (p *Parser) isGIB() bool {
+	return p.peek(0) == '\\' && p.peek(1) == 'H' && p.peek(2) == 'S'
+}
+
+func (p *Parser) isNGF() bool {
+	savedIndex := p.index
+	defer func() { p.index = savedIndex }()
+	_, err := p.parseLine()
+	if err != nil {
+		return false
+	}
+	_, err = p.parseInt()
+	return err == nil
+}
+
 func (p *Parser) Parse() (*SGFNode, error) {
 	p.skipWhitespace()
 	savedIndex := p.index
+
 	// perhaps gib?
-	if p.peek(0) == '\\' && p.peek(1) == 'H' && p.peek(2) == 'S' {
+	if p.isGIB() {
 		gibResult, err := NewGIBParser(string(p.text)).Parse()
 		if err == nil {
 			return gibResult.ToSGFNode()
 		}
 	}
 	p.index = savedIndex
+
+	// perhaps ngf?
+	if p.isNGF() {
+		ngfResult, err := NewNGFParser(string(p.text)).Parse()
+		if err == nil {
+			return ngfResult.ToSGFNode()
+		}
+	}
+	p.index = savedIndex
+
+	// now parse sgf
 	_, err := p.parseUntil('(')
 	if err != nil {
 		return nil, err

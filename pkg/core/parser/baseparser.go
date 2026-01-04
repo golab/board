@@ -12,12 +12,52 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
 type BaseParser struct {
 	text  []rune
 	index int
+}
+
+func (p *BaseParser) parseLine() (string, error) {
+	s, err := p.parseUntilAny('\n', 0)
+	p.skipWhitespace()
+	return s, err
+}
+
+func (p *BaseParser) parseInt() (int, error) {
+	s, err := p.parseLine()
+	if err != nil {
+		return 0, err
+	}
+	n, err := strconv.Atoi(s)
+	return n, err
+}
+
+func (p *BaseParser) parseUntilAny(rs ...rune) (string, error) {
+	sb := strings.Builder{}
+	for {
+		found := false
+		c := p.peek(0)
+		for i := 0; i < len(rs); i++ {
+			if c == rs[i] {
+				found = true
+				break
+			}
+		}
+		if found {
+			break
+		}
+		if c == rune(0) {
+			return "", fmt.Errorf("encountered eof during parseUntilAny")
+		} else {
+			sb.WriteRune(c)
+			p.read()
+		}
+	}
+	return sb.String(), nil
 }
 
 func (p *BaseParser) parseUntil(r rune) (string, error) {
