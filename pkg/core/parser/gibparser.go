@@ -175,9 +175,9 @@ func (g *GIBResult) ToSGFNode() (*SGFNode, error) {
 					f := float64(zipsu) / 10
 					switch grlt {
 					case GRLTBlackByCounting:
-						root.AddField("RE", fmt.Sprintf("B+%f", f))
+						root.AddField("RE", "B+"+strconv.FormatFloat(f, 'f', -1, 64))
 					case GRLTWhiteByCounting:
-						root.AddField("RE", fmt.Sprintf("W+%f", f))
+						root.AddField("RE", "W+"+strconv.FormatFloat(f, 'f', -1, 64))
 					}
 				case "LINE":
 					root.AddField("SZ", prop.value)
@@ -186,7 +186,7 @@ func (g *GIBResult) ToSGFNode() (*SGFNode, error) {
 					if err != nil || n == 0 {
 						continue
 					}
-					root.AddField("KM", fmt.Sprintf("%f", float64(n)/10))
+					root.AddField("KM", strconv.FormatFloat(float64(n)/10, 'f', -1, 64))
 				case "DUM":
 					n, err := strconv.Atoi(prop.value)
 					if err != nil || n == 0 {

@@ -181,7 +181,7 @@ func TestGIBToSGF(t *testing.T) {
 	node, err := gibResult.ToSGFNode()
 	require.NoError(t, err)
 	require.NotNil(t, node)
-	assert.Equal(t, len(node.toSGF(true)), 85)
+	assert.Equal(t, len(node.toSGF(true)), 80)
 }
 
 func TestGIBToSGFRanks(t *testing.T) {
@@ -238,7 +238,7 @@ func TestGRLT0(t *testing.T) {
 	require.NotNil(t, node)
 	re := node.GetField("RE")
 	require.Equal(t, len(re), 1)
-	assert.Equal(t, re[0], "B+9.000000")
+	assert.Equal(t, re[0], "B+9")
 }
 
 func TestGRLT1(t *testing.T) {
@@ -252,7 +252,7 @@ func TestGRLT1(t *testing.T) {
 	require.NotNil(t, node)
 	re := node.GetField("RE")
 	require.Equal(t, len(re), 1)
-	assert.Equal(t, re[0], "W+9.000000")
+	assert.Equal(t, re[0], "W+9")
 }
 
 func TestGRLT3(t *testing.T) {
