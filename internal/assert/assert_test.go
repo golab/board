@@ -139,7 +139,9 @@ func TestNotNil(t *testing.T) {
 	}
 
 	h = &MockTester{}
-	assert.NotNil(h, nil)
+	type V struct{}
+	var v *V
+	assert.NotNil(h, v)
 	if !h.failed {
 		t.Errorf("should fail")
 	}

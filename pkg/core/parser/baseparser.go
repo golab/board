@@ -21,17 +21,14 @@ type BaseParser struct {
 	index int
 }
 
-func (p *BaseParser) parseLine() (string, error) {
-	s, err := p.parseUntilAny('\n', 0)
+func (p *BaseParser) parseLine() string {
+	s, _ := p.parseUntilAny('\n', 0) // nolint: errcheck
 	p.skipWhitespace()
-	return s, err
+	return s
 }
 
 func (p *BaseParser) parseInt() (int, error) {
-	s, err := p.parseLine()
-	if err != nil {
-		return 0, err
-	}
+	s := p.parseLine()
 	n, err := strconv.Atoi(s)
 	return n, err
 }

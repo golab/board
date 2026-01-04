@@ -12,6 +12,7 @@ package hub_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http/httptest"
 	"net/url"
@@ -205,4 +206,43 @@ func TestWebRouterSGFIX(t *testing.T) {
 	body, err = io.ReadAll(rec.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, len(body), 70)
+}
+
+func getStatusCode(method, endpoint string) int {
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	h, err := hub.NewHub(config.Test(), logger)
+	if err != nil {
+		return 0
+	}
+	r := chi.NewRouter()
+	r.Mount("/", h.WebRouter())
+
+	// send a request to /sgfix (should be empty)
+	req := httptest.NewRequest(method, endpoint, nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	return rec.Code
+}
+
+func TestWebRouterEndpoints(t *testing.T) {
+	endpointTests := []struct {
+		method   string
+		endpoint string
+		code     int
+	}{
+		{"GET", "/", 200},
+		{"GET", "/integrations", 200},
+		{"GET", "/about", 200},
+		{"POST", "/new", 302},
+		{"GET", "/b/someboard", 200},
+		{"GET", "/static/js/init.js", 200},
+		{"GET", "/static/foobar.js", 404},
+		{"GET", "/favicon.ico", 200},
+	}
+	for i, tt := range endpointTests {
+		t.Run(fmt.Sprintf("endpoint%d", i), func(t *testing.T) {
+			code := getStatusCode(tt.method, tt.endpoint)
+			assert.Equal(t, code, tt.code)
+		})
+	}
 }

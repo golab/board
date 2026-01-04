@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/golab/board/internal/assert"
@@ -20,8 +21,7 @@ import (
 func TestNGFParseLine(t *testing.T) {
 	s := "some title\n"
 	p := NewNGFParser(s)
-	parsed, err := p.parseLine()
-	require.NoError(t, err)
+	parsed := p.parseLine()
 	assert.Equal(t, parsed, "some title")
 }
 
@@ -72,74 +72,80 @@ func TestNGFParseNickRank4(t *testing.T) {
 func TestNGFParseResult1(t *testing.T) {
 	s := "White wins by resignation"
 	p := NewNGFParser(s)
-	result, err := p.parseResult()
-	require.NoError(t, err)
+	result := p.parseResult()
 	assert.Equal(t, result, "W+R")
 }
 
 func TestNGFParseResult2(t *testing.T) {
 	s := "Black wins by resignation"
 	p := NewNGFParser(s)
-	result, err := p.parseResult()
-	require.NoError(t, err)
+	result := p.parseResult()
 	assert.Equal(t, result, "B+R")
 }
 
 func TestNGFParseResult3(t *testing.T) {
 	s := "White wins by time"
 	p := NewNGFParser(s)
-	result, err := p.parseResult()
-	require.NoError(t, err)
+	result := p.parseResult()
 	assert.Equal(t, result, "W+T")
 }
 
 func TestNGFParseResult4(t *testing.T) {
 	s := "Black wins by time"
 	p := NewNGFParser(s)
-	result, err := p.parseResult()
-	require.NoError(t, err)
+	result := p.parseResult()
 	assert.Equal(t, result, "B+T")
 }
 
 func TestNGFParseResult5(t *testing.T) {
 	s := "Black wins by 16.5 points"
 	p := NewNGFParser(s)
-	result, err := p.parseResult()
-	require.NoError(t, err)
+	result := p.parseResult()
 	assert.Equal(t, result, "B+16.5")
 }
 
 func TestNGFParseResult6(t *testing.T) {
 	s := "White wins by 0.5 points"
 	p := NewNGFParser(s)
-	result, err := p.parseResult()
-	require.NoError(t, err)
+	result := p.parseResult()
 	assert.Equal(t, result, "W+0.5")
 }
 
 func TestNGFParseResult7(t *testing.T) {
 	s := "Progressing"
 	p := NewNGFParser(s)
-	result, err := p.parseResult()
-	require.NoError(t, err)
+	result := p.parseResult()
 	assert.Equal(t, result, "")
 }
 
 func TestNGFParseResult8(t *testing.T) {
 	s := "Black wins points"
 	p := NewNGFParser(s)
-	result, err := p.parseResult()
-	require.NoError(t, err)
+	result := p.parseResult()
 	assert.Equal(t, result, "B+")
 }
 
-func TestNGFMove(t *testing.T) {
+func TestNGFMove1(t *testing.T) {
 	s := "PMABWQRRQ\n"
 	p := NewNGFParser(s)
 	mv, err := p.parseMove()
 	require.NoError(t, err)
 	assert.Equal(t, mv.key, "W")
 	assert.Equal(t, mv.coord, "pq")
+}
+
+func TestNGFMove2(t *testing.T) {
+	s := "PMABWRRQ\n"
+	p := NewNGFParser(s)
+	_, err := p.parseMove()
+	assert.NotNil(t, err)
+}
+
+func TestNGFMove3(t *testing.T) {
+	s := "XYABWQRRQ\n"
+	p := NewNGFParser(s)
+	_, err := p.parseMove()
+	assert.NotNil(t, err)
 }
 
 const testNGFString = `
@@ -196,4 +202,23 @@ func TestNGF2(t *testing.T) {
 	node, err := r.ToSGFNode()
 	require.NoError(t, err)
 	t.Logf("%v", node.toSGF(true))
+}
+
+func TestNGFErrors(t *testing.T) {
+	ngfTests := []string{
+		"abc\nfoo\n",
+		"abc\n19\nfoo\n",
+		"abc\n19\nfoo 5k\nbar\n",
+		"abc\n19\nfoo 5k\nbar 5k\nbaz\nbot\n",
+		"abc\n19\nfoo 5k\nbar 5k\nbaz\n4\nqux\nquxx\nquy\nquz\nqua\n",
+		"abc\n19\nfoo 5k\nbar 5k\nbaz\n4\nqux\n6\nquy\nquz\nqua\n",
+		"abc\n19\nfoo 5k\nbar 5k\nbaz\n4\nqux\n6\nquy\nquz\n40\n",
+	}
+	for i, tt := range ngfTests {
+		t.Run(fmt.Sprintf("ngf%d", i), func(t *testing.T) {
+			p := NewNGFParser(tt)
+			_, err := p.Parse()
+			assert.NotNil(t, err)
+		})
+	}
 }

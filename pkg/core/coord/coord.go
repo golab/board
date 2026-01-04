@@ -228,6 +228,10 @@ func FromInterface(ifc any) (*Coord, error) {
 		return nil, fmt.Errorf("error coercing to coord")
 	}
 
+	if len(val) < 2 {
+		return nil, fmt.Errorf("error coercing to coord: not enough values")
+	}
+
 	for _, v := range val {
 		i := int(v.(float64))
 		coords = append(coords, i)

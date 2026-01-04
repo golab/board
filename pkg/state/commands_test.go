@@ -21,7 +21,7 @@ import (
 	"github.com/golab/board/pkg/state"
 )
 
-func TestCommandAddStone(t *testing.T) {
+func TestCommandAddStone1(t *testing.T) {
 	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
 	assert.NoError(t, err)
 
@@ -29,7 +29,29 @@ func TestCommandAddStone(t *testing.T) {
 	color := color.Black
 	_, err = state.NewAddStoneCommand(coord, color).Execute(s)
 	assert.NoError(t, err)
+}
 
+func TestCommandAddStone2(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.TwoFalseEyes)
+	assert.NoError(t, err)
+
+	coord := coord.NewCoord(10, 10)
+	color := color.Black
+	frm, err := state.NewAddStoneCommand(coord, color).Execute(s)
+	assert.NoError(t, err)
+	assert.Zero(t, frm)
+}
+
+func TestCommandAddStone3(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
+	assert.NoError(t, err)
+
+	coord := coord.NewCoord(15, 3)
+	color := color.Black
+	frm, err := state.NewAddStoneCommand(coord, color).Execute(s)
+	require.NoError(t, err)
+	require.NotNil(t, frm)
+	assert.Equal(t, frm.Type, state.FullFrame)
 }
 
 func TestCommandPass(t *testing.T) {

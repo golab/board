@@ -28,6 +28,16 @@ func TestDecodeAddStone(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestDecodeAddStoneFail(t *testing.T) {
+	val := make(map[string]any)
+	val["color"] = 1.0
+	val["coords"] = []any{9.0}
+	e := event.NewEvent("add_stone", val)
+
+	_, err := state.DecodeToCommand(e)
+	assert.NotNil(t, err)
+}
+
 func TestDecodePass(t *testing.T) {
 	e := event.NewEvent("pass", 1.0)
 
@@ -43,6 +53,14 @@ func TestDecodeRemoveStone(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestDecodeRemoveStoneFail(t *testing.T) {
+	val := []any{9.0}
+	e := event.NewEvent("remove_stone", val)
+
+	_, err := state.DecodeToCommand(e)
+	assert.NotNil(t, err)
+}
+
 func TestDecodeTriangle(t *testing.T) {
 	val := []any{9.0, 9.0}
 	e := event.NewEvent("triangle", val)
@@ -51,12 +69,28 @@ func TestDecodeTriangle(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestDecodeTriangleFail(t *testing.T) {
+	val := []any{9.0}
+	e := event.NewEvent("triangle", val)
+
+	_, err := state.DecodeToCommand(e)
+	assert.NotNil(t, err)
+}
+
 func TestDecodeSquare(t *testing.T) {
 	val := []any{9.0, 9.0}
 	e := event.NewEvent("square", val)
 
 	_, err := state.DecodeToCommand(e)
 	assert.NoError(t, err)
+}
+
+func TestDecodeSquareFail(t *testing.T) {
+	val := []any{9.0}
+	e := event.NewEvent("square", val)
+
+	_, err := state.DecodeToCommand(e)
+	assert.NotNil(t, err)
 }
 
 func TestDecodeLetter(t *testing.T) {
@@ -69,6 +103,16 @@ func TestDecodeLetter(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestDecodeLetterFail(t *testing.T) {
+	val := make(map[string]any)
+	val["coords"] = []any{9.0}
+	val["letter"] = "A"
+	e := event.NewEvent("letter", val)
+
+	_, err := state.DecodeToCommand(e)
+	assert.NotNil(t, err)
+}
+
 func TestDecodeNumber(t *testing.T) {
 	val := make(map[string]any)
 	val["coords"] = []any{9.0, 9.0}
@@ -77,6 +121,16 @@ func TestDecodeNumber(t *testing.T) {
 
 	_, err := state.DecodeToCommand(e)
 	assert.NoError(t, err)
+}
+
+func TestDecodeNumberFail(t *testing.T) {
+	val := make(map[string]any)
+	val["coords"] = []any{9.0}
+	val["number"] = 1.0
+	e := event.NewEvent("number", val)
+
+	_, err := state.DecodeToCommand(e)
+	assert.NotNil(t, err)
 }
 
 func TestDecodeLabel(t *testing.T) {
@@ -89,12 +143,30 @@ func TestDecodeLabel(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestDecodeLabelFail(t *testing.T) {
+	val := make(map[string]any)
+	val["coords"] = []any{9.0}
+	val["label"] = "O_o"
+	e := event.NewEvent("label", val)
+
+	_, err := state.DecodeToCommand(e)
+	assert.NotNil(t, err)
+}
+
 func TestDecodeRemoveMark(t *testing.T) {
 	val := []any{9.0, 9.0}
 	e := event.NewEvent("remove_mark", val)
 
 	_, err := state.DecodeToCommand(e)
 	assert.NoError(t, err)
+}
+
+func TestDecodeRemoveMarkFail(t *testing.T) {
+	val := []any{9.0}
+	e := event.NewEvent("remove_mark", val)
+
+	_, err := state.DecodeToCommand(e)
+	assert.NotNil(t, err)
 }
 
 func TestDecodeCut(t *testing.T) {
@@ -161,6 +233,14 @@ func TestDecodeGotoCoord(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestDecodeGotoCoordFail(t *testing.T) {
+	val := []any{9.0}
+	e := event.NewEvent("goto_coord", val)
+
+	_, err := state.DecodeToCommand(e)
+	assert.NotNil(t, err)
+}
+
 func TestDecodeComment(t *testing.T) {
 	e := event.NewEvent("comment", "somecomment")
 
@@ -170,6 +250,14 @@ func TestDecodeComment(t *testing.T) {
 
 func TestDecodeDraw(t *testing.T) {
 	val := []any{0.0, 0.0, 1.0, 1.0, "#445566"}
+	e := event.NewEvent("draw", val)
+
+	_, err := state.DecodeToCommand(e)
+	assert.NoError(t, err)
+}
+
+func TestDecodeDrawNil(t *testing.T) {
+	val := []any{nil, nil, 1.0, 1.0, "#445566"}
 	e := event.NewEvent("draw", val)
 
 	_, err := state.DecodeToCommand(e)
@@ -217,6 +305,14 @@ func TestDecodeMarkDead(t *testing.T) {
 
 	_, err := state.DecodeToCommand(e)
 	assert.NoError(t, err)
+}
+
+func TestDecodeMarkDeadFail(t *testing.T) {
+	val := []any{9.0}
+	e := event.NewEvent("markdead", val)
+
+	_, err := state.DecodeToCommand(e)
+	assert.NotNil(t, err)
 }
 
 func TestDecodeFail(t *testing.T) {

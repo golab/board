@@ -243,3 +243,29 @@ func TestOGSConnectorLoop3(t *testing.T) {
 
 	assert.Equal(t, r.calls[2].name, "BroadcastFullFrame")
 }
+
+func TestInitStateToSGF1(t *testing.T) {
+	o := &OGSConnector{}
+	gamedata := map[string]any{
+		"initial_player": "white",
+		"initial_state": map[string]any{
+			"black": "",
+			"white": "",
+		},
+	}
+	o.initStateToSGF(gamedata)
+	assert.Equal(t, o.First, color.White)
+}
+
+func TestInitStateToSGF2(t *testing.T) {
+	o := &OGSConnector{}
+	gamedata := map[string]any{
+		"initial_player": "white",
+		"initial_state": map[string]any{
+			"black": "pdpq",
+			"white": "ddqq",
+		},
+	}
+	o.initStateToSGF(gamedata)
+	assert.Equal(t, o.First, color.White)
+}

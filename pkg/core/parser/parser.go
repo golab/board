@@ -97,11 +97,8 @@ func (p *Parser) isGIB() bool {
 func (p *Parser) isNGF() bool {
 	savedIndex := p.index
 	defer func() { p.index = savedIndex }()
-	_, err := p.parseLine()
-	if err != nil {
-		return false
-	}
-	_, err = p.parseInt()
+	p.parseLine()
+	_, err := p.parseInt()
 	return err == nil
 }
 

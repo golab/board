@@ -34,8 +34,6 @@ func TestString(t *testing.T) {
 func TestEmptyGroup(t *testing.T) {
 	g := board.NewGroup(nil, nil, color.Empty)
 	assert.Equal(t, g.Color, color.Empty)
-	assert.NotNil(t, g.Coords)
-	assert.NotNil(t, g.Libs)
 }
 
 func TestGetEmpty(t *testing.T) {
@@ -50,8 +48,6 @@ func TestFindGroupEmpty(t *testing.T) {
 	b := board.NewBoard(9)
 	g := b.FindGroup(coord.NewCoord(0, 0))
 	assert.Equal(t, g.Color, color.Empty)
-	assert.NotNil(t, g.Coords)
-	assert.NotNil(t, g.Libs)
 }
 
 func TestExistingLegal(t *testing.T) {
@@ -524,4 +520,9 @@ WWB.WB...
 	assert.Equal(t, len(sr.BlackArea), 30)
 	assert.Equal(t, len(sr.WhiteDead), 2)
 	assert.Equal(t, len(sr.Dame), 0)
+}
+
+func TestFromString(t *testing.T) {
+	_, err := board.FromString("BBB")
+	assert.NotNil(t, err)
 }

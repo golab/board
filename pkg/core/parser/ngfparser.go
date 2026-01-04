@@ -30,10 +30,7 @@ type userdata struct {
 }
 
 func (p *NGFParser) parseNickRank() (*userdata, error) {
-	s, err := p.parseLine()
-	if err != nil {
-		return nil, err
-	}
+	s := p.parseLine()
 	tokens := strings.Split(s, " ")
 	if len(tokens) < 2 {
 		return nil, fmt.Errorf("error parsing userdata")
@@ -49,10 +46,7 @@ type move struct {
 }
 
 func (p *NGFParser) parseMove() (*move, error) {
-	line, err := p.parseLine()
-	if err != nil {
-		return nil, err
-	}
+	line := p.parseLine()
 	if len(line) != 9 {
 		return nil, fmt.Errorf("error parsing move")
 	}
@@ -68,12 +62,12 @@ func (p *NGFParser) parseMove() (*move, error) {
 	return &move{key: key, coord: coord}, nil
 }
 
-func (p *NGFParser) parseResult() (string, error) {
-	lineOrig, err := p.parseLine()
-	if err != nil {
-		return "", err
-	}
+func (p *NGFParser) parseResult() string {
+	lineOrig := p.parseLine()
 	line := strings.ToLower(lineOrig)
+	if len(line) < 5 {
+		return ""
+	}
 	var key string
 	var r string
 	if strings.Contains(line[:5], "black") {
@@ -81,7 +75,7 @@ func (p *NGFParser) parseResult() (string, error) {
 	} else if strings.Contains(line[:5], "white") {
 		key = "W"
 	} else {
-		return "", nil
+		return ""
 	}
 	if strings.Contains(line, "time") {
 		r = "T"
@@ -96,7 +90,7 @@ func (p *NGFParser) parseResult() (string, error) {
 		}
 	}
 
-	return key + "+" + r, nil
+	return key + "+" + r
 }
 
 type NGFResult struct {
@@ -116,10 +110,7 @@ type NGFResult struct {
 func (p *NGFParser) Parse() (*NGFResult, error) {
 	p.skipWhitespace()
 
-	title, err := p.parseLine()
-	if err != nil {
-		return nil, err
-	}
+	title := p.parseLine()
 
 	size, err := p.parseInt()
 	if err != nil {
@@ -136,20 +127,14 @@ func (p *NGFParser) Parse() (*NGFResult, error) {
 		return nil, err
 	}
 
-	website, err := p.parseLine()
-	if err != nil {
-		return nil, err
-	}
+	website := p.parseLine()
 
 	handicap, err := p.parseInt()
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = p.parseLine()
-	if err != nil {
-		return nil, err
-	}
+	p.parseLine()
 
 	komiInt, err := p.parseInt()
 	if err != nil {
@@ -157,20 +142,12 @@ func (p *NGFParser) Parse() (*NGFResult, error) {
 	}
 	komi := float64(komiInt) + 0.5
 
-	date, err := p.parseLine()
-	if err != nil {
-		return nil, err
-	}
+	date := p.parseLine()
 
-	_, err = p.parseLine()
-	if err != nil {
-		return nil, err
-	}
+	// ignore next line
+	p.parseLine()
 
-	result, err := p.parseResult()
-	if err != nil {
-		return nil, err
-	}
+	result := p.parseResult()
 
 	numMoves, err := p.parseInt()
 	if err != nil {
@@ -223,7 +200,9 @@ func (r *NGFResult) ToSGFNode() (*SGFNode, error) {
 	}
 	root.AddField("KM", strconv.FormatFloat(r.komi, 'f', -1, 64))
 	root.AddField("DT", r.date)
-	root.AddField("RE", r.result)
+	if r.result != "" {
+		root.AddField("RE", r.result)
+	}
 	root.AddField("GN", r.title)
 	root.AddField("PC", r.website)
 	addHandicap(root, r.handicap)

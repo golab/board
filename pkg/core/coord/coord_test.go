@@ -294,8 +294,14 @@ func TestFromLetters2(t *testing.T) {
 	assert.True(t, c.Equal(coord.NewCoord(2, 2)))
 }
 
-func TestFromInterface(t *testing.T) {
+func TestFromInterface1(t *testing.T) {
 	_, err := coord.FromInterface(0)
+	assert.NotNil(t, err)
+}
+
+func TestFromInterface2(t *testing.T) {
+	v := []any{9.0}
+	_, err := coord.FromInterface(v)
 	assert.NotNil(t, err)
 }
 

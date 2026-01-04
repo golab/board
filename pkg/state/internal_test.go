@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/require"
 	"github.com/golab/board/internal/sgfsamples"
 	"github.com/golab/board/pkg/core/color"
 	"github.com/golab/board/pkg/core/coord"
@@ -208,4 +209,14 @@ func TestSetLocation(t *testing.T) {
 	assert.Equal(t, s.Current().Index, 0)
 	s.SetLocation("0,0,0,0")
 	assert.Equal(t, s.Current().Index, 4)
+}
+
+func TestComputeDiffSetup(t *testing.T) {
+	s, err := FromSGF("(;GM[1]SZ[19]AW[pd][pq])")
+	require.NoError(t, err)
+	diff := s.computeDiffSetup(0)
+	require.Equal(t, len(diff.Add), 1)
+	add := diff.Add[0]
+	assert.Equal(t, add.Color, color.White)
+	assert.Equal(t, len(add.Coords), 2)
 }
