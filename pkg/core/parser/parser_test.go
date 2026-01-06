@@ -213,7 +213,7 @@ func TestAnyParse(t *testing.T) {
 	assert.NotNil(t, root)
 }
 
-func FuzzParser(f *testing.F) {
+func FuzzSGFParser(f *testing.F) {
 	testcases := []string{"(;)", "(;GM[1];B[aa];W[bb];B[];W[ss])", "(;GM[1];C[comment \"with\" quotes])", sgfsamples.Empty, sgfsamples.SimpleTwoBranches, sgfsamples.SimpleWithComment, sgfsamples.SimpleFourMoves, sgfsamples.SimpleEightMoves, sgfsamples.Scoring1, sgfsamples.PassWithTT, sgfsamples.ChineseNames}
 	for _, tc := range testcases {
 		// add to seed corpus
@@ -221,7 +221,35 @@ func FuzzParser(f *testing.F) {
 	}
 
 	f.Fuzz(func(t *testing.T, orig string) {
-		p := parser.New(orig)
+		p := parser.NewSGFParser(orig)
+		// looking for crashes or panics
+		_, _ = p.Parse()
+	})
+}
+
+func FuzzNGFParser(f *testing.F) {
+	testcases := []string{""}
+	for _, tc := range testcases {
+		// add to seed corpus
+		f.Add(tc)
+	}
+
+	f.Fuzz(func(t *testing.T, orig string) {
+		p := parser.NewNGFParser(orig)
+		// looking for crashes or panics
+		_, _ = p.Parse()
+	})
+}
+
+func FuzzGIBParser(f *testing.F) {
+	testcases := []string{""}
+	for _, tc := range testcases {
+		// add to seed corpus
+		f.Add(tc)
+	}
+
+	f.Fuzz(func(t *testing.T, orig string) {
+		p := parser.NewGIBParser(orig)
 		// looking for crashes or panics
 		_, _ = p.Parse()
 	})

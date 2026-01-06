@@ -154,8 +154,13 @@ func (p *NGFParser) Parse() (*NGFResult, error) {
 		return nil, err
 	}
 
-	moves := make([]*move, numMoves)
-	index := 0
+	if numMoves < 0 {
+		return nil, fmt.Errorf("numMoves should be >= 0")
+	}
+	if numMoves > (1 << 16) {
+		return nil, fmt.Errorf("numMoves should be < 2^16")
+	}
+	moves := make([]*move, 0, numMoves)
 	for {
 		c := p.peek(0)
 		if c != 'P' {
@@ -165,12 +170,7 @@ func (p *NGFParser) Parse() (*NGFResult, error) {
 		if err != nil {
 			continue
 		}
-		if index < len(moves) {
-			moves[index] = move
-			index++
-		} else {
-			moves = append(moves, move)
-		}
+		moves = append(moves, move)
 	}
 	ngfResult := &NGFResult{
 		title:     title,

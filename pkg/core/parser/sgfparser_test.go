@@ -28,7 +28,7 @@ var outputTests = []string{
 func TestToSGF(t *testing.T) {
 	for _, input := range outputTests {
 		t.Run(input, func(t *testing.T) {
-			p := New(input)
+			p := NewSGFParser(input)
 			root, err := p.Parse()
 			require.NoError(t, err)
 			output := root.toSGF(true)
@@ -39,7 +39,7 @@ func TestToSGF(t *testing.T) {
 
 func TestPass(t *testing.T) {
 	sgf := "(;GM[1];B[aa];W[bb];B[tt];W[ss])"
-	p := New(sgf)
+	p := NewSGFParser(sgf)
 	root, err := p.Parse()
 	require.NoError(t, err)
 	output := root.toSGF(true)
@@ -50,14 +50,14 @@ func TestPass(t *testing.T) {
 
 func TestParseKey1(t *testing.T) {
 	text := ""
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseKey()
 	assert.NotNil(t, err)
 }
 
 func TestParseKey2(t *testing.T) {
 	text := "ABC[123]"
-	p := New(text)
+	p := NewSGFParser(text)
 	key, err := p.parseKey()
 	require.NoError(t, err)
 	assert.Equal(t, key, "ABC")
@@ -65,7 +65,7 @@ func TestParseKey2(t *testing.T) {
 
 func TestParseKey3(t *testing.T) {
 	text := "Abc[123]"
-	p := New(text)
+	p := NewSGFParser(text)
 	key, err := p.parseKey()
 	require.NoError(t, err)
 	assert.Equal(t, key, "ABC")
@@ -73,14 +73,14 @@ func TestParseKey3(t *testing.T) {
 
 func TestParseKey4(t *testing.T) {
 	text := "FOO"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseKey()
 	assert.NotNil(t, err)
 }
 
 func TestParseField1(t *testing.T) {
 	text := "[123]"
-	p := New(text)
+	p := NewSGFParser(text)
 	field, err := p.parseField()
 	require.NoError(t, err)
 	assert.Equal(t, field, "123")
@@ -88,14 +88,14 @@ func TestParseField1(t *testing.T) {
 
 func TestParseField2(t *testing.T) {
 	text := "123"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseField()
 	assert.NotNil(t, err)
 }
 
 func TestParseField3(t *testing.T) {
 	text := "[123\\]abc]"
-	p := New(text)
+	p := NewSGFParser(text)
 	field, err := p.parseField()
 	require.NoError(t, err)
 	assert.Equal(t, field, "123]abc")
@@ -103,7 +103,7 @@ func TestParseField3(t *testing.T) {
 
 func TestParseField4(t *testing.T) {
 	text := "[abc"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseField()
 	assert.NotNil(t, err)
 }
@@ -120,7 +120,7 @@ func TestParseUntil(t *testing.T) {
 
 	for _, tt := range skipTests {
 		t.Run(tt.input, func(t *testing.T) {
-			p := New(tt.input)
+			p := NewSGFParser(tt.input)
 			s, err := p.parseUntil('(')
 			if tt.hasError {
 				assert.NotNil(t, err)
@@ -133,7 +133,7 @@ func TestParseUntil(t *testing.T) {
 
 func TestParseNode1(t *testing.T) {
 	text := ";FOO[bar][baz][bot];"
-	p := New(text)
+	p := NewSGFParser(text)
 	node, err := p.parseNode()
 	require.NoError(t, err)
 	require.Equal(t, len(node.AllFields()), 1)
@@ -146,7 +146,7 @@ func TestParseNode1(t *testing.T) {
 
 func TestParseNode2(t *testing.T) {
 	text := ";FOO[bar][baz][bot]QUX[quz];"
-	p := New(text)
+	p := NewSGFParser(text)
 	node, err := p.parseNode()
 	require.NoError(t, err)
 	require.Equal(t, len(node.AllFields()), 2)
@@ -162,35 +162,35 @@ func TestParseNode2(t *testing.T) {
 
 func TestParseNode3(t *testing.T) {
 	text := "FOO[bb];"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseNode()
 	assert.NotNil(t, err)
 }
 
 func TestParseNode4(t *testing.T) {
 	text := ";FOO[bb]BAR;"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseNode()
 	assert.NotNil(t, err)
 }
 
 func TestParseNodes1(t *testing.T) {
 	text := ";FOO[bar"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseOneOrMoreNodes()
 	assert.NotNil(t, err)
 }
 
 func TestParseNodes2(t *testing.T) {
 	text := ";FOO[bar];BAZ[bot"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseOneOrMoreNodes()
 	assert.NotNil(t, err)
 }
 
 func TestParseProperty1(t *testing.T) {
 	text := "789[abc]"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseProperty()
 	assert.NotNil(t, err)
 }
@@ -199,7 +199,7 @@ func TestParseProperty2(t *testing.T) {
 	// the SGF spec says keys should be all uppercase
 	// so our parser is a bit permissive
 	text := "foo[abc]"
-	p := New(text)
+	p := NewSGFParser(text)
 	prop, err := p.parseProperty()
 	require.NoError(t, err)
 	assert.Equal(t, prop.key, "FOO")
@@ -210,7 +210,7 @@ func TestParseProperty2(t *testing.T) {
 func TestParseProperty3(t *testing.T) {
 	// perhaps the parser is TOO permissive
 	text := "F O O  [abc]"
-	p := New(text)
+	p := NewSGFParser(text)
 	prop, err := p.parseProperty()
 	require.NoError(t, err)
 	assert.Equal(t, prop.key, "FOO")
@@ -220,42 +220,42 @@ func TestParseProperty3(t *testing.T) {
 
 func TestParseProperty4(t *testing.T) {
 	text := "FOO"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseProperty()
 	assert.NotNil(t, err)
 }
 
 func TestParseProperty5(t *testing.T) {
 	text := "FOO[bar][baz"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseProperty()
 	assert.NotNil(t, err)
 }
 
 func TestOneOrMoreFields1(t *testing.T) {
 	text := "abc"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseOneOrMoreFields("FOO")
 	assert.NotNil(t, err)
 }
 
 func TestOneOrMoreFields2(t *testing.T) {
 	text := "[abc][def"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseOneOrMoreFields("FOO")
 	assert.NotNil(t, err)
 }
 
 func TestParseOneField1(t *testing.T) {
 	text := "[abc"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseOneField("FOO")
 	assert.NotNil(t, err)
 }
 
 func TestParseOneField2(t *testing.T) {
 	text := "[tt]"
-	p := New(text)
+	p := NewSGFParser(text)
 	s, err := p.parseOneField("B")
 	require.NoError(t, err)
 	assert.Equal(t, s, "")
@@ -263,7 +263,7 @@ func TestParseOneField2(t *testing.T) {
 
 func TestParseOneField3(t *testing.T) {
 	text := "[bb]"
-	p := New(text)
+	p := NewSGFParser(text)
 	s, err := p.parseOneField("B")
 	require.NoError(t, err)
 	assert.Equal(t, s, "bb")
@@ -271,35 +271,35 @@ func TestParseOneField3(t *testing.T) {
 
 func TestParseBranch1(t *testing.T) {
 	text := "abc"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseBranch()
 	assert.NotNil(t, err)
 }
 
 func TestParseBranch2(t *testing.T) {
 	text := "("
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseBranch()
 	assert.NotNil(t, err)
 }
 
 func TestParseBranch3(t *testing.T) {
 	text := "(;GM[1](B[aa])(;B[bb]))"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseBranch()
 	assert.NotNil(t, err)
 }
 
 func TestParseBranch4(t *testing.T) {
 	text := "((;GM[1](;B[aa])(;B[bb])))"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseBranch()
 	require.NoError(t, err)
 }
 
 func TestParseBranch5(t *testing.T) {
 	text := "(;[1])"
-	p := New(text)
+	p := NewSGFParser(text)
 	_, err := p.parseBranch()
 	assert.NotNil(t, err)
 }

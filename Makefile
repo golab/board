@@ -40,8 +40,10 @@ lint: setup ## Lint code
 
 test-fuzz: ## Fuzz code
 	@echo "==> test-fuzz"
-	go test ./pkg/core -fuzz=FuzzParser -fuzztime=60s
-	go test ./pkg/twitch/ -fuzz=FuzzParseChat -fuzztime=60s
+	go test ./pkg/core/parser -fuzz=FuzzSGFParser -fuzztime=60s
+	go test ./pkg/core/parser -fuzz=FuzzNGFParser -fuzztime=60s
+	go test ./pkg/core/parser -fuzz=FuzzGIBParser -fuzztime=60s
+	go test ./internal/twitch/ -fuzz=FuzzParseChat -fuzztime=60s
 
 test-pprof:
 	@echo "==> test-pprof"

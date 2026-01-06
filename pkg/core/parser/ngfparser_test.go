@@ -222,3 +222,23 @@ func TestNGFErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestNGFRegression1(t *testing.T) {
+	p := NewNGFParser("0\n0\n0 \n0 \n0\n0\n0\n0\n0\n0\n0\n010")
+	r, err := p.Parse()
+	require.NoError(t, err)
+	_, err = r.ToSGFNode()
+	require.NoError(t, err)
+}
+
+func TestNGFRegression2(t *testing.T) {
+	p := NewNGFParser("0\n0\n0 \n0 \n0\n0\n0\n0\n0\n0\n0\n-1")
+	_, err := p.Parse()
+	require.NotNil(t, err)
+}
+
+func TestNGFRegression3(t *testing.T) {
+	p := NewNGFParser("0\n0\n0 \n0 \n0\n0\n0\n0\n0\n0 \n0\n00030000300330000")
+	_, err := p.Parse()
+	require.NotNil(t, err)
+}
