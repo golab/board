@@ -22,7 +22,7 @@ type BaseParser struct {
 }
 
 func (p *BaseParser) parseLine() string {
-	s, _ := p.parseUntilAny('\n', 0) // nolint: errcheck
+	s, _ := p.parseUntilAny('\n', '\r', 0) // nolint: errcheck
 	p.skipWhitespace()
 	return s
 }

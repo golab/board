@@ -45,7 +45,7 @@ type move struct {
 	coord string
 }
 
-func (p *NGFParser) parseMove() (*move, error) {
+func (p *NGFParser) parseMove(size int) (*move, error) {
 	line := p.parseLine()
 	if len(line) != 9 {
 		return nil, fmt.Errorf("error parsing move")
@@ -55,8 +55,11 @@ func (p *NGFParser) parseMove() (*move, error) {
 	}
 	key := fmt.Sprintf("%c", line[4])
 	coordOrig := strings.ToLower(line[5:7])
-	x := coordOrig[0] - 1
-	y := coordOrig[1] - 1
+	// black magic to fix coordinate orientation
+	// based on extensive research (one sample)
+	// wbaduk displays the board with the "origin" in the bottom right
+	x := byte(size) + 'a' - (coordOrig[0] - 'a')
+	y := byte(size) + 'a' - (coordOrig[1] - 'a')
 	coord := fmt.Sprintf("%c%c", x, y)
 	p.skipWhitespace()
 	return &move{key: key, coord: coord}, nil
@@ -166,7 +169,7 @@ func (p *NGFParser) Parse() (*NGFResult, error) {
 		if c != 'P' {
 			break
 		}
-		move, err := p.parseMove()
+		move, err := p.parseMove(size)
 		if err != nil {
 			continue
 		}

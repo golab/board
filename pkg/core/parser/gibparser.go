@@ -421,7 +421,7 @@ func (p *GIBParser) parseGameLine() (string, error) {
 		if c == 0 {
 			return "", fmt.Errorf("error parsing game line, encountered null")
 		}
-		if c == '\n' {
+		if c == '\n' || c == '\r' {
 			break
 		}
 		sb.WriteRune(c)

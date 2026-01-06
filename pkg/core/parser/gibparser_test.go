@@ -30,6 +30,13 @@ func TestParseGameLine2(t *testing.T) {
 	assert.Equal(t, s, "test line")
 }
 
+func TestParseGameLine3(t *testing.T) {
+	p := NewGIBParser("test line\r\n")
+	s, err := p.parseGameLine()
+	require.NoError(t, err)
+	assert.Equal(t, s, "test line")
+}
+
 func TestParseGame1(t *testing.T) {
 	p := NewGIBParser("\\GS\nline1\nline2\n\\GE\n")
 	lines, err := p.parseGame()

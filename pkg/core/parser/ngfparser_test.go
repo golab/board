@@ -128,23 +128,23 @@ func TestNGFParseResult8(t *testing.T) {
 func TestNGFMove1(t *testing.T) {
 	s := "PMABWQRRQ\n"
 	p := NewNGFParser(s)
-	mv, err := p.parseMove()
+	mv, err := p.parseMove(19)
 	require.NoError(t, err)
 	assert.Equal(t, mv.key, "W")
-	assert.Equal(t, mv.coord, "pq")
+	assert.Equal(t, mv.coord, "dc")
 }
 
 func TestNGFMove2(t *testing.T) {
 	s := "PMABWRRQ\n"
 	p := NewNGFParser(s)
-	_, err := p.parseMove()
+	_, err := p.parseMove(19)
 	assert.NotNil(t, err)
 }
 
 func TestNGFMove3(t *testing.T) {
 	s := "XYABWQRRQ\n"
 	p := NewNGFParser(s)
-	_, err := p.parseMove()
+	_, err := p.parseMove(19)
 	assert.NotNil(t, err)
 }
 
@@ -241,4 +241,11 @@ func TestNGFRegression3(t *testing.T) {
 	p := NewNGFParser("0\n0\n0 \n0 \n0\n0\n0\n0\n0\n0 \n0\n00030000300330000")
 	_, err := p.Parse()
 	require.NotNil(t, err)
+}
+
+func TestNGFRegression4(t *testing.T) {
+	// for carriage returns
+	p := NewNGFParser("Rated game\r\n19\r\nwhite       3D?\r\nblack       3D*\r\nwww.cyberoro.com\r\n0\r\n0\r\n6\r\n20260106 [14:47]\r\n4\r\nWhite wins by  time!\r\n2\r\nPMABBEQQE\r\nPMACWQQQQ")
+	_, err := p.Parse()
+	require.NoError(t, err)
 }
