@@ -15,6 +15,7 @@ import (
 
 	"github.com/golab/board/internal/assert"
 	"github.com/golab/board/internal/require"
+	"github.com/golab/board/internal/sgfsamples"
 )
 
 var outputTests = []string{
@@ -301,5 +302,17 @@ func TestParseBranch5(t *testing.T) {
 	text := "(;[1])"
 	p := NewSGFParser(text)
 	_, err := p.parseBranch()
+	assert.NotNil(t, err)
+}
+
+func TestParseGarbage(t *testing.T) {
+	p := NewSGFParser(sgfsamples.Garbage)
+	_, err := p.Parse()
+	assert.NoError(t, err)
+}
+
+func TestParseGarbageClean(t *testing.T) {
+	p := NewSGFParser(sgfsamples.Garbage)
+	_, err := p.ParseClean()
 	assert.NotNil(t, err)
 }

@@ -294,6 +294,10 @@ func NewGIBParser(text string) *GIBParser {
 	return &GIBParser{&BaseParser{[]rune(text), 0}}
 }
 
+func GIBParserFrom(p *BaseParser) *GIBParser {
+	return &GIBParser{p}
+}
+
 func (p *GIBParser) Parse() (*GIBResult, error) {
 	header, err := p.parseHeader()
 	if err != nil {

@@ -24,6 +24,10 @@ func NewNGFParser(text string) *NGFParser {
 	return &NGFParser{&BaseParser{[]rune(text), 0}}
 }
 
+func NGFParserFrom(p *BaseParser) *NGFParser {
+	return &NGFParser{p}
+}
+
 type userdata struct {
 	nick string
 	rank string

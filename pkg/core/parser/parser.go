@@ -102,13 +102,26 @@ func (p *Parser) isNGF() bool {
 	return err == nil
 }
 
+func (p *Parser) isCleanSGF() bool {
+	return p.peek(0) == '('
+}
+
 func (p *Parser) Parse() (*SGFNode, error) {
 	p.skipWhitespace()
 	savedIndex := p.index
 
+	// check clean sgf first
+	if p.isCleanSGF() {
+		node, err := SGFParserFrom(p.BaseParser).ParseClean()
+		if err == nil {
+			return node, err
+		}
+	}
+	p.index = savedIndex
+
 	// perhaps gib?
 	if p.isGIB() {
-		gibResult, err := NewGIBParser(string(p.text)).Parse()
+		gibResult, err := GIBParserFrom(p.BaseParser).Parse()
 		if err == nil {
 			return gibResult.ToSGFNode()
 		}
@@ -117,15 +130,15 @@ func (p *Parser) Parse() (*SGFNode, error) {
 
 	// perhaps ngf?
 	if p.isNGF() {
-		ngfResult, err := NewNGFParser(string(p.text)).Parse()
+		ngfResult, err := NGFParserFrom(p.BaseParser).Parse()
 		if err == nil {
 			return ngfResult.ToSGFNode()
 		}
 	}
 	p.index = savedIndex
 
-	// now parse sgf
-	return NewSGFParser(string(p.text)).Parse()
+	// lastly try to parse "dirty" sgf (garbage prefix)
+	return SGFParserFrom(p.BaseParser).Parse()
 }
 
 func Merge(sgfs []string) string {

@@ -23,6 +23,10 @@ func NewSGFParser(text string) *SGFParser {
 	return &SGFParser{&BaseParser{[]rune(text), 0}}
 }
 
+func SGFParserFrom(p *BaseParser) *SGFParser {
+	return &SGFParser{p}
+}
+
 func (p *SGFParser) Parse() (*SGFNode, error) {
 	// now parse sgf
 	_, err := p.parseUntil('(')
@@ -35,6 +39,11 @@ func (p *SGFParser) Parse() (*SGFNode, error) {
 		return nil, err
 	}
 	return root, nil
+}
+
+// no garbage
+func (p *SGFParser) ParseClean() (*SGFNode, error) {
+	return p.parseBranch()
 }
 
 func (p *SGFParser) parseKey() (string, error) {
