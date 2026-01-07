@@ -28,6 +28,7 @@ func (h *Hub) Upload(w http.ResponseWriter, r *http.Request) {
 		boardID = core.RandomBoardName()
 	}
 	newroom := h.GetOrCreateRoom(boardID)
+	h.logger.Info("/ext/upload", "room_id", boardID, "url", url)
 
 	var evt event.Event
 	if url != "" {
