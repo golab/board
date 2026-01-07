@@ -20,7 +20,7 @@ import { opposite, Coord, is_touch_device } from '../common.js';
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 // compute luminance
-function hex_to_value(hex) {
+function luminance(hex) {
     let r = parseInt(hex.slice(1,3), 16);
     let g = parseInt(hex.slice(3,5), 16);
     let b = parseInt(hex.slice(5,7), 16);
@@ -29,16 +29,28 @@ function hex_to_value(hex) {
     return Math.round((y / 255) * 100);
 }
 
+const light_primary = "#fdf6e3";
+const light_secondary = "#beb895";
+
 // https://ux.stackexchange.com/questions/107318/formula-for-color-contrast-between-text-and-background
 function hex_to_bw(hex) {
-    let v = hex_to_value(hex);
+    let v = luminance(hex);
     // picked 68 based on the stack overflow page:
     // "If L >= 0.175, then black text is okay."
     if (v < 68) {
-        return "#FFFFFF";
+        return light_primary;
     }
     return "#000000";
 }
+
+function hex_to_bw_secondary(hex) {
+    let v = luminance(hex);
+    if (v < 68) {
+        return light_secondary;
+    }
+    return "#000000";
+}
+
 
 let preloaded = [];
 
@@ -314,7 +326,7 @@ class BoardGraphics {
         this.draw_stones();
     }
 
-    black_or_white(hex, stone) {
+    black_or_white(hex, stone, secondary) {
         // if there's a black stone there
         if (stone == 1) {
             if (!this.state.black_stone_color.startsWith("#")) {
@@ -334,7 +346,13 @@ class BoardGraphics {
         if (hex == "light" || hex == "medium") {
             return "#000000";
         } else if (hex == "dark") {
-            return "#FFFFFF";
+            if (secondary) {
+                return light_secondary;
+            }
+            return light_primary;
+        }
+        if (secondary) {
+            return hex_to_bw_secondary(hex);
         }
         return hex_to_bw(hex);
     }
@@ -435,7 +453,7 @@ class BoardGraphics {
     }
 
     draw_lines() {
-        let color = this.black_or_white(this.state.board_color);
+        let color = this.black_or_white(this.state.board_color, 0, true);
         var i;
 
         let coord_pairs = [];
@@ -756,7 +774,7 @@ class BoardGraphics {
     }
 
     draw_star(x, y) {
-        let color = this.black_or_white(this.state.board_color);
+        let color = this.black_or_white(this.state.board_color, 0, true);
         let radius = this.side/12;
         let star = this.draw_circle(x, y, radius, color, "lines", true, 0);
         star.setAttribute("mask", "url(#lineMask)");
