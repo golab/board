@@ -300,6 +300,16 @@ function appearance_settings(state) {
     appearance_collapse.appendChild(darkmode_element);
     appearance_collapse.appendChild(document.createElement("br"));
 
+    // rotation
+    let rotation_element = document.createElement("div");
+    rotation_element.innerHTML = "Board orientation:&nbsp;"
+    let rotation_icon = document.createElement("i");
+    rotation_icon.classList.add("bi-arrow-counterclockwise");
+    rotation_icon.addEventListener("click", ()=>{state.increment_board_rotation()});
+    rotation_element.appendChild(rotation_icon);
+    appearance_collapse.appendChild(rotation_element);
+    appearance_collapse.appendChild(document.createElement("br"));
+
     // board color
     let board_color_element = document.createElement("div");
 

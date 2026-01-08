@@ -85,6 +85,7 @@ class State {
         this.black_outline_color = "none";
         this.white_outline_color = "none";
         this.shadow = true;
+        this.rotation = 0;
         this.board_graphics = new BoardGraphics(this);
         this.tree_graphics = new TreeGraphics(this);
 
@@ -108,6 +109,16 @@ class State {
 
     set_network_handler(handler) {
         this.network_handler = handler;
+    }
+
+    increment_board_rotation() {
+        this.rotation = (this.rotation+1) % 4;
+        this.board_graphics.clear_board();
+        this.board_graphics.draw_board();
+        this.board_graphics.draw_marks();
+        this.board_graphics.draw_stones();
+        this.board_graphics.clear_pen();
+        this.apply_pen();
     }
 
     set_board_color(color) {
@@ -554,12 +565,6 @@ class State {
 
     apply_pen() {
         for (let [x0, y0, x1, y1, color] of this.pen) {
-            if (x0 == -1.0) {
-                x0 = null;
-            }
-            if (y0 == -1.0) {
-                y0 = null;
-            }
             this.board_graphics.draw_pen(x0, y0, x1, y1, color);
         }
     }

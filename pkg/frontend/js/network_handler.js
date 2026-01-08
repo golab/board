@@ -605,7 +605,15 @@ class NetworkHandler {
         if (event.pointerType == "mouse") {
             if (this.state.mark == "pen" && this.state.ispointerdown) {
                 let [x,y,inside] = this.state.board_graphics.board_relative_coords(event.clientX, event.clientY);
-                let payload = {"event": "draw", "value": [this.state.penx, this.state.peny, x, y, this.state.pen_color]};
+                let x0 = this.state.penx;
+                if (x0 == null) {
+                    x0 = x;
+                }
+                let y0 = this.state.peny;
+                if (y0 == null) {
+                    y0 = y;
+                }
+                let payload = {"event": "draw", "value": [x0, y0, x, y, this.state.pen_color]};
                 this.state.penx = x;
                 this.state.peny = y;
                 this.prepare(payload);
@@ -637,7 +645,16 @@ class NetworkHandler {
                 // for example, disables "pull refresh" on android
                 event.preventDefault();
             }
-            let payload = {"event": "draw", "value": [this.state.penx, this.state.peny, x,y, this.state.pen_color]};
+            let x0 = this.state.penx;
+            if (x0 == null) {
+                x0 = x;
+            }
+            let y0 = this.state.peny;
+            if (y0 == null) {
+                y0 = y;
+            }
+
+            let payload = {"event": "draw", "value": [x0, y0, x,y, this.state.pen_color]};
             this.state.penx = x;
             this.state.peny = y;
 

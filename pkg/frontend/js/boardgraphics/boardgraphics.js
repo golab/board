@@ -226,6 +226,14 @@ class BoardGraphics {
         this.marks = new Map();
     }
 
+    make_id(base, x, y) {
+        if (base == "") {
+            return x.toString() + "-" + y.toString();
+        }
+
+        return base + "-" + x.toString() + "-" + y.toString();
+    }
+
     new_svg(id, z_index) {
         // derp
         if (this.svgs.has(id)) {
@@ -383,13 +391,13 @@ class BoardGraphics {
                 let letter = spl[1];
                 this.draw_backdrop(x,y);
                 let l = this.draw_letter(x, y, letter, hexcolor, svg_id);
-                l.id = "mark-" + x.toString() + "-" + y.toString();
+                l.id = this.make_id("mark", x, y);
             } else if (value.startsWith("number")) {
                 spl = value.split(":");
                 let number = parseInt(spl[1]);
                 this.draw_backdrop(x,y);
                 let n = this.draw_number(x, y, number, hexcolor, svg_id);
-                n.id = "mark-" + x.toString() + "-" + y.toString();
+                n.id = this.make_id("mark", x, y);
             } else if (value == "score-black") {
                 this.draw_black_area(x, y);
             } else if (value == "score-white") {
@@ -421,8 +429,6 @@ class BoardGraphics {
                 this.draw_stone(i, j, color);
             }
         }
-
-        //this.draw_current();
     }
 
     draw_boardbg() {
@@ -548,12 +554,59 @@ class BoardGraphics {
         let review = document.getElementById("review");
 
         for (i=0; i<this.size; i++) {
+            let horiz_x = this.side*i+this.pad*7/8;
+            let horiz_y0 = this.pad/2;
+            let horiz_y1 = this.width+this.pad*7/4;
 
-            // letters along the top
+            let vert_x0 = this.pad/8;
+            let vert_x1 = this.width + this.pad*12/8;
+            let vert_y = this.side*i+this.pad*9/8;
+
+            let top_x = horiz_x;
+            let top_y = horiz_y0;
+            let bot_x = horiz_x;
+            let bot_y = horiz_y1;
+            let left_x = vert_x0;
+            let left_y = vert_y;
+            let right_x = vert_x1;
+            let right_y = vert_y;
+
+            let l = letters[i];
+            let n = this.size-i;
+
+            if (this.state.rotation == 1) {
+                top_x = vert_x1;
+                top_y = vert_y;
+                right_x = horiz_x;
+                right_y = horiz_y1;
+                bot_x = vert_x0;
+                bot_y = vert_y;
+                left_x = horiz_x;
+                left_y = horiz_y0;
+                l = letters[this.size-1-i];
+            } else if (this.state.rotation == 2) {
+                top_y = horiz_y1;
+                bot_y = horiz_y0;
+                left_x = vert_x1;
+                right_x = vert_x0;
+                l = letters[this.size-1-i];
+                n = i+1;
+            } else if (this.state.rotation == 3) {
+                top_x = vert_x0;
+                top_y = vert_y;
+                right_x = horiz_x;
+                right_y = horiz_y0;
+                bot_x = vert_x1;
+                bot_y = vert_y;
+                left_x = horiz_x;
+                left_y = horiz_y1;
+                n = i+1;
+            }
+
             this.svg_draw_text(
-                this.side*i+this.pad*7/8,
-                this.pad/2,
-                letters[i],
+                top_x,
+                top_y,
+                l,
                 color,
                 "coords",
                 font_size,
@@ -561,9 +614,9 @@ class BoardGraphics {
 
             // letters along the bottom
             this.svg_draw_text(
-                this.side*i+this.pad*7/8,
-                this.width+this.pad*7/4,
-                letters[i],
+                bot_x,
+                bot_y,
+                l,
                 color,
                 "coords",
                 font_size,
@@ -571,9 +624,9 @@ class BoardGraphics {
 
             // numbers along the left
             this.svg_draw_text(
-                this.pad/8,
-                this.side*i+this.pad*9/8,
-                (this.size-i).toString(),
+                left_x,
+                left_y,
+                n.toString(),
                 color,
                 "coords",
                 font_size,
@@ -581,9 +634,9 @@ class BoardGraphics {
 
             // numbers along the right
             this.svg_draw_text(
-                this.width + this.pad*12/8,
-                this.side*i+this.pad*9/8,
-                (this.size-i).toString(),
+                right_x,
+                right_y,
+                n.toString(),
                 color,
                 "coords",
                 font_size,
@@ -591,17 +644,20 @@ class BoardGraphics {
         }
     }
 
+    real_coord(x, y) {
+        [x,y] = this.rotate(x, y, (4-this.state.rotation)%4);
+        return [x*this.side + this.pad, y*this.side+this.pad];
+    }
+
     // board graphics
     draw_circle(x, y, r, hexColor, id, filled=true, stroke=3*this.minstroke, strokecolor="#000000") {
-        let real_x = x*this.side + this.pad;
-        let real_y = y*this.side + this.pad;
+        let [real_x, real_y] = this.real_coord(x, y);
         return this.draw_raw_circle(real_x, real_y, r, hexColor, id, filled, stroke, strokecolor);
     }
 
     // board graphics
     draw_gradient_circle(x, y, r, grad_id, id, stroke=3*this.minstroke) {
-        let real_x = x*this.side + this.pad;
-        let real_y = y*this.side + this.pad;
+        let [real_x, real_y] = this.real_coord(x, y);
         return this.draw_raw_gradient_circle(real_x, real_y, r, grad_id, id, stroke);
     }
 
@@ -660,6 +716,7 @@ class BoardGraphics {
     }
 
     _draw_current(x, y, color) {
+        this.clear_svg("current");
         let hexcolor = "";
         if (color == 1) {
             hexcolor = this.black_or_white(this.state.white_stone_color, opposite(color));
@@ -673,8 +730,7 @@ class BoardGraphics {
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
         }
-        let real_x = x*this.side + this.pad;
-        let real_y = y*this.side + this.pad;
+        let [real_x, real_y] = this.real_coord(x, y);
         let r = (this.side/3);
         let s = 2*r*Math.cos(Math.PI/6);
         let a = r/2;
@@ -687,8 +743,7 @@ class BoardGraphics {
         coord_pairs.push([B, C]);
         coord_pairs.push([C, A]);
         let t = this.svg_draw_polyline(coord_pairs, hexColor, id, 3*this.minstroke);
-        t.id = "mark-" + x.toString() + "-" + y.toString();
-
+        t.id = this.make_id("mark", x, y);
     }
 
     draw_ghost_triangle(x, y) {
@@ -725,8 +780,7 @@ class BoardGraphics {
             return;
         }
 
-        let real_x = x*this.side + this.pad;
-        let real_y = y*this.side + this.pad;
+        let [real_x, real_y] = this.real_coord(x, y);
         let r = (this.side/3);
         let b = r;
         let rect = document.createElementNS(this.svgns, "rect");
@@ -747,8 +801,7 @@ class BoardGraphics {
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
         }
-        let real_x = x*this.side + this.pad;
-        let real_y = y*this.side + this.pad;
+        let [real_x, real_y] = this.real_coord(x, y);
         let r = (this.side/3);
         let h = 3*r/2;
         let b = h/2;
@@ -759,7 +812,7 @@ class BoardGraphics {
         let D = [real_x-b, real_y-b];
         let coord_pairs = [[A, B], [B, C], [C, D], [D, A]];
         let s = this.svg_draw_polyline(coord_pairs, hexColor, id, 3*this.minstroke);
-        s.id = "mark-" + x.toString() + "-" + y.toString();
+        s.id = this.make_id("mark", x ,y);
     }
 
     draw_ghost_square(x, y) {
@@ -808,7 +861,7 @@ class BoardGraphics {
     }
 
     clear_stone(x, y) {
-        let id = "stone-" + x.toString() + "-" + y.toString();
+        let id = this.make_id("stone", x, y);
         let stone = document.getElementById(id);
         if (stone == null) {
             return;
@@ -823,9 +876,11 @@ class BoardGraphics {
     }
 
     draw_pen(x0, y0, x1, y1, pen_color) {
-        // TODO: what to do if click and don't move
-        if (x0 == null) {
-            // interestingly, OGS doesn't draw anything in this case either
+        [x0, y0] = this.unit_rotate(x0, y0, (4-this.state.rotation)%4);
+        [x1, y1] = this.unit_rotate(x1, y1, (4-this.state.rotation)%4);
+
+        // this could be vestigial but i'll keep it around just in case
+        if (x0 == null || x1 == null || y0 == null || y1 == null) {
             return;
         }
 
@@ -844,7 +899,7 @@ class BoardGraphics {
     draw_stone(x, y, color) {
         let radius = this.side/2 * 0.98;
         // this could be more idiomatic and universal
-        let id = x.toString() + "-" + y.toString();
+        let id = this.make_id("", x, y);
 
         let svg_id = "stones";
 
@@ -918,28 +973,21 @@ class BoardGraphics {
         stone.setAttributeNS(null, "width", radius*2);
         stone.setAttributeNS(null, "height", radius*2);
 
-        const px = this.side * x + radius;
-        const py = this.side * y + radius;
-        
-        // compute rotation center
-        const cx = px + radius;
-        const cy = py + radius;
+        let [px, py] = this.real_coord(x, y);
         
         // random angle, e.g. between 0 and 360
         const angle = Math.floor(Math.random() * 360);
         
-        stone.setAttributeNS(null, "x", px);
-        stone.setAttributeNS(null, "y", py);
+        stone.setAttributeNS(null, "x", px-radius);
+        stone.setAttributeNS(null, "y", py-radius);
 
         // apply rotation around center
         stone.setAttributeNS(
             null,
             "transform",
-            `rotate(${angle} ${cx} ${cy})`
+            `rotate(${angle} ${px} ${py})`
         );
 
-        //stone.setAttributeNS(null, "x", this.side*x+radius);
-        //stone.setAttributeNS(null, "y", this.side*y+radius);
         svg.appendChild(stone);
         this.draw_highlights(x, y);
         return stone;
@@ -949,7 +997,7 @@ class BoardGraphics {
         let radius = this.side/2 * 0.98;
         let highlight1 = this.draw_gradient_circle(x, y, radius, "highlight_grad", "highlights", 0);
         let highlight2 = this.draw_gradient_circle(x, y, radius, "shell_grad", "highlights", 0);
-        let cls = "highlight-" + x.toString() + "-" + y.toString();
+        let cls = this.make_id("highlight", x, y);
         highlight1.classList.add(cls);
         highlight2.classList.add(cls);
         //let highlights = this.svgs.get("highlights");
@@ -957,8 +1005,7 @@ class BoardGraphics {
 
     draw_cast_shadow(x, y) {
         let radius = this.side/2 * 0.98;
-        let real_x = x*this.side + this.pad;
-        let real_y = y*this.side + this.pad;
+        let [real_x, real_y] = this.real_coord(x, y);
         let offset = 6*this.minstroke;
         let id = "shadows";
         // the shadows are causing some kind of compositing issue on mobile
@@ -971,7 +1018,7 @@ class BoardGraphics {
     }
 
     clear_cast_shadow(x, y) {
-        let id = "shadow-" + x.toString() + "-" + y.toString();
+        let id = this.make_id("shadow", x, y);
         let shadow = document.getElementById(id);
         if (shadow == null) {
             return;
@@ -980,7 +1027,7 @@ class BoardGraphics {
     }
 
     clear_highlight(x, y) {
-        let cls = "highlight-" + x.toString() + "-" + y.toString();
+        let cls = this.make_id("highlight", x, y);
         let highlights = Array.from(document.getElementsByClassName(cls));
         for (let highlight of highlights) {
             highlight.remove();
@@ -1020,8 +1067,7 @@ class BoardGraphics {
     }
 
     draw_cross(x, y, hexColor, id) {
-        let real_x = x*this.side + this.pad;
-        let real_y = y*this.side + this.pad;
+        let [real_x, real_y] = this.real_coord(x, y);
 
         let r = (this.side/4);
         let coord_pairs = [];
@@ -1071,8 +1117,7 @@ class BoardGraphics {
     }
 
     draw_letter(x, y, letter, color, id) {
-        let real_x = x*this.side + this.pad;
-        let real_y = y*this.side + this.pad;
+        let [real_x, real_y] = this.real_coord(x, y);
 
         let font_size = this.width/36;
 
@@ -1083,8 +1128,7 @@ class BoardGraphics {
     }
 
     draw_centered_text(x, y, text, color, id) {
-        let real_x = x*this.side + this.pad;
-        let real_y = y*this.side + this.pad;
+        let [real_x, real_y] = this.real_coord(x, y);
 
         let font_size = this.width/36;
 
@@ -1118,8 +1162,7 @@ class BoardGraphics {
     }
 
     draw_number(x, y, number, color, id) {
-        let real_x = x*this.side + this.pad;
-        let real_y = y*this.side + this.pad;
+        let [real_x, real_y] = this.real_coord(x, y);
 
         let font_size = this.width/36;
 
@@ -1147,7 +1190,7 @@ class BoardGraphics {
     }
 
     remove_mark(x, y) {
-        let id = x.toString() + "-" + y.toString();
+        let id = this.make_id("", x, y);
         let mark = this.state.marks.get(id);
         this.state.marks.delete(id);
         this.clear_mark(x, y);
@@ -1191,8 +1234,7 @@ class BoardGraphics {
         this.draw_backdrop(x, y);
 
         let l = this.draw_letter(x, y, letter, hexcolor, svg_id);
-        let _id = "mark-" + x.toString() + "-" + y.toString();
-        l.id = _id;
+        l.id = this.make_id("mark", x, y);
     }
 
     draw_custom_label(x, y, label) {
@@ -1205,8 +1247,7 @@ class BoardGraphics {
         this.draw_backdrop(x, y);
 
         let l = this.draw_centered_text(x, y, label, hexcolor, svg_id);
-        let _id = "mark-" + x.toString() + "-" + y.toString();
-        l.id = _id;
+        l.id = this.make_id("mark", x, y);
     }
 
     _draw_manual_number(x, y, number) {
@@ -1219,13 +1260,12 @@ class BoardGraphics {
         this.draw_backdrop(x, y);
 
         let n = this.draw_number(x, y, number, hexcolor, svg_id);
-        let _id = "mark-" + x.toString() + "-" + y.toString();
-        n.id = _id;
+        n.id = this.make_id("mark", x, y);
     }
 
 
     clear_mark(x, y) {
-        let id = "mark-" + x.toString() + "-" + y.toString();
+        let id = this.make_id("mark", x, y);
         let mark = document.getElementById(id);
         if (mark == null) {
             return;
@@ -1236,7 +1276,7 @@ class BoardGraphics {
     draw_backdrop(x, y) {
         let id = "backdrop";
         let backdrop = this.draw_circle(x, y, this.side/2, "#222222", id, true, 0);
-        backdrop.id = "backdrop-" + x.toString() + "-" + y.toString();
+        backdrop.id = this.make_id("backdrop", x, y);
 
         let mask = document.getElementById("lineMask");
         let p = mask.parentNode;
@@ -1246,7 +1286,7 @@ class BoardGraphics {
     }
 
     clear_backdrop(x, y) {
-        let id = "backdrop-" + x.toString() + "-" + y.toString();
+        let id = this.make_id("backdrop", x, y);
         let backdrop = document.getElementById(id);
         if (backdrop == null) {
             return;
@@ -1279,13 +1319,41 @@ class BoardGraphics {
         }
     }
 
+    rotate(x, y, r) {
+        if (r == 0) {
+            return [x, y];
+        } else if (r == 1) {
+            return [this.state.size - y -1, x];
+        } else if (r == 2) {
+            return [this.state.size - x - 1, this.state.size - y - 1];
+        } else if (r == 3) {
+            return [y, this.state.size - x - 1];
+        }
+
+    }
+
     pos_to_coord(x, y) {
         let board = this.svgs.get("board");
         let rect = board.getBoundingClientRect();
 
-        let x_coord = (x-rect.left - this.pad)/this.side;
-        let y_coord = (y-rect.top - this.pad)/this.side;
-        return [Math.floor(x_coord+0.5), Math.floor(y_coord+0.5)];
+        let x_real = (x-rect.left - this.pad)/this.side;
+        let y_real = (y-rect.top - this.pad)/this.side;
+        let x_coord = Math.floor(x_real+0.5);
+        let y_coord = Math.floor(y_real+0.5);
+
+        return this.rotate(x_coord, y_coord, this.state.rotation);
+    }
+
+    unit_rotate(x, y, r) {
+        if (r == 0) {
+            return [x, y];
+        } else if (r == 1) {
+            return [1-y, x];
+        } else if (r == 2) {
+            return [1-x, 1-y];
+        } else if (r == 3) {
+            return [y, 1-x];
+        }
     }
 
     board_relative_coords(x, y) {
@@ -1293,8 +1361,12 @@ class BoardGraphics {
         let rect = board.getBoundingClientRect();
         let x_coord = x-rect.left;
         let y_coord = y-rect.top;
+        let x_rel = x_coord/rect.width;
+        let y_rel = y_coord/rect.height;
+        let [x_new, y_new] = this.unit_rotate(x_rel, y_rel, this.state.rotation);
+        
         let inside = x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
-        return [x_coord/rect.width, y_coord/rect.height, inside];
+        return [x_new, y_new, inside];
     }
 
     clear_and_remove() {
@@ -1369,6 +1441,5 @@ class BoardGraphics {
     clear_ghosts() {
         this.clear_svg("ghost");
         this.clear_svg("ghost-marks");
-
     }
 }
