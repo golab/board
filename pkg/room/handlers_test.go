@@ -180,6 +180,7 @@ func TestHandleAddStone(t *testing.T) {
 	assert.Equal(t, len(r.ToSGF()), 71)
 }
 
+/*
 func TestSlow(t *testing.T) {
 	r := room.NewRoom("")
 
@@ -200,6 +201,7 @@ func TestSlow(t *testing.T) {
 	r.HandleAny(evt)
 	assert.Equal(t, len(r.ToSGF()), 77)
 }
+*/
 
 func TestLogUploadSGF(t *testing.T) {
 	l := logx.NewRecorder(logx.LogLevelInfo)

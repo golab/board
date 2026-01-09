@@ -454,6 +454,12 @@ func (r *Room) outsideBuffer(handler EventHandler) EventHandler {
 			diff := now.Sub(r.GetLastActive())
 			if diff.Milliseconds() < r.GetInputBuffer() {
 				// don't do the next handler if too fast
+
+				// still broadcast an empty event
+				bcast := event.EmptyEvent()
+				bcast.SetID(evt.GetID())
+				r.Broadcast(bcast)
+
 				return evt
 			}
 		}
