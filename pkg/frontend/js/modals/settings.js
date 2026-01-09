@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import { new_text_button, prefer_dark_mode, add_tooltip } from '../common.js';
+import { new_icon_button, new_text_button, prefer_dark_mode, add_tooltip } from '../common.js';
 import { add_modal } from './base.js';
 export {
     add_settings_modal,
@@ -303,10 +303,11 @@ function appearance_settings(state) {
     // rotation
     let rotation_element = document.createElement("div");
     rotation_element.innerHTML = "Board orientation:&nbsp;"
-    let rotation_icon = document.createElement("i");
-    rotation_icon.classList.add("bi-arrow-counterclockwise");
-    rotation_icon.addEventListener("click", ()=>{state.increment_board_rotation()});
-    rotation_element.appendChild(rotation_icon);
+    let rotation_button = new_icon_button("bi-arrow-counterclockwise", () => {
+        state.increment_board_rotation();
+    });
+    rotation_button.classList.remove("wide-button");
+    rotation_element.appendChild(rotation_button);
     appearance_collapse.appendChild(rotation_element);
     appearance_collapse.appendChild(document.createElement("br"));
 
