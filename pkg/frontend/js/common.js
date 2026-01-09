@@ -24,6 +24,7 @@ export {
     get_dims,
     htmlencode,
     is_touch_device,
+    uuid,
 }
 
 class Coord {
@@ -162,4 +163,32 @@ function htmlencode(str) {
     let div = document.createElement("div");
     div.textContent = str || "";
     return div.innerHTML;
+}
+
+function uuid() {
+    if (window.crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    return fallback_uuid();
+}
+
+function fallback_uuid() {
+    let tokens = [];
+    tokens.push(random_chars(8));
+    tokens.push(random_chars(4));
+    tokens.push(random_chars(4));
+    tokens.push(random_chars(4));
+    tokens.push(random_chars(12));
+    return tokens.join("-");
+}
+
+function random_chars(n) {
+    let chars = "abcdef0123456789";
+    let l = chars.length;
+
+    let s = "";
+    for (let i = 0; i < 8; i++) {
+        s += chars.charAt(Math.floor(Math.random() * l));
+    }
+    return s;
 }

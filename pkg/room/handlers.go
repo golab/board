@@ -75,7 +75,7 @@ func (r *Room) initHandlers() {
 			r.handleEvent,
 			r.outsideBuffer,
 			r.authorized,
-			r.slow,
+			//r.slow,
 			r.broadcastAfter,
 			r.setTimeAfter),
 		"graft": chain(
@@ -423,7 +423,9 @@ func (r *Room) authorized(handler EventHandler) EventHandler {
 }
 
 // this one is to keep the same user from submitting multiple events too quickly
-func (r *Room) slow(handler EventHandler) EventHandler {
+// i've moved safeguards to the frontend, and this function actually cannot be used
+// at the same time as the frontend safeguard, so this may be obsolete now
+func (r *Room) slow(handler EventHandler) EventHandler { // nolint:unused
 	return func(evt event.Event) event.Event {
 		id := evt.User()
 		// check multiple events from the same user in a narrow window (50 ms)
