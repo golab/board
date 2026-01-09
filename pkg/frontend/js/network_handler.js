@@ -57,6 +57,8 @@ class NetworkHandler {
 
         this.add_listeners();
 
+        this.blocked = null;
+
         // in a var for now so we can do exponential backoff in the future
         this.backoff = 0;
 
@@ -160,6 +162,10 @@ class NetworkHandler {
 
     fromserver(payload) {
         let evt = payload["event"];
+        let id = payload["eventid"];
+        if (this.blocked == id) {
+            this.blocked = null;
+        }
         var coords;
         var index;
         var value;
@@ -434,6 +440,19 @@ class NetworkHandler {
     }
 
     send(payload) {
+        // blocking logic
+        if (this.blocked != null) {
+            return;
+        }
+        let uuid = crypto.randomUUID();
+        payload["eventid"] = uuid;
+
+        // only block under certain circumstances
+        let type = payload["event"];
+        if (type == "add_stone" || type == "goto_grid") {
+            this.blocked = uuid;
+        }
+
         //console.log("sending:", payload);
         
         // first create the json payload
@@ -450,7 +469,6 @@ class NetworkHandler {
         // then send the payload
         this.socket.send(json_payload);
     }
-
 
     onmessage(event) {
         //console.log("receiving:", event.data);

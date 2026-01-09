@@ -21,7 +21,7 @@ type Event interface {
 	Type() string
 	Value() any
 	User() string
-	ID() string
+	GetID() string
 	SetType(string)
 	SetValue(any)
 	SetUser(string)
@@ -34,7 +34,7 @@ type DefaultEvent struct {
 	EventType   string `json:"event"`
 	EventValue  any    `json:"value"`
 	EventUserID string `json:"userid"`
-	id          string
+	EventID     string `json:"eventid"`
 }
 
 func (e *DefaultEvent) Type() string {
@@ -61,12 +61,12 @@ func (e *DefaultEvent) SetUser(id string) {
 	e.EventUserID = id
 }
 
-func (e *DefaultEvent) ID() string {
-	return e.id
+func (e *DefaultEvent) GetID() string {
+	return e.EventID
 }
 
 func (e *DefaultEvent) SetID(id string) {
-	e.id = id
+	e.EventID = id
 }
 
 func NewEvent(t string, value any) Event {
@@ -76,7 +76,7 @@ func NewEvent(t string, value any) Event {
 	return &DefaultEvent{
 		EventType:  t,
 		EventValue: value,
-		id:         id,
+		EventID:    id,
 	}
 }
 
@@ -100,13 +100,14 @@ func NopEvent() Event {
 }
 
 func EventFromJSON(data []byte) (Event, error) {
-	r, _ := uuid.NewRandom()
-	id := r.String()
 
 	evt := &DefaultEvent{}
 	if err := json.Unmarshal(data, evt); err != nil {
 		return nil, err
 	}
-	evt.id = id
+	if evt.EventID == "" {
+		r, _ := uuid.NewRandom()
+		evt.EventID = r.String()
+	}
 	return evt, nil
 }

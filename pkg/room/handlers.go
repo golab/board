@@ -125,7 +125,7 @@ func (r *Room) handleUploadSGF(evt event.Event) event.Event {
 	defer func() {
 		if bcast != nil {
 			bcast.SetUser(evt.User())
-			bcast.SetID(evt.ID())
+			bcast.SetID(evt.GetID())
 		}
 	}()
 
@@ -185,7 +185,7 @@ func (r *Room) handleRequestSGF(evt event.Event) event.Event {
 	defer func() {
 		if bcast != nil {
 			bcast.SetUser(evt.User())
-			bcast.SetID(evt.ID())
+			bcast.SetID(evt.GetID())
 		}
 	}()
 
@@ -336,7 +336,7 @@ func (r *Room) handleEvent(evt event.Event) event.Event {
 	defer func() {
 		if bcast != nil {
 			bcast.SetUser(evt.User())
-			bcast.SetID(evt.ID())
+			bcast.SetID(evt.GetID())
 		}
 	}()
 
@@ -465,7 +465,7 @@ func (r *Room) logEventType(handler EventHandler) EventHandler {
 			r.logger.Info(
 				"handling event with type",
 				"event_type", evt.Type(),
-				"event_id", evt.ID(),
+				"event_id", evt.GetID(),
 				"event_channel", evt.User(),
 			)
 
@@ -480,7 +480,7 @@ func (r *Room) logEventValue(handler EventHandler) EventHandler {
 			r.logger.Info(
 				"handling event with value",
 				"event_value", evt.Value().(string),
-				"event_id", evt.ID(),
+				"event_id", evt.GetID(),
 				"event_channel", evt.User(),
 			)
 		}
@@ -498,13 +498,13 @@ func (r *Room) logAfter(handler EventHandler) EventHandler {
 				r.logger.Error(
 					"error while handling",
 					"error", evt.Value().(string),
-					"event_id", evt.ID(),
+					"event_id", evt.GetID(),
 					"event_channel", evt.User(),
 				)
 			} else {
 				current := r.Current()
 				args := []any{
-					"event_id", evt.ID(),
+					"event_id", evt.GetID(),
 					"event_channel", evt.User(),
 				}
 				for _, field := range current.AllFields() {
