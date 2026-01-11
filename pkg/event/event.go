@@ -21,7 +21,7 @@ type Event interface {
 	Type() string
 	Value() any
 	User() string
-	GetID() string
+	ID() string
 	SetType(string)
 	SetValue(any)
 	SetUser(string)
@@ -61,7 +61,7 @@ func (e *DefaultEvent) SetUser(id string) {
 	e.EventUserID = id
 }
 
-func (e *DefaultEvent) GetID() string {
+func (e *DefaultEvent) ID() string {
 	return e.EventID
 }
 

@@ -180,8 +180,7 @@ func TestHandleAddStone(t *testing.T) {
 	assert.Equal(t, len(r.ToSGF()), 71)
 }
 
-/*
-func TestSlow(t *testing.T) {
+func TestOutsideBuffer(t *testing.T) {
 	r := room.NewRoom("")
 
 	val := make(map[string]any)
@@ -193,6 +192,8 @@ func TestSlow(t *testing.T) {
 
 	// adding a stone with the buffers in place shouldn't do anything
 	val["coords"] = []any{10.0, 10.0}
+	evt = event.NewEvent("add_stone", val)
+	evt.SetUser("user2")
 	r.HandleAny(evt)
 	assert.Equal(t, len(r.ToSGF()), 71)
 
@@ -201,7 +202,6 @@ func TestSlow(t *testing.T) {
 	r.HandleAny(evt)
 	assert.Equal(t, len(r.ToSGF()), 77)
 }
-*/
 
 func TestLogUploadSGF(t *testing.T) {
 	l := logx.NewRecorder(logx.LogLevelInfo)

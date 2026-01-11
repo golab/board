@@ -75,7 +75,6 @@ func (r *Room) initHandlers() {
 			r.handleEvent,
 			r.outsideBuffer,
 			r.authorized,
-			//r.slow,
 			r.broadcastAfter,
 			r.setTimeAfter),
 		"graft": chain(
@@ -125,7 +124,7 @@ func (r *Room) handleUploadSGF(evt event.Event) event.Event {
 	defer func() {
 		if bcast != nil {
 			bcast.SetUser(evt.User())
-			bcast.SetID(evt.GetID())
+			bcast.SetID(evt.ID())
 		}
 	}()
 
@@ -185,7 +184,7 @@ func (r *Room) handleRequestSGF(evt event.Event) event.Event {
 	defer func() {
 		if bcast != nil {
 			bcast.SetUser(evt.User())
-			bcast.SetID(evt.GetID())
+			bcast.SetID(evt.ID())
 		}
 	}()
 
@@ -336,7 +335,7 @@ func (r *Room) handleEvent(evt event.Event) event.Event {
 	defer func() {
 		if bcast != nil {
 			bcast.SetUser(evt.User())
-			bcast.SetID(evt.GetID())
+			bcast.SetID(evt.ID())
 		}
 	}()
 
@@ -422,28 +421,6 @@ func (r *Room) authorized(handler EventHandler) EventHandler {
 	}
 }
 
-// this one is to keep the same user from submitting multiple events too quickly
-// i've moved safeguards to the frontend, and this function actually cannot be used
-// at the same time as the frontend safeguard, so this may be obsolete now
-func (r *Room) slow(handler EventHandler) EventHandler { // nolint:unused
-	return func(evt event.Event) event.Event {
-		id := evt.User()
-		// check multiple events from the same user in a narrow window (50 ms)
-		now := time.Now()
-		if last, ok := r.GetLastMessages(id); !ok {
-			r.SetLastMessages(id, &now)
-		} else {
-			diff := now.Sub(last)
-			r.SetLastMessages(id, &now)
-			if diff.Milliseconds() < r.GetUserBuffer() {
-				// don't do the next handler if too fast
-				return evt
-			}
-		}
-		return handler(evt)
-	}
-}
-
 // this one is to keep people from tripping over each other
 func (r *Room) outsideBuffer(handler EventHandler) EventHandler {
 	return func(evt event.Event) event.Event {
@@ -457,7 +434,7 @@ func (r *Room) outsideBuffer(handler EventHandler) EventHandler {
 
 				// still broadcast an empty event
 				bcast := event.EmptyEvent()
-				bcast.SetID(evt.GetID())
+				bcast.SetID(evt.ID())
 				r.Broadcast(bcast)
 
 				return evt
@@ -473,7 +450,7 @@ func (r *Room) logEventType(handler EventHandler) EventHandler {
 			r.logger.Info(
 				"handling event with type",
 				"event_type", evt.Type(),
-				"event_id", evt.GetID(),
+				"event_id", evt.ID(),
 				"event_channel", evt.User(),
 			)
 
@@ -488,7 +465,7 @@ func (r *Room) logEventValue(handler EventHandler) EventHandler {
 			r.logger.Info(
 				"handling event with value",
 				"event_value", evt.Value().(string),
-				"event_id", evt.GetID(),
+				"event_id", evt.ID(),
 				"event_channel", evt.User(),
 			)
 		}
@@ -506,13 +483,13 @@ func (r *Room) logAfter(handler EventHandler) EventHandler {
 				r.logger.Error(
 					"error while handling",
 					"error", evt.Value().(string),
-					"event_id", evt.GetID(),
+					"event_id", evt.ID(),
 					"event_channel", evt.User(),
 				)
 			} else {
 				current := r.Current()
 				args := []any{
-					"event_id", evt.GetID(),
+					"event_id", evt.ID(),
 					"event_channel", evt.User(),
 				}
 				for _, field := range current.AllFields() {
