@@ -11,12 +11,47 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package hub
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/golab/board/pkg/event"
 )
 
-func ApiV1Router() http.Handler {
+func (h *Hub) handler(w http.ResponseWriter, r *http.Request) {
+	board := chi.URLParam(r, "board")
+	room := h.GetOrCreateRoom(board)
+
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		msg := fmt.Sprintf(`{"success": false, "error": "%s"}`, err.Error())
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+	evt, err := event.EventFromJSON(data)
+	if err != nil {
+		msg := fmt.Sprintf(`{"success": false, "error": "%s"}`, err.Error())
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+	evt = room.HandleAny(evt)
+	if evt.Type() == "error" {
+		v, ok := evt.Value().(string)
+		if !ok {
+			v = "unknown error occurred"
+		}
+		msg := fmt.Sprintf(`{"success": false, "error": "%s"}`, v)
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+	data, _ = json.Marshal(evt)
+	fmt.Fprintf(w, `{"success": true, "output": %s}`, string(data)) // nolint:errcheck
+}
+
+func (h *Hub) ApiV1Router() http.Handler {
 	r := chi.NewRouter()
+	r.Post("/room/{board}", h.handler)
 	return r
 }

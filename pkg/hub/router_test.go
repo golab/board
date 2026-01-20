@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package hub_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -244,5 +245,68 @@ func TestWebRouterEndpoints(t *testing.T) {
 			code := getStatusCode(tt.method, tt.endpoint)
 			assert.Equal(t, code, tt.code)
 		})
+	}
+}
+
+func TestApiV1Router1(t *testing.T) {
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	h, err := hub.NewHub(config.Test(), logger)
+	assert.NoError(t, err)
+	r := chi.NewRouter()
+	r.Mount("/api/v1", h.ApiV1Router())
+
+	payload := []byte(`{"event": "add_stone", "value": {"coords": [0, 0], "color": 1}}`)
+	req := httptest.NewRequest("POST", "/api/v1/room/abc", bytes.NewBuffer(payload))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	body, err := io.ReadAll(rec.Body)
+	require.NoError(t, err)
+
+	output := struct {
+		Success bool               `json:"success"`
+		Event   event.DefaultEvent `json:"output"`
+	}{}
+
+	err = json.Unmarshal(body, &output)
+	require.NoError(t, err)
+	evt := output.Event
+
+	assert.Equal(t, evt.Type(), "frame")
+}
+
+func TestApiV1Router2(t *testing.T) {
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	h, err := hub.NewHub(config.Test(), logger)
+	assert.NoError(t, err)
+	r := chi.NewRouter()
+	r.Mount("/api/v1", h.ApiV1Router())
+
+	for i := 0; i < 2; i++ {
+		payload := []byte(`{"event": "add_stone", "value": {"coords": [0, 0], "color": 1}}`)
+		req := httptest.NewRequest("POST", "/api/v1/room/abc", bytes.NewBuffer(payload))
+		rec := httptest.NewRecorder()
+		r.ServeHTTP(rec, req)
+
+		body, err := io.ReadAll(rec.Body)
+		require.NoError(t, err)
+
+		output := struct {
+			Success bool               `json:"success"`
+			Event   event.DefaultEvent `json:"output"`
+		}{}
+
+		err = json.Unmarshal(body, &output)
+		require.NoError(t, err)
+		evt := output.Event
+
+		// trying to add a stone on a coordinate where there's already a stone
+		// is illegal, so instead of getting a "frame" event back, we just
+		// get back the original event
+		if i == 0 {
+			assert.Equal(t, evt.Type(), "frame")
+		} else {
+			assert.Equal(t, evt.Type(), "add_stone")
+		}
 	}
 }

@@ -71,12 +71,6 @@ func (r *Room) initHandlers() {
 			r.broadcastConnectedUsersAfter,
 			r.broadcastAfter,
 			r.broadcastFullFrameAfter),
-		"add_stone": chain(
-			r.handleEvent,
-			r.outsideBuffer,
-			r.authorized,
-			r.broadcastAfter,
-			r.setTimeAfter),
 		"graft": chain(
 			r.handleEvent,
 			r.broadcastFullFrameAfter),
@@ -98,7 +92,10 @@ func (r *Room) handleIsProtected(evt event.Event) event.Event {
 }
 
 func (r *Room) handleCheckPassword(evt event.Event) event.Event {
-	p := evt.Value().(string)
+	p, ok := evt.Value().(string)
+	if !ok {
+		p = ""
+	}
 
 	password := r.GetPassword()
 
@@ -188,7 +185,10 @@ func (r *Room) handleRequestSGF(evt event.Event) event.Event {
 		}
 	}()
 
-	url := evt.Value().(string)
+	url, ok := evt.Value().(string)
+	if !ok {
+		url = ""
+	}
 
 	if fetch.IsOGS(url) {
 
@@ -245,7 +245,7 @@ func (r *Room) handleRequestSGF(evt event.Event) event.Event {
 		}
 	}
 
-	data, err := r.GetFetcher().ApprovedFetch(evt.Value().(string))
+	data, err := r.GetFetcher().ApprovedFetch(url)
 	if err != nil {
 		bcast = event.ErrorEvent(err.Error())
 	} else if data == "Permission denied" {
@@ -272,7 +272,10 @@ func (r *Room) handleTrash(evt event.Event) event.Event {
 }
 
 func (r *Room) handleUpdateNickname(evt event.Event) event.Event {
-	nickname := evt.Value().(string)
+	nickname, ok := evt.Value().(string)
+	if !ok {
+		nickname = ""
+	}
 	r.SetNick(evt.User(), nickname)
 	userEvt := event.NewEvent("connected_users", r.Nicks())
 	userEvt.SetUser(evt.User())

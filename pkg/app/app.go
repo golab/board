@@ -48,7 +48,7 @@ func New(cfg *config.Config, logger logx.Logger) (*App, error) {
 
 	// api routers
 	r.Mount("/api", h.ApiRouter(cfg.Version))
-	r.Mount("/api/v1", hub.ApiV1Router())
+	r.Mount("/api/v1", h.ApiV1Router())
 
 	// see server package for routes
 	r.Mount("/apps/twitch", h.TwitchRouter())
