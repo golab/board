@@ -203,7 +203,7 @@ func (p *SGFParser) parseNode() (*SGFNode, error) {
 			return nil, err
 		}
 
-		n.SetField(prop.key, prop.values)
+		n.AppendField(prop.key, prop.values)
 
 		p.skipWhitespace()
 	}

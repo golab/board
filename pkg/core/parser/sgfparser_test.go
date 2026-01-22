@@ -175,6 +175,19 @@ func TestParseNode4(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestParseNode5(t *testing.T) {
+	text := ";FOO[bar]AW[cr]AW[br]AW[dr];"
+	p := NewSGFParser(text)
+	node, err := p.parseNode()
+	require.NoError(t, err)
+	require.Equal(t, len(node.AllFields()), 2)
+	g := node.GetField("AW")
+	require.Equal(t, len(g), 3)
+	assert.Equal(t, g[0], "cr")
+	assert.Equal(t, g[1], "br")
+	assert.Equal(t, g[2], "dr")
+}
+
 func TestParseNodes1(t *testing.T) {
 	text := ";FOO[bar"
 	p := NewSGFParser(text)

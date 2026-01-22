@@ -173,3 +173,27 @@ func TestHasField(t *testing.T) {
 	assert.True(t, f.HasField("foo"))
 	assert.False(t, f.HasField("boo"))
 }
+
+func TestAppendField1(t *testing.T) {
+	f := &fields.Fields{}
+	f.SetField("foo", []string{"bar"})
+	g := f.GetField("foo")
+	require.Equal(t, len(g), 1)
+	assert.Equal(t, g[0], "bar")
+	f.AppendField("foo", []string{"baz", "bot"})
+	g = f.GetField("foo")
+	require.Equal(t, len(g), 3)
+	assert.Equal(t, g[0], "bar")
+	assert.Equal(t, g[1], "baz")
+	assert.Equal(t, g[2], "bot")
+}
+
+func TestAppendField2(t *testing.T) {
+	f := &fields.Fields{}
+	f.AppendField("foo", []string{"bar", "baz", "bot"})
+	g := f.GetField("foo")
+	require.Equal(t, len(g), 3)
+	assert.Equal(t, g[0], "bar")
+	assert.Equal(t, g[1], "baz")
+	assert.Equal(t, g[2], "bot")
+}

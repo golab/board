@@ -129,3 +129,13 @@ func (f *Fields) SetField(key string, values []string) {
 	}
 	f.fields = append(f.fields, Field{Key: key, Values: values})
 }
+
+func (f *Fields) AppendField(key string, values []string) {
+	for i := range f.fields {
+		if f.fields[i].Key == key {
+			f.fields[i].Values = append(f.fields[i].Values, values...)
+			return
+		}
+	}
+	f.fields = append(f.fields, Field{Key: key, Values: values})
+}

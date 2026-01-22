@@ -220,7 +220,10 @@ func FromSGF(data string) (*State, error) {
 			if IsPass(node) {
 				state.addPassNode(Color(node), node.Fields, index)
 			} else if IsMove(node) {
-				state.addNode(Coord(node), Color(node), node.Fields, index, true)
+				crd := Coord(node)
+				if crd != nil {
+					state.addNode(crd, Color(node), node.Fields, index, true)
+				}
 			} else {
 				state.addFieldNode(node.Fields, index)
 			}
