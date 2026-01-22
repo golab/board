@@ -199,6 +199,19 @@ func (c *Coord) Equal(other *Coord) bool {
 	return c.X == other.X && c.Y == other.Y
 }
 
+func (c *Coord) Valid(size int) bool {
+	if c == nil {
+		return true
+	}
+	if c.X < 0 || c.Y < 0 {
+		return false
+	}
+	if c.X >= size || c.Y >= size {
+		return false
+	}
+	return true
+}
+
 // Copy copies the Coord
 func (c *Coord) Copy() *Coord {
 	if c == nil {
@@ -209,10 +222,10 @@ func (c *Coord) Copy() *Coord {
 
 // FromLetters takes a pair of letters and turns it into a Coord
 func FromLetters(s string) *Coord {
-	if len(s) != 2 {
+	t := strings.ToLower(s)
+	if len(t) != 2 {
 		return nil
 	}
-	t := strings.ToLower(s)
 	return NewCoord(int(t[0]-97), int(t[1]-97))
 }
 

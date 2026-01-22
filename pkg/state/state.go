@@ -178,6 +178,9 @@ func FromSGF(data string) (*State, error) {
 	if err != nil {
 		return nil, err
 	}
+	if root == nil {
+		return nil, fmt.Errorf("parsing didn't produce a valid tree")
+	}
 
 	var size int64 = 19
 	sizeField := root.GetField("SZ")
@@ -190,6 +193,9 @@ func FromSGF(data string) (*State, error) {
 			return nil, err
 		}
 	}
+	if int(size) > 19 {
+		return nil, fmt.Errorf("unsupported board size")
+	}
 
 	state := NewEmptyState(int(size))
 	stack := []any{root}
@@ -198,9 +204,15 @@ func FromSGF(data string) (*State, error) {
 		cur := stack[i]
 		stack = stack[:i]
 		if _, ok := cur.(string); ok {
+			if state.current == nil {
+				return nil, fmt.Errorf("parsing didn't produce a valid tree")
+			}
 			state.left()
 		} else {
 			node := cur.(*parser.SGFNode)
+			if node == nil {
+				return nil, fmt.Errorf("parsing didn't produce a valid tree")
+			}
 
 			index := -1
 			indexes := node.GetField("IX")
@@ -212,16 +224,16 @@ func FromSGF(data string) (*State, error) {
 				}
 			}
 
+			crd := Coord(node)
 			// refuse to process sgfs with a suicide move
-			if Coord(node) != nil && !state.board.Legal(Coord(node), Color(node)) {
+			if crd != nil && crd.Valid(int(size)) && !state.board.Legal(Coord(node), Color(node)) {
 				return nil, fmt.Errorf("suicide moves are not currently supported")
 			}
 
 			if IsPass(node) {
 				state.addPassNode(Color(node), node.Fields, index)
 			} else if IsMove(node) {
-				crd := Coord(node)
-				if crd != nil {
+				if crd != nil && crd.Valid(int(size)) {
 					state.addNode(crd, Color(node), node.Fields, index, true)
 				}
 			} else {
@@ -234,6 +246,11 @@ func FromSGF(data string) (*State, error) {
 			// TODO: this might be wrong in some cases
 			state.head = state.current
 		}
+	}
+	// it's possible (like with a mangled sgf) that parsing can succeed
+	// but not provide us with a valid sgf tree
+	if state.current == nil {
+		return nil, fmt.Errorf("parsing didn't produce a valid tree")
 	}
 	state.rewind()
 	state.resetPrefs()

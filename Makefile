@@ -44,6 +44,7 @@ test-fuzz: ## Fuzz code
 	go test ./pkg/core/parser -fuzz=FuzzNGFParser -fuzztime=60s
 	go test ./pkg/core/parser -fuzz=FuzzGIBParser -fuzztime=60s
 	go test ./internal/twitch/ -fuzz=FuzzParseChat -fuzztime=60s
+	go test ./pkg/state/ -fuzz=FuzzFromSGF -fuzztime=60s
 
 test-pprof:
 	@echo "==> test-pprof"

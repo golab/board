@@ -140,7 +140,9 @@ func (b *Board) Get(c *coord.Coord) color.Color {
 
 func (b *Board) SetMany(cs []*coord.Coord, col color.Color) {
 	for _, c := range cs {
-		b.Set(c, col)
+		if c.Valid(b.Size) {
+			b.Set(c, col)
+		}
 	}
 }
 

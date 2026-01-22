@@ -180,3 +180,16 @@ func TestAddStonesNoChange(t *testing.T) {
 	s.AddStones(stones)
 	assert.Equal(t, s.GetNextIndex(), 5)
 }
+
+func FuzzFromSGF(f *testing.F) {
+	testcases := []string{"(;)", "(;GM[1];B[b,c])", "(;GM[1]SZ[9];B[ss])", "(;GM[1];B[aa];W[bb];B[];W[ss])", "(;GM[1];C[comment \"with\" quotes])", sgfsamples.Empty, sgfsamples.SimpleTwoBranches, sgfsamples.SimpleWithComment, sgfsamples.SimpleFourMoves, sgfsamples.SimpleEightMoves, sgfsamples.Scoring1, sgfsamples.PassWithTT, sgfsamples.ChineseNames}
+	for _, tc := range testcases {
+		// add to seed corpus
+		f.Add(tc)
+	}
+
+	f.Fuzz(func(t *testing.T, orig string) {
+		// looking for crashes or panics
+		_, _ = state.FromSGF(orig)
+	})
+}
