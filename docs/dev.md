@@ -2,7 +2,7 @@
 
 For additional documentation, see:
 - The [design doc](design.md)
-- the [API v1 spec](apiv1.md)
+- The [API v1 spec](apiv1.md)
 
 ## Quickstart
 

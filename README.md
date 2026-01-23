@@ -10,6 +10,7 @@
 [![Main](https://github.com/golab/board/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/golab/board/actions/workflows/main.yml)
 [![Test](https://github.com/golab/board/actions/workflows/test.yml/badge.svg)](https://github.com/golab/board/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/golab/board/blob/main/LICENSE)
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/username/repo)
 [![Discord](https://img.shields.io/badge/discord-5865F2?logo=discord&logoColor=white)](https://discord.gg/y4wGZyed3e)
 
 A free and open-source multi-user go board.
