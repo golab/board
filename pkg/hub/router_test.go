@@ -272,6 +272,7 @@ func TestApiV1Router1(t *testing.T) {
 	require.NoError(t, err)
 	evt := output.Event
 
+	assert.Equal(t, output.Success, true)
 	assert.Equal(t, evt.Type(), "frame")
 }
 
@@ -299,6 +300,7 @@ func TestApiV1Router2(t *testing.T) {
 		err = json.Unmarshal(body, &output)
 		require.NoError(t, err)
 		evt := output.Event
+		assert.Equal(t, output.Success, true)
 
 		// trying to add a stone on a coordinate where there's already a stone
 		// is illegal, so instead of getting a "frame" event back, we just
@@ -309,4 +311,56 @@ func TestApiV1Router2(t *testing.T) {
 			assert.Equal(t, evt.Type(), "add_stone")
 		}
 	}
+}
+
+func TestApiV1Router3(t *testing.T) {
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	h, err := hub.NewHub(config.Test(), logger)
+	assert.NoError(t, err)
+	r := chi.NewRouter()
+	r.Mount("/api/v1", h.ApiV1Router())
+
+	payload := []byte(`{"invalidjson`)
+	req := httptest.NewRequest("POST", "/api/v1/room/abc", bytes.NewBuffer(payload))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	body, err := io.ReadAll(rec.Body)
+	require.NoError(t, err)
+
+	output := struct {
+		Success bool               `json:"success"`
+		Event   event.DefaultEvent `json:"output"`
+	}{}
+
+	err = json.Unmarshal(body, &output)
+	require.NoError(t, err)
+
+	assert.Equal(t, output.Success, false)
+}
+
+func TestApiV1Router4(t *testing.T) {
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	h, err := hub.NewHub(config.Test(), logger)
+	assert.NoError(t, err)
+	r := chi.NewRouter()
+	r.Mount("/api/v1", h.ApiV1Router())
+
+	payload := []byte(`{"event": "upload_sgf", "value": ")invalidsgf"}`)
+	req := httptest.NewRequest("POST", "/api/v1/room/abc", bytes.NewBuffer(payload))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	body, err := io.ReadAll(rec.Body)
+	require.NoError(t, err)
+
+	output := struct {
+		Success bool               `json:"success"`
+		Event   event.DefaultEvent `json:"output"`
+	}{}
+
+	err = json.Unmarshal(body, &output)
+	require.NoError(t, err)
+
+	assert.Equal(t, output.Success, false)
 }
