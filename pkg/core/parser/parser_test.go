@@ -205,8 +205,16 @@ func TestGetChild(t *testing.T) {
 	assert.Zero(t, root.GetChild(-1))
 }
 
-func TestAnyParse(t *testing.T) {
+func TestAnyParse1(t *testing.T) {
 	data := "\\HS\n\\[GAMEINFOMAIN=LINE:19,GONGJE:65\\]\n\\[WUSERINFO=WNICK:player_white\\]\n\\[BUSERINFO=BNICK:player_black\\]\n\\HE\n\\GS\nSTO 0 2 1 15 15\nSTO 0 3 2 3 15\nSTO 0 4 1 15 3\nSTO 0 5 2 3 3\nSKI 0 6\nSKI 0 7\n\\GE"
+	p := parser.New(data)
+	root, err := p.Parse()
+	require.NoError(t, err)
+	assert.NotNil(t, root)
+}
+
+func TestAnyParse2(t *testing.T) {
+	data := "Rated game\n19\nplayer1     3D?\nplayer2     3D*\nwww.example.com\n0\n0\n6\n20260106 [14:47]\n4\nWhite wins by  time!\n10\nPMABBEQQE\nPMACWQQQQ\nPMADBEDDE\nPMAEWQDDQ\nPMAFBORRO\nPMAGWROOR\nPMAHBQSSQ\nPMAIWEGGE\nPMAJBHDDH\n"
 	p := parser.New(data)
 	root, err := p.Parse()
 	require.NoError(t, err)
