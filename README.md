@@ -29,6 +29,7 @@ A free and open-source multi-user go board.
 - Browser-based
 - Desktop and mobile compatible
 - File formats accepted: SGF, GIB, NGF, ZIP
+- Board sizes supported: 9x9, 13x13, and 19x19
 - Sync with live OGS games or reviews
 - Integrate with Twitch
 - Free and open source

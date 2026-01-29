@@ -138,7 +138,11 @@ func (p *Parser) Parse() (*SGFNode, error) {
 	p.index = savedIndex
 
 	// lastly try to parse "dirty" sgf (garbage prefix)
-	return SGFParserFrom(p.BaseParser).Parse()
+	node, err := SGFParserFrom(p.BaseParser).Parse()
+	if err != nil {
+		return nil, fmt.Errorf("couldn't detect filetype")
+	}
+	return node, nil
 }
 
 func Merge(sgfs []string) string {

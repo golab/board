@@ -303,7 +303,9 @@ export function create_buttons(_state) {
     let black = document.createElement("div");
     black.setAttribute("id", "black-namecard");
     black.style.whiteSpace = "nowrap";
-    black.style.overflow = "scroll";
+    black.style.overflowX = "scroll";
+    black.style.overflowY = "hidden";
+    black.style.scrollbarWidth = "thin";
     //black.style.textOverflow = "ellipsis";
     black.classList.add("h-100", "w-100", "text-white", "bg-dark", "justify-content-center", "align-content-center");
     let black_name = document.createElement("span");
@@ -323,7 +325,9 @@ export function create_buttons(_state) {
     let white = document.createElement("div");
     white.setAttribute("id", "white-namecard");
     white.style.whiteSpace = "nowrap";
-    white.style.overflow = "scroll";
+    white.style.overflowX = "scroll";
+    white.style.overflowY = "hidden";
+    white.style.scrollbarWidth = "thin";
     //white.style.textOverflow = "ellipsis";
 
     white.classList.add("h-100", "w-100", "text-black", "bg-light", "justify-content-center", "align-content-center");

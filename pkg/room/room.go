@@ -394,7 +394,7 @@ func (r *Room) BroadcastHubMessage(m *message.Message) {
 func (r *Room) UploadSGF(sgf string) event.Event {
 	s, err := state.FromSGF(sgf)
 	if err != nil {
-		msg := fmt.Sprintf("Error parsing SGF: %s", err)
+		msg := fmt.Sprintf("Error while parsing: %s", err)
 		return event.ErrorEvent(msg)
 	}
 	r.SetState(s)
