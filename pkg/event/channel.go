@@ -13,6 +13,7 @@ package event
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/google/uuid"
@@ -68,7 +69,7 @@ func (ec *DefaultEventChannel) ReceiveEvent() (Event, error) {
 	// turn data into json
 	var evt Event
 	if evt, err = EventFromJSON(data); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error: %w, string: \"%s\"", err, string(data))
 	}
 	return evt, nil
 }
