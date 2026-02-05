@@ -460,14 +460,14 @@ class NetworkHandler {
 
         // find the length in bytes
         let encoder = new TextEncoder();
-        let payloadBytes = encoder.encode(json_payload);
+        let payload_bytes = encoder.encode(json_payload);
 
         // then send the length to the socket
-        let length = pack_int(payloadBytes.length);
+        let length = pack_int(payload_bytes.length);
         this.socket.send(length);
 
         // then send the payload
-        this.socket.send(json_payload);
+        this.socket.send(payload_bytes);
     }
 
     onmessage(event) {
