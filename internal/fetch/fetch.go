@@ -32,7 +32,7 @@ var okList = map[string]bool{
 	"raw.githubusercontent.com": true,
 	"cdn.discordapp.com":        true,
 	"playgo.gg":                 true,
-	"www.playgo.gg":                 true,
+	"www.playgo.gg":             true,
 }
 
 type Fetcher interface {
