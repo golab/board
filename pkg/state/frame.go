@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package state
 
 import (
+	"math"
 	"strconv"
 	"strings"
 
@@ -110,11 +111,14 @@ func (s *State) generateMarks() *Marks {
 	if s.current.XY != nil {
 		marks.Current = s.current.XY
 	}
+	// mark values can come from uploaded files, so anything malformed
+	// or off the board is skipped rather than trusted
 	if trs := s.current.GetField("TR"); len(trs) > 0 {
 		cs := coord.NewCoordSet()
 		for _, tr := range trs {
-			c := coord.FromLetters(tr)
-			cs.Add(c)
+			for _, c := range coord.FromPointList(tr, s.size) {
+				cs.Add(c)
+			}
 		}
 		marks.Triangles = cs.List()
 	}
@@ -122,17 +126,23 @@ func (s *State) generateMarks() *Marks {
 	if sqs := s.current.GetField("SQ"); len(sqs) > 0 {
 		cs := coord.NewCoordSet()
 		for _, sq := range sqs {
-			c := coord.FromLetters(sq)
-			cs.Add(c)
+			for _, c := range coord.FromPointList(sq, s.size) {
+				cs.Add(c)
+			}
 		}
 		marks.Squares = cs.List()
 	}
 	if lbs := s.current.GetField("LB"); len(lbs) > 0 {
 		labels := []*Label{}
 		for _, lb := range lbs {
-			spl := strings.SplitN(lb, ":", 2)
-			c := coord.FromLetters(spl[0])
-			text := spl[1]
+			point, text, ok := strings.Cut(lb, ":")
+			if !ok {
+				continue
+			}
+			c := coord.FromLetters(point)
+			if c == nil || !c.Valid(s.size) {
+				continue
+			}
 			label := &Label{Coord: c, Text: text}
 			labels = append(labels, label)
 		}
@@ -152,6 +162,10 @@ func (s *State) generateMarks() *Marks {
 			y1, err3 := strconv.ParseFloat(spl[3], 64)
 			hasErr := err0 != nil || err1 != nil || err2 != nil || err3 != nil
 			if hasErr {
+				continue
+			}
+			// NaN and Inf can't be encoded as json
+			if !finite(x0, y0, x1, y1) {
 				continue
 			}
 			pen := &Pen{X0: x0, Y0: y0, X1: x1, Y1: y1, Color: spl[4]}
@@ -203,4 +217,13 @@ func (s *State) GenerateTreeOnly(t TreeJSONType) *Frame {
 	frame.BlackCaps = s.current.BlackCaps
 	frame.WhiteCaps = s.current.WhiteCaps
 	return frame
+}
+
+func finite(fs ...float64) bool {
+	for _, f := range fs {
+		if math.IsNaN(f) || math.IsInf(f, 0) {
+			return false
+		}
+	}
+	return true
 }

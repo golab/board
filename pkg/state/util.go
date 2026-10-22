@@ -138,8 +138,7 @@ func (s *State) computeDiffSetup(i int) *coord.Diff {
 	if val := n.GetField("AB"); len(val) > 0 {
 		add := coord.NewCoordSet()
 		for _, v := range val {
-			crd := coord.FromLetters(v)
-			if crd != nil {
+			for _, crd := range coord.FromPointList(v, s.size) {
 				add.Add(crd)
 			}
 		}
@@ -151,8 +150,7 @@ func (s *State) computeDiffSetup(i int) *coord.Diff {
 	if val := n.GetField("AW"); len(val) > 0 {
 		add := coord.NewCoordSet()
 		for _, v := range val {
-			crd := coord.FromLetters(v)
-			if crd != nil {
+			for _, crd := range coord.FromPointList(v, s.size) {
 				add.Add(crd)
 			}
 		}
@@ -166,13 +164,13 @@ func (s *State) computeDiffSetup(i int) *coord.Diff {
 		csBlack := coord.NewCoordSet()
 		csWhite := coord.NewCoordSet()
 		for _, v := range val {
-			coord := coord.FromLetters(v)
-			col := s.board.Get(coord)
-			switch col {
-			case color.Black:
-				csBlack.Add(coord)
-			case color.White:
-				csWhite.Add(coord)
+			for _, crd := range coord.FromPointList(v, s.size) {
+				switch s.board.Get(crd) {
+				case color.Black:
+					csBlack.Add(crd)
+				case color.White:
+					csWhite.Add(crd)
+				}
 			}
 		}
 		removeBlack := coord.NewStoneSet(csBlack, color.Black)

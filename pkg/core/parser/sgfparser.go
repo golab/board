@@ -80,8 +80,20 @@ func (p *SGFParser) parseField() (string, error) {
 			return "", fmt.Errorf("bad field")
 		} else if t == ']' {
 			break
-		} else if t == '\\' && p.peek(0) == ']' {
+		} else if t == '\\' {
+			// per the sgf spec, a backslash escapes the next character
+			// and a backslash before a newline is a soft line break
 			t = p.read()
+			if t == 0 {
+				return "", fmt.Errorf("bad field")
+			}
+			if t == '\r' && p.peek(0) == '\n' {
+				p.read()
+				continue
+			}
+			if t == '\n' || t == '\r' {
+				continue
+			}
 		}
 		sb.WriteRune(t)
 	}

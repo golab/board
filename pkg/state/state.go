@@ -140,9 +140,8 @@ func (s *State) toSGF(indexes bool) string {
 			}
 			sb.WriteString(key)
 			for _, fieldValue := range multifield {
-				m := strings.ReplaceAll(fieldValue, "]", "\\]")
 				sb.WriteByte('[')
-				sb.WriteString(m)
+				sb.WriteString(parser.EscapeValue(fieldValue))
 				sb.WriteByte(']')
 			}
 

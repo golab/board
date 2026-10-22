@@ -368,3 +368,34 @@ func TestDiffNil(t *testing.T) {
 	var d *coord.Diff
 	assert.Zero(t, d.Copy())
 }
+
+func TestFromPointList(t *testing.T) {
+	tests := []struct {
+		value string
+		size  int
+		count int
+	}{
+		{"aa", 19, 1},
+		{"aa:cc", 19, 9},
+		{"cc:aa", 19, 9},
+		{"aa:sa", 19, 19},
+		{"ss", 19, 1},
+		{"ss", 9, 0},
+		{"aa:ss", 9, 0},
+		{"x", 19, 0},
+		{"", 19, 0},
+		{"aa:", 19, 0},
+		{"zzz:aa", 19, 0},
+	}
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%s/%d", tt.value, tt.size), func(t *testing.T) {
+			assert.Equal(t, len(coord.FromPointList(tt.value, tt.size)), tt.count)
+		})
+	}
+}
+
+func TestCoordSetAddNil(t *testing.T) {
+	cs := coord.NewCoordSet()
+	cs.Add(nil)
+	assert.Equal(t, len(cs), 0)
+}

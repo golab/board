@@ -61,8 +61,7 @@ func (n *SGFNode) toSGF(root bool) string {
 		sb.WriteString(field.Key)
 		for _, value := range field.Values {
 			sb.WriteByte('[')
-			m := strings.ReplaceAll(value, "]", "\\]")
-			sb.WriteString(m)
+			sb.WriteString(EscapeValue(value))
 			sb.WriteByte(']')
 		}
 	}
@@ -229,4 +228,12 @@ func Merge(sgfs []string) string {
 
 	newRoot.AddField("SZ", size)
 	return newRoot.toSGF(true)
+}
+
+var valueEscaper = strings.NewReplacer(`\`, `\\`, `]`, `\]`)
+
+// EscapeValue escapes a property value so it can be placed between
+// '[' and ']' in an sgf and read back unchanged
+func EscapeValue(v string) string {
+	return valueEscaper.Replace(v)
 }

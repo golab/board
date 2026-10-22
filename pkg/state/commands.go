@@ -264,7 +264,7 @@ func (cmd *removeMarkCommand) Execute(s *State) (*Frame, error) {
 		key := field.Key
 		values := field.Values
 		for _, value := range values {
-			if key == "LB" && value[:2] == l {
+			if key == "LB" && strings.HasPrefix(value, l+":") {
 				s.current.RemoveField("LB", value)
 			} else if key == "SQ" && value == l {
 				s.current.RemoveField("SQ", l)

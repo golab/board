@@ -249,3 +249,11 @@ func TestNGFRegression4(t *testing.T) {
 	_, err := p.Parse()
 	require.NoError(t, err)
 }
+
+func TestNGFMoveBadColor(t *testing.T) {
+	for _, s := range []string{"PMAB[QRRQ\n", "PMABXQRRQ\n", "PMABbQRRQ\n"} {
+		p := NewNGFParser(s)
+		_, err := p.parseMove(19)
+		assert.NotNil(t, err)
+	}
+}

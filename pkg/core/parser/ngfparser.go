@@ -58,6 +58,10 @@ func (p *NGFParser) parseMove(size int) (*move, error) {
 		return nil, fmt.Errorf("unknown key in move line")
 	}
 	key := fmt.Sprintf("%c", line[4])
+	// the key becomes an sgf property, so only accept real moves
+	if key != "B" && key != "W" {
+		return nil, fmt.Errorf("unknown color in move line")
+	}
 	coordOrig := strings.ToLower(line[5:7])
 	// black magic to fix coordinate orientation
 	// based on extensive research (one sample)

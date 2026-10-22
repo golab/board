@@ -20,6 +20,7 @@ import (
 	"github.com/golab/board/internal/require"
 	"github.com/golab/board/pkg/core/color"
 	"github.com/golab/board/pkg/core/coord"
+	"github.com/golab/board/pkg/core/parser"
 	"github.com/golab/board/pkg/event"
 )
 
@@ -105,52 +106,6 @@ func TestOGSConnectorChatConnect(t *testing.T) {
 	assert.NoError(t, err)
 	err = o.chatConnect()
 	assert.NoError(t, err)
-}
-
-func TestOGSConnectorReadSocket(t *testing.T) {
-	f := fetch.NewMockFetcher(`{"user": {"id": 123456, "username": "someuser"}, "user_jwt": "jwt123"}`)
-	r := &MockRoom{}
-	o, err := NewMockOGSConnector(r, f)
-	assert.NoError(t, err)
-
-	s := "foobar"
-	_, err = o.Socket.Write([]byte(s))
-	assert.NoError(t, err)
-
-	socketchan := make(chan byte, len(s))
-	err = o.readSocketToChan(socketchan)
-	assert.NotNil(t, err)
-
-	data := []byte{}
-	for {
-		b, ok := <-socketchan
-		if !ok {
-			break
-		}
-		data = append(data, b)
-	}
-	assert.Equal(t, string(data), s)
-}
-
-func TestOGSConnectorReadFrame(t *testing.T) {
-	f := fetch.NewMockFetcher(`{"user": {"id": 123456, "username": "someuser"}, "user_jwt": "jwt123"}`)
-	r := &MockRoom{}
-	o, err := NewMockOGSConnector(r, f)
-	assert.NoError(t, err)
-
-	s := "[abc [def] [ghi] [jkl]]"
-	_, err = o.Socket.Write([]byte(s))
-	assert.NoError(t, err)
-
-	socketchan := make(chan byte, len(s))
-	err = o.readSocketToChan(socketchan)
-	// should be EOF
-	assert.NotNil(t, err)
-
-	data, err := readFrameFromChan(socketchan)
-	assert.NoError(t, err)
-
-	assert.Equal(t, string(data), s)
 }
 
 func TestOGSConnectorLoop1(t *testing.T) {
@@ -268,4 +223,53 @@ func TestInitStateToSGF2(t *testing.T) {
 	}
 	o.initStateToSGF(gamedata)
 	assert.Equal(t, o.First, color.White)
+}
+
+// game names and usernames come from ogs users: brackets inside strings
+// must not break message framing, and must not inject sgf properties
+func TestOGSConnectorLoopUntrustedStrings(t *testing.T) {
+	f := fetch.NewMockFetcher(`{"user": {"id": 123456, "username": "someuser"}, "user_jwt": "jwt123"}`)
+	r := &MockRoom{}
+	o, err := NewMockOGSConnector(r, f)
+	assert.NoError(t, err)
+
+	name := `[[[ x]AB[aa];B[bb]( \`
+	black := `b]lack\`
+	gamedata := map[string]any{
+		"width": 19, "komi": 6.5, "game_name": name, "rules": "Japanese",
+		"players": map[string]any{
+			"black": map[string]any{"username": black, "rank": 30},
+			"white": map[string]any{"username": "w", "rank": 29},
+		},
+		"initial_player": "black",
+		"initial_state":  map[string]any{"black": "", "white": ""},
+		"moves":          []any{},
+	}
+	frame, err := json.Marshal([]any{"game/123456789/gamedata", gamedata})
+	require.NoError(t, err)
+	// a second message after the first, to check framing recovers
+	move := `["game/123456789/move", {"move": [3.0, 3.0]}]`
+	_, err = o.Socket.Write(append(frame, []byte(move)...))
+	require.NoError(t, err)
+
+	err = o.loop(123456789, "game")
+	assert.NoError(t, err)
+
+	require.True(t, len(r.calls) >= 1)
+	require.Equal(t, r.calls[0].name, "UploadSGF")
+	sgf := r.calls[0].args[0].(string)
+
+	root, err := parser.New(sgf).Parse()
+	require.NoError(t, err)
+	assert.Equal(t, root.GetField("GN")[0], name)
+	assert.Equal(t, root.GetField("PB")[0], black)
+	assert.Equal(t, len(root.GetField("AB")), 0)
+	assert.Equal(t, root.NumChildren(), 0)
+
+	// the move message after it was still processed
+	names := []string{}
+	for _, c := range r.calls {
+		names = append(names, c.name)
+	}
+	assert.Equal(t, fmt.Sprint(names), "[UploadSGF Broadcast HeadColor PushHead BroadcastFullFrame]")
 }

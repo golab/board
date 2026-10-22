@@ -329,3 +329,36 @@ func TestParseGarbageClean(t *testing.T) {
 	_, err := p.ParseClean()
 	assert.NotNil(t, err)
 }
+
+func TestSGFEscapes(t *testing.T) {
+	tests := []struct {
+		input string
+		value string
+	}{
+		{`(;C[a\]b])`, "a]b"},
+		{`(;C[a\\b])`, `a\b`},
+		{`(;C[end\\])`, `end\`},
+		{`(;C[a\bc])`, "abc"},
+		{"(;C[soft\\\nbreak])", "softbreak"},
+		{"(;C[soft\\\r\nbreak])", "softbreak"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			root, err := New(tt.input).Parse()
+			require.NoError(t, err)
+			c := root.GetField("C")
+			require.Equal(t, len(c), 1)
+			assert.Equal(t, c[0], tt.value)
+		})
+	}
+}
+
+func TestSGFEscapeRoundTrip(t *testing.T) {
+	for _, v := range []string{`a]b`, `a\b`, `end\`, `\]`, `[x]`, `\\]]`} {
+		t.Run(v, func(t *testing.T) {
+			root, err := New("(;C[" + EscapeValue(v) + "])").Parse()
+			require.NoError(t, err)
+			assert.Equal(t, root.GetField("C")[0], v)
+		})
+	}
+}
