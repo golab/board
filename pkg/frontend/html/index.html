@@ -1,14 +1,6 @@
 <!DOCTYPE html>
 <html>
     {{ template "header.html" }}
-    <script>
-        window.addEventListener("load",
-            () => {
-                let bar = document.getElementById("board_id");
-                bar.focus();
-            }
-        );
-    </script>
     <body>
         {{ template "menubar.html" }}
 
@@ -29,7 +21,7 @@
                 <div class="row">
                     <div class="col-lg-3"></div>
                     <div class="col-lg-4 col-sm-12 mb-1">
-                        <input id="board_id" class="form-control" type="text" name="board_id" placeholder="Enter a name for your board">
+                        <input id="board_id" class="form-control" type="text" name="board_id" placeholder="Enter a name for your board" autofocus>
                     </div>
                     <div class="col-lg-2 col-sm-12 mb-1">
                         <input class="btn w-100 btn-light" type="submit" value="New Board" />

@@ -12,9 +12,13 @@ package app_test
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"io"
 	"net/http/httptest"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/golab/board/internal/assert"
@@ -62,4 +66,36 @@ func TestTwitch(t *testing.T) {
 	room, err := a.Hub.GetRoom("board")
 	require.NoError(t, err)
 	assert.Equal(t, len(room.ToSGF()), 77)
+}
+
+var inlineScript = regexp.MustCompile(`(?s)<script(\s[^>]*)?>(.*?)</script>`)
+
+// every page gets the headers, and any inline script on a page is allowed
+// by its hash (otherwise the browser silently refuses to run it)
+func TestSecurityHeaders(t *testing.T) {
+	a, err := app.New(config.Test(), logx.NewRecorder(logx.LogLevelInfo))
+	require.NoError(t, err)
+
+	for _, path := range []string{"/", "/about", "/integrations", "/b/abc", "/nope", "/api/ping"} {
+		t.Run(path, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			a.Router.ServeHTTP(rec, httptest.NewRequest("GET", path, nil))
+
+			csp := rec.Header().Get("Content-Security-Policy")
+			assert.True(t, strings.Contains(csp, "script-src 'self'"))
+			assert.True(t, strings.Contains(csp, "object-src 'none'"))
+			assert.Equal(t, rec.Header().Get("X-Content-Type-Options"), "nosniff")
+
+			for _, m := range inlineScript.FindAllStringSubmatch(rec.Body.String(), -1) {
+				if strings.Contains(m[1], "src=") {
+					continue
+				}
+				sum := sha256.Sum256([]byte(m[2]))
+				hash := "'sha256-" + base64.StdEncoding.EncodeToString(sum[:]) + "'"
+				if !strings.Contains(csp, hash) {
+					t.Errorf("inline script %q is blocked by the csp", m[2])
+				}
+			}
+		})
+	}
 }

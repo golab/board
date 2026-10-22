@@ -39,6 +39,7 @@ func New(cfg *config.Config, logger logx.Logger) (*App, error) {
 	r := chi.NewRouter()
 	r.Use(middleware.StripSlashes)
 	r.Use(logger.AsMiddleware)
+	r.Use(SecurityHeaders)
 
 	// web router
 	r.Mount("/", h.WebRouter())
