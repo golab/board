@@ -19,10 +19,7 @@ import (
 
 func (s *State) addFieldNode(flds fields.Fields, index int) *coord.Diff {
 	s.AnyMove()
-	tmp := s.GetNextIndex()
-	if index == -1 {
-		index = tmp
-	}
+	index = s.claimIndex(index)
 	n := tree.NewTreeNode(nil, color.Empty, index, s.current, flds)
 	s.nodes[index] = n
 	if s.root == nil {
@@ -42,10 +39,7 @@ func (s *State) addFieldNode(flds fields.Fields, index int) *coord.Diff {
 
 func (s *State) addPassNode(col color.Color, flds fields.Fields, index int) {
 	s.AnyMove()
-	tmp := s.GetNextIndex()
-	if index == -1 {
-		index = tmp
-	}
+	index = s.claimIndex(index)
 	n := tree.NewTreeNode(nil, col, index, s.current, flds)
 	s.nodes[index] = n
 	if s.root == nil {
@@ -155,10 +149,7 @@ func (s *State) addNode(crd *coord.Coord, col color.Color, flds fields.Fields, i
 		}
 	}
 
-	tmp := s.GetNextIndex()
-	if index == -1 {
-		index = tmp
-	}
+	index = s.claimIndex(index)
 	n := tree.NewTreeNode(crd, color.Color(col), index, s.current, flds)
 
 	s.nodes[index] = n
@@ -223,7 +214,10 @@ func (s *State) AddStones(moves []*coord.Stone) {
 
 // SmartGraft doesn't duplicate existing moves
 func (s *State) smartGraft(parentIndex int, moves []*coord.Stone) {
-	parent := s.nodes[parentIndex]
+	parent, ok := s.nodes[parentIndex]
+	if !ok {
+		return
+	}
 	savedPrefs := make(map[int]int)
 	save := s.current.Index
 

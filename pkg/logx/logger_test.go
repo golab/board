@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/golab/board/internal/assert"
@@ -111,4 +112,26 @@ func TestChildLogger(t *testing.T) {
 	child := logger.With("room_id", "room123")
 	child.Info("foo")
 	assert.Equal(t, len(logger.Lines()), 2)
+}
+
+func TestRecover(t *testing.T) {
+	logger := logx.NewRecorder(logx.LogLevelDebug)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		defer logx.Recover(logger, "worker panicked", "id", "abc")
+		panic("boom")
+	}()
+	<-done
+
+	lines := logger.Lines()
+	assert.Equal(t, len(lines), 1)
+	assert.True(t, strings.Contains(lines[0], "worker panicked"))
+	assert.True(t, strings.Contains(lines[0], "boom"))
+
+	// a nil logger is fine too
+	func() {
+		defer logx.Recover(nil, "ignored")
+		panic("boom")
+	}()
 }

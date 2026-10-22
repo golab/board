@@ -188,6 +188,8 @@ func (h *Hub) Load() {
 }
 
 func (h *Hub) Heartbeat(roomID string) {
+	defer logx.Recover(h.logger, "heartbeat panicked", "room_id", roomID)
+
 	r, err := h.GetRoom(roomID)
 	if err != nil {
 		h.logger.Info("room not found during heartbeat", "room_id", roomID)
@@ -267,8 +269,12 @@ func (h *Hub) MessageLoop() {
 		// wait 5 seconds
 		time.Sleep(time.Duration(h.messageInterval * float64(time.Second)))
 
-		h.ReadMessages()
-		h.SendMessages()
+		// recover per iteration so one bad message doesn't stop the loop
+		func() {
+			defer logx.Recover(h.logger, "message loop panicked")
+			h.ReadMessages()
+			h.SendMessages()
+		}()
 	}
 }
 

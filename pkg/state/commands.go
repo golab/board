@@ -34,9 +34,7 @@ func NewAddStoneCommand(crd *coord.Coord, color color.Color) Command {
 }
 
 func (cmd *addStoneCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.crd.X
-	y := cmd.crd.Y
-	if x >= s.size || y >= s.size || x < 0 || y < 0 {
+	if cmd.crd == nil || !cmd.crd.Valid(s.size) {
 		return nil, nil
 	}
 
@@ -124,9 +122,7 @@ func NewRemoveStoneCommand(crd *coord.Coord) Command {
 }
 
 func (cmd *removeStoneCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.crd.X
-	y := cmd.crd.Y
-	if x >= s.size || y >= s.size || x < 0 || y < 0 {
+	if cmd.crd == nil || !cmd.crd.Valid(s.size) {
 		return nil, nil
 	}
 
@@ -155,9 +151,7 @@ func NewAddTriangleCommand(crd *coord.Coord) Command {
 }
 
 func (cmd *addTriangleCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.crd.X
-	y := cmd.crd.Y
-	if x >= s.size || y >= s.size || x < 0 || y < 0 {
+	if cmd.crd == nil || !cmd.crd.Valid(s.size) {
 		return nil, nil
 	}
 	l := cmd.crd.ToLetters()
@@ -174,9 +168,7 @@ func NewAddSquareCommand(crd *coord.Coord) Command {
 }
 
 func (cmd *addSquareCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.crd.X
-	y := cmd.crd.Y
-	if x >= s.size || y >= s.size || x < 0 || y < 0 {
+	if cmd.crd == nil || !cmd.crd.Valid(s.size) {
 		return nil, nil
 	}
 	l := cmd.crd.ToLetters()
@@ -194,9 +186,7 @@ func NewAddLetterCommand(crd *coord.Coord, letter string) Command {
 }
 
 func (cmd *addLetterCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.crd.X
-	y := cmd.crd.Y
-	if x >= s.size || y >= s.size || x < 0 || y < 0 {
+	if cmd.crd == nil || !cmd.crd.Valid(s.size) {
 		return nil, nil
 	}
 
@@ -216,9 +206,7 @@ func NewAddNumberCommand(crd *coord.Coord, number int) Command {
 }
 
 func (cmd *addNumberCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.crd.X
-	y := cmd.crd.Y
-	if x >= s.size || y >= s.size || x < 0 || y < 0 {
+	if cmd.crd == nil || !cmd.crd.Valid(s.size) {
 		return nil, nil
 	}
 
@@ -238,9 +226,7 @@ func NewAddLabelCommand(crd *coord.Coord, label string) Command {
 }
 
 func (cmd *addLabelCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.crd.X
-	y := cmd.crd.Y
-	if x >= s.size || y >= s.size || x < 0 || y < 0 {
+	if cmd.crd == nil || !cmd.crd.Valid(s.size) {
 		return nil, nil
 	}
 
@@ -562,7 +548,11 @@ func (cmd *graftCommand) Execute(s *State) (*Frame, error) {
 
 	// setup the moves array and initial color
 	moves := []*coord.Stone{}
-	col := s.nodes[parentIndex].Color
+	parent, ok := s.nodes[parentIndex]
+	if !ok {
+		return nil, fmt.Errorf("graft point not found")
+	}
+	col := parent.Color
 	if col == color.Empty {
 		col = color.White
 	}
@@ -623,9 +613,7 @@ func NewMarkDeadCommand(crd *coord.Coord) Command {
 }
 
 func (cmd *markDeadCommand) Execute(s *State) (*Frame, error) {
-	x := cmd.crd.X
-	y := cmd.crd.Y
-	if x >= s.size || y >= s.size || x < 0 || y < 0 {
+	if cmd.crd == nil || !cmd.crd.Valid(s.size) {
 		return nil, nil
 	}
 

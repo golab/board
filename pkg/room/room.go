@@ -516,8 +516,11 @@ func (room *Room) GetHandler(t string) EventHandler {
 func (r *Room) RegisterPlugin(p plugin.Plugin, args map[string]any) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	key := args["key"].(string)
+	key, _ := args["key"].(string)
 	r.logger.Info("registering plugin", "room_id", r.id, "plugin_key", key)
+	if lp, ok := p.(interface{ SetLogger(logx.Logger) }); ok && r.logger != nil {
+		lp.SetLogger(r.logger)
+	}
 	p.Start(args)
 	r.plugins[key] = p
 }

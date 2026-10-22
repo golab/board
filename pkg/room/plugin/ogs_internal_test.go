@@ -273,3 +273,24 @@ func TestOGSConnectorLoopUntrustedStrings(t *testing.T) {
 	}
 	assert.Equal(t, fmt.Sprint(names), "[UploadSGF Broadcast HeadColor PushHead BroadcastFullFrame]")
 }
+
+// a malformed ogs message ends the connection instead of crashing
+func TestOGSConnectorLoopMalformedMessage(t *testing.T) {
+	f := fetch.NewMockFetcher(`{"user": {"id": 123456, "username": "someuser"}, "user_jwt": "jwt123"}`)
+
+	for _, s := range []string{
+		`["game/1/move", {"move": "x"}]`,
+		`["game/1/move", {"move": [1]}]`,
+		`["game/1/gamedata", {"width": "19"}]`,
+		`["review/1/r", {"m": 5, "f": 1}]`,
+		`[5, {}]`,
+		`["game/1/move", 7]`,
+	} {
+		o, err := NewMockOGSConnector(&MockRoom{}, f)
+		require.NoError(t, err)
+		_, err = o.Socket.Write([]byte(s))
+		require.NoError(t, err)
+		assert.NoError(t, o.loop(1, "game"))
+		assert.True(t, o.isExited())
+	}
+}

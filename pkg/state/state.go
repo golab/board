@@ -52,8 +52,27 @@ func (s *State) GetColorAt(t int) color.Color {
 	return Color(node)
 }
 
+// SetNextIndex never lowers the counter below an index already in use
 func (s *State) SetNextIndex(i int) {
-	s.nextIndex = i
+	s.nextIndex = max(i, s.nextIndex)
+}
+
+// claimIndex picks the index for a new node: the requested one (e.g. from
+// an sgf IX field) if it's usable, otherwise the next free index
+// duplicate or negative IX values would otherwise corrupt the nodes map
+func (s *State) claimIndex(requested int) int {
+	if requested >= 0 {
+		if _, taken := s.nodes[requested]; !taken {
+			s.nextIndex = max(s.nextIndex, requested+1)
+			return requested
+		}
+	}
+	for {
+		i := s.GetNextIndex()
+		if _, taken := s.nodes[i]; !taken {
+			return i
+		}
+	}
 }
 
 func (s *State) GetNextIndex() int {

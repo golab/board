@@ -23,6 +23,7 @@ import (
 	"github.com/golab/board/pkg/core/coord"
 	"github.com/golab/board/pkg/core/parser"
 	"github.com/golab/board/pkg/event"
+	"github.com/golab/board/pkg/logx"
 	"golang.org/x/net/websocket"
 )
 
@@ -68,7 +69,12 @@ type OGSConnector struct {
 	First   color.Color
 	Exit    bool
 	fetcher fetch.Fetcher
+	logger  logx.Logger
 	mu      sync.Mutex
+}
+
+func (o *OGSConnector) SetLogger(l logx.Logger) {
+	o.logger = l
 }
 
 func NewOGSPlugin(room Room, f fetch.Fetcher) (Plugin, error) {
@@ -159,6 +165,7 @@ func (o *OGSConnector) isExited() bool {
 }
 
 func (o *OGSConnector) ping() {
+	defer logx.Recover(o.logger, "ogs ping panicked")
 	for !o.isExited() {
 		//30 seconds seemed just a little too long was causing connection issues
 		time.Sleep(25 * time.Second)
@@ -172,6 +179,11 @@ func (o *OGSConnector) ping() {
 }
 
 func (o *OGSConnector) loop(gameID int, ogsType string) error {
+	// ogs messages are untrusted input, so a panic while handling one
+	// must end this connection rather than the whole server
+	defer o.End()
+	defer logx.Recover(o.logger, "ogs connection panicked", "game_id", gameID)
+
 	err := o.chatConnect()
 	if err != nil {
 		return err
@@ -182,8 +194,6 @@ func (o *OGSConnector) loop(gameID int, ogsType string) error {
 	}
 
 	go o.ping()
-
-	defer o.End()
 
 	// each ogs message is a json array of [topic, payload]
 	// decoding the stream (rather than counting brackets) keeps

@@ -526,3 +526,15 @@ func TestFromString(t *testing.T) {
 	_, err := board.FromString("BBB")
 	assert.NotNil(t, err)
 }
+
+func TestSetLegalOffBoard(t *testing.T) {
+	b := board.NewBoard(9)
+	off := coord.NewCoord(18, 18)
+
+	// neither panics, and nothing is placed
+	b.Set(nil, color.Black)
+	b.Set(off, color.Black)
+	assert.False(t, b.Legal(nil, color.Black))
+	assert.False(t, b.Legal(off, color.Black))
+	assert.True(t, b.Legal(coord.NewCoord(4, 4), color.Black))
+}

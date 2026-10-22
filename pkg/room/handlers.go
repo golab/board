@@ -12,6 +12,8 @@ package room
 
 import (
 	"encoding/base64"
+	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -158,7 +160,11 @@ func (r *Room) handleUploadSGF(evt event.Event) event.Event {
 		// it might be an array of strings
 		sgfs := []string{}
 		for _, ifc := range arr {
-			str := ifc.(string)
+			str, ok := ifc.(string)
+			if !ok {
+				bcast = event.ErrorEvent("each file should be a base64 string")
+				return bcast
+			}
 			d, err := base64.StdEncoding.DecodeString(str)
 			if err != nil {
 				bcast = event.ErrorEvent(err.Error())
@@ -289,15 +295,38 @@ type Settings struct {
 	AutoNumber bool
 }
 
-func (r *Room) handleUpdateSettings(evt event.Event) event.Event {
-	sMap := evt.Value().(map[string]any)
-	buffer := int64(sMap["buffer"].(float64))
-	size := int(sMap["size"].(float64))
-	nickname := sMap["nickname"].(string)
+// settingsField reads one required field of an update_settings event
+func settingsField[T any](sMap map[string]any, key string) (T, error) {
+	v, ok := sMap[key].(T)
+	if !ok {
+		var zero T
+		return zero, fmt.Errorf("settings field %q is missing or has the wrong type", key)
+	}
+	return v, nil
+}
 
-	black := sMap["black"].(string)
-	white := sMap["white"].(string)
-	komi := sMap["komi"].(string)
+func (r *Room) handleUpdateSettings(evt event.Event) event.Event {
+	sMap, ok := evt.Value().(map[string]any)
+	if !ok {
+		return event.ErrorEvent("settings should be an object")
+	}
+
+	// validate everything before changing anything
+	bufferF, err1 := settingsField[float64](sMap, "buffer")
+	sizeF, err2 := settingsField[float64](sMap, "size")
+	nickname, err3 := settingsField[string](sMap, "nickname")
+	black, err4 := settingsField[string](sMap, "black")
+	white, err5 := settingsField[string](sMap, "white")
+	komi, err6 := settingsField[string](sMap, "komi")
+	password, err7 := settingsField[string](sMap, "password")
+	if err := errors.Join(err1, err2, err3, err4, err5, err6, err7); err != nil {
+		return event.ErrorEvent(err.Error())
+	}
+	buffer := int64(bufferF)
+	size := int(sizeF)
+	if size != 9 && size != 13 && size != 19 {
+		return event.ErrorEvent("board size should be 9, 13, or 19")
+	}
 
 	if black != "" {
 		r.EditPlayerBlack(black)
@@ -311,7 +340,6 @@ func (r *Room) handleUpdateSettings(evt event.Event) event.Event {
 
 	r.SetNick(evt.User(), nickname)
 
-	password := sMap["password"].(string)
 	hashed := ""
 	if password != "" {
 		hashed = core.Hash(password)
@@ -475,7 +503,7 @@ func (r *Room) logEventValue(handler EventHandler) EventHandler {
 		if r.logger != nil {
 			r.logger.Info(
 				"handling event with value",
-				"event_value", evt.Value().(string),
+				"event_value", evt.Value(),
 				"event_id", evt.ID(),
 				"event_channel", evt.User(),
 			)
@@ -493,7 +521,7 @@ func (r *Room) logAfter(handler EventHandler) EventHandler {
 			if evt.Type() == "error" {
 				r.logger.Error(
 					"error while handling",
-					"error", evt.Value().(string),
+					"error", evt.Value(),
 					"event_id", evt.ID(),
 					"event_channel", evt.User(),
 				)

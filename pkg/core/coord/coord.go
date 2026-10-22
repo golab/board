@@ -280,13 +280,20 @@ func FromInterface(ifc any) (*Coord, error) {
 		return nil, fmt.Errorf("error coercing to coord: not enough values")
 	}
 
-	for _, v := range val {
-		i := int(v.(float64))
-		coords = append(coords, i)
+	for _, v := range val[:2] {
+		f, ok := v.(float64)
+		if !ok {
+			return nil, fmt.Errorf("error coercing to coord: values should be numbers")
+		}
+		coords = append(coords, int(f))
 	}
 	x := coords[0]
 	y := coords[1]
-	return NewCoord(x, y), nil
+	c := NewCoord(x, y)
+	if c == nil {
+		return nil, fmt.Errorf("error coercing to coord: off the board")
+	}
+	return c, nil
 }
 
 // Stone is a Coord plus a Color
@@ -329,6 +336,9 @@ func FromAlphanumeric(s string, size int) (*Coord, error) {
 		x = int(letter - 'a')
 	} else {
 		x = int(letter - 'a' - 1)
+	}
+	if x >= size {
+		return nil, fmt.Errorf("bad character: %c", letter)
 	}
 
 	return NewCoord(x, y), nil

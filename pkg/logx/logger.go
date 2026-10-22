@@ -12,10 +12,12 @@ package logx
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"strings"
 )
 
@@ -115,4 +117,19 @@ func (r *Recorder) Lines() []string {
 func (r *Recorder) With(key, value string) Logger {
 	l := &DefaultLogger{r.s.With(slog.String(key, value))}
 	return &Recorder{Buffer: nil, DefaultLogger: l}
+}
+
+// Recover is meant to be deferred at the top of any goroutine the app
+// starts itself: unlike http handlers, a panic there would otherwise
+// take down the whole server
+// it logs the panic (if logger isn't nil) and lets the goroutine end
+func Recover(logger Logger, msg string, args ...any) {
+	r := recover()
+	if r == nil {
+		return
+	}
+	if logger != nil {
+		args = append(args, "panic", fmt.Sprint(r), "stack", string(debug.Stack()))
+		logger.Error(msg, args...)
+	}
 }

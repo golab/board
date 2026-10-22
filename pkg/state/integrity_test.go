@@ -91,3 +91,35 @@ func TestCommentBackslashReloads(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, reloaded.ToSGF(), s.ToSGF())
 }
+
+// IX values come from uploaded files: duplicates, negatives and large
+// values must not corrupt the index -> node map
+func TestUntrustedIndexes(t *testing.T) {
+	for _, sgf := range []string{
+		"(;IX[0]SZ[19];B[aa]IX[5];W[bb]IX[5];B[cc]IX[-7])",
+		"(;IX[3]SZ[19];B[aa]IX[3];W[bb]IX[1000])",
+	} {
+		t.Run(sgf, func(t *testing.T) {
+			s, err := state.FromSGF(sgf)
+			require.NoError(t, err)
+
+			// every node in the tree is in the map under its own index
+			count := 0
+			execute(t, s, state.NewRewindCommand())
+			for node := s.Root(); node != nil; {
+				assert.True(t, s.Nodes()[node.Index] == node)
+				count++
+				if len(node.Down) == 0 {
+					break
+				}
+				node = node.Down[0]
+			}
+			assert.Equal(t, len(s.Nodes()), count)
+
+			// new nodes don't collide with loaded ones
+			execute(t, s, state.NewFastForwardCommand())
+			execute(t, s, state.NewAddStoneCommand(coord.NewCoord(9, 9), color.Black))
+			assert.Equal(t, len(s.Nodes()), count+1)
+		})
+	}
+}

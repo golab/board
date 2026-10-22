@@ -125,6 +125,9 @@ func (b *Board) Copy() *Board {
 }
 
 func (b *Board) Set(c *coord.Coord, col color.Color) {
+	if c == nil || !c.Valid(b.Size) {
+		return
+	}
 	b.Points[c.Y][c.X] = col
 }
 
@@ -238,6 +241,11 @@ func (b *Board) Groups() []*Group {
 }
 
 func (b *Board) Legal(start *coord.Coord, col color.Color) bool {
+	// passes and points off the board aren't legal placements
+	if start == nil || !start.Valid(b.Size) {
+		return false
+	}
+
 	// if there's already a stone there, it's illegal
 	if b.Get(start) != color.Empty {
 		return false

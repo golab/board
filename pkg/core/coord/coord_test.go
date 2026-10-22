@@ -399,3 +399,27 @@ func TestCoordSetAddNil(t *testing.T) {
 	cs.Add(nil)
 	assert.Equal(t, len(cs), 0)
 }
+
+func TestFromInterfaceRejects(t *testing.T) {
+	for _, v := range []any{
+		[]any{"a", "b"}, []any{1.0, "b"}, []any{nil, nil},
+		[]any{30.0, 30.0}, []any{-1.0, 5.0}, []any{1.0}, "x", nil,
+	} {
+		c, err := coord.FromInterface(v)
+		assert.NotNil(t, err)
+		assert.True(t, c == nil)
+	}
+	c, err := coord.FromInterface([]any{3.0, 4.0, 5.0})
+	require.NoError(t, err)
+	assert.True(t, c.Equal(coord.NewCoord(3, 4)))
+}
+
+func TestFromAlphanumericBoardSize(t *testing.T) {
+	_, err := coord.FromAlphanumeric("t19", 9)
+	assert.NotNil(t, err)
+	_, err = coord.FromAlphanumeric("k5", 9)
+	assert.NotNil(t, err)
+	c, err := coord.FromAlphanumeric("j9", 9)
+	require.NoError(t, err)
+	assert.True(t, c.Equal(coord.NewCoord(8, 0)))
+}
