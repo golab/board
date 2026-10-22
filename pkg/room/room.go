@@ -564,7 +564,11 @@ func (r *Room) Size() int {
 func (r *Room) GenerateFullFrame(t state.TreeJSONType) *state.Frame {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	return r.state.GenerateFullFrame(t)
+	frame := r.state.GenerateFullFrame(t)
+	// include room settings so new connections see the current values
+	buffer := r.inputBuffer
+	frame.Metadata.Buffer = &buffer
+	return frame
 }
 
 func (r *Room) GenerateTreeOnly(t state.TreeJSONType) *state.Frame {

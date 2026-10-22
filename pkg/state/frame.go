@@ -71,6 +71,9 @@ type Metadata struct {
 	Size       int            `json:"size"`
 	Fields     []fields.Field `json:"fields"`
 	AutoNumber bool           `json:"autonumber"`
+	// the input buffer belongs to the room, not the state
+	// so it is only filled in by the room (and omitted otherwise)
+	Buffer *int64 `json:"buffer,omitempty"`
 }
 
 // TreeJSONType defines some options for how much data to send in a TreeJSON

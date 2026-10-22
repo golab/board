@@ -213,10 +213,6 @@ class NetworkHandler {
             case "trash":
                 this.state.reset();
                 break;
-            case "update_buffer":
-                value = payload["value"];
-                this.state.update_buffer(value);
-                break;
             case "update_settings":
                 value = payload["value"];
                 this.state.update_settings(value);
@@ -357,11 +353,6 @@ class NetworkHandler {
 
     prepare_settings(settings) {
         let payload = {"event": "update_settings", "value": settings};
-        this.prepare(payload);
-    }
-
-    prepare_buffer(num) {
-        let payload = {"event":"update_buffer", "value": num};
         this.prepare(payload);
     }
 

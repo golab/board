@@ -972,6 +972,9 @@ class State {
         if (metadata.autonumber != null) {
             this.autonumber = metadata.autonumber;
         }
+        if (metadata.buffer != null) {
+            this.input_buffer = metadata.buffer;
+        }
         this.set_gameinfo(metadata.fields);
         this.modals.update_modals();
     }
