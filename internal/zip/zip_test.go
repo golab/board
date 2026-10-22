@@ -11,6 +11,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package zip_test
 
 import (
+	stdzip "archive/zip"
+	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/golab/board/internal/zip"
@@ -39,4 +42,43 @@ func TestZip(t *testing.T) {
 		t.Errorf("error decompressing, expected %s, got: %s", "world", string(files[1]))
 	}
 
+}
+
+func makeZip(t *testing.T, files int, size int) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	w := stdzip.NewWriter(&buf)
+	for i := 0; i < files; i++ {
+		f, err := w.Create(fmt.Sprintf("%d.sgf", i))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := f.Write(make([]byte, size)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return buf.Bytes()
+}
+
+func TestZipLimits(t *testing.T) {
+	// a small zip that expands past the budget
+	if _, err := zip.Decompress(makeZip(t, 1, zip.MaxTotalBytes+1)); err == nil {
+		t.Error("expected an error for a zip bomb")
+	}
+	// many files that together go past the budget
+	if _, err := zip.Decompress(makeZip(t, 9, 1<<20)); err == nil {
+		t.Error("expected an error when files add up past the budget")
+	}
+	if _, err := zip.Decompress(makeZip(t, zip.MaxFiles+1, 1)); err == nil {
+		t.Error("expected an error for too many files")
+	}
+
+	// right at the limits is fine
+	files, err := zip.Decompress(makeZip(t, 8, 1<<20))
+	if err != nil || len(files) != 8 {
+		t.Errorf("expected 8 files, got %d (%v)", len(files), err)
+	}
 }

@@ -14,7 +14,15 @@ package zip
 import (
 	"archive/zip"
 	"bytes"
+	"fmt"
 	"io"
+)
+
+// limits on what an uploaded archive can expand to
+// (a 1 MB zip can otherwise hold 1 GB of zeros)
+const (
+	MaxFiles      = 256
+	MaxTotalBytes = 8 << 20
 )
 
 // IsZipFile checks the first two bytes to see if they are 0x504b
@@ -33,21 +41,28 @@ func Decompress(data []byte) ([][]byte, error) {
 		return nil, err
 	}
 
+	if len(zipReader.File) > MaxFiles {
+		return nil, fmt.Errorf("too many files in archive (max %d)", MaxFiles)
+	}
+
 	files := [][]byte{}
+	remaining := int64(MaxTotalBytes)
 	for _, file := range zipReader.File {
 		rc, err := file.Open()
 		if err != nil {
 			continue
 		}
-		fData, err := io.ReadAll(rc)
+		// read one byte past the budget to detect going over it
+		fData, err := io.ReadAll(io.LimitReader(rc, remaining+1))
+		rc.Close() //nolint: errcheck
 		if err != nil {
 			continue
 		}
-		files = append(files, fData)
-		err = rc.Close()
-		if err != nil {
-			return nil, err
+		remaining -= int64(len(fData))
+		if remaining < 0 {
+			return nil, fmt.Errorf("archive too large when decompressed (max %d MB)", MaxTotalBytes>>20)
 		}
+		files = append(files, fData)
 	}
 	return files, nil
 }

@@ -12,7 +12,10 @@ package state_test
 
 import (
 	"encoding/json"
+	"errors"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/golab/board/internal/assert"
 	"github.com/golab/board/internal/require"
@@ -121,5 +124,86 @@ func TestUntrustedIndexes(t *testing.T) {
 			execute(t, s, state.NewAddStoneCommand(coord.NewCoord(9, 9), color.Black))
 			assert.Equal(t, len(s.Nodes()), count+1)
 		})
+	}
+}
+
+func passes(n int) string {
+	var sb strings.Builder
+	sb.WriteString("(;SZ[19]")
+	for i := 0; i < n; i++ {
+		if i%2 == 0 {
+			sb.WriteString(";B[]")
+		} else {
+			sb.WriteString(";W[]")
+		}
+	}
+	sb.WriteString(")")
+	return sb.String()
+}
+
+func TestNodeCap(t *testing.T) {
+	// uploads over the cap are refused
+	_, err := state.FromSGF(passes(state.MaxNodes))
+	assert.NotNil(t, err)
+
+	// copy and paste doubles the tree: refused once it would pass the cap
+	s, err := state.FromSGF(passes(state.MaxNodes / 3))
+	require.NoError(t, err)
+	before := len(s.Nodes())
+	execute(t, s, state.NewCopyCommand())
+	execute(t, s, state.NewPasteCommand())
+	_, err = state.NewPasteCommand().Execute(s)
+	assert.True(t, errors.Is(err, state.ErrTooManyNodes))
+	assert.Equal(t, len(s.Nodes()), 2*before)
+
+	// as are single moves once it's full
+	full, err := state.FromSGF(passes(state.MaxNodes - 1))
+	require.NoError(t, err)
+	_, err = state.NewAddStoneCommand(coord.NewCoord(3, 3), color.Black).Execute(full)
+	assert.True(t, errors.Is(err, state.ErrTooManyNodes))
+	_, err = state.NewPassCommand(color.Black).Execute(full)
+	assert.True(t, errors.Is(err, state.ErrTooManyNodes))
+}
+
+// each setup node used to replay the game from the root: 10k of them
+// took ~24s to load
+func TestLoadManySetupNodes(t *testing.T) {
+	var sb strings.Builder
+	sb.WriteString("(;SZ[19]")
+	for i := 0; i < 20_000; i++ {
+		sb.WriteString(";AB[aa]")
+	}
+	sb.WriteString(";AE[aa];AW[aa])")
+
+	start := time.Now()
+	s, err := state.FromSGF(sb.String())
+	require.NoError(t, err)
+	assert.True(t, time.Since(start) < 5*time.Second)
+
+	execute(t, s, state.NewFastForwardCommand())
+	assert.Equal(t, s.Board().Get(coord.NewCoord(0, 0)), color.White)
+}
+
+func TestGraftLimit(t *testing.T) {
+	s := state.NewState(19)
+	moves := strings.Repeat("a1 ", state.MaxGraftMoves+2)
+	_, err := state.NewGraftCommand(moves).Execute(s)
+	assert.NotNil(t, err)
+
+	_, err = state.NewGraftCommand("   ").Execute(s)
+	assert.NotNil(t, err)
+
+	_, err = state.NewGraftCommand("0 d4 q16").Execute(s)
+	require.NoError(t, err)
+}
+
+func TestBoardSizeRange(t *testing.T) {
+	for _, sgf := range []string{"(;SZ[0])", "(;SZ[-3])", "(;SZ[20])"} {
+		_, err := state.FromSGF(sgf)
+		assert.NotNil(t, err)
+	}
+	for _, sgf := range []string{"(;SZ[1])", "(;SZ[2];B[aa])", "(;SZ[7];B[aa])"} {
+		_, err := state.FromSGF(sgf)
+		require.NoError(t, err)
 	}
 }

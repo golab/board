@@ -18,6 +18,7 @@ import (
 	"github.com/golab/board/pkg/core/color"
 	"github.com/golab/board/pkg/core/coord"
 	"github.com/golab/board/pkg/core/fields"
+	"github.com/golab/board/pkg/core/tree"
 )
 
 type Command interface {
@@ -48,6 +49,10 @@ func (cmd *addStoneCommand) Execute(s *State) (*Frame, error) {
 	// do nothing on a suicide move
 	if !s.board.Legal(cmd.crd, cmd.color) {
 		return nil, nil
+	}
+
+	if err := s.checkCapacity(1); err != nil {
+		return nil, err
 	}
 
 	flds := fields.Fields{}
@@ -86,6 +91,10 @@ func NewPassCommand(color color.Color) Command {
 }
 
 func (cmd *passCommand) Execute(s *State) (*Frame, error) {
+	if err := s.checkCapacity(1); err != nil {
+		return nil, err
+	}
+
 	flds := fields.Fields{}
 	key := "B"
 	if cmd.color == color.White {
@@ -124,6 +133,9 @@ func NewRemoveStoneCommand(crd *coord.Coord) Command {
 func (cmd *removeStoneCommand) Execute(s *State) (*Frame, error) {
 	if cmd.crd == nil || !cmd.crd.Valid(s.size) {
 		return nil, nil
+	}
+	if err := s.checkCapacity(1); err != nil {
+		return nil, err
 	}
 
 	flds := fields.Fields{}
@@ -496,6 +508,12 @@ func (cmd *pasteCommand) Execute(s *State) (*Frame, error) {
 		return nil, nil
 	}
 
+	size := 0
+	tree.Fmap(func(*tree.TreeNode) { size++ }, s.clipboard)
+	if err := s.checkCapacity(size); err != nil {
+		return nil, err
+	}
+
 	s.paste()
 
 	marks := s.generateMarks()
@@ -519,8 +537,21 @@ func NewGraftCommand(text string) Command {
 	return &graftCommand{text}
 }
 
+// MaxGraftMoves caps the moves in one graft
+const MaxGraftMoves = 1000
+
 func (cmd *graftCommand) Execute(s *State) (*Frame, error) {
-	tokens := strings.Split(cmd.text, " ")
+	tokens := strings.Fields(cmd.text)
+	if len(tokens) == 0 {
+		return nil, fmt.Errorf("nothing to graft")
+	}
+	// +1 for the optional move number
+	if len(tokens) > MaxGraftMoves+1 {
+		return nil, fmt.Errorf("too many moves to graft (max %d)", MaxGraftMoves)
+	}
+	if err := s.checkCapacity(len(tokens)); err != nil {
+		return nil, err
+	}
 
 	// currently accepting the first arg as a move number or not
 	var parentIndex int

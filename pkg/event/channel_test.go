@@ -101,3 +101,29 @@ func TestID(t *testing.T) {
 	ch := event.NewDefaultEventChannel(c)
 	assert.Equal(t, len(ch.ID()), 36)
 }
+
+// an oversized length is rejected before anything is read or allocated
+func TestEventChannelTooLarge(t *testing.T) {
+	queued := [][]byte{
+		{0xff, 0xff, 0xff, 0xff},
+		[]byte(`{"event": "test"}`),
+	}
+	c := NewMockReadWriteCloser(queued)
+	ch := event.NewDefaultEventChannel(c)
+	_, err := ch.ReceiveEvent()
+	assert.NotNil(t, err)
+	assert.Equal(t, c.index, 1)
+}
+
+// a body split across several short reads is put back together
+func TestEventChannelSplitReads(t *testing.T) {
+	e := `{"event": "test", "value": "abc", "userid": "u"}`
+	queued := [][]byte{{byte(len(e)), 0}, {0, 0}}
+	for i := 0; i < len(e); i += 5 {
+		queued = append(queued, []byte(e[i:min(i+5, len(e))]))
+	}
+	ch := event.NewDefaultEventChannel(NewMockReadWriteCloser(queued))
+	evt, err := ch.ReceiveEvent()
+	assert.NoError(t, err)
+	assert.Equal(t, evt.Value().(string), "abc")
+}

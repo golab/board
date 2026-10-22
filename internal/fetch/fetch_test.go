@@ -11,6 +11,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package fetch_test
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/golab/board/internal/assert"
@@ -103,5 +105,30 @@ func TestBadOGS(t *testing.T) {
 	mc := fetch.NewMockClient("")
 	f := fetch.NewDefaultFetcher(mc)
 	_, err := f.ApprovedFetch("https://online-go.com/foo/bar/baz")
+	assert.NotNil(t, err)
+}
+
+func TestFetchTooLarge(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(make([]byte, fetch.MaxBytes+1)) //nolint: errcheck
+	}))
+	defer srv.Close()
+
+	_, err := fetch.NewDefaultFetcher(nil).Fetch(srv.URL)
+	assert.NotNil(t, err)
+}
+
+// redirects have to stay on the allow list
+func TestFetchRedirectOffList(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/start" {
+			http.Redirect(w, r, "/internal", http.StatusFound)
+			return
+		}
+		w.Write([]byte("secret")) //nolint: errcheck
+	}))
+	defer srv.Close()
+
+	_, err := fetch.NewDefaultFetcher(nil).Fetch(srv.URL + "/start")
 	assert.NotNil(t, err)
 }

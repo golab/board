@@ -146,27 +146,37 @@ func (n *TreeNode) HasChild(crd *coord.Coord, col color.Color) (int, bool) {
 	return 0, false
 }
 
+// Copy copies the subtree rooted at n (iteratively, since trees can be
+// deep enough to make recursion a problem)
 func (n *TreeNode) Copy() *TreeNode {
-	// parent will get assigned later
-	m := NewTreeNode(
-		n.XY.Copy(),
-		n.Color,
-		0,
-		nil,
-		n.Fields)
-
-	// copy children
-	down := []*TreeNode{}
-	for _, d := range n.Down {
-		e := d.Copy()
-		e.SetParent(m)
-		down = append(down, e)
+	copyOne := func(src *TreeNode) *TreeNode {
+		// parent will get assigned later
+		m := NewTreeNode(
+			src.XY.Copy(),
+			src.Color,
+			0,
+			nil,
+			src.Fields)
+		m.Down = []*TreeNode{}
+		m.Diff = src.Diff.Copy()
+		return m
 	}
 
-	m.Down = down
-	m.Diff = n.Diff.Copy()
-
-	return m
+	root := copyOne(n)
+	type pair struct{ src, dst *TreeNode }
+	stack := []pair{{n, root}}
+	for len(stack) > 0 {
+		i := len(stack) - 1
+		cur := stack[i]
+		stack = stack[:i]
+		for _, d := range cur.src.Down {
+			e := copyOne(d)
+			e.SetParent(cur.dst)
+			cur.dst.Down = append(cur.dst.Down, e)
+			stack = append(stack, pair{d, e})
+		}
+	}
+	return root
 }
 
 func (n *TreeNode) MaxDepth() int {

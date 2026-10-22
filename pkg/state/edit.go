@@ -31,7 +31,9 @@ func (s *State) addFieldNode(flds fields.Fields, index int) *coord.Diff {
 	s.current = n
 
 	// compute diff
-	diff := s.computeDiffSetup(index)
+	// the board is still at the parent's position, so no need to navigate
+	// there (doing that for every node made loading quadratic)
+	diff := s.setupDiff(n)
 	s.board.ApplyDiff(diff)
 	s.current.SetDiff(diff)
 	return diff
@@ -414,13 +416,7 @@ func (s *State) paste() {
 	branch.RecomputeDepth()
 
 	// recompute diffs
-	tree.Fmap(func(n *tree.TreeNode) {
-		if IsMove(n) {
-			n.SetDiff(s.computeDiffMove(n.Index))
-		} else {
-			n.SetDiff(s.computeDiffSetup(n.Index))
-		}
-	}, branch)
+	s.computeBranchDiffs(branch)
 
 	// restore savedpref
 	s.current.PreferredChild = savedPref

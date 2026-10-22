@@ -11,11 +11,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package state
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/golab/board/internal/assert"
 	"github.com/golab/board/internal/require"
 	"github.com/golab/board/internal/sgfsamples"
+	"github.com/golab/board/pkg/core/board"
 	"github.com/golab/board/pkg/core/color"
 	"github.com/golab/board/pkg/core/coord"
 )
@@ -219,4 +221,43 @@ func TestComputeDiffSetup(t *testing.T) {
 	add := diff.Add[0]
 	assert.Equal(t, add.Color, color.White)
 	assert.Equal(t, len(add.Coords), 2)
+}
+
+// paste computes the diffs of the pasted branch in one walk; they must match
+// what navigating to each node and computing its diff gives
+func TestPasteDiffsMatch(t *testing.T) {
+	// a branch with a capture, a pass, setup stones and a removal, and a
+	// second variation that plays where the first one did
+	sgf := "(;SZ[9];B[ba];W[aa];B[ab];W[cc](;B[];W[dd]AB[ee];AE[ab]AW[ff])(;B[dd]))"
+	s, err := FromSGF(sgf)
+	require.NoError(t, err)
+
+	// copy the tree from move 1, paste it back onto the root
+	s.gotoIndex(1) //nolint: errcheck
+	s.clipboard = s.current.Copy()
+	s.rewind()
+	before := len(s.nodes)
+	s.paste()
+	require.True(t, len(s.nodes) > before)
+
+	// the board is back where it was
+	assert.Equal(t, s.current, s.root)
+	assert.Equal(t, s.board.String(), board.NewBoard(9).String())
+
+	for i, n := range s.nodes {
+		if i < before {
+			continue
+		}
+		var want *coord.Diff
+		if IsMove(n) {
+			want = s.computeDiffMove(i)
+		} else {
+			want = s.computeDiffSetup(i)
+		}
+		got, err := json.Marshal(n.Diff)
+		require.NoError(t, err)
+		expected, err := json.Marshal(want)
+		require.NoError(t, err)
+		assert.Equal(t, string(got), string(expected))
+	}
 }

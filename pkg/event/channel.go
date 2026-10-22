@@ -15,8 +15,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/google/uuid"
+)
+
+const (
+	// MaxMessageBytes caps one incoming message; the largest legitimate
+	// ones are uploaded files (base64 encoded)
+	MaxMessageBytes = 16 << 20
+
+	// messageTimeout is how long the body of a message can take to arrive
+	messageTimeout = 30 * time.Second
 )
 
 type EventChannel interface {
@@ -81,46 +91,29 @@ func (ec *DefaultEventChannel) Close() error {
 func (ec *DefaultEventChannel) readPacket() ([]byte, error) {
 	// read in 4 bytes (length of rest of message)
 	lengthArray := make([]byte, 4)
-	_, err := ec.ws.Read(lengthArray)
+	_, err := io.ReadFull(ec.ws, lengthArray)
 	if err != nil {
 		return nil, err
 	}
 	length := binary.LittleEndian.Uint32(lengthArray)
 
+	// the length comes from the client, so check it before trusting it
+	if length > MaxMessageBytes {
+		return nil, fmt.Errorf("message too large: %d bytes (max %d)", length, MaxMessageBytes)
+	}
+
+	// once a message has started, the rest of it has to arrive promptly
+	// (waiting between messages is fine, so this is only set here)
+	if d, ok := ec.ws.(interface{ SetReadDeadline(time.Time) error }); ok {
+		_ = d.SetReadDeadline(time.Now().Add(messageTimeout))
+		defer func() { _ = d.SetReadDeadline(time.Time{}) }()
+	}
+
 	// read in the rest of the data
-	var data []byte
-
-	if length > 1024 {
-		data, err = ec.readBytes(int(length))
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		data = make([]byte, length)
-		_, err := ec.ws.Read(data)
-
-		if err != nil {
-			return nil, err
-		}
+	data := make([]byte, length)
+	_, err = io.ReadFull(ec.ws, data)
+	if err != nil {
+		return nil, err
 	}
 	return data, nil
-}
-
-func (ec *DefaultEventChannel) readBytes(size int) ([]byte, error) {
-	chunkSize := 64
-	message := []byte{}
-	for len(message) < size {
-		l := size - len(message)
-		if l > chunkSize {
-			l = chunkSize
-		}
-		temp := make([]byte, l)
-		n, err := ec.ws.Read(temp)
-		if err != nil {
-			return nil, err
-		}
-		message = append(message, temp[:n]...)
-	}
-
-	return message, nil
 }

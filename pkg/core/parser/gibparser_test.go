@@ -188,7 +188,7 @@ func TestGIBToSGF(t *testing.T) {
 	node, err := gibResult.ToSGFNode()
 	require.NoError(t, err)
 	require.NotNil(t, node)
-	assert.Equal(t, len(node.toSGF(true)), 80)
+	assert.Equal(t, len(node.toSGF()), 80)
 }
 
 func TestGIBToSGFRanks(t *testing.T) {

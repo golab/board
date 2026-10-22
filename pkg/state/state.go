@@ -75,6 +75,20 @@ func (s *State) claimIndex(requested int) int {
 	}
 }
 
+// MaxNodes caps the size of a game tree, whether uploaded or built up by
+// editing (copy and paste can otherwise double a tree with every click)
+const MaxNodes = 100_000
+
+var ErrTooManyNodes = fmt.Errorf("the game tree is too large (max %d moves)", MaxNodes)
+
+// checkCapacity reports whether n more nodes fit in the tree
+func (s *State) checkCapacity(n int) error {
+	if len(s.nodes)+n > MaxNodes {
+		return ErrTooManyNodes
+	}
+	return nil
+}
+
 func (s *State) GetNextIndex() int {
 	i := s.nextIndex
 	s.nextIndex++
@@ -210,7 +224,7 @@ func FromSGF(data string) (*State, error) {
 			return nil, err
 		}
 	}
-	if int(size) > 19 {
+	if size < 1 || size > 19 {
 		return nil, fmt.Errorf("unsupported board size")
 	}
 
@@ -229,6 +243,9 @@ func FromSGF(data string) (*State, error) {
 			node := cur.(*parser.SGFNode)
 			if node == nil {
 				return nil, fmt.Errorf("parsing didn't produce a valid tree")
+			}
+			if err := state.checkCapacity(1); err != nil {
+				return nil, err
 			}
 
 			index := -1

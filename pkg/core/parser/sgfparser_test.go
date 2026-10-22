@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package parser
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/golab/board/internal/assert"
@@ -32,7 +33,7 @@ func TestToSGF(t *testing.T) {
 			p := NewSGFParser(input)
 			root, err := p.Parse()
 			require.NoError(t, err)
-			output := root.toSGF(true)
+			output := root.toSGF()
 			assert.Equal(t, output, input)
 		})
 	}
@@ -43,7 +44,7 @@ func TestPass(t *testing.T) {
 	p := NewSGFParser(sgf)
 	root, err := p.Parse()
 	require.NoError(t, err)
-	output := root.toSGF(true)
+	output := root.toSGF()
 	if output != "(;GM[1];B[aa];W[bb];B[];W[ss])" {
 		t.Errorf("error in reading [tt] pass")
 	}
@@ -361,4 +362,36 @@ func TestSGFEscapeRoundTrip(t *testing.T) {
 			assert.Equal(t, root.GetField("C")[0], v)
 		})
 	}
+}
+
+func TestNestingLimit(t *testing.T) {
+	nested := func(n int) string {
+		return strings.Repeat("(", n) + ";B[aa]" + strings.Repeat(")", n)
+	}
+	_, err := NewSGFParser(nested(MaxNesting)).ParseClean()
+	require.NoError(t, err)
+
+	_, err = NewSGFParser(nested(MaxNesting + 1)).ParseClean()
+	assert.NotNil(t, err)
+
+	// deep enough to overflow the stack before there was a limit
+	_, err = New(nested(5_000_000)).Parse()
+	assert.NotNil(t, err)
+}
+
+// serializing used to recurse per node and copy each subtree's string
+// into its parent's: quadratic, and a stack overflow on long games
+func TestMergeLongGames(t *testing.T) {
+	var sb strings.Builder
+	sb.WriteString("(;SZ[19]")
+	for i := 0; i < 200_000; i++ {
+		sb.WriteString(";B[aa];W[bb]")
+	}
+	sb.WriteString(")")
+	game := sb.String()
+
+	merged := Merge([]string{game, game})
+	root, err := New(merged).Parse()
+	require.NoError(t, err)
+	assert.Equal(t, root.NumChildren(), 2)
 }

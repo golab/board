@@ -17,7 +17,11 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
+
+// MaxBytes caps the size of a fetched file
+const MaxBytes = 8 << 20
 
 var okList = map[string]bool{
 	"files.gokgs.com":           true,
@@ -52,7 +56,19 @@ type DefaultFetcher struct {
 
 func NewDefaultFetcher(client Client) *DefaultFetcher {
 	if client == nil {
-		client = http.DefaultClient
+		client = &http.Client{
+			Timeout: 20 * time.Second,
+			// a redirect must stay on the allow list
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				if len(via) >= 5 {
+					return fmt.Errorf("too many redirects")
+				}
+				if !okList[req.URL.Hostname()] {
+					return fmt.Errorf("redirected to unapproved host %s", req.URL.Hostname())
+				}
+				return nil
+			},
+		}
 	}
 	return &DefaultFetcher{
 		client: client,
@@ -104,9 +120,13 @@ func (f *DefaultFetcher) Fetch(urlStr string) (string, error) {
 
 	defer resp.Body.Close() //nolint: errcheck
 
-	data, err := io.ReadAll(resp.Body)
+	// read one byte past the limit to detect going over it
+	data, err := io.ReadAll(io.LimitReader(resp.Body, MaxBytes+1))
 	if err != nil {
 		return "", err
+	}
+	if len(data) > MaxBytes {
+		return "", fmt.Errorf("file too large (max %d MB)", MaxBytes>>20)
 	}
 	return string(data), nil
 }

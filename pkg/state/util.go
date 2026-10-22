@@ -15,6 +15,7 @@ import (
 
 	"github.com/golab/board/pkg/core/color"
 	"github.com/golab/board/pkg/core/coord"
+	"github.com/golab/board/pkg/core/tree"
 )
 
 func (s *State) prefs() map[string]int {
@@ -133,6 +134,12 @@ func (s *State) computeDiffSetup(i int) *coord.Diff {
 	// at the end, go back to the saved index
 	defer s.gotoIndex(save) //nolint: errcheck
 
+	return s.setupDiff(n)
+}
+
+// setupDiff computes the diff of setup node n against the board as it is
+// now, which must be the position of n's parent
+func (s *State) setupDiff(n *tree.TreeNode) *coord.Diff {
 	// find the black stones to add
 	diffAdd := []*coord.StoneSet{}
 	if val := n.GetField("AB"); len(val) > 0 {
@@ -180,4 +187,44 @@ func (s *State) computeDiffSetup(i int) *coord.Diff {
 	}
 	diff := coord.NewDiff(diffAdd, diffRemove)
 	return diff
+}
+
+// computeBranchDiffs sets the diff of every node in branch, whose parent
+// must be the current position. it plays and unplays nodes during a single
+// walk, rather than navigating from the root for each node (quadratic)
+func (s *State) computeBranchDiffs(branch *tree.TreeNode) {
+	type step struct {
+		node *tree.TreeNode
+		undo *coord.Diff
+		exit bool
+	}
+	stack := []step{{node: branch}}
+	for len(stack) > 0 {
+		i := len(stack) - 1
+		cur := stack[i]
+		stack = stack[:i]
+
+		if cur.exit {
+			s.board.ApplyDiff(cur.undo)
+			continue
+		}
+
+		n := cur.node
+		var diff *coord.Diff
+		if IsMove(n) {
+			if n.XY != nil {
+				// Move also places the stone
+				diff = s.board.Move(n.XY, n.Color)
+			}
+		} else {
+			diff = s.setupDiff(n)
+			s.board.ApplyDiff(diff)
+		}
+		n.SetDiff(diff)
+
+		stack = append(stack, step{undo: diff.Invert(), exit: true})
+		for j := len(n.Down) - 1; j >= 0; j-- {
+			stack = append(stack, step{node: n.Down[j]})
+		}
+	}
 }

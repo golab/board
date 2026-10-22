@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
@@ -363,4 +364,18 @@ func TestApiV1Router4(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, output.Success, false)
+}
+
+func TestApiV1BodyTooLarge(t *testing.T) {
+	logger := logx.NewRecorder(logx.LogLevelInfo)
+	h, err := hub.NewHub(config.Test(), logger)
+	assert.NoError(t, err)
+	r := chi.NewRouter()
+	r.Mount("/api/v1", h.ApiV1Router())
+
+	payload := bytes.Repeat([]byte(" "), event.MaxMessageBytes+1)
+	req := httptest.NewRequest("POST", "/api/v1/room/abc", bytes.NewBuffer(payload))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	assert.Equal(t, rec.Code, http.StatusBadRequest)
 }

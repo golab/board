@@ -201,7 +201,7 @@ func TestNGF2(t *testing.T) {
 	require.NoError(t, err)
 	node, err := r.ToSGFNode()
 	require.NoError(t, err)
-	t.Logf("%v", node.toSGF(true))
+	t.Logf("%v", node.toSGF())
 }
 
 func TestNGFErrors(t *testing.T) {

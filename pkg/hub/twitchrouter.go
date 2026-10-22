@@ -136,7 +136,8 @@ func (h *Hub) twitchCallbackGet(w http.ResponseWriter, r *http.Request) {
 
 func (h *Hub) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 	// read the body into a []byte
-	body, _ := io.ReadAll(r.Body)
+	// twitch notifications are small
+	body, _ := io.ReadAll(http.MaxBytesReader(w, r.Body, 1<<20))
 
 	// try to read the body into a TwitchJSON struct
 	var req twitch.TwitchJSON

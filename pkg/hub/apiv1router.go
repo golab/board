@@ -24,7 +24,7 @@ func (h *Hub) handler(w http.ResponseWriter, r *http.Request) {
 	board := chi.URLParam(r, "board")
 	room := h.GetOrCreateRoom(board)
 
-	data, err := io.ReadAll(r.Body)
+	data, err := io.ReadAll(http.MaxBytesReader(w, r.Body, event.MaxMessageBytes))
 	if err != nil {
 		msg := fmt.Sprintf(`{"success": false, "error": "%s"}`, err.Error())
 		http.Error(w, msg, http.StatusBadRequest)

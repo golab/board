@@ -18,6 +18,7 @@ import (
 	"github.com/golab/board/internal/sgfsamples"
 	"github.com/golab/board/pkg/core/color"
 	"github.com/golab/board/pkg/core/coord"
+	"github.com/golab/board/pkg/core/fields"
 	"github.com/golab/board/pkg/core/tree"
 	"github.com/golab/board/pkg/state"
 )
@@ -156,4 +157,37 @@ func TestTreeNodeAddField(t *testing.T) {
 	n.AddField("foo", "bar")
 	n.AddField("baz", "bot")
 	assert.Equal(t, len(n.AllFields()), 2)
+}
+
+func TestCopyDeepAndBranched(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleTwoBranches)
+	require.NoError(t, err)
+	root := s.Root()
+
+	c := root.Copy()
+	count := func(n *tree.TreeNode) int {
+		total := 0
+		tree.Fmap(func(*tree.TreeNode) { total++ }, n)
+		return total
+	}
+	assert.Equal(t, count(c), count(root))
+
+	// parents and depths are set, and children keep their order
+	tree.Fmap(func(n *tree.TreeNode) {
+		for _, d := range n.Down {
+			assert.True(t, d.Up == n)
+			assert.Equal(t, d.Depth, n.Depth+1)
+		}
+	}, c)
+	assert.Equal(t, c.Down[0].XY.String(), root.Down[0].XY.String())
+
+	// a long chain copies without recursing
+	chain := tree.NewTreeNode(nil, color.Empty, 0, nil, fields.Fields{})
+	cur := chain
+	for i := 1; i < 500_000; i++ {
+		n := tree.NewTreeNode(coord.NewCoord(0, 0), color.Black, i, cur, fields.Fields{})
+		cur.Down = append(cur.Down, n)
+		cur = n
+	}
+	assert.Equal(t, count(chain.Copy()), 500_000)
 }
