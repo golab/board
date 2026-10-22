@@ -308,3 +308,20 @@ func TestBoard(t *testing.T) {
 	assert.Equal(t, b.Get(coord.NewCoord(3, 14)), color.Black)
 	assert.Equal(t, b.Get(coord.NewCoord(14, 14)), color.White)
 }
+
+func TestAutoNumberCarriesOver(t *testing.T) {
+	r := room.NewRoom("")
+	r.SetAutoNumber(true)
+
+	// replacing the state (upload, trash, resize) keeps the setting
+	r.SetState(state.NewState(9))
+	assert.True(t, r.GetState().AutoNumber())
+
+	save := r.Save()
+	assert.True(t, save.AutoNumber)
+
+	loaded, err := room.Load(save)
+	require.NoError(t, err)
+	assert.True(t, loaded.GetAutoNumber())
+	assert.True(t, loaded.GetState().AutoNumber())
+}

@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package loader_test
 
 import (
+	"database/sql"
 	"fmt"
 	"path/filepath"
 	"sync"
@@ -146,4 +147,68 @@ func TestSqliteLoaderConcurrency(t *testing.T) {
 	}
 
 	wg.Wait()
+}
+
+func TestSqliteLoaderAutoNumber(t *testing.T) {
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "board.db")
+
+	ldr, err := loader.NewSqliteLoader(path)
+	assert.NoError(t, err)
+
+	l := &loader.LoadJSON{SGF: "test", ID: "test", AutoNumber: true}
+	assert.NoError(t, ldr.SaveRoom(l.ID, l))
+	m, err := ldr.LoadRoom(l.ID)
+	assert.NoError(t, err)
+	assert.True(t, m.AutoNumber)
+
+	// update path
+	m.AutoNumber = false
+	assert.NoError(t, ldr.SaveRoom(m.ID, m))
+	m, err = ldr.LoadRoom(l.ID)
+	assert.NoError(t, err)
+	assert.False(t, m.AutoNumber)
+}
+
+func TestSqliteLoaderMigrateAutoNumber(t *testing.T) {
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "board.db")
+
+	// a database created before the autonumber column existed
+	db, err := sql.Open("sqlite", "file:"+path)
+	assert.NoError(t, err)
+	_, err = db.Exec(
+		`CREATE TABLE rooms (
+			id TEXT PRIMARY KEY,
+			sgf TEXT NOT NULL,
+			loc TEXT NOT NULL,
+			prefs TEXT NOT NULL,
+			buffer INTEGER NOT NULL,
+			nextindex INTEGER NOT NULL,
+			password TEXT NOT NULL
+		)`)
+	assert.NoError(t, err)
+	_, err = db.Exec(
+		`INSERT INTO rooms (id, sgf, loc, prefs, buffer, nextindex, password) VALUES ('old', 'sgf', '0', '{}', 250, 1, '')`)
+	assert.NoError(t, err)
+	assert.NoError(t, db.Close())
+
+	ldr, err := loader.NewSqliteLoader(path)
+	assert.NoError(t, err)
+
+	m, err := ldr.LoadRoom("old")
+	assert.NoError(t, err)
+	assert.Equal(t, m.SGF, "sgf")
+	assert.False(t, m.AutoNumber)
+
+	m.AutoNumber = true
+	assert.NoError(t, ldr.SaveRoom(m.ID, m))
+	m, err = ldr.LoadRoom("old")
+	assert.NoError(t, err)
+	assert.True(t, m.AutoNumber)
+
+	// running setup again on an already-migrated db is fine
+	assert.NoError(t, ldr.Close())
+	_, err = loader.NewSqliteLoader(path)
+	assert.NoError(t, err)
 }

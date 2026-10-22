@@ -253,3 +253,34 @@ func TestLogRequestOGS(t *testing.T) {
 	p := r.GetPlugin("ogs")
 	require.NotNil(t, p)
 }
+
+func TestHandleUpdateSettingsAutoNumber(t *testing.T) {
+	r := room.NewRoom("")
+	settings := func(autonumber any) map[string]any {
+		value := map[string]any{
+			"buffer":   250.0,
+			"size":     19.0,
+			"nickname": "",
+			"password": "",
+			"black":    "",
+			"white":    "",
+			"komi":     "",
+		}
+		if autonumber != nil {
+			value["autonumber"] = autonumber
+		}
+		return value
+	}
+
+	r.HandleAny(event.NewEvent("update_settings", settings(true)))
+	assert.True(t, r.GetAutoNumber())
+	assert.True(t, r.GetState().AutoNumber())
+
+	// older clients don't send the field, which leaves it unchanged
+	r.HandleAny(event.NewEvent("update_settings", settings(nil)))
+	assert.True(t, r.GetAutoNumber())
+
+	r.HandleAny(event.NewEvent("update_settings", settings(false)))
+	assert.False(t, r.GetAutoNumber())
+	assert.False(t, r.GetState().AutoNumber())
+}

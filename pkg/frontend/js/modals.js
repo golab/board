@@ -159,6 +159,9 @@ export function create_modals(_state) {
         let select = document.getElementById(id + "-size-select");
         select.value = state.size;
 
+        let autonumber = document.getElementById(id + "-autonumber-switch");
+        autonumber.checked = state.autonumber;
+
         let password = state.password;
         if (password == "") {
             remove_password();

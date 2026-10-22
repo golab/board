@@ -68,8 +68,9 @@ type Pen struct {
 
 // Metadata provides the size of the board plus any fields (usually from the root node)
 type Metadata struct {
-	Size   int            `json:"size"`
-	Fields []fields.Field `json:"fields"`
+	Size       int            `json:"size"`
+	Fields     []fields.Field `json:"fields"`
+	AutoNumber bool           `json:"autonumber"`
 }
 
 // TreeJSONType defines some options for how much data to send in a TreeJSON
@@ -160,8 +161,9 @@ func (s *State) generateMarks() *Marks {
 
 func (s *State) generateMetadata() *Metadata {
 	m := &Metadata{
-		Size:   s.size,
-		Fields: s.root.AllFields(),
+		Size:       s.size,
+		Fields:     s.root.AllFields(),
+		AutoNumber: s.autoNumber,
 	}
 	return m
 }

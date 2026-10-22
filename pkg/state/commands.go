@@ -61,6 +61,10 @@ func (cmd *addStoneCommand) Execute(s *State) (*Frame, error) {
 
 	diff := s.addNode(cmd.crd, cmd.color, flds, -1, false)
 
+	if s.autoNumber {
+		s.numberBranch()
+	}
+
 	marks := s.generateMarks()
 
 	return &Frame{
@@ -92,10 +96,17 @@ func (cmd *passCommand) Execute(s *State) (*Frame, error) {
 	flds.AddField(key, "")
 	s.addPassNode(cmd.color, flds, -1)
 
+	// keep the branch numbers visible through a pass
+	var marks *Marks
+	if s.autoNumber {
+		s.numberBranch()
+		marks = s.generateMarks()
+	}
+
 	return &Frame{
 		Type:      DiffFrame,
 		Diff:      nil,
-		Marks:     nil,
+		Marks:     marks,
 		Comments:  nil,
 		Metadata:  nil,
 		TreeJSON:  s.saveTree(PartialNodes),

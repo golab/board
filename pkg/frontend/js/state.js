@@ -59,6 +59,7 @@ class State {
         this.mark = "";
         this.input_buffer = 250;
         this.password = "";
+        this.autonumber = false;
 
         // pen variables
         this.pen_color = "#48BBFF";
@@ -189,6 +190,9 @@ class State {
             this.reset();
         }
         this.password = settings["password"];
+        if (settings["autonumber"] != null) {
+            this.autonumber = settings["autonumber"];
+        }
         this.modals.update_settings_modal();
     }
 
@@ -964,6 +968,9 @@ class State {
             this.recompute_consts();
             this.board_graphics.reset_board();
             this.reset();
+        }
+        if (metadata.autonumber != null) {
+            this.autonumber = metadata.autonumber;
         }
         this.set_gameinfo(metadata.fields);
         this.modals.update_modals();

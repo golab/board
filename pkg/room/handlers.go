@@ -283,9 +283,10 @@ func (r *Room) handleUpdateNickname(evt event.Event) event.Event {
 }
 
 type Settings struct {
-	Buffer   int64
-	Size     int
-	Password string
+	Buffer     int64
+	Size       int
+	Password   string
+	AutoNumber bool
 }
 
 func (r *Room) handleUpdateSettings(evt event.Event) event.Event {
@@ -315,7 +316,13 @@ func (r *Room) handleUpdateSettings(evt event.Event) event.Event {
 	if password != "" {
 		hashed = core.Hash(password)
 	}
-	settings := &Settings{buffer, size, hashed}
+	// older clients don't send this, so leave it alone if it's missing
+	autoNumber, ok := sMap["autonumber"].(bool)
+	if !ok {
+		autoNumber = r.GetAutoNumber()
+	}
+
+	settings := &Settings{buffer, size, hashed, autoNumber}
 
 	r.SetInputBuffer(settings.Buffer)
 	if settings.Size != r.Size() {
@@ -323,6 +330,7 @@ func (r *Room) handleUpdateSettings(evt event.Event) event.Event {
 		r.SetState(state.NewState(settings.Size))
 		r.SetInputBuffer(buffer)
 	}
+	r.SetAutoNumber(settings.AutoNumber)
 
 	// can be changed
 	// anyone already in the room is added

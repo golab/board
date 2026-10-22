@@ -38,6 +38,7 @@ type State struct {
 	clipboard  *tree.TreeNode
 	markedDead coord.CoordSet
 	markedDame coord.CoordSet
+	autoNumber bool
 }
 
 func (s *State) HeadColor() color.Color {

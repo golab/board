@@ -20,13 +20,14 @@ type MessageJSON struct {
 }
 
 type LoadJSON struct {
-	SGF       string         `json:"sgf"`
-	Location  string         `json:"loc"`
-	Prefs     map[string]int `json:"prefs"`
-	Buffer    int64          `json:"buffer"`
-	NextIndex int            `json:"next_index"`
-	Password  string         `json:"password"`
-	ID        string         `json:"id"`
+	SGF        string         `json:"sgf"`
+	Location   string         `json:"loc"`
+	Prefs      map[string]int `json:"prefs"`
+	Buffer     int64          `json:"buffer"`
+	NextIndex  int            `json:"next_index"`
+	Password   string         `json:"password"`
+	ID         string         `json:"id"`
+	AutoNumber bool           `json:"autonumber"`
 }
 
 type Loader interface {

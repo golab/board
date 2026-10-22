@@ -58,10 +58,17 @@ func (ldr *BaseLoader) sqliteSetup() error {
 			prefs TEXT NOT NULL,
 			buffer INTEGER NOT NULL,
 			nextindex INTEGER NOT NULL,
-			password TEXT NOT NULL
+			password TEXT NOT NULL,
+			autonumber INTEGER NOT NULL DEFAULT 0
 		)`,
 	)
 
+	if err != nil {
+		return err
+	}
+
+	// add columns that were introduced after the table was first created
+	err = ldr.sqliteAddColumn("rooms", "autonumber", "INTEGER NOT NULL DEFAULT 0")
 	if err != nil {
 		return err
 	}
@@ -101,10 +108,19 @@ func (ldr *BaseLoader) postgresSetup() error {
 			prefs TEXT NOT NULL,
 			buffer INTEGER NOT NULL,
 			nextindex INTEGER NOT NULL,
-			password TEXT NOT NULL
+			password TEXT NOT NULL,
+			autonumber BOOLEAN NOT NULL DEFAULT FALSE
 		)`,
 	)
 
+	if err != nil {
+		return err
+	}
+
+	// add columns that were introduced after the table was first created
+	_, err = ldr.Exec(
+		`ALTER TABLE rooms ADD COLUMN IF NOT EXISTS autonumber BOOLEAN NOT NULL DEFAULT FALSE`,
+	)
 	if err != nil {
 		return err
 	}
@@ -131,6 +147,33 @@ func (ldr *BaseLoader) postgresSetup() error {
 		)`,
 	)
 
+	return err
+}
+
+// sqliteAddColumn adds a column to a table unless it already exists
+// (sqlite has no ADD COLUMN IF NOT EXISTS)
+func (ldr *BaseLoader) sqliteAddColumn(table, column, definition string) error {
+	rows, err := ldr.Query(
+		`SELECT COUNT(*) FROM pragma_table_info(?) WHERE name = ?`,
+		table, column)
+	if err != nil {
+		return err
+	}
+	count := 0
+	for rows.Next() {
+		err = rows.Scan(&count)
+		if err != nil {
+			rows.Close() //nolint: errcheck
+			return err
+		}
+	}
+	rows.Close() //nolint: errcheck
+	if count > 0 {
+		return nil
+	}
+
+	_, err = ldr.Exec(
+		fmt.Sprintf(`ALTER TABLE %s ADD COLUMN %s %s`, table, column, definition))
 	return err
 }
 
@@ -254,8 +297,8 @@ func (ldr *BaseLoader) updateRoom(id string, data *LoadJSON) error {
 	}
 
 	_, err = ldr.Exec(
-		`UPDATE rooms SET sgf = ?, loc = ?, prefs = ?, buffer = ?, nextindex = ?, password = ?  WHERE id = ?`,
-		data.SGF, data.Location, prefs, data.Buffer, data.NextIndex, data.Password, id)
+		`UPDATE rooms SET sgf = ?, loc = ?, prefs = ?, buffer = ?, nextindex = ?, password = ?, autonumber = ?  WHERE id = ?`,
+		data.SGF, data.Location, prefs, data.Buffer, data.NextIndex, data.Password, data.AutoNumber, id)
 	return err
 }
 
@@ -266,15 +309,15 @@ func (ldr *BaseLoader) insertRoom(id string, data *LoadJSON) error {
 	}
 
 	_, err = ldr.Exec(
-		`INSERT INTO rooms (id, sgf, loc, prefs, buffer, nextindex, password) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		id, data.SGF, data.Location, prefs, data.Buffer, data.NextIndex, data.Password)
+		`INSERT INTO rooms (id, sgf, loc, prefs, buffer, nextindex, password, autonumber) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		id, data.SGF, data.Location, prefs, data.Buffer, data.NextIndex, data.Password, data.AutoNumber)
 
 	return err
 }
 
 func (ldr *BaseLoader) LoadAllRooms() ([]*LoadJSON, error) {
 	rows, err := ldr.Query(
-		`SELECT id, sgf, loc, prefs, buffer, nextindex, password FROM rooms`)
+		`SELECT id, sgf, loc, prefs, buffer, nextindex, password, autonumber FROM rooms`)
 	if err != nil {
 		return nil, err
 	}
@@ -289,19 +332,21 @@ func (ldr *BaseLoader) LoadAllRooms() ([]*LoadJSON, error) {
 		var buffer int
 		var nextIndex int
 		var password string
-		err = rows.Scan(&id, &sgf, &loc, &prefsString, &buffer, &nextIndex, &password)
+		var autoNumber bool
+		err = rows.Scan(&id, &sgf, &loc, &prefsString, &buffer, &nextIndex, &password, &autoNumber)
 		if err != nil {
 			return nil, err
 		}
 		prefs, _ := PrefsFromString(prefsString)
 		data := &LoadJSON{
-			SGF:       sgf,
-			Location:  loc,
-			Prefs:     prefs,
-			Buffer:    int64(buffer),
-			NextIndex: nextIndex,
-			Password:  password,
-			ID:        id,
+			SGF:        sgf,
+			Location:   loc,
+			Prefs:      prefs,
+			Buffer:     int64(buffer),
+			NextIndex:  nextIndex,
+			Password:   password,
+			ID:         id,
+			AutoNumber: autoNumber,
 		}
 		rooms = append(rooms, data)
 	}
@@ -311,7 +356,7 @@ func (ldr *BaseLoader) LoadAllRooms() ([]*LoadJSON, error) {
 
 func (ldr *BaseLoader) selectRoom(id string) ([]*LoadJSON, error) {
 	rows, err := ldr.Query(
-		`SELECT id, sgf, loc, prefs, buffer, nextindex, password FROM rooms WHERE id = ?`,
+		`SELECT id, sgf, loc, prefs, buffer, nextindex, password, autonumber FROM rooms WHERE id = ?`,
 		id)
 	if err != nil {
 		return nil, err
@@ -327,19 +372,21 @@ func (ldr *BaseLoader) selectRoom(id string) ([]*LoadJSON, error) {
 		var buffer int
 		var nextIndex int
 		var password string
-		err = rows.Scan(&id, &sgf, &loc, &prefsString, &buffer, &nextIndex, &password)
+		var autoNumber bool
+		err = rows.Scan(&id, &sgf, &loc, &prefsString, &buffer, &nextIndex, &password, &autoNumber)
 		if err != nil {
 			return nil, err
 		}
 		prefs, _ := PrefsFromString(prefsString)
 		data := &LoadJSON{
-			SGF:       sgf,
-			Location:  loc,
-			Prefs:     prefs,
-			Buffer:    int64(buffer),
-			NextIndex: nextIndex,
-			Password:  password,
-			ID:        id,
+			SGF:        sgf,
+			Location:   loc,
+			Prefs:      prefs,
+			Buffer:     int64(buffer),
+			NextIndex:  nextIndex,
+			Password:   password,
+			ID:         id,
+			AutoNumber: autoNumber,
 		}
 		rooms = append(rooms, data)
 	}

@@ -48,6 +48,7 @@ type Room struct {
 	inputBuffer  int64
 	userBuffer   int64
 	timeout      float64
+	autoNumber   bool
 	logger       logx.Logger
 	mu           sync.Mutex
 }
@@ -110,6 +111,7 @@ func Load(load *loader.LoadJSON) (*Room, error) {
 	r.SetPassword(load.Password)
 	r.SetInputBuffer(load.Buffer)
 	r.SetState(st)
+	r.SetAutoNumber(load.AutoNumber)
 
 	return r, nil
 }
@@ -269,6 +271,7 @@ func (r *Room) Save() *loader.LoadJSON {
 	// add on last fields owned by the room instead of the state
 	save.Password = r.password
 	save.Buffer = r.inputBuffer
+	save.AutoNumber = r.autoNumber
 	save.ID = r.id
 	return save
 }
@@ -299,7 +302,22 @@ func (r *Room) GetState() *state.State {
 func (r *Room) SetState(s *state.State) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	// auto-numbering is a room setting, so it carries over to new states
+	s.SetAutoNumber(r.autoNumber)
 	r.state = s
+}
+
+func (r *Room) GetAutoNumber() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.autoNumber
+}
+
+func (r *Room) SetAutoNumber(b bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.autoNumber = b
+	r.state.SetAutoNumber(b)
 }
 
 func (r *Room) SetConnector(key string, c Connector) {

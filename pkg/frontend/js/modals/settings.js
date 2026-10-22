@@ -147,6 +147,7 @@ function make_settings() {
     let black = document.getElementById(id + "-blackplayer-bar").value;
     let white = document.getElementById(id + "-whiteplayer-bar").value;
     let komi = document.getElementById(id + "-komi-bar").value;
+    let autonumber = document.getElementById(id + "-autonumber-switch").checked;
     return {
         "buffer": buffer,
         "size": size,
@@ -154,7 +155,8 @@ function make_settings() {
         "nickname": nickname,
         "black": black,
         "white": white,
-        "komi": komi};
+        "komi": komi,
+        "autonumber": autonumber};
 }
 
 function gameinfo_settings(state) {
@@ -726,6 +728,31 @@ function behavior_settings(state) {
     updown_element.append(d);
 
     behavior_collapse.appendChild(updown_element);
+    behavior_collapse.appendChild(document.createElement("br"));
+
+    // auto-number branches
+    let autonumber_element = document.createElement("div");
+    autonumber_element.innerHTML = "Auto-number Branches "
+
+    let autonumber_icon = document.createElement("i");
+    autonumber_icon.setAttribute("class", "bi-question-circle");
+    add_tooltip(autonumber_icon, "When a move is played off the main branch, number the moves of the variation starting from 1");
+    autonumber_element.appendChild(autonumber_icon);
+
+    let autonumber_div = document.createElement("div");
+    autonumber_div.setAttribute("class", "form-check form-switch");
+
+    let autonumber_switch = document.createElement("input");
+    autonumber_switch.setAttribute("class", "form-check-input");
+    autonumber_switch.setAttribute("type", "checkbox");
+    autonumber_switch.setAttribute("role", "switch");
+    autonumber_switch.checked = state.autonumber;
+    autonumber_switch.setAttribute("id", id + "-autonumber-switch");
+
+    autonumber_div.appendChild(autonumber_switch);
+    autonumber_element.append(autonumber_div);
+
+    behavior_collapse.appendChild(autonumber_element);
     behavior_collapse.appendChild(document.createElement("br"));
 
 
