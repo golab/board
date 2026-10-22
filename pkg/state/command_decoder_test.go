@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 package state_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/golab/board/internal/assert"
@@ -473,4 +474,58 @@ func TestDecodeFail(t *testing.T) {
 	e := event.NewEvent("failevent", nil)
 	_, err := state.DecodeToCommand(e)
 	assert.NotNil(t, err)
+}
+
+func TestDecodeLabelValidation(t *testing.T) {
+	tests := []struct {
+		event string
+		key   string
+		label string
+		ok    bool
+	}{
+		{"label", "label", "O_o", true},
+		{"label", "label", "é", true},
+		{"label", "label", "", false},
+		{"label", "label", "abcd", false},
+		{"label", "label", "<b>", true},
+		{"label", "label", "<img src=x>", false},
+		{"label", "label", "a\x00", false},
+		{"letter", "letter", "A", true},
+		{"letter", "letter", "<script>", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.event+":"+tt.label, func(t *testing.T) {
+			val := map[string]any{"coords": []any{9.0, 9.0}, tt.key: tt.label}
+			_, err := state.DecodeToCommand(event.NewEvent(tt.event, val))
+			if tt.ok {
+				assert.NoError(t, err)
+			} else {
+				assert.NotNil(t, err)
+			}
+		})
+	}
+}
+
+func TestDecodeDrawValidation(t *testing.T) {
+	tests := []struct {
+		value []any
+		ok    bool
+	}{
+		{[]any{0.1, 0.1, 0.2, 0.2, "#48bbff"}, true},
+		{[]any{0.1, 0.1, 0.2, 0.2, "#48BBFF80"}, true},
+		{[]any{nil, nil, 0.2, 0.2, "#000000"}, true},
+		{[]any{0.1, 0.1, 0.2, 0.2, "red"}, false},
+		{[]any{0.1, 0.1, 0.2, 0.2, "#000;background:url(x)"}, false},
+		{[]any{0.1, 0.1, 0.2}, false},
+	}
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("draw%d", i), func(t *testing.T) {
+			_, err := state.DecodeToCommand(event.NewEvent("draw", tt.value))
+			if tt.ok {
+				assert.NoError(t, err)
+			} else {
+				assert.NotNil(t, err)
+			}
+		})
+	}
 }

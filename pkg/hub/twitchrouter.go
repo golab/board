@@ -146,15 +146,6 @@ func (h *Hub) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// on subscriptions, twitch sends a challenge that we need to respond to
-	if req.Challenge != "" {
-		_, err = w.Write([]byte(req.Challenge))
-		if err != nil {
-			h.logger.Error("twitchCallbackPost:write", "err", err)
-		}
-		return
-	}
-
 	// Grab headers for verification
 	msgid := r.Header.Get("Twitch-Eventsub-Message-Id")
 	timestamp := r.Header.Get("Twitch-Eventsub-Message-Timestamp")
@@ -164,9 +155,23 @@ func (h *Hub) twitchCallbackPost(w http.ResponseWriter, r *http.Request) {
 	message := msgid + timestamp + string(body)
 
 	// do verification
+	// (this has to happen before echoing the challenge, otherwise anyone
+	// can make this endpoint reflect arbitrary content)
 	v := twitch.Verify(h.cfg.Twitch.Secret, message, signature)
 	if !v {
 		h.logger.Info("unverified message")
+		return
+	}
+
+	// on subscriptions, twitch sends a challenge that we need to respond to
+	if req.Challenge != "" {
+		// never let the browser interpret the echoed challenge as html
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		_, err = w.Write([]byte(req.Challenge))
+		if err != nil {
+			h.logger.Error("twitchCallbackPost:write", "err", err)
+		}
 		return
 	}
 

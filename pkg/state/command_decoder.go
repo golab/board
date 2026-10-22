@@ -12,11 +12,34 @@ package state
 
 import (
 	"fmt"
+	"regexp"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/golab/board/pkg/core/color"
 	"github.com/golab/board/pkg/core/coord"
 	"github.com/golab/board/pkg/event"
 )
+
+// MaxLabelLength is the longest label (in characters) a user can place
+const MaxLabelLength = 3
+
+var penColorRegexp = regexp.MustCompile(`^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$`)
+
+// validateLabel rejects labels that are empty, too long, or contain
+// anything other than printable characters
+func validateLabel(label string) error {
+	n := utf8.RuneCountInString(label)
+	if n == 0 || n > MaxLabelLength {
+		return fmt.Errorf("labels must be 1 to %d characters", MaxLabelLength)
+	}
+	for _, r := range label {
+		if !unicode.IsPrint(r) {
+			return fmt.Errorf("labels must only contain printable characters")
+		}
+	}
+	return nil
+}
 
 func DecodeToCommand(evt event.Event) (Command, error) {
 	switch evt.Type() {
@@ -80,6 +103,9 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 		if !ok {
 			return nil, fmt.Errorf("'letter' should be a string")
 		}
+		if err := validateLabel(letter); err != nil {
+			return nil, err
+		}
 		return NewAddLetterCommand(c, letter), nil
 	case "number":
 		val, ok := evt.Value().(map[string]any)
@@ -109,6 +135,9 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 		label, ok := val["label"].(string)
 		if !ok {
 			return nil, fmt.Errorf("'label' should be a string")
+		}
+		if err := validateLabel(label); err != nil {
+			return nil, err
 		}
 		return NewAddLabelCommand(c, label), nil
 	case "remove_mark":
@@ -155,6 +184,9 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 		if !ok {
 			return nil, fmt.Errorf("'value' should be in the format [float, float, float, float, string]")
 		}
+		if len(vals) != 5 {
+			return nil, fmt.Errorf("'value' should be in the format [float, float, float, float, string]")
+		}
 		var x0 float64
 		var y0 float64
 		if vals[0] == nil {
@@ -190,6 +222,9 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 
 		if !ok {
 			return nil, fmt.Errorf("'value' should be in the format [float, float, float, float, string]")
+		}
+		if !penColorRegexp.MatchString(color) {
+			return nil, fmt.Errorf("pen color should be a hex color like #48bbff")
 		}
 		return NewDrawCommand(x0, y0, x1, y1, color), nil
 	case "erase_pen":

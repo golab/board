@@ -99,3 +99,37 @@ func TestTwitchRouterCallbackGet(t *testing.T) {
 		})
 	}
 }
+
+func TestTwitchRouterChallengeIsPlainText(t *testing.T) {
+	h, err := hub.NewHub(config.Test(), logx.NewRecorder(logx.LogLevelDebug))
+	require.NoError(t, err)
+	r := chi.NewRouter()
+	r.Mount("/", h.TwitchRouter())
+
+	body := []byte(`{"challenge": "<html><script>alert(1)</script></html>"}`)
+	req := httptest.NewRequest("POST", "/callback", bytes.NewBuffer(body))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	assert.Equal(t, rec.Header().Get("Content-Type"), "text/plain; charset=utf-8")
+	assert.Equal(t, rec.Header().Get("X-Content-Type-Options"), "nosniff")
+}
+
+func TestTwitchRouterChallengeRequiresSignature(t *testing.T) {
+	cfg := config.Test()
+	cfg.Twitch.Secret = "secret"
+	h, err := hub.NewHub(cfg, logx.NewRecorder(logx.LogLevelDebug))
+	require.NoError(t, err)
+	r := chi.NewRouter()
+	r.Mount("/", h.TwitchRouter())
+
+	body := []byte(`{"challenge": "foo"}`)
+	req := httptest.NewRequest("POST", "/callback", bytes.NewBuffer(body))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	// unsigned requests don't get the challenge echoed back
+	out, err := io.ReadAll(rec.Result().Body)
+	require.NoError(t, err)
+	assert.Equal(t, string(out), "")
+}

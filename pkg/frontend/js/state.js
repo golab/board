@@ -1029,11 +1029,13 @@ class State {
         let coord = lb.coord
         let id = coordtoid(coord);
 
-        let i = parseInt(lb.text);
-        if (Number.isInteger(i)) {
-            this.marks.set(id, "number:" + lb.text);
+        // only treat the label as a number if it is entirely digits
+        // (parseInt would accept "1<anything>")
+        if (/^[0-9]+$/.test(lb.text)) {
+            let i = parseInt(lb.text);
+            this.marks.set(id, "number:" + i);
             this.numbers.set(i, 1);
-            this.board_graphics._draw_manual_number(coord.x, coord.y, lb.text);
+            this.board_graphics._draw_manual_number(coord.x, coord.y, String(i));
             return;
         }
 

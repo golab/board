@@ -519,7 +519,7 @@ class BoardGraphics {
         }
         text.style.fontSize = font_size + "px";
         text.style.fill = color;
-        text.innerHTML = txt;
+        text.textContent = txt;
         //text.setAttributeNS(null, "id", text_id);
         text.style.cursor = "default";
         text.style.userSelect = "none";
@@ -543,7 +543,7 @@ class BoardGraphics {
         }
         text.style.fontSize = font_size + "px";
         text.style.fill = color;
-        text.innerHTML = txt;
+        text.textContent = txt;
         //text.setAttributeNS(null, "id", text_id);
         text.style.cursor = "default";
         text.style.userSelect = "none";

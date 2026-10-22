@@ -831,7 +831,7 @@ class TreeGraphics {
             text.setAttribute("y", pos_y+y_offset);
             text.style.fontSize = font_size + "px";
             text.style.fill = hex_color;
-            text.innerHTML = text_value;
+            text.textContent = text_value;
             //text.setAttributeNS(null, "id", text_id);
             text.style.cursor = "default";
             text.style.userSelect = "none";
