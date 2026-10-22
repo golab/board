@@ -25,7 +25,7 @@ help: ## Show this help.
 
 setup: ## Setup environment
 	@echo "==> setup"
-	@[ -x ${PWD}/bin/golangci-lint ] || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b ${PWD}/bin v2.5.0
+	@[ -x ${PWD}/bin/golangci-lint ] || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b ${PWD}/bin v2.14.0
 	@[ -x ${PWD}/bin/air ] || curl -sSfL https://raw.githubusercontent.com/air-verse/air/master/install.sh | sh -s -- -b ${PWD}/bin
 	@[ -x ${PWD}/bin/gremlins ] || GOBIN=${PWD}/bin go install github.com/go-gremlins/gremlins/cmd/gremlins@v0.5.0
 

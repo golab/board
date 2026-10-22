@@ -189,7 +189,7 @@ func (ldr *BaseLoader) rebind(query string) string {
 	for i := 0; i < len(query); i++ {
 		ch := query[i]
 		if ch == '?' {
-			b.WriteString(fmt.Sprintf("$%d", argIdx))
+			fmt.Fprintf(&b, "$%d", argIdx)
 			argIdx++
 		} else {
 			b.WriteByte(ch)

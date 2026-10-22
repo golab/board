@@ -23,8 +23,6 @@ import (
 	"github.com/golab/board/pkg/core/tree"
 )
 
-const Letters = "ABCDEFGHIJKLNMOPQRSTUVWXYZ"
-
 // as a rule, anything that would need to get sent to new connections
 // should be stored here
 type State struct {
