@@ -188,6 +188,12 @@ class BoardGraphics {
 
         let review = document.getElementById("review");
 
+        // keep the svg layers' z-indexes local to the board
+        // otherwise the transparent top layers sit above things that
+        // overlap the board (e.g. the collapsed button dropdown)
+        // and swallow their clicks
+        review.style.isolation = "isolate";
+
         this.size = this.state.size;
         this.width = parseInt(review.offsetHeight)*(this.size-1)/(this.size+1);
         this.side = this.width/(this.size-1);

@@ -687,13 +687,24 @@ class NetworkHandler {
         let y = event.clientY;
         let flip = this.state.keys_down.has("Shift");
 
-        //let explorer_node = this.state.tree_graphics.capture_mouse(x, y);
-        let index = this.state.tree_graphics.capture_mouse(x, y);
-        if (index != -1) {
-            let payload = {"event": "goto_grid", "value": index};
-            this.prepare(payload);
+        // only clicks that land directly on the explorer or the board count
+        // otherwise a click on something overlapping them (e.g. the
+        // collapsed button dropdown) would also place a stone underneath
+        if (this.state.tree_graphics.container.contains(event.target)) {
+            //let explorer_node = this.state.tree_graphics.capture_mouse(x, y);
+            let index = this.state.tree_graphics.capture_mouse(x, y);
+            if (index != -1) {
+                let payload = {"event": "goto_grid", "value": index};
+                this.prepare(payload);
+            }
             return;
         }
+
+        let review = document.getElementById("review");
+        if (review == null || !review.contains(event.target)) {
+            return;
+        }
+
         let coords = this.state.board_graphics.pos_to_coord(x, y);
 
         // don't need to share if click is outside the board
