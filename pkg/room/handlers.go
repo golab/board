@@ -324,8 +324,8 @@ func (r *Room) handleUpdateSettings(evt event.Event) event.Event {
 	}
 	buffer := int64(bufferF)
 	size := int(sizeF)
-	if size != 9 && size != 13 && size != 19 {
-		return event.ErrorEvent("board size should be 9, 13, or 19")
+	if size != 7 && size != 9 && size != 13 && size != 19 {
+		return event.ErrorEvent("board size should be 7, 9, 13, or 19")
 	}
 
 	if black != "" {

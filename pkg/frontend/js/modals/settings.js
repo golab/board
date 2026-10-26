@@ -240,7 +240,7 @@ function gameinfo_settings(state) {
     let size_select = document.createElement("select");
     size_select.setAttribute("id", id + "-size-select");
     size_select.setAttribute("class", "form-select");
-    for (let x of ["9", "13", "19"]) {
+    for (let x of ["7", "9", "13", "19"]) {
         let opt = document.createElement("option");
         opt.setAttribute("value", x);
         opt.innerHTML = x;

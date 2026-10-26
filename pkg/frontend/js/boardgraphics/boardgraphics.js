@@ -860,6 +860,8 @@ class BoardGraphics {
             stars.push([6,2]);
             stars.push([6,6]);
             stars.push([4,4]);
+        } else if (this.size == 7) {
+            stars.push([3,3]);
         }
         for (let [x,y] of stars) {
             this.draw_star(x,y);
