@@ -55,6 +55,7 @@ type Hub struct {
 	wg                sync.WaitGroup
 	heartbeatInterval float64
 	messageInterval   float64
+	saveInterval      float64
 }
 
 func NewHub(cfg *config.Config, logger logx.Logger) (*Hub, error) {
@@ -94,10 +95,15 @@ func NewHubWithDB(db loader.Loader, cfg *config.Config, logger logx.Logger) (*Hu
 		logger:            logger,
 		heartbeatInterval: 3600.0,
 		messageInterval:   5.0,
+		saveInterval:      300.0,
 	}
 
 	// start message loop
 	go s.MessageLoop()
+
+	// periodically persist room state so a crash/OOM/SIGKILL loses at most
+	// one interval of activity rather than everything since startup
+	go s.SaveLoop()
 
 	return s, nil
 }
@@ -190,36 +196,71 @@ func (h *Hub) Load() {
 func (h *Hub) Heartbeat(roomID string) {
 	defer logx.Recover(h.logger, "heartbeat panicked", "room_id", roomID)
 
-	r, err := h.GetRoom(roomID)
-	if err != nil {
-		h.logger.Info("room not found during heartbeat", "room_id", roomID)
-		return
-	}
 	for {
 		time.Sleep(time.Duration(h.heartbeatInterval * float64(time.Second)))
-		now := time.Now()
-		diff := now.Sub(r.GetLastActive())
-		if diff.Seconds() > r.GetTimeout() {
-			break
+
+		// re-fetch each tick: the room may have been evicted and a brand new
+		// one created under the same id, and a stale pointer must not be used
+		r, err := h.GetRoom(roomID)
+		if err != nil {
+			// the room is already gone; nothing left to watch
+			return
 		}
-		h.logger.Debug("inactive", "room_id", roomID, "duration", diff.String())
+
+		// a room with live connections is never idle, no matter how long ago
+		// the last move was
+		if r.NumConns() > 0 {
+			continue
+		}
+
+		diff := time.Since(r.GetLastActive())
+		if diff.Seconds() <= r.GetTimeout() {
+			h.logger.Debug("inactive", "room_id", roomID, "duration", diff.String())
+			continue
+		}
+
+		// the room looks evictable; evictIfIdle re-checks under the hub lock
+		// before deleting so we never close a room out from under a user who
+		// reconnected in the meantime
+		if h.evictIfIdle(roomID, r) {
+			return
+		}
 	}
+}
+
+// evictIfIdle removes and closes r only if, under the hub lock, it is still the
+// same room registered under roomID and still has no connections and is still
+// past its timeout. It returns true when the heartbeat should stop: either the
+// room was evicted, or it is no longer the room this heartbeat was watching.
+func (h *Hub) evictIfIdle(roomID string, r *room.Room) bool {
+	h.mu.Lock()
+	current, ok := h.rooms[roomID]
+	if !ok || current != r {
+		// already evicted, or replaced by a newer room with its own heartbeat
+		h.mu.Unlock()
+		return true
+	}
+	// re-check under the lock: a connection may have attached (and refreshed
+	// lastActive) between the unlocked check and here
+	if r.NumConns() > 0 || time.Since(r.GetLastActive()).Seconds() <= r.GetTimeout() {
+		h.mu.Unlock()
+		return false
+	}
+	// remove from the map first, so GetOrCreateRoom can't hand this room to a
+	// new connection while we're tearing it down
+	delete(h.rooms, roomID)
+	h.mu.Unlock()
+
 	h.logger.Info("clearing board", "room_id", roomID)
 
-	// close the room down
-	err = r.Close()
-	if err != nil {
+	if err := r.Close(); err != nil {
 		h.logger.Error("failed to close room", "err", err, "room_id", roomID)
 	}
 
-	// delete the room from the server map
-	h.DeleteRoom(roomID)
-
-	// delete it from the database
-	err = h.db.DeleteRoom(roomID)
-	if err != nil {
+	if err := h.db.DeleteRoom(roomID); err != nil {
 		h.logger.Error("failed to delete room", "err", err, "room_id", roomID)
 	}
+	return true
 }
 
 func (h *Hub) ReadMessages() {
@@ -274,6 +315,18 @@ func (h *Hub) MessageLoop() {
 			defer logx.Recover(h.logger, "message loop panicked")
 			h.ReadMessages()
 			h.SendMessages()
+		}()
+	}
+}
+
+func (h *Hub) SaveLoop() {
+	for {
+		time.Sleep(time.Duration(h.saveInterval * float64(time.Second)))
+
+		// recover per iteration so one failed save doesn't stop the loop
+		func() {
+			defer logx.Recover(h.logger, "save loop panicked")
+			h.Save()
 		}()
 	}
 }

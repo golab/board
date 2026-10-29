@@ -23,6 +23,7 @@ import (
 	"github.com/golab/board/internal/assert"
 	"github.com/golab/board/internal/twitch"
 	"github.com/golab/board/pkg/config"
+	"github.com/golab/board/pkg/event"
 	"github.com/golab/board/pkg/loader"
 	"github.com/golab/board/pkg/logx"
 )
@@ -170,4 +171,25 @@ func TestHeartbeat(t *testing.T) {
 	// room shouldn't exist
 	_, err = h.GetRoom(roomID)
 	assert.NotNil(t, err)
+}
+
+// a room with a connected user is not evicted, even when its last activity is
+// older than the timeout
+func TestHeartbeatKeepsWatchedRoom(t *testing.T) {
+	logger := logx.NewRecorder(logx.LogLevelDebug)
+	h, err := NewHubWithDB(loader.NewMemoryLoader(), config.Default(), logger)
+	assert.NoError(t, err)
+
+	h.heartbeatInterval = 0.01
+	roomID := "watched"
+	r := h.GetOrCreateRoom(roomID)
+	r.SetTimeout(0.02)
+
+	// a live connection should keep the room alive past the timeout
+	r.RegisterConnection(event.NewMockEventChannel())
+
+	time.Sleep(time.Duration(0.05 * float64(time.Second)))
+
+	_, err = h.GetRoom(roomID)
+	assert.NoError(t, err)
 }
