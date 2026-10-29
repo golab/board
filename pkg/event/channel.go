@@ -13,8 +13,10 @@ package event
 import (
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -27,6 +29,22 @@ const (
 
 	// messageTimeout is how long the body of a message can take to arrive
 	messageTimeout = 30 * time.Second
+
+	// sendQueueSize is the per-connection outbound buffer. Each connection
+	// drains its own queue on a dedicated goroutine, so a slow client can
+	// fall this far behind before it is disconnected without blocking any
+	// other client or the room lock.
+	sendQueueSize = 256
+)
+
+var (
+	// ErrSlowConsumer is returned by SendEvent when the connection's outbound
+	// buffer is full. The connection is closed so a stalled client can't hold
+	// up broadcasts to everyone else.
+	ErrSlowConsumer = errors.New("slow consumer: send buffer full")
+
+	// ErrClosed is returned by SendEvent after the connection has been closed.
+	ErrClosed = errors.New("event channel closed")
 )
 
 type EventChannel interface {
@@ -37,34 +55,79 @@ type EventChannel interface {
 	ID() string
 }
 
-// DefaultEventChannel is a thin wrapper around a ReadWriteCloser
+// DefaultEventChannel wraps a ReadWriteCloser. Sends are buffered and written
+// on a dedicated per-connection goroutine so that a single slow client can
+// never stall a broadcast to everyone else (or the room lock the broadcast is
+// holding). Reads stay synchronous on the caller's goroutine.
 type DefaultEventChannel struct {
-	ws io.ReadWriteCloser
-	id string
+	ws       io.ReadWriteCloser
+	id       string
+	queue    chan Event
+	done     chan struct{}
+	start    sync.Once
+	closeOne sync.Once
+	closeErr error
 }
 
 func NewDefaultEventChannel(ws io.ReadWriteCloser) EventChannel {
 	// assign the new connection a new id
 	id := uuid.New().String()
 
-	return &DefaultEventChannel{ws, id}
+	return &DefaultEventChannel{
+		ws:    ws,
+		id:    id,
+		queue: make(chan Event, sendQueueSize),
+		done:  make(chan struct{}),
+	}
 }
 
 func (ec *DefaultEventChannel) ID() string {
 	return ec.id
 }
 
+// SendEvent enqueues evt for delivery and returns without touching the socket.
+// It never blocks: if the connection has been closed it returns ErrClosed, and
+// if the outbound buffer is full (a stalled client) it closes the connection
+// and returns ErrSlowConsumer rather than blocking the caller.
 func (ec *DefaultEventChannel) SendEvent(evt Event) error {
-	// marshal event back into data
-	data, err := json.Marshal(evt)
-	if err != nil {
-		return err
+	select {
+	case <-ec.done:
+		return ErrClosed
+	default:
 	}
-	_, err = ec.ws.Write(data)
-	if err != nil {
-		return err
+
+	// start the writer lazily, so a channel that never sends never spawns a
+	// goroutine
+	ec.start.Do(func() { go ec.sendLoop() })
+
+	select {
+	case ec.queue <- evt:
+		return nil
+	default:
+		_ = ec.Close()
+		return ErrSlowConsumer
 	}
-	return nil
+}
+
+// sendLoop is the sole writer to the socket: it drains the outbound queue in
+// order until the connection is closed or a write fails.
+func (ec *DefaultEventChannel) sendLoop() {
+	for {
+		select {
+		case <-ec.done:
+			return
+		case evt := <-ec.queue:
+			data, err := json.Marshal(evt)
+			if err != nil {
+				// a single unmarshalable event shouldn't kill the connection
+				continue
+			}
+			if _, err := ec.ws.Write(data); err != nil {
+				_ = ec.Close()
+				return
+			}
+		}
+	}
 }
 
 func (ec *DefaultEventChannel) OnConnect() {
@@ -84,8 +147,15 @@ func (ec *DefaultEventChannel) ReceiveEvent() (Event, error) {
 	return evt, nil
 }
 
+// Close stops the writer goroutine and closes the underlying socket. It is
+// idempotent and safe to call from the sender goroutine, a broadcaster, or the
+// connection handler.
 func (ec *DefaultEventChannel) Close() error {
-	return ec.ws.Close()
+	ec.closeOne.Do(func() {
+		close(ec.done)
+		ec.closeErr = ec.ws.Close()
+	})
+	return ec.closeErr
 }
 
 func (ec *DefaultEventChannel) readPacket() ([]byte, error) {

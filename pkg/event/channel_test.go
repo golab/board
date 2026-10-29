@@ -13,9 +13,12 @@ package event_test
 import (
 	"fmt"
 	"io"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/golab/board/internal/assert"
+	"github.com/golab/board/internal/require"
 	"github.com/golab/board/pkg/event"
 )
 
@@ -58,6 +61,7 @@ func TestEventChannel(t *testing.T) {
 	}
 	c := NewMockReadWriteCloser(queued)
 	ch := event.NewDefaultEventChannel(c)
+	defer ch.Close() //nolint:errcheck
 	evt, err := ch.ReceiveEvent()
 	assert.NoError(t, err)
 	assert.Equal(t, evt.Type(), "test")
@@ -85,6 +89,7 @@ func TestEventChannelBig(t *testing.T) {
 
 	c := NewMockReadWriteCloser(queued)
 	ch := event.NewDefaultEventChannel(c)
+	defer ch.Close() //nolint:errcheck
 	evt, err := ch.ReceiveEvent()
 	assert.NoError(t, err)
 	_ = evt
@@ -113,6 +118,104 @@ func TestEventChannelTooLarge(t *testing.T) {
 	_, err := ch.ReceiveEvent()
 	assert.NotNil(t, err)
 	assert.Equal(t, c.index, 1)
+}
+
+// recordingWriteCloser records every Write and signals it on a channel, so a
+// test can wait for asynchronous delivery.
+type recordingWriteCloser struct {
+	mu      sync.Mutex
+	writes  int
+	written chan struct{}
+}
+
+func newRecordingWriteCloser() *recordingWriteCloser {
+	return &recordingWriteCloser{written: make(chan struct{}, 1024)}
+}
+
+func (w *recordingWriteCloser) Read([]byte) (int, error) { return 0, io.EOF }
+
+func (w *recordingWriteCloser) Write(p []byte) (int, error) {
+	w.mu.Lock()
+	w.writes++
+	w.mu.Unlock()
+	w.written <- struct{}{}
+	return len(p), nil
+}
+
+func (w *recordingWriteCloser) Close() error { return nil }
+
+func (w *recordingWriteCloser) count() int {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return w.writes
+}
+
+// sends are delivered on the channel's own goroutine, not the caller's
+func TestEventChannelDeliversAsync(t *testing.T) {
+	w := newRecordingWriteCloser()
+	ch := event.NewDefaultEventChannel(w)
+	defer ch.Close() //nolint:errcheck
+
+	const n = 5
+	for i := 0; i < n; i++ {
+		require.NoError(t, ch.SendEvent(event.NewEvent("test", fmt.Sprintf("%d", i))))
+	}
+
+	for i := 0; i < n; i++ {
+		select {
+		case <-w.written:
+		case <-time.After(2 * time.Second):
+			t.Fatalf("timed out after %d of %d async writes", i, n)
+		}
+	}
+	assert.Equal(t, w.count(), n)
+}
+
+// blockingWriteCloser blocks in Write until it is closed, standing in for a
+// client that has stopped reading.
+type blockingWriteCloser struct {
+	closed chan struct{}
+	once   sync.Once
+}
+
+func newBlockingWriteCloser() *blockingWriteCloser {
+	return &blockingWriteCloser{closed: make(chan struct{})}
+}
+
+func (w *blockingWriteCloser) Read([]byte) (int, error) {
+	<-w.closed
+	return 0, io.EOF
+}
+
+func (w *blockingWriteCloser) Write(p []byte) (int, error) {
+	<-w.closed
+	return 0, io.ErrClosedPipe
+}
+
+func (w *blockingWriteCloser) Close() error {
+	w.once.Do(func() { close(w.closed) })
+	return nil
+}
+
+// a client that never drains eventually overflows its buffer and is
+// disconnected, instead of blocking the sender forever
+func TestEventChannelSlowConsumerDisconnects(t *testing.T) {
+	w := newBlockingWriteCloser()
+	ch := event.NewDefaultEventChannel(w)
+	defer ch.Close() //nolint:errcheck
+
+	// far more than the buffer can hold; the writer goroutine is stuck in
+	// Write, so the buffer fills and then overflows
+	var err error
+	for i := 0; i < 100000; i++ {
+		if err = ch.SendEvent(event.EmptyEvent()); err != nil {
+			break
+		}
+	}
+	require.ErrorIs(t, err, event.ErrSlowConsumer)
+
+	// once overflowed, the connection is closed and further sends are rejected
+	assert.ErrorIs(t, ch.SendEvent(event.EmptyEvent()), event.ErrClosed)
 }
 
 // a body split across several short reads is put back together

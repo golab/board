@@ -305,6 +305,8 @@ func (h *Hub) HandlerWrapper(ws *websocket.Conn) {
 
 	// wrap the socket
 	ec := event.NewDefaultEventChannel(ws)
+	// stop the per-connection writer goroutine once the connection ends
+	defer ec.Close() //nolint:errcheck
 	h.Handler(ec, roomID)
 }
 
