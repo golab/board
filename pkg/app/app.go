@@ -51,8 +51,11 @@ func New(cfg *config.Config, logger logx.Logger) (*App, error) {
 	r.Mount("/api", h.ApiRouter(cfg.Version))
 	r.Mount("/api/v1", h.ApiV1Router())
 
-	// see server package for routes
-	r.Mount("/apps/twitch", h.TwitchRouter())
+	// see server package for routes; only mounted when Twitch is configured,
+	// so a deploy without a secret can't receive unauthenticated callbacks
+	if cfg.TwitchEnabled() {
+		r.Mount("/apps/twitch", h.TwitchRouter())
+	}
 
 	// mount websocket
 	r.Mount("/socket", h.SocketRouter())

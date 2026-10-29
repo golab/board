@@ -69,9 +69,13 @@ type TwitchMessageJSON struct {
 	Text string `json:"text"`
 }
 
+// Verify reports whether signature is a valid Twitch EventSub HMAC-SHA256 of
+// message keyed by secret. It fails closed: an empty secret never verifies, so
+// a misconfigured deployment rejects callbacks rather than accepting
+// unauthenticated ones that could drive board state.
 func Verify(secret, message, signature string) bool {
 	if len(secret) == 0 {
-		return true
+		return false
 	}
 
 	mac := hmac.New(sha256.New, []byte(secret))

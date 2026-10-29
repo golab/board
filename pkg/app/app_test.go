@@ -12,10 +12,13 @@ package app_test
 
 import (
 	"bytes"
+	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"regexp"
 	"strings"
@@ -27,6 +30,24 @@ import (
 	"github.com/golab/board/pkg/config"
 	"github.com/golab/board/pkg/logx"
 )
+
+// twitchConfig returns a Test config with Twitch enabled, so the
+// /apps/twitch routes are mounted and callbacks can be verified.
+func twitchConfig() *config.Config {
+	cfg := config.Test()
+	cfg.Twitch.ClientID = "client"
+	cfg.Twitch.Secret = "secret"
+	cfg.Twitch.BotID = "bot"
+	return cfg
+}
+
+// signTwitch sets the Twitch EventSub signature header for body. The id and
+// timestamp headers are left empty, so the signed message is exactly the body.
+func signTwitch(req *http.Request, secret string, body []byte) {
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write(body)
+	req.Header.Set("Twitch-Eventsub-Message-Signature", "sha256="+hex.EncodeToString(mac.Sum(nil)))
+}
 
 func TestPing(t *testing.T) {
 	a, err := app.New(config.Test(), logx.NewRecorder(logx.LogLevelInfo))
@@ -50,22 +71,57 @@ func TestPing(t *testing.T) {
 }
 
 func TestTwitch(t *testing.T) {
-	a, err := app.New(config.Test(), logx.NewRecorder(logx.LogLevelInfo))
+	cfg := twitchConfig()
+	a, err := app.New(cfg, logx.NewRecorder(logx.LogLevelInfo))
 	assert.NoError(t, err)
 
 	rec := httptest.NewRecorder()
 
 	body := []byte(`{"event": {"message": {"text": "!setboard Board"}}}`)
 	req := httptest.NewRequest("POST", "/apps/twitch/callback", bytes.NewBuffer(body))
+	signTwitch(req, cfg.Twitch.Secret, body)
 	a.Router.ServeHTTP(rec, req)
 
 	body = []byte(`{"event": {"message": {"text": "!branch k10 k11"}}}`)
 	req = httptest.NewRequest("POST", "/apps/twitch/callback", bytes.NewBuffer(body))
+	signTwitch(req, cfg.Twitch.Secret, body)
 	a.Router.ServeHTTP(rec, req)
 
 	room, err := a.Hub.GetRoom("board")
 	require.NoError(t, err)
 	assert.Equal(t, len(room.ToSGF()), 77)
+}
+
+// An unsigned callback must not drive board state, even when Twitch is enabled.
+func TestTwitchRejectsUnauthenticated(t *testing.T) {
+	cfg := twitchConfig()
+	a, err := app.New(cfg, logx.NewRecorder(logx.LogLevelInfo))
+	require.NoError(t, err)
+
+	rec := httptest.NewRecorder()
+	body := []byte(`{"event": {"message": {"text": "!setboard Board"}}}`)
+	// no signTwitch: the request carries no valid signature
+	req := httptest.NewRequest("POST", "/apps/twitch/callback", bytes.NewBuffer(body))
+	a.Router.ServeHTTP(rec, req)
+
+	_, err = a.Hub.GetRoom("board")
+	assert.True(t, err != nil)
+}
+
+// With Twitch disabled (no secret), the callback route is not mounted, so a
+// misconfigured deploy can't act on callbacks: the Twitch handler never runs
+// and no board state is created.
+func TestTwitchDisabledRouteNotMounted(t *testing.T) {
+	a, err := app.New(config.Test(), logx.NewRecorder(logx.LogLevelInfo))
+	require.NoError(t, err)
+
+	rec := httptest.NewRecorder()
+	body := []byte(`{"event": {"message": {"text": "!setboard Board"}}}`)
+	req := httptest.NewRequest("POST", "/apps/twitch/callback", bytes.NewBuffer(body))
+	a.Router.ServeHTTP(rec, req)
+
+	_, err = a.Hub.GetRoom("board")
+	assert.True(t, err != nil)
 }
 
 var inlineScript = regexp.MustCompile(`(?s)<script(\s[^>]*)?>(.*?)</script>`)

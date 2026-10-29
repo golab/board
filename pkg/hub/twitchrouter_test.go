@@ -12,8 +12,12 @@ package hub_test
 
 import (
 	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -24,6 +28,18 @@ import (
 	"github.com/golab/board/pkg/hub"
 	"github.com/golab/board/pkg/logx"
 )
+
+const testTwitchSecret = "test-secret"
+
+// signTwitch sets the Twitch EventSub signature header for body, keyed by
+// secret. The id and timestamp headers are left empty, so the signed message
+// is exactly the body (matching twitchCallbackPost's construction).
+func signTwitch(req *http.Request, secret string, body []byte) {
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write(body)
+	sig := "sha256=" + hex.EncodeToString(mac.Sum(nil))
+	req.Header.Set("Twitch-Eventsub-Message-Signature", sig)
+}
 
 func TestTwitchRouterCallbackPost(t *testing.T) {
 	twitchTests := []struct {
@@ -46,13 +62,16 @@ func TestTwitchRouterCallbackPost(t *testing.T) {
 		t.Run(fmt.Sprintf("twitch%d", i), func(t *testing.T) {
 
 			logger := logx.NewRecorder(logx.LogLevelDebug)
-			h, err := hub.NewHub(config.Test(), logger)
+			cfg := config.Test()
+			cfg.Twitch.Secret = testTwitchSecret
+			h, err := hub.NewHub(cfg, logger)
 			require.NoError(t, err)
 			r := chi.NewRouter()
 			r.Mount("/", h.TwitchRouter())
 
 			postBody := []byte(tt.body)
 			req := httptest.NewRequest("POST", "/callback", bytes.NewBuffer(postBody))
+			signTwitch(req, testTwitchSecret, postBody)
 			rec := httptest.NewRecorder()
 			r.ServeHTTP(rec, req)
 
@@ -101,13 +120,16 @@ func TestTwitchRouterCallbackGet(t *testing.T) {
 }
 
 func TestTwitchRouterChallengeIsPlainText(t *testing.T) {
-	h, err := hub.NewHub(config.Test(), logx.NewRecorder(logx.LogLevelDebug))
+	cfg := config.Test()
+	cfg.Twitch.Secret = testTwitchSecret
+	h, err := hub.NewHub(cfg, logx.NewRecorder(logx.LogLevelDebug))
 	require.NoError(t, err)
 	r := chi.NewRouter()
 	r.Mount("/", h.TwitchRouter())
 
 	body := []byte(`{"challenge": "<html><script>alert(1)</script></html>"}`)
 	req := httptest.NewRequest("POST", "/callback", bytes.NewBuffer(body))
+	signTwitch(req, testTwitchSecret, body)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 

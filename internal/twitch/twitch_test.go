@@ -87,6 +87,14 @@ func TestVerify(t *testing.T) {
 	message := "hello world"
 	sig := "sha256=3ae321e96e012c6cc89b73326f329f0a3d1d7935abc3d819387830ce5f1b3074"
 	assert.True(t, twitch.Verify(secret, message, sig))
+
+	// a wrong signature is rejected
+	assert.False(t, twitch.Verify(secret, message, "sha256=deadbeef"))
+
+	// fail closed: an empty secret never verifies, even with a signature that
+	// would match an empty key
+	assert.False(t, twitch.Verify("", message, sig))
+	assert.False(t, twitch.Verify("", message, ""))
 }
 
 func TestParse(t *testing.T) {

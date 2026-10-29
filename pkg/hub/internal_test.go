@@ -12,6 +12,9 @@ package hub
 
 import (
 	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -23,6 +26,14 @@ import (
 	"github.com/golab/board/pkg/loader"
 	"github.com/golab/board/pkg/logx"
 )
+
+// signTwitchReq sets the Twitch EventSub signature header for body. The id and
+// timestamp headers are left empty, so the signed message is exactly the body.
+func signTwitchReq(req *http.Request, secret string, body []byte) {
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write(body)
+	req.Header.Set("Twitch-Eventsub-Message-Signature", "sha256="+hex.EncodeToString(mac.Sum(nil)))
+}
 
 func TestTwitchCallbackSubscribe(t *testing.T) {
 	logger := logx.NewRecorder(logx.LogLevelInfo)
@@ -90,7 +101,9 @@ func TestTwitchCallbackUnsubscribe(t *testing.T) {
 
 func TestTwitchCallbackPost1(t *testing.T) {
 	logger := logx.NewRecorder(logx.LogLevelInfo)
-	h, err := NewHubWithDB(loader.NewMemoryLoader(), config.Test(), logger)
+	cfg := config.Test()
+	cfg.Twitch.Secret = "test-secret"
+	h, err := NewHubWithDB(loader.NewMemoryLoader(), cfg, logger)
 	assert.NoError(t, err)
 
 	rec := httptest.NewRecorder()
@@ -99,6 +112,7 @@ func TestTwitchCallbackPost1(t *testing.T) {
 
 	body := []byte(`{"subscription": {"id": "sub123"}, "event": {"broadcaster_user_id": "broadcaster123", "chatter_user_id": "broadcaster123", "message": {"text": "!setboard abc"}}}`)
 	req := httptest.NewRequest("POST", "/callback", bytes.NewBuffer(body))
+	signTwitchReq(req, cfg.Twitch.Secret, body)
 	r.ServeHTTP(rec, req)
 
 	roomID := h.db.TwitchGetRoom("broadcaster123")
@@ -107,7 +121,9 @@ func TestTwitchCallbackPost1(t *testing.T) {
 
 func TestTwitchCallbackPost2(t *testing.T) {
 	logger := logx.NewRecorder(logx.LogLevelInfo)
-	h, err := NewHubWithDB(loader.NewMemoryLoader(), config.Test(), logger)
+	cfg := config.Test()
+	cfg.Twitch.Secret = "test-secret"
+	h, err := NewHubWithDB(loader.NewMemoryLoader(), cfg, logger)
 	assert.NoError(t, err)
 
 	rec := httptest.NewRecorder()
@@ -116,6 +132,7 @@ func TestTwitchCallbackPost2(t *testing.T) {
 
 	body := []byte(`{"subscription": {"id": "sub123"}, "event": {"broadcaster_user_id": "broadcaster123", "chatter_user_id": "broadcaster123", "message": {"text": "!setboard abc"}}}`)
 	req := httptest.NewRequest("POST", "/callback", bytes.NewBuffer(body))
+	signTwitchReq(req, cfg.Twitch.Secret, body)
 	r.ServeHTTP(rec, req)
 
 	roomID := h.db.TwitchGetRoom("broadcaster123")
@@ -123,6 +140,7 @@ func TestTwitchCallbackPost2(t *testing.T) {
 
 	body = []byte(`{"subscription": {"id": "sub123"}, "event": {"broadcaster_user_id": "broadcaster123", "chatter_user_id": "chatter123", "message": {"text": "!branch e10 e9 e8 e7"}}}`)
 	req = httptest.NewRequest("POST", "/callback", bytes.NewBuffer(body))
+	signTwitchReq(req, cfg.Twitch.Secret, body)
 	r.ServeHTTP(rec, req)
 
 	room, err := h.GetRoom(roomID)
