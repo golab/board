@@ -236,10 +236,17 @@ func (r *Room) SetTimeout(f float64) {
 	r.timeout = f
 }
 
+// Nicks returns a snapshot copy of the connection-id to nickname map. A copy
+// (rather than the internal map) means callers can read it without the room
+// lock and without racing concurrent SetNick/connect/disconnect mutations.
 func (r *Room) Nicks() map[string]string {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	return r.nicks
+	cp := make(map[string]string, len(r.nicks))
+	for k, v := range r.nicks {
+		cp[k] = v
+	}
+	return cp
 }
 
 func (r *Room) GetNick(user string) (string, bool) {
@@ -429,8 +436,9 @@ func (r *Room) DisableBuffers() {
 }
 
 func (r *Room) SendUserList() {
-	// send list of currently connected users
-	evt := event.NewEvent("connected_users", r.nicks)
+	// send list of currently connected users; Nicks() returns a private copy
+	// so the event doesn't share the room's map with concurrent mutations
+	evt := event.NewEvent("connected_users", r.Nicks())
 
 	r.Broadcast(evt)
 }

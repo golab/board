@@ -549,8 +549,8 @@ func chain(h EventHandler, middleware ...Middleware) EventHandler {
 	return h
 }
 
-// HandleAny is only to be used in special occasions because it recreates
-// all the handlers
+// HandleAny dispatches evt to the handler registered for its type, falling
+// back to the default handler when no handler matches.
 func (r *Room) HandleAny(evt event.Event) event.Event {
 	// handle the event
 	return r.GetHandler(evt.Type())(evt)

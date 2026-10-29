@@ -150,19 +150,32 @@ func page404(w http.ResponseWriter, r *http.Request) {
 	includeCommon(w, "404.html")
 }
 
-func page500(w http.ResponseWriter, r *http.Request) { //nolint:unused
-	includeCommon(w, "500.html")
-}
-
 //static
 
 func serveStatic(w http.ResponseWriter, r *http.Request, fname string) {
-	staticFS, _ := fs.Sub(frontend.Content, "static")
+	staticFS, err := fs.Sub(frontend.Content, "static")
+	if err != nil {
+		staticNotFound(w)
+		return
+	}
 
-	//path := fmt.Sprintf("%s/%s", "static", fname)
-	// TODO: make sure this is locked down
-	// TODO: make sure this uses the 404 page when the file isn't found
+	// serve only real files that live inside the embedded static tree:
+	// fs.Stat rejects path traversal ("..") and missing files, and the IsDir
+	// check blocks directory listings
+	info, err := fs.Stat(staticFS, fname)
+	if err != nil || info.IsDir() {
+		staticNotFound(w)
+		return
+	}
+
 	http.ServeFileFS(w, r, staticFS, fname)
+}
+
+// staticNotFound renders the styled 404 page with a 404 status for a missing
+// or disallowed static asset.
+func staticNotFound(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNotFound)
+	includeCommon(w, "404.html")
 }
 
 func favicon(w http.ResponseWriter, r *http.Request) {
