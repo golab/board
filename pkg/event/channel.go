@@ -35,6 +35,11 @@ const (
 	// fall this far behind before it is disconnected without blocking any
 	// other client or the room lock.
 	sendQueueSize = 256
+
+	// writeTimeout bounds a single socket write, so a client that stops
+	// reading (a stalled TCP connection) can't pin the writer goroutine, and
+	// the socket's write lock, indefinitely
+	writeTimeout = 10 * time.Second
 )
 
 var (
@@ -65,6 +70,7 @@ type DefaultEventChannel struct {
 	queue    chan Event
 	done     chan struct{}
 	start    sync.Once
+	doneOnce sync.Once
 	closeOne sync.Once
 	closeErr error
 }
@@ -104,7 +110,13 @@ func (ec *DefaultEventChannel) SendEvent(evt Event) error {
 	case ec.queue <- evt:
 		return nil
 	default:
-		_ = ec.Close()
+		// the writer is stuck in Write, which holds the socket's write lock;
+		// x/net/websocket's Close needs that same lock to send a close frame,
+		// so closing synchronously here would block the caller (and the room
+		// lock it holds) until the stalled write gives up. Reject further
+		// sends immediately and close the socket in the background instead.
+		ec.markDone()
+		go ec.Close() //nolint:errcheck
 		return ErrSlowConsumer
 	}
 }
@@ -121,6 +133,9 @@ func (ec *DefaultEventChannel) sendLoop() {
 			if err != nil {
 				// a single unmarshalable event shouldn't kill the connection
 				continue
+			}
+			if d, ok := ec.ws.(interface{ SetWriteDeadline(time.Time) error }); ok {
+				_ = d.SetWriteDeadline(time.Now().Add(writeTimeout))
 			}
 			if _, err := ec.ws.Write(data); err != nil {
 				_ = ec.Close()
@@ -151,11 +166,17 @@ func (ec *DefaultEventChannel) ReceiveEvent() (Event, error) {
 // idempotent and safe to call from the sender goroutine, a broadcaster, or the
 // connection handler.
 func (ec *DefaultEventChannel) Close() error {
+	ec.markDone()
 	ec.closeOne.Do(func() {
-		close(ec.done)
 		ec.closeErr = ec.ws.Close()
 	})
 	return ec.closeErr
+}
+
+// markDone stops the writer and makes further sends fail with ErrClosed,
+// without touching the socket. It is idempotent.
+func (ec *DefaultEventChannel) markDone() {
+	ec.doneOnce.Do(func() { close(ec.done) })
 }
 
 func (ec *DefaultEventChannel) readPacket() ([]byte, error) {

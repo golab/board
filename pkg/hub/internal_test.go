@@ -193,3 +193,24 @@ func TestHeartbeatKeepsWatchedRoom(t *testing.T) {
 	_, err = h.GetRoom(roomID)
 	assert.NoError(t, err)
 }
+
+// a user who has just been handed an idle room by GetOrCreateRoom, but hasn't
+// registered their connection yet, must not have that room evicted out from
+// under them
+func TestEvictSkipsRoomJustHandedOut(t *testing.T) {
+	h, err := NewHubWithDB(loader.NewMemoryLoader(), config.Default(), logx.NewRecorder(logx.LogLevelInfo))
+	assert.NoError(t, err)
+
+	roomID := "joining"
+	r := h.GetOrCreateRoom(roomID)
+	r.SetTimeout(60)
+	old := time.Now().Add(-time.Hour)
+	r.SetLastActive(&old)
+
+	// a new user arrives: same room comes back, connection not yet registered
+	assert.Equal(t, h.GetOrCreateRoom(roomID), r)
+
+	assert.False(t, h.evictIfIdle(roomID, r))
+	_, err = h.GetRoom(roomID)
+	assert.NoError(t, err)
+}

@@ -179,7 +179,7 @@ func (s *State) generateMarks() *Marks {
 func (s *State) generateMetadata() *Metadata {
 	m := &Metadata{
 		Size:       s.size,
-		Fields:     s.root.AllFields(),
+		Fields:     copyFields(s.root.AllFields()),
 		AutoNumber: s.autoNumber,
 	}
 	return m
@@ -188,9 +188,23 @@ func (s *State) generateMetadata() *Metadata {
 func (s *State) generateComments() []string {
 	cmts := []string{}
 	if c := s.current.GetField("C"); len(c) > 0 {
-		cmts = c
+		cmts = append(cmts, c...)
 	}
 	return cmts
+}
+
+// copyFields deep-copies fs. Frames are serialized after the room lock is
+// released (on each connection's writer goroutine), so they must not share
+// slices with the live tree, which later edits mutate in place.
+func copyFields(fs []fields.Field) []fields.Field {
+	if fs == nil {
+		return nil
+	}
+	out := make([]fields.Field, len(fs))
+	for i, f := range fs {
+		out[i] = fields.Field{Key: f.Key, Values: append([]string(nil), f.Values...)}
+	}
+	return out
 }
 
 func (s *State) GenerateFullFrame(t TreeJSONType) *Frame {

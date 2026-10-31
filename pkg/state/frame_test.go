@@ -32,3 +32,45 @@ func TestGenerateTreeOnly(t *testing.T) {
 	f := s.GenerateTreeOnly(Full)
 	assert.Equal(t, f.Type, DiffFrame)
 }
+
+// frames are serialized later on per-connection goroutines, outside the room
+// lock, so they must not share memory with the live state
+func TestFullFrameDoesNotAliasState(t *testing.T) {
+	s := NewState(19)
+	s.root.OverwriteField("ZZ", "z")
+	s.root.AppendField("AA", []string{"a", "b"})
+	s.current.AppendField("C", []string{"one", "two"})
+
+	f := s.GenerateFullFrame(Full)
+	wantKeys := []string{}
+	for _, fld := range s.root.AllFields() {
+		wantKeys = append(wantKeys, fld.Key)
+	}
+
+	// in-place mutations: RemoveField shifts the backing arrays, SortFields
+	// reorders the field slice
+	s.root.RemoveField("AA", "a")
+	s.root.SortFields()
+	s.current.RemoveField("C", "one")
+
+	require.Equal(t, len(f.Comments), 2)
+	assert.Equal(t, f.Comments[0], "one")
+	assert.Equal(t, f.Comments[1], "two")
+
+	var aa []string
+	keys := []string{}
+	for _, fld := range f.Metadata.Fields {
+		keys = append(keys, fld.Key)
+		if fld.Key == "AA" {
+			aa = fld.Values
+		}
+	}
+	require.Equal(t, len(aa), 2)
+	assert.Equal(t, aa[0], "a")
+	assert.Equal(t, aa[1], "b")
+	// original (unsorted) order is preserved in the frame
+	require.Equal(t, len(keys), len(wantKeys))
+	for i := range keys {
+		assert.Equal(t, keys[i], wantKeys[i])
+	}
+}

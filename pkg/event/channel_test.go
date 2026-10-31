@@ -230,3 +230,76 @@ func TestEventChannelSplitReads(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, evt.Value().(string), "abc")
 }
+
+// lockingWriteCloser mimics x/net/websocket: Write and Close share a write
+// lock, so Close can't proceed while a Write is stalled. Write only returns
+// once release is closed (standing in for a write deadline firing).
+type lockingWriteCloser struct {
+	wio     sync.Mutex
+	release chan struct{}
+	entered chan struct{}
+	once    sync.Once
+}
+
+func newLockingWriteCloser() *lockingWriteCloser {
+	return &lockingWriteCloser{
+		release: make(chan struct{}),
+		entered: make(chan struct{}, 1),
+	}
+}
+
+func (w *lockingWriteCloser) Read([]byte) (int, error) { return 0, io.EOF }
+
+func (w *lockingWriteCloser) Write(p []byte) (int, error) {
+	w.wio.Lock()
+	defer w.wio.Unlock()
+	select {
+	case w.entered <- struct{}{}:
+	default:
+	}
+	<-w.release
+	return 0, io.ErrClosedPipe
+}
+
+func (w *lockingWriteCloser) Close() error {
+	w.wio.Lock()
+	defer w.wio.Unlock()
+	return nil
+}
+
+func (w *lockingWriteCloser) unblock() { w.once.Do(func() { close(w.release) }) }
+
+// overflowing a stalled connection must not block the sender, even when the
+// socket's Close waits on the stalled Write
+func TestEventChannelSlowConsumerDoesNotBlockSender(t *testing.T) {
+	w := newLockingWriteCloser()
+	defer w.unblock()
+	ch := event.NewDefaultEventChannel(w)
+
+	// get the writer stuck inside Write, holding the write lock
+	require.NoError(t, ch.SendEvent(event.EmptyEvent()))
+	select {
+	case <-w.entered:
+	case <-time.After(2 * time.Second):
+		t.Fatal("writer never started")
+	}
+
+	done := make(chan error, 1)
+	go func() {
+		var err error
+		for i := 0; i < 100000; i++ {
+			if err = ch.SendEvent(event.EmptyEvent()); err != nil {
+				break
+			}
+		}
+		done <- err
+	}()
+
+	select {
+	case err := <-done:
+		require.ErrorIs(t, err, event.ErrSlowConsumer)
+	case <-time.After(2 * time.Second):
+		t.Fatal("SendEvent blocked on a stalled connection")
+	}
+	assert.ErrorIs(t, ch.SendEvent(event.EmptyEvent()), event.ErrClosed)
+}

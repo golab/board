@@ -240,8 +240,9 @@ func (h *Hub) evictIfIdle(roomID string, r *room.Room) bool {
 		h.mu.Unlock()
 		return true
 	}
-	// re-check under the lock: a connection may have attached (and refreshed
-	// lastActive) between the unlocked check and here
+	// re-check under the lock: a connection may have attached, or
+	// GetOrCreateRoom may have handed the room to a new user (refreshing
+	// lastActive), between the unlocked check and here
 	if r.NumConns() > 0 || time.Since(r.GetLastActive()).Seconds() <= r.GetTimeout() {
 		h.mu.Unlock()
 		return false
@@ -346,6 +347,12 @@ func (h *Hub) GetOrCreateRoom(roomID string) *room.Room {
 		go h.Heartbeat(roomID)
 	}
 	r := h.rooms[roomID]
+
+	// mark the room active while still holding the hub lock: the caller is
+	// about to register a connection, and evictIfIdle (which re-checks under
+	// this same lock) must not evict the room in the gap before it does
+	now := time.Now()
+	r.SetLastActive(&now)
 	return r
 }
 

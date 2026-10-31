@@ -85,18 +85,26 @@ func main() {
 	// catch SIGETRM or SIGINTERRUPT
 	signal.Notify(cancelChan, syscall.SIGTERM, syscall.SIGINT)
 
-	// run server
+	// run server; a failure to listen (e.g. port in use) is reported back
+	// so the process exits instead of idling with nothing serving
+	serveErr := make(chan error, 1)
 	go func() {
 		logger.Info("listening on", "url", url)
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Error("error listening", "err", err)
+			serveErr <- err
 		}
 	}()
 
-	// catch cancel signal
-	sig := <-cancelChan
+	// wait for a cancel signal or a server failure
+	select {
+	case sig := <-cancelChan:
+		logger.Info("caught signal", "signal", fmt.Sprintf("%v", sig))
+	case err := <-serveErr:
+		// still return normally so the deferred save runs
+		logger.Error("error listening", "err", err)
+		return
+	}
 
-	logger.Info("caught signal", "signal", fmt.Sprintf("%v", sig))
 	logger.Info("shutting down gracefully")
 
 	// stop accepting new connections and let in-flight requests finish
