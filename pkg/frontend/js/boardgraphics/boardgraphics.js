@@ -1200,6 +1200,9 @@ class BoardGraphics {
     remove_mark(x, y) {
         let id = this.make_id("", x, y);
         let mark = this.state.marks.get(id);
+        if (mark == null) {
+            return;
+        }
         this.state.marks.delete(id);
         this.clear_mark(x, y);
         let spl = mark.split(":");
