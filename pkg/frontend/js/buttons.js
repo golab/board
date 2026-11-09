@@ -31,22 +31,33 @@ export function create_buttons(_state) {
 
     let arrows = document.getElementById("arrows");
 
+    // name -> button for tool buttons; highlight_tool(name) marks one active
+    const tool_buttons = new Map();
+    function highlight_tool(name) {
+        for (let [key, btn] of tool_buttons) {
+            btn.classList.toggle("active", key === name);
+        }
+    }
+
     // row 1
 
     // toggle
     let toggle_button = new_icon_button("bi-circle-half", () => state.set_toggle());
     add_tooltip(toggle_button, "Place alternating stones (1)");
     button_row1.appendChild(toggle_button);
+    tool_buttons.set("toggle", toggle_button);
 
     // black stones
     let black_stone_button = new_icon_button("bi-circle-fill", () => state.set_black());
     add_tooltip(black_stone_button, "Place black stones (2)");
     button_row1.appendChild(black_stone_button);
+    tool_buttons.set("black", black_stone_button);
 
     // white stones
     let white_stone_button = new_icon_button("bi-circle", () => state.set_white());
     add_tooltip(white_stone_button, "Place white stones (3)");
     button_row1.appendChild(white_stone_button);
+    tool_buttons.set("white", white_stone_button);
 
     // pass
     let pass_button = new_icon_button("bi-arrow-repeat", () => state.network_handler.prepare_pass());
@@ -64,22 +75,26 @@ export function create_buttons(_state) {
     let triangle_button = new_icon_button("bi-triangle", () => state.set_triangle());
     add_tooltip(triangle_button, "Place triangles (5)");
     button_row1.appendChild(triangle_button);
+    tool_buttons.set("triangle", triangle_button);
 
     // square
     let square_button = new_icon_button("bi-square", () => state.set_square());
     add_tooltip(square_button, "Place squares (6)");
     button_row1.appendChild(square_button);
+    tool_buttons.set("square", square_button);
 
 
     // letters
     let letter_button = new_icon_button("bi-alphabet-uppercase", () => state.set_letter());
     add_tooltip(letter_button, "Place letters (7)");
     button_row1.appendChild(letter_button);
+    tool_buttons.set("letter", letter_button);
 
     // numbers
     let number_button = new_icon_button("bi-123", () => state.set_number());
     add_tooltip(number_button, "Place numbers (8)");
     button_row1.appendChild(number_button);
+    tool_buttons.set("number", number_button);
 
     // row 2
     //
@@ -102,6 +117,7 @@ export function create_buttons(_state) {
     let pen_button = new_icon_button("bi-pen", () => state.set_pen());
     add_tooltip(pen_button, "Draw with a pen (9)");
     button_row2.appendChild(pen_button);
+    tool_buttons.set("pen", pen_button);
 
     // eraser
     let eraser_button = new_icon_button("bi-eraser-fill", () => state.network_handler.prepare_erase_pen());
@@ -127,6 +143,7 @@ export function create_buttons(_state) {
     let score_button = new_icon_button("bi-calculator", () => state.trigger_score());
     add_tooltip(score_button, "Score (Ctrl+Enter / Cmd+Enter)");
     button_row2.appendChild(score_button);
+    tool_buttons.set("score", score_button);
 
     // trash everything
     let trash_button = new_icon_button("bi-trash", () => state.modals.show_modal("trash-modal"));
@@ -399,6 +416,7 @@ export function create_buttons(_state) {
     }
     return {
         resize,
+        highlight_tool,
     };
 }
 

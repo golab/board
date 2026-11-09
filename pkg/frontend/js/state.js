@@ -96,6 +96,7 @@ class State {
         this.board_graphics.draw_board();
 
         this.buttons = create_buttons(this);
+        this.buttons.highlight_tool("toggle");
 
         this.modals = create_modals(this);
 
@@ -284,6 +285,7 @@ class State {
         this.color = 1;
         this.toggling = true;
         this.mark = "";
+        this.buttons.highlight_tool("toggle");
 
         //this.board = new Board(this.size);
         this.board = create_board(this.size);
@@ -524,6 +526,7 @@ class State {
         this.color = 1;
         this.toggling = false;
         this.mark = "";
+        this.buttons.highlight_tool("black");
         this.board_graphics.clear_ghosts();
     }
 
@@ -531,6 +534,7 @@ class State {
         this.color = 2;
         this.toggling = false;
         this.mark = "";
+        this.buttons.highlight_tool("white");
         this.board_graphics.clear_ghosts();
     }
 
@@ -538,6 +542,7 @@ class State {
         this.toggling = true;
         this.update_color();
         this.mark = "";
+        this.buttons.highlight_tool("toggle");
         this.board_graphics.clear_ghosts();
     }
 
@@ -548,6 +553,7 @@ class State {
 
     set_pen() {
         this.mark = "pen";
+        this.buttons.highlight_tool("pen");
         this.board_graphics.clear_ghosts();
     }
 
@@ -612,27 +618,32 @@ class State {
 
    set_triangle() {
         this.mark = "triangle";
+        this.buttons.highlight_tool("triangle");
         this.board_graphics.clear_ghosts();
     }
 
     set_square() {
         this.mark = "square";
+        this.buttons.highlight_tool("square");
         this.board_graphics.clear_ghosts();
     }
 
     set_letter() {
         this.mark = "letter";
         this.custom_label = "";
+        this.buttons.highlight_tool("letter");
         this.board_graphics.clear_ghosts();
     }
 
     set_number() {
         this.mark = "number";
+        this.buttons.highlight_tool("number");
         this.board_graphics.clear_ghosts();
     }
 
     trigger_score() {
         this.mark = "score";
+        this.buttons.highlight_tool("score");
         this.network_handler.prepare_score()
     }
 
