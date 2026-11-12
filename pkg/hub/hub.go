@@ -155,7 +155,7 @@ func (h *Hub) Save() {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	for id, r := range h.rooms {
-		h.logger.Info("saving", "room_id", id)
+		h.logger.Debug("saving", "room_id", id)
 
 		save := r.Save()
 
