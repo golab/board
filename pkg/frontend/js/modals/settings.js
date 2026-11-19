@@ -591,6 +591,63 @@ function appearance_settings(state) {
     appearance_collapse.appendChild(white_outline_color_select);
     appearance_collapse.appendChild(document.createElement("br"));
 
+    // tree explorer background
+    let tree_bgcolor = document.createElement("div");
+    let tree_bgcolor_label = document.createElement("div");
+    tree_bgcolor_label.innerHTML = "Tree explorer background:";
+
+    let tree_bgcolor_select = document.createElement("select");
+    tree_bgcolor_select.setAttribute("id", id + "-tree-bgcolor-select");
+    tree_bgcolor_select.setAttribute("class", "form-select");
+    for (let x of ["default", "[custom]"]) {
+        let opt = document.createElement("option");
+        opt.setAttribute("value", x);
+        opt.innerHTML = x;
+        tree_bgcolor_select.appendChild(opt);
+    }
+
+    let tree_bgcolor_stored = localStorage.getItem("tree_bgcolor") || "default";
+    let saved_tree_bgcolor_picker = "#DEDDDA";
+    if (tree_bgcolor_stored.startsWith("#")) {
+        saved_tree_bgcolor_picker = tree_bgcolor_stored;
+    }
+    let tree_bgcolor_picker = document.createElement("input");
+    tree_bgcolor_picker.value = saved_tree_bgcolor_picker;
+    tree_bgcolor_picker.setAttribute("type", "color");
+    tree_bgcolor_picker.setAttribute("id", "tree-bgcolor-picker");
+    tree_bgcolor_picker.style.display = "none";
+    // oninput gives a live preview while the picker is open
+    tree_bgcolor_picker.oninput = () => {
+        state.tree_graphics.set_bgcolor(tree_bgcolor_picker.value);
+    };
+    tree_bgcolor_picker.onchange = () => {
+        saved_tree_bgcolor_picker = tree_bgcolor_picker.value;
+        state.tree_graphics.set_bgcolor(tree_bgcolor_picker.value);
+        localStorage.setItem("tree_bgcolor", tree_bgcolor_picker.value);
+    };
+    tree_bgcolor_select.value = tree_bgcolor_stored;
+    tree_bgcolor.appendChild(tree_bgcolor_label);
+    tree_bgcolor.appendChild(tree_bgcolor_picker);
+
+    tree_bgcolor_select.addEventListener(
+        "change",
+        () => {
+            if (tree_bgcolor_select.value == "[custom]") {
+                state.tree_graphics.set_bgcolor(saved_tree_bgcolor_picker);
+                localStorage.setItem("tree_bgcolor", saved_tree_bgcolor_picker);
+                tree_bgcolor_picker.click();
+                tree_bgcolor_select.value = "";
+            } else {
+                state.tree_graphics.set_bgcolor(tree_bgcolor_select.value);
+                localStorage.setItem("tree_bgcolor", tree_bgcolor_select.value);
+            }
+        }
+    );
+
+    appearance_collapse.appendChild(tree_bgcolor);
+    appearance_collapse.appendChild(tree_bgcolor_select);
+    appearance_collapse.appendChild(document.createElement("br"));
+
     // shadows
     let shadow_element = document.createElement("div");
     shadow_element.innerHTML = "Shadows "

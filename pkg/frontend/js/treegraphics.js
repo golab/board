@@ -19,6 +19,15 @@ const BLACK = 1;
 const WHITE = 2;
 
 class TreeGraphics {
+    // color is a hex string, anything else resets to the default
+    set_bgcolor(color) {
+        if (!color.startsWith("#")) {
+            color = this.default_bgcolor;
+        }
+        this.bgcolor = color;
+        this.container.style.background = color;
+    }
+
     constructor(state) {
         this.state = state;
         let review = document.getElementById("review");
@@ -39,7 +48,12 @@ class TreeGraphics {
         this.container = container;
         this.explorer = explorer;
         let size = explorer.getAttribute("size");
-        this.bgcolor = "#DEDDDA";
+        this.default_bgcolor = "#DEDDDA";
+        this.bgcolor = this.default_bgcolor;
+        let stored_bgcolor = localStorage.getItem("tree_bgcolor") || "";
+        if (stored_bgcolor.startsWith("#")) {
+            this.bgcolor = stored_bgcolor;
+        }
 
         //let review_height = review.offsetHeight;
         //let container_height = review_height
