@@ -248,6 +248,121 @@ func (cmd *addLabelCommand) Execute(s *State) (*Frame, error) {
 	return nil, nil
 }
 
+// addMarksCommand places one kind of mark on many cells at once (a
+// click-and-drag gesture on the client). The whole batch lands on a single
+// node, cells that already carry a mark are skipped, and letters/numbers
+// are assigned here instead of trusting each client's idea of what's free.
+type addMarksCommand struct {
+	kind  string
+	crds  []*coord.Coord
+	label string
+	node  *int
+}
+
+// NewAddMarksCommand creates a batch mark command. kind is one of
+// "triangle", "square", "letter", "number" or "label" (label is only
+// used by the last). node, if not nil, is the index of the node the
+// client was looking at; the batch is dropped if that is no longer current
+func NewAddMarksCommand(kind string, crds []*coord.Coord, label string, node *int) Command {
+	return &addMarksCommand{kind, crds, label, node}
+}
+
+func (cmd *addMarksCommand) Execute(s *State) (*Frame, error) {
+	// someone navigated away while the client was dragging
+	if cmd.node != nil && *cmd.node != s.current.Index {
+		return nil, nil
+	}
+
+	// figure out which cells, letters and numbers are already in use
+	marks := s.generateMarks()
+	taken := coord.NewCoordSet()
+	for _, c := range marks.Triangles {
+		taken.Add(c)
+	}
+	for _, c := range marks.Squares {
+		taken.Add(c)
+	}
+	letters := map[string]bool{}
+	numbers := map[int]bool{}
+	for _, lb := range marks.Labels {
+		taken.Add(lb.Coord)
+		if isDigits(lb.Text) {
+			if n, err := strconv.Atoi(lb.Text); err == nil {
+				numbers[n] = true
+			}
+		} else {
+			letters[lb.Text] = true
+		}
+	}
+
+	added := false
+	nextLetter := 'A'
+	nextNumber := 1
+loop:
+	for _, crd := range cmd.crds {
+		if crd == nil || !crd.Valid(s.size) || taken.Has(crd) {
+			continue
+		}
+		l := crd.ToLetters()
+		switch cmd.kind {
+		case "triangle":
+			s.current.AddField("TR", l)
+		case "square":
+			s.current.AddField("SQ", l)
+		case "label":
+			s.current.AddField("LB", fmt.Sprintf("%s:%s", l, cmd.label))
+		case "letter":
+			for nextLetter <= 'Z' && letters[string(nextLetter)] {
+				nextLetter++
+			}
+			if nextLetter > 'Z' {
+				// out of letters
+				break loop
+			}
+			letters[string(nextLetter)] = true
+			s.current.AddField("LB", fmt.Sprintf("%s:%c", l, nextLetter))
+		case "number":
+			for numbers[nextNumber] {
+				nextNumber++
+			}
+			numbers[nextNumber] = true
+			s.current.AddField("LB", fmt.Sprintf("%s:%d", l, nextNumber))
+		default:
+			return nil, nil
+		}
+		taken.Add(crd)
+		added = true
+	}
+
+	if !added {
+		return nil, nil
+	}
+
+	// reply with every mark on the node so all clients converge
+	return &Frame{
+		Type:      DiffFrame,
+		Diff:      nil,
+		Marks:     s.generateMarks(),
+		Comments:  s.generateComments(),
+		Metadata:  nil,
+		TreeJSON:  nil,
+		BlackCaps: s.current.BlackCaps,
+		WhiteCaps: s.current.WhiteCaps,
+	}, nil
+}
+
+func isDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
+}
+
 type removeMarkCommand struct {
 	crd *coord.Coord
 }

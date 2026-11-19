@@ -262,3 +262,129 @@ func TestCommandMarkDead(t *testing.T) {
 	_, err = state.NewMarkDeadCommand(coord).Execute(s)
 	assert.NoError(t, err)
 }
+
+func TestCommandAddMarksTriangles(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
+	assert.NoError(t, err)
+
+	// duplicates and off-board coords are skipped
+	crds := []*coord.Coord{
+		coord.NewCoord(0, 0),
+		coord.NewCoord(1, 0),
+		coord.NewCoord(1, 0),
+		nil,
+	}
+	frm, err := state.NewAddMarksCommand("triangle", crds, "", nil).Execute(s)
+	assert.NoError(t, err)
+	require.NotNil(t, frm)
+	assert.Equal(t, len(frm.Marks.Triangles), 2)
+	assert.Equal(t, len(s.Current().GetField("TR")), 2)
+}
+
+func TestCommandAddMarksSkipsTaken(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
+	assert.NoError(t, err)
+
+	c := coord.NewCoord(3, 3)
+	_, err = state.NewAddTriangleCommand(c).Execute(s)
+	assert.NoError(t, err)
+
+	// the only cell is already marked, so nothing changes
+	frm, err := state.NewAddMarksCommand("square", []*coord.Coord{c}, "", nil).Execute(s)
+	assert.NoError(t, err)
+	assert.Zero(t, frm)
+	assert.Equal(t, len(s.Current().GetField("SQ")), 0)
+
+	crds := []*coord.Coord{c, coord.NewCoord(4, 3)}
+	frm, err = state.NewAddMarksCommand("square", crds, "", nil).Execute(s)
+	assert.NoError(t, err)
+	require.NotNil(t, frm)
+	sqs := s.Current().GetField("SQ")
+	require.Equal(t, len(sqs), 1)
+	assert.Equal(t, sqs[0], "ed")
+	// the frame carries every mark on the node, not just the new ones
+	assert.Equal(t, len(frm.Marks.Triangles), 1)
+	assert.Equal(t, len(frm.Marks.Squares), 1)
+}
+
+func TestCommandAddMarksLetters(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
+	assert.NoError(t, err)
+
+	// B is already in use, so the server hands out A, C
+	_, err = state.NewAddLetterCommand(coord.NewCoord(0, 0), "B").Execute(s)
+	assert.NoError(t, err)
+
+	crds := []*coord.Coord{coord.NewCoord(1, 0), coord.NewCoord(2, 0)}
+	_, err = state.NewAddMarksCommand("letter", crds, "", nil).Execute(s)
+	assert.NoError(t, err)
+
+	lbs := s.Current().GetField("LB")
+	require.Equal(t, len(lbs), 3)
+	assert.Equal(t, lbs[1], "ba:A")
+	assert.Equal(t, lbs[2], "ca:C")
+}
+
+func TestCommandAddMarksLettersRunOut(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
+	assert.NoError(t, err)
+
+	crds := []*coord.Coord{}
+	for x := 0; x < 19; x++ {
+		crds = append(crds, coord.NewCoord(x, 0), coord.NewCoord(x, 1))
+	}
+	_, err = state.NewAddMarksCommand("letter", crds, "", nil).Execute(s)
+	assert.NoError(t, err)
+	assert.Equal(t, len(s.Current().GetField("LB")), 26)
+}
+
+func TestCommandAddMarksNumbers(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
+	assert.NoError(t, err)
+
+	_, err = state.NewAddNumberCommand(coord.NewCoord(0, 0), 2).Execute(s)
+	assert.NoError(t, err)
+
+	crds := []*coord.Coord{coord.NewCoord(1, 0), coord.NewCoord(2, 0)}
+	_, err = state.NewAddMarksCommand("number", crds, "", nil).Execute(s)
+	assert.NoError(t, err)
+
+	lbs := s.Current().GetField("LB")
+	require.Equal(t, len(lbs), 3)
+	assert.Equal(t, lbs[1], "ba:1")
+	assert.Equal(t, lbs[2], "ca:3")
+}
+
+func TestCommandAddMarksLabel(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
+	assert.NoError(t, err)
+
+	crds := []*coord.Coord{coord.NewCoord(1, 0), coord.NewCoord(2, 0)}
+	_, err = state.NewAddMarksCommand("label", crds, "O_o", nil).Execute(s)
+	assert.NoError(t, err)
+
+	lbs := s.Current().GetField("LB")
+	require.Equal(t, len(lbs), 2)
+	assert.Equal(t, lbs[0], "ba:O_o")
+	assert.Equal(t, lbs[1], "ca:O_o")
+}
+
+func TestCommandAddMarksWrongNode(t *testing.T) {
+	s, err := state.FromSGF(sgfsamples.SimpleEightMoves)
+	assert.NoError(t, err)
+
+	crds := []*coord.Coord{coord.NewCoord(1, 0)}
+
+	// the client was looking at a different node: drop the batch
+	stale := s.Current().Index + 1
+	frm, err := state.NewAddMarksCommand("triangle", crds, "", &stale).Execute(s)
+	assert.NoError(t, err)
+	assert.Zero(t, frm)
+	assert.Equal(t, len(s.Current().GetField("TR")), 0)
+
+	cur := s.Current().Index
+	frm, err = state.NewAddMarksCommand("triangle", crds, "", &cur).Execute(s)
+	assert.NoError(t, err)
+	require.NotNil(t, frm)
+	assert.Equal(t, len(s.Current().GetField("TR")), 1)
+}

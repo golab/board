@@ -217,6 +217,8 @@ class BoardGraphics {
         this.new_svg("current", 950);
         this.new_svg("marks", 1000);
         this.new_svg("ghost-marks", 1000);
+        this.new_svg("drag-marks", 1000);
+        this.svgs.get("drag-marks").style.opacity = 0.6;
         this.new_svg("pen", 1050);
 
         this.used_letters = new Array(26).fill(0);
@@ -1197,9 +1199,62 @@ class BoardGraphics {
         this.draw_number(x, y, number, hexcolor, "ghost-marks");
     }
 
+    // preview of a click-and-drag in progress: one mark (of the currently
+    // selected kind) per cell. nothing here touches state.marks; the real
+    // marks are drawn when the server answers the "marks" event.
+    // letters and numbers are only a guess at what the server will assign
+    draw_drag_marks(cells) {
+        this.clear_svg("drag-marks");
+        let svg_id = "drag-marks";
+        let letter_index = 0;
+        let number = 1;
+        for (let [x, y] of cells) {
+            let hexcolor = this.black_or_white(
+                this.state.board_color,
+                this.state.board.get(new Coord(x, y)));
+            if (this.state.mark == "triangle") {
+                this.draw_triangle(x, y, hexcolor, svg_id);
+            } else if (this.state.mark == "square") {
+                this.draw_square(x, y, hexcolor, svg_id);
+            } else if (this.state.mark == "letter") {
+                if (this.state.custom_label != "") {
+                    this.draw_letter(x, y, this.state.custom_label, hexcolor, svg_id);
+                    continue;
+                }
+                while (letter_index < 26 && this.state.letters[letter_index] != 0) {
+                    letter_index++;
+                }
+                if (letter_index >= 26) {
+                    // out of letters
+                    break;
+                }
+                this.draw_letter(x, y, letters[letter_index], hexcolor, svg_id);
+                letter_index++;
+            } else if (this.state.mark == "number") {
+                while (this.state.numbers.get(number) != null) {
+                    number++;
+                }
+                this.draw_number(x, y, number, hexcolor, svg_id);
+                number++;
+            }
+        }
+        // previews shouldn't share ids with real marks
+        for (let elt of this.svgs.get(svg_id).querySelectorAll("[id]")) {
+            elt.removeAttribute("id");
+        }
+    }
+
+    clear_drag_marks() {
+        this.clear_svg("drag-marks");
+    }
+
     remove_mark(x, y) {
         let id = this.make_id("", x, y);
         let mark = this.state.marks.get(id);
+        if (mark == null) {
+            // already gone (e.g. two users removed the same mark)
+            return;
+        }
         this.state.marks.delete(id);
         this.clear_mark(x, y);
         let spl = mark.split(":");

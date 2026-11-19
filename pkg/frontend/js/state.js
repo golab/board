@@ -77,6 +77,8 @@ class State {
         this.marks = new Map();
         this.pen = new Array();
         this.current = null;
+        // index of the current node in the tree (null until the first frame)
+        this.current_index = null;
         this.numbers = new Map();
         this.letters = new Array(26).fill(0);
 
@@ -887,6 +889,7 @@ class State {
 
             // current should always exist
             let current_index = frame.tree.current;
+            this.current_index = current_index;
           
             // setting move number must happen before setting the color
             let current_node = this.tree_graphics.nodes[current_index];
@@ -896,10 +899,11 @@ class State {
             // updating the color checks the current move
             let current_color = current_node.color;
             this.update_color(current_color);
+            // (frames without a tree, like a batch of marks, shouldn't
+            // yank the explorer's scroll position around)
+            this.tree_graphics.set_scroll();
+            this.tree_graphics.schedule_render();
         }
-    
-        this.tree_graphics.set_scroll();
-        this.tree_graphics.schedule_render();
     }
 
     handle_comments(comments) {

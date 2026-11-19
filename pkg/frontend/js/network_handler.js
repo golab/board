@@ -15,6 +15,9 @@ export {
 
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+// marks that can be placed on many cells with a click-and-drag
+const DRAG_MARKS = new Set(["triangle", "square", "letter", "number"]);
+
 // specifically into 4 bytes
 function pack_int(n) {
     let byte_array = new Uint8Array([0, 0, 0, 0]);
@@ -58,6 +61,16 @@ class NetworkHandler {
         this.add_listeners();
 
         this.blocked = null;
+
+        // click-and-drag marks: while the pointer is down the cells are only
+        // previewed locally, then sent as a single "marks" event on release.
+        // null when no gesture is in progress
+        this.drag = null;
+
+        // set when a drag was just sent (or cancelled partway), so the
+        // click event that follows the release doesn't also act on the
+        // last cell
+        this.drag_committed = false;
 
         // in a var for now so we can do exponential backoff in the future
         this.backoff = 0;
@@ -142,6 +155,7 @@ class NetworkHandler {
 
         document.addEventListener("touchstart", (event) => this.touchstart(event));
         document.addEventListener("touchend", (event) => this.touchend(event));
+        document.addEventListener("touchcancel", (event) => this.touchcancel(event));
         // the passive arg is necessary to disable regular touch events
         document.addEventListener("touchmove", (event) => this.touchmove(event), {passive: false});
 
@@ -174,6 +188,12 @@ class NetworkHandler {
         switch (evt) {
             case "frame":
                 this.state.handle_frame(payload["value"]);
+                if (payload["value"].tree != null) {
+                    // the board moved to another node mid-drag
+                    this.drag_cancel();
+                } else {
+                    this.drag_refresh();
+                }
                 break;
             case "triangle":
                 coords = new Coord(payload["value"][0], payload["value"][1]);
@@ -587,9 +607,146 @@ class NetworkHandler {
         }
     }
 
+    // begin a (potential) click-and-drag of marks. nothing is drawn or
+    // sent until the pointer reaches a second cell, so a plain click
+    // still goes through click()
+    drag_start(clientX, clientY, target) {
+        this.drag = null;
+        this.drag_committed = false;
+        this.state.board_graphics.clear_drag_marks();
+        if (!DRAG_MARKS.has(this.state.mark)) {
+            return;
+        }
+        if (this.state.modals.modals_up.size > 0) {
+            return;
+        }
+        let review = document.getElementById("review");
+        if (review == null || !review.contains(target)) {
+            return;
+        }
+        let coords = this.state.board_graphics.pos_to_coord(clientX, clientY);
+        if (!this.in_bounds(coords)) {
+            return;
+        }
+        this.drag = {
+            mark: this.state.mark,
+            start: coords,
+            last: coords,
+            active: false,
+            seen: new Set(),
+            cells: [],
+        };
+    }
+
+    in_bounds(coords) {
+        let size = this.state.size;
+        return coords[0] >= 0 && coords[1] >= 0 && coords[0] < size && coords[1] < size;
+    }
+
+    drag_add(x, y) {
+        let id = x.toString() + "-" + y.toString();
+        if (this.drag.seen.has(id)) {
+            return;
+        }
+        this.drag.seen.add(id);
+        // cells that already have a mark are left alone
+        // (the server skips them too)
+        if (this.state.marks.has(id)) {
+            return;
+        }
+        this.drag.cells.push([x, y]);
+    }
+
+    // returns true if a drag is underway (so the caller can skip ghosts)
+    drag_move(clientX, clientY) {
+        if (this.drag == null) {
+            return false;
+        }
+        if (this.state.mark != this.drag.mark) {
+            // tool changed mid-drag
+            this.drag_cancel();
+            return false;
+        }
+        let coords = this.state.board_graphics.pos_to_coord(clientX, clientY);
+        if (!this.in_bounds(coords)) {
+            return this.drag.active;
+        }
+        let [x0, y0] = this.drag.last;
+        let [x1, y1] = coords;
+        if (x0 == x1 && y0 == y1) {
+            return this.drag.active;
+        }
+        if (!this.drag.active) {
+            this.drag.active = true;
+            this.drag_add(x0, y0);
+        }
+        // a fast drag skips cells, so fill in the line from the last one
+        let steps = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
+        for (let i = 1; i <= steps; i++) {
+            this.drag_add(
+                Math.round(x0 + (x1 - x0)*i/steps),
+                Math.round(y0 + (y1 - y0)*i/steps));
+        }
+        this.drag.last = coords;
+        this.state.board_graphics.clear_ghosts();
+        this.state.board_graphics.draw_drag_marks(this.drag.cells);
+        return true;
+    }
+
+    // pointer released: send the whole drag as one event
+    drag_end() {
+        let drag = this.drag;
+        this.drag = null;
+        if (drag == null || !drag.active) {
+            return;
+        }
+        this.state.board_graphics.clear_drag_marks();
+        this.drag_committed = true;
+        if (drag.cells.length == 0 || this.state.mark != drag.mark) {
+            return;
+        }
+        let value = {"mark": drag.mark, "coords": drag.cells};
+        if (drag.mark == "letter" && this.state.custom_label != "") {
+            value["mark"] = "label";
+            value["label"] = this.state.custom_label;
+        }
+        // lets the server drop the drag if someone navigated away
+        // before it arrived
+        if (this.state.current_index != null) {
+            value["node"] = this.state.current_index;
+        }
+        this.prepare({"event": "marks", "value": value});
+    }
+
+    drag_cancel() {
+        if (this.drag == null) {
+            return;
+        }
+        if (this.drag.active) {
+            // the release is still coming; it shouldn't count as a click
+            this.drag_committed = true;
+        }
+        this.drag = null;
+        this.state.board_graphics.clear_drag_marks();
+    }
+
+    // marks changed under an in-progress drag (someone else placed some):
+    // drop the cells that are now taken
+    drag_refresh() {
+        if (this.drag == null || !this.drag.active) {
+            return;
+        }
+        this.drag.cells = this.drag.cells.filter(
+            ([x, y]) => !this.state.marks.has(x.toString() + "-" + y.toString()));
+        this.state.board_graphics.draw_drag_marks(this.drag.cells);
+    }
+
     pointerdown(event) {
         if (event.pointerType == "mouse") {
             this.state.ispointerdown = true;
+            if (event.button == 0) {
+                this.drag_start(event.clientX, event.clientY, event.target);
+            }
             //let payload = {"event": "pointerdown"};
             //this.prepare(payload);
         }
@@ -600,6 +757,7 @@ class NetworkHandler {
             this.state.ispointerdown = false;
             this.state.penx = null;
             this.state.peny = null;
+            this.drag_end();
 
             //let payload = {"event": "pointerup"};
             //this.prepare(payload);
@@ -627,6 +785,10 @@ class NetworkHandler {
                 this.state.peny = y;
                 this.prepare(payload);
             } else {
+                if (this.drag_move(event.clientX, event.clientY)) {
+                    // the drag preview replaces the ghost
+                    return;
+                }
                 let coords = this.state.board_graphics.pos_to_coord(event.clientX, event.clientY);
                 let payload = {"event": "pointermove", "value": coords};
                 this.prepare(payload);
@@ -637,12 +799,27 @@ class NetworkHandler {
 
     touchstart(event) {
         this.state.ispointerdown = true;
+        if (event.touches.length == 1) {
+            let touch = event.touches[0];
+            this.drag_start(touch.clientX, touch.clientY, event.target);
+        } else {
+            // a second finger means pinch/scroll, not a drag
+            this.drag_cancel();
+        }
     }
 
     touchend(event) {
         this.state.ispointerdown = false;
         this.state.penx = null;
         this.state.peny = null;
+        this.drag_end();
+    }
+
+    touchcancel(event) {
+        this.state.ispointerdown = false;
+        this.state.penx = null;
+        this.state.peny = null;
+        this.drag_cancel();
     }
 
     touchmove(event) {
@@ -668,8 +845,15 @@ class NetworkHandler {
             this.state.peny = y;
 
             this.prepare(payload);
+        } else if (this.drag != null) {
+            let touch = event.touches[0];
+            let [x,y,inside] = this.state.board_graphics.board_relative_coords(touch.clientX, touch.clientY);
+            if (inside) {
+                // keep the page from scrolling while dragging marks
+                event.preventDefault();
+            }
+            this.drag_move(touch.clientX, touch.clientY);
         }
-        // nothing to do if this.mark != "pen"
     }
 
     click(event) {
@@ -677,6 +861,12 @@ class NetworkHandler {
         let x = event.clientX;
         let y = event.clientY;
         let flip = this.state.keys_down.has("Shift");
+
+        // this click is just the release of a drag
+        if (this.drag_committed) {
+            this.drag_committed = false;
+            return;
+        }
 
         // only clicks that land directly on the explorer or the board count
         // otherwise a click on something overlapping them (e.g. the

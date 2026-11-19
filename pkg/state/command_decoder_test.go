@@ -529,3 +529,54 @@ func TestDecodeDrawValidation(t *testing.T) {
 		})
 	}
 }
+
+func TestDecodeMarks(t *testing.T) {
+	for _, mark := range []string{"triangle", "square", "letter", "number"} {
+		val := map[string]any{
+			"mark":   mark,
+			"coords": []any{[]any{9.0, 9.0}, []any{10.0, 9.0}},
+			"node":   3.0,
+		}
+		e := event.NewEvent("marks", val)
+
+		_, err := state.DecodeToCommand(e)
+		assert.NoError(t, err)
+	}
+}
+
+func TestDecodeMarksLabel(t *testing.T) {
+	val := map[string]any{
+		"mark":   "label",
+		"coords": []any{[]any{9.0, 9.0}},
+		"label":  "abc",
+	}
+	e := event.NewEvent("marks", val)
+
+	_, err := state.DecodeToCommand(e)
+	assert.NoError(t, err)
+}
+
+func TestDecodeMarksFail(t *testing.T) {
+	coords := []any{[]any{9.0, 9.0}}
+	tooMany := make([]any, state.MaxMarkBatch+1)
+	for i := range tooMany {
+		tooMany[i] = []any{0.0, 0.0}
+	}
+	vals := []any{
+		"triangle",
+		map[string]any{"coords": coords},
+		map[string]any{"mark": "pen", "coords": coords},
+		map[string]any{"mark": "triangle"},
+		map[string]any{"mark": "triangle", "coords": []any{}},
+		map[string]any{"mark": "triangle", "coords": tooMany},
+		map[string]any{"mark": "triangle", "coords": []any{[]any{9.0}}},
+		map[string]any{"mark": "label", "coords": coords},
+		map[string]any{"mark": "label", "coords": coords, "label": "toolong"},
+	}
+	for _, val := range vals {
+		e := event.NewEvent("marks", val)
+
+		_, err := state.DecodeToCommand(e)
+		assert.NotNil(t, err)
+	}
+}

@@ -24,6 +24,10 @@ import (
 // MaxLabelLength is the longest label (in characters) a user can place
 const MaxLabelLength = 3
 
+// MaxMarkBatch is the most cells a single "marks" event can cover
+// (every point on a 19x19 board)
+const MaxMarkBatch = 19 * 19
+
 var penColorRegexp = regexp.MustCompile(`^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$`)
 
 // validateLabel rejects labels that are empty, too long, or contain
@@ -140,6 +144,51 @@ func DecodeToCommand(evt event.Event) (Command, error) {
 			return nil, err
 		}
 		return NewAddLabelCommand(c, label), nil
+	case "marks":
+		val, ok := evt.Value().(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("event requires map for 'value'")
+		}
+		kind, ok := val["mark"].(string)
+		if !ok {
+			return nil, fmt.Errorf("'mark' should be a string")
+		}
+		label := ""
+		switch kind {
+		case "triangle", "square", "letter", "number":
+		case "label":
+			label, ok = val["label"].(string)
+			if !ok {
+				return nil, fmt.Errorf("'label' should be a string")
+			}
+			if err := validateLabel(label); err != nil {
+				return nil, err
+			}
+		default:
+			return nil, fmt.Errorf("invalid mark")
+		}
+		raw, ok := val["coords"].([]any)
+		if !ok {
+			return nil, fmt.Errorf("'coords' should be a list of coords")
+		}
+		if len(raw) == 0 || len(raw) > MaxMarkBatch {
+			return nil, fmt.Errorf("'coords' should have 1 to %d coords", MaxMarkBatch)
+		}
+		crds := make([]*coord.Coord, 0, len(raw))
+		for _, r := range raw {
+			c, err := coord.FromInterface(r)
+			if err != nil {
+				return nil, err
+			}
+			crds = append(crds, c)
+		}
+		// optional: the node the client was looking at
+		var node *int
+		if f, ok := val["node"].(float64); ok {
+			n := int(f)
+			node = &n
+		}
+		return NewAddMarksCommand(kind, crds, label, node), nil
 	case "remove_mark":
 		c, err := coord.FromInterface(evt.Value())
 		if err != nil {

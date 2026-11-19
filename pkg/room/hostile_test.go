@@ -26,7 +26,7 @@ func TestHostileEventsDontPanic(t *testing.T) {
 	events := []string{
 		"isprotected", "checkpassword", "upload_sgf", "request_sgf", "trash", "update_nickname",
 		"update_settings", "graft", "add_stone", "pass", "remove_stone", "triangle", "square",
-		"letter", "number", "label", "remove_mark", "cut", "left", "right", "up", "down", "rewind",
+		"letter", "number", "label", "marks", "remove_mark", "cut", "left", "right", "up", "down", "rewind",
 		"fastforward", "goto_grid", "goto_coord", "comment", "draw", "erase_pen", "copy",
 		"clipboard", "score", "markdead",
 	}
