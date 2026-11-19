@@ -705,17 +705,25 @@ class NetworkHandler {
         if (drag.cells.length == 0 || this.state.mark != drag.mark) {
             return;
         }
-        let value = {"mark": drag.mark, "coords": drag.cells};
-        if (drag.mark == "letter" && this.state.custom_label != "") {
+        this.prepare(this.marks_payload(drag.mark, drag.cells));
+    }
+
+    // the "marks" event places one kind of mark on a list of cells (a
+    // single click is just a list of one). the server skips cells that
+    // are taken and hands out the letters/numbers itself, so two users
+    // can't end up with the same one
+    marks_payload(mark, cells) {
+        let value = {"mark": mark, "coords": cells};
+        if (mark == "letter" && this.state.custom_label != "") {
             value["mark"] = "label";
             value["label"] = this.state.custom_label;
         }
-        // lets the server drop the drag if someone navigated away
+        // lets the server drop the event if someone navigated away
         // before it arrived
         if (this.state.current_index != null) {
             value["node"] = this.state.current_index;
         }
-        this.prepare({"event": "marks", "value": value});
+        return {"event": "marks", "value": value};
     }
 
     drag_cancel() {
@@ -910,50 +918,35 @@ class NetworkHandler {
             if (this.state.marks.has(id)) {
                 payload = {"event": "remove_mark", value: coords};
             } else {
-                payload = {"event": this.state.mark};
-                switch(this.state.mark) {
-                    case "triangle":
-                        payload["value"] = coords;
-                        break;
-                    case "square":
-                        payload["value"] = coords;
-                        break;
-                    case "letter":
-                        let label = "";
-                        if (flip || this.state.custom_label != "") {
-                            if (flip) {
-                                let handler = () => {
-                                    label = this.state.modals.get_prompt_bar();
-                                    this.state.modals.clear_prompt_bar();
-                                    this.state.custom_label = label;
-                                    payload = {"event": "label"};
-                                    payload["value"] = {"coords": coords, "label": label};
-                                    this.prepare(payload);
-                                }
-                                this.state.modals.show_prompt_modal(
-                                    "Enter up to three characters:",
-                                    handler
-                                );
-                                return;
-                            } else {
-                                payload = {"event": "label"};
-                                payload["value"] = {"coords": coords, "label": this.state.custom_label};
-                            }
-                        } else {
-                            let letter = this.state.next_letter();
-                            if (letter == null) {
-                                return;
-                            }
-                            label = letter;
-    
-                            payload["value"] = {"coords": coords, "letter": label};
-                        }
-                        break;
-                    case "number":
-                        let number = this.state.next_number();
-                        payload["value"] = {"coords": coords, "number": number};
-                        break;
+                if (!DRAG_MARKS.has(this.state.mark)) {
+                    return;
                 }
+                if (this.state.mark == "letter") {
+                    if (flip) {
+                        // shift+click: ask for a custom label
+                        // (sent as "label" since that's what's allowed
+                        // through while the prompt is still up)
+                        let handler = () => {
+                            let label = this.state.modals.get_prompt_bar();
+                            this.state.modals.clear_prompt_bar();
+                            this.state.custom_label = label;
+                            payload = {"event": "label"};
+                            payload["value"] = {"coords": coords, "label": label};
+                            this.prepare(payload);
+                        }
+                        this.state.modals.show_prompt_modal(
+                            "Enter up to three characters:",
+                            handler
+                        );
+                        return;
+                    }
+                    if (this.state.custom_label == "" && this.state.next_letter() == null) {
+                        // out of letters
+                        return;
+                    }
+                }
+                // a click is a drag over a single cell
+                payload = this.marks_payload(this.state.mark, [coords]);
             }
         } else if (this.state.toggling) {
             if (this.state.keys_down.has("Shift")) {
